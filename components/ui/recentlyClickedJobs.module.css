@@ -1,0 +1,71 @@
+.recentlyClickedContainer {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.header {
+  font-size: 1.2em;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.loading,
+.noJobs {
+  padding: 10px;
+  text-align: center;
+  color: #555;
+}
+
+.jobList {
+  list-style-type: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Responsive grid */
+  gap: 10px; /* Reduced gap between cards */
+}
+
+.jobCard {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 10px; /* Reduced padding */
+  cursor: pointer;
+  transition: box-shadow 0.3s ease;
+}
+
+.jobCard:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.jobTitle {
+  font-size: 1em; /* Reduced font size */
+  font-weight: bold;
+  margin-top: 0;
+  margin-bottom: 5px; /* Reduced margin */
+  color: #007bff; /* Or your app's primary color */
+}
+
+.company {
+  font-size: 0.85em; /* Reduced font size */
+  color: #555;
+  margin-bottom: 8px; /* Reduced margin */
+}
+
+.jobLink {
+  font-size: 0.8em; /* Reduced font size */
+  color: #007bff;
+  text-decoration: none;
+  display: inline-block; /* Allows for margin */
+  margin-top: 5px; /* Reduced margin */
+}
+
+.jobLink:hover {
+  text-decoration: underline;
+}
+
+.newJob {
+  border-left: 4px solid #28a745; /* Green border for new jobs */
+}

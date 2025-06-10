@@ -63,69 +63,112 @@ CREATE TABLE IF NOT EXISTS job_email_submissions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Add RLS (Row Level Security) policies
-ALTER TABLE user_clearances ENABLE ROW LEVEL SECURITY;
-ALTER TABLE job_additions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE job_postings_log ENABLE ROW LEVEL SECURITY;
-ALTER TABLE job_email_submissions ENABLE ROW LEVEL SECURITY;
+-- Note: RLS (Row Level Security) is NOT enabled on this database
+-- Tables will be accessible to all authenticated users
+-- For production use, consider enabling RLS for better security
+
+-- Create tables for logging user activity without RLS
+
+-- Create job_clicks table for tracking job clicks
+CREATE TABLE IF NOT EXISTS job_clicks (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    job_id TEXT,
+    job_title TEXT,
+    company TEXT,
+    location TEXT,
+    rate TEXT,
+    date_posted TEXT,
+    summary TEXT,
+    url TEXT,
+    clicked_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
+-- Create search_logs table for tracking search activity
+CREATE TABLE IF NOT EXISTS search_logs (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    search_term TEXT NOT NULL,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
+-- Create tables without RLS policies since RLS is not enabled
+-- These tables will be accessible to all authenticated users
+
+-- Note: Since RLS is not enabled, the following policies are commented out
+-- If you enable RLS in the future, uncomment these policies
 
 -- Policy for user_clearances: Users can read their own clearance
-CREATE POLICY "Users can view own clearance" ON user_clearances
-    FOR SELECT USING (auth.uid() = user_id);
+-- CREATE POLICY "Users can view own clearance" ON user_clearances
+--     FOR SELECT USING (auth.uid() = user_id);
 
 -- Policy for user_clearances: Only admins can manage clearances
-CREATE POLICY "Admins can manage clearances" ON user_clearances
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM user_clearances 
-            WHERE user_id = auth.uid() 
-            AND clearance_level = 'admin'
-        )
-    );
+-- CREATE POLICY "Admins can manage clearances" ON user_clearances
+--     FOR ALL USING (
+--         EXISTS (
+--             SELECT 1 FROM user_clearances 
+--             WHERE user_id = auth.uid() 
+--             AND clearance_level = 'admin'
+--         )
+--     );
 
 -- Policy for job_additions: Users can view their own additions
-CREATE POLICY "Users can view own job additions" ON job_additions
-    FOR SELECT USING (auth.uid() = user_id);
+-- CREATE POLICY "Users can view own job additions" ON job_additions
+--     FOR SELECT USING (auth.uid() = user_id);
 
 -- Policy for job_additions: Allow inserts for authenticated users
-CREATE POLICY "Authenticated users can log job additions" ON job_additions
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- CREATE POLICY "Authenticated users can log job additions" ON job_additions
+--     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Policy for job_postings_log: Users can view their own postings log
-CREATE POLICY "Users can view own job postings log" ON job_postings_log
-    FOR SELECT USING (auth.uid() = user_id);
+-- CREATE POLICY "Users can view own job postings log" ON job_postings_log
+--     FOR SELECT USING (auth.uid() = user_id);
 
 -- Policy for job_postings_log: Allow inserts for authenticated users
-CREATE POLICY "Authenticated users can log job postings" ON job_postings_log
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- CREATE POLICY "Authenticated users can log job postings" ON job_postings_log
+--     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Policy for job_postings_log: Admins can view all logs
-CREATE POLICY "Admins can view all job postings logs" ON job_postings_log
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM user_clearances 
-            WHERE user_id = auth.uid() 
-            AND clearance_level IN ('admin', 'moderator')
-        )
-    );
+-- CREATE POLICY "Admins can view all job postings logs" ON job_postings_log
+--     FOR SELECT USING (
+--         EXISTS (
+--             SELECT 1 FROM user_clearances 
+--             WHERE user_id = auth.uid() 
+--             AND clearance_level IN ('admin', 'moderator')
+--         )
+--     );
 
 -- Policy for job_email_submissions: Users can view their own submissions
-CREATE POLICY "Users can view own job email submissions" ON job_email_submissions
-    FOR SELECT USING (auth.uid() = user_id);
+-- CREATE POLICY "Users can view own job email submissions" ON job_email_submissions
+--     FOR SELECT USING (auth.uid() = user_id);
 
 -- Policy for job_email_submissions: Allow inserts for authenticated users
-CREATE POLICY "Authenticated users can submit job emails" ON job_email_submissions
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- CREATE POLICY "Authenticated users can submit job emails" ON job_email_submissions
+--     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Policy for job_email_submissions: Admins can view and update all submissions
-CREATE POLICY "Admins can manage all job email submissions" ON job_email_submissions
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM user_clearances 
-            WHERE user_id = auth.uid() 
-            AND clearance_level IN ('admin', 'moderator')
-        )
-    );
+-- CREATE POLICY "Admins can manage all job email submissions" ON job_email_submissions
+--     FOR ALL USING (
+--         EXISTS (
+--             SELECT 1 FROM user_clearances 
+--             WHERE user_id = auth.uid() 
+--             AND clearance_level IN ('admin', 'moderator')
+--         )
+--     );
+
+-- Policies for job_clicks
+-- CREATE POLICY "Authenticated users can log job clicks" ON job_clicks
+--     FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+
+-- CREATE POLICY "Users can view their own job clicks" ON job_clicks
+--     FOR SELECT TO authenticated USING (auth.uid() = user_id);
+
+-- Policies for search_logs
+-- CREATE POLICY "Authenticated users can log search terms" ON search_logs
+--     FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+
+-- CREATE POLICY "Users can view their own search logs" ON search_logs
+--     FOR SELECT TO authenticated USING (auth.uid() = user_id);
 
 -- Insert some sample clearances (replace with actual user IDs)
 -- You'll need to replace these UUIDs with actual user IDs from your auth.users table
