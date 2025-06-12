@@ -26,6 +26,7 @@ interface Job {
   poster_name?: string // Name of the person who posted the job
   source?: string // Source of the job (e.g., 'allGigs')
   tags?: string // Tags for the job
+  clicked_at?: string; // Added to store when the job was clicked by the user
 }
 
 export default function JobBoard() {
@@ -81,10 +82,10 @@ export default function JobBoard() {
     color: "#fff",
     border: "none",
     borderRadius: "6px",
-    padding: "10px 16px",
-    fontSize: "0.95rem",
+    padding: "10px 16px", // Reverted to original padding
+    fontSize: "0.95rem", // Reverted to original font size
     cursor: "pointer",
-    width: "80%",
+    width: "24%", // Adjusted width (80% * 0.3)
     display: "flex",
     justifySelf: "center",
     justifyContent: "center"
@@ -287,72 +288,116 @@ export default function JobBoard() {
 
   // Function to fetch recently clicked jobs
   const fetchRecentlyClickedJobs = async () => {
-    if (!user || !user.id) return;
+    if (!user || !user.id) {
+      console.log("[FetchRecentlyClicked] User not available.");
+      return;
+    }
+    console.log("[FetchRecentlyClicked] Starting for user:", user.id);
     setLoadingRecentlyClicked(true);
     try {
-      const tenDaysAgo = new Date();
-      tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
-
       const { data: clicks, error: clicksError } = await supabase
         .from('job_clicks')
         .select('job_id, clicked_at')
         .eq('user_id', user.id)
-        .gte('clicked_at', tenDaysAgo.toISOString())
         .order('clicked_at', { ascending: false });
 
+      console.log("[FetchRecentlyClicked] Clicks data raw:", clicks);
+      console.log("[FetchRecentlyClicked] Clicks error:", clicksError);
+
       if (clicksError) {
-        console.error('Error fetching recent job clicks:', clicksError);
+        console.error('[FetchRecentlyClicked] Error fetching job clicks:', clicksError);
         setRecentlyClickedJobs([]);
-        setLoadingRecentlyClicked(false);
+        // setLoadingRecentlyClicked(false); // Handled in finally
         return;
       }
 
       if (!clicks || clicks.length === 0) {
+        console.log("[FetchRecentlyClicked] No clicks found in the last 10 days for user:", user.id);
         setRecentlyClickedJobs([]);
-        setLoadingRecentlyClicked(false);
+        // setLoadingRecentlyClicked(false); // Handled in finally
         return;
       }
+      console.log(`[FetchRecentlyClicked] Found ${clicks.length} clicks.`);
 
-      const jobIds = clicks.map(click => click.job_id);
+      const jobIds = clicks.map(click => click.job_id).filter(id => id != null); // Ensure no null/undefined ids
       const uniqueJobIds = [...new Set(jobIds)];
+      console.log("[FetchRecentlyClicked] Unique Job IDs to fetch:", uniqueJobIds);
+
+      if (uniqueJobIds.length === 0) {
+          console.log("[FetchRecentlyClicked] No valid unique job IDs to fetch details for.");
+          setRecentlyClickedJobs([]);
+          // setLoadingRecentlyClicked(false); // Handled in finally
+          return;
+      }
+
+      const clickTimeMap = new Map<string, string>();
+      clicks.forEach(click => {
+        if (click.job_id && click.clicked_at && !clickTimeMap.has(click.job_id)) {
+          clickTimeMap.set(click.job_id, click.clicked_at);
+        }
+      });
+      console.log("[FetchRecentlyClicked] ClickTimeMap:", clickTimeMap);
 
       const { data: jobsData, error: jobsError } = await supabase
         .from('Allgigs_All_vacancies_NEW')
-        .select('*')
+        .select('UNIQUE_ID, Title, Company, URL, date, Location, Summary, rate') // Removed created_at, inserted_at
         .in('UNIQUE_ID', uniqueJobIds);
 
+      console.log("[FetchRecentlyClicked] JobsData from Allgigs_All_vacancies_NEW raw:", jobsData);
+      console.log("[FetchRecentlyClicked] JobsError:", jobsError);
+
       if (jobsError) {
-        console.error('Error fetching recently clicked job details:', jobsError);
+        console.error('[FetchRecentlyClicked] Error fetching job details:', jobsError);
         setRecentlyClickedJobs([]);
+      } else if (jobsData && jobsData.length > 0) {
+        const jobsWithClickData = jobsData.map(job => ({
+          ...job,
+          clicked_at: clickTimeMap.get(job.UNIQUE_ID),
+        }));
+        console.log("[FetchRecentlyClicked] Jobs with click data (before ordering):", jobsWithClickData);
+
+        const orderedJobs = uniqueJobIds
+          .map(id => jobsWithClickData.find(job => job.UNIQUE_ID === id))
+          .filter(job => job !== undefined) as Job[];
+        
+        console.log("[FetchRecentlyClicked] Final ordered jobs for state:", orderedJobs);
+        setRecentlyClickedJobs(orderedJobs);
       } else {
-        // To maintain the order of recency from clicks, we can sort jobsData
-        // based on the order of uniqueJobIds derived from sorted clicks.
-        const orderedJobs = uniqueJobIds.map(id => jobsData?.find(job => job.UNIQUE_ID === id)).filter(job => job !== undefined) as Job[];
-        setRecentlyClickedJobs(orderedJobs || []);
+        console.log("[FetchRecentlyClicked] No job details found for the clicked job IDs or jobsData is empty.");
+        setRecentlyClickedJobs([]);
       }
     } catch (error) {
-      console.error('Error in fetchRecentlyClickedJobs:', error);
+      console.error('[FetchRecentlyClicked] Exception in fetchRecentlyClickedJobs:', error);
       setRecentlyClickedJobs([]);
     } finally {
       setLoadingRecentlyClicked(false);
+      console.log("[FetchRecentlyClicked] Finished.");
     }
   };
 
-
   // useEffect for fetching recently clicked jobs
   useEffect(() => {
-    if (user && showRecentlyClicked) {
+    console.log("[useEffect RecentlyClicked] Triggered. User:", user ? user.id : 'null', "ShowRecentlyClicked:", showRecentlyClicked);
+    if (user && user.id && showRecentlyClicked) {
+      console.log("[useEffect RecentlyClicked] Conditions met. Calling fetchRecentlyClickedJobs.");
       fetchRecentlyClickedJobs();
+    } else {
+      console.log("[useEffect RecentlyClicked] Conditions NOT met. Skipping fetchRecentlyClickedJobs.");
+      if (!user || !user.id) console.log("[useEffect RecentlyClicked] Reason: User or user.id is missing.");
+      if (!showRecentlyClicked) console.log("[useEffect RecentlyClicked] Reason: showRecentlyClicked is false.");
     }
-    // Do not add fetchRecentlyClickedJobs to dependency array if it's stable
-    // or wrap it in useCallback if it needs to be in the dependency array.
-    // For now, assuming it's stable as it's defined in the component scope.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, showRecentlyClicked]);
 
   // Memoize the Fuse.js instance to avoid recreating it on every render
-  const fuse = useMemo(() => new Fuse(allJobs, { // Changed from jobs to allJobs for Fuse
-    keys: ["Title", "Company", "Location", "Summary"],
-    threshold: 0.4, // Adjust for more/less fuzziness
+  const fuse = useMemo(() => new Fuse(allJobs, {
+    keys: [
+      { name: "Title", weight: 0.6 },
+      { name: "Summary", weight: 0.3 },
+      { name: "Company", weight: 0.05 },
+      { name: "Location", weight: 0.05 }
+    ],
+    threshold: 0.36, // Reduced fuzziness by 10%
   }), [allJobs]);
 
   // Memoize filtered jobs to avoid expensive filtering on every render
@@ -377,14 +422,23 @@ export default function JobBoard() {
     return filtered;
   }, [allJobs, debouncedSearchTerm]); // Removed selectedIndustry, excludedTerms, categorizeJob
 
+  // Sort filtered jobs by Fuse.js search results
+  const sortedJobs = useMemo(() => {
+    if (debouncedSearchTerm && debouncedSearchTerm.trim() !== "") {
+      const results = fuse.search(debouncedSearchTerm);
+      return results.map(result => result.item);
+    }
+    return filteredJobs;
+  }, [debouncedSearchTerm, filteredJobs, fuse]);
 
   useEffect(() => {
     setPage(0);
+    setHighlightedJobs([]); // Reset highlighted jobs when search term changes
   }, [debouncedSearchTerm]); // Removed selectedIndustry, excludedTerms
 
   const paginatedJobs = useMemo(() => {
-    return filteredJobs.slice((page ?? 0) * PAGE_SIZE, ((page ?? 0) + 1) * PAGE_SIZE);
-  }, [filteredJobs, page]);
+    return sortedJobs.slice((page ?? 0) * PAGE_SIZE, ((page ?? 0) + 1) * PAGE_SIZE);
+  }, [sortedJobs, page]);
 
   // Helper function to check if a job is new (within 3 hours)
   const isJobNew = (job: Job): boolean => {
@@ -405,7 +459,7 @@ export default function JobBoard() {
     await supabase.auth.signOut();
     setUser(null);
   };
-  const totalPages = Math.ceil(filteredJobs.length / PAGE_SIZE);
+  const totalPages = Math.ceil(sortedJobs.length / PAGE_SIZE);
 
   const getPageNumbers = () => {
     const visiblePages = 10;
@@ -422,6 +476,39 @@ export default function JobBoard() {
   };
 
   const pageNumbers = getPageNumbers();
+
+  // Add a state to track highlighted jobs
+  const [highlightedJobs, setHighlightedJobs] = useState<Job[]>([]);
+
+  // Function to highlight search terms in job text
+  const highlightSearchTerms = (text: string, searchWords: string[]): string => {
+    if (!searchWords || searchWords.length === 0) return text;
+
+    // Escape special regex characters and create case-insensitive regex
+    const escapedWords = searchWords.map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const regex = new RegExp(`(${escapedWords.join('|')})`, 'gi');
+    return text.replace(regex, '<span class="highlight">$1</span>');
+  };
+
+  // Real-time highlighting as user types (mobile-friendly)
+  useEffect(() => {
+    if (debouncedSearchTerm.trim() !== '') {
+      const searchWords = debouncedSearchTerm.trim().split(/\s+/).filter(word => word.length > 0);
+
+      const updatedJobs = sortedJobs.map(job => ({
+        ...job,
+        Title: highlightSearchTerms(job.Title, searchWords),
+        Summary: highlightSearchTerms(job.Summary, searchWords),
+        Company: highlightSearchTerms(job.Company, searchWords),
+        Location: highlightSearchTerms(job.Location, searchWords),
+      }));
+
+      setHighlightedJobs(updatedJobs);
+    } else {
+      // Clear highlights when search term is empty
+      setHighlightedJobs([]);
+    }
+  }, [debouncedSearchTerm, sortedJobs]);
 
   if (!user) {
     return (
@@ -447,10 +534,10 @@ export default function JobBoard() {
   // Log job click to Supabase
   const logJobClick = async (job: Job) => {
     if (!user || !user.id) {
-      console.error("User not available for logging job click. Aborting.");
+      console.error("[LogJobClick] User not available for logging job click. Aborting.");
       return;
     }
-    console.log("Logging job click for user:", user.id, "Job ID:", job.UNIQUE_ID, "Job Title:", job.Title);
+    console.log("[LogJobClick] Logging for user:", user.id, "Job ID:", job.UNIQUE_ID, "Title:", job.Title);
     try {
       const { error } = await supabase.from("job_clicks").insert([
         {
@@ -463,20 +550,25 @@ export default function JobBoard() {
           date_posted: job.date, 
           summary: job.Summary,
           url: job.URL,
-          // Removed search_pills and disregarded_pills
+          // clicked_at should be handled by DB default
         },
       ]);
       if (error) {
-        console.error("Error logging job click:", error);
+        console.error("[LogJobClick] Error logging job click:", error);
       } else {
-        console.log("Job click logged successfully for job:", job.UNIQUE_ID);
+        console.log("[LogJobClick] Job click logged successfully for job:", job.UNIQUE_ID);
+        // Refresh recently clicked jobs if the section is visible
+        if (showRecentlyClicked) {
+          console.log("[LogJobClick] Refreshing recently clicked jobs as section is visible.");
+          fetchRecentlyClickedJobs();
+        } else {
+          console.log("[LogJobClick] Recently clicked jobs section not visible, not refreshing immediately. Will refresh when opened.");
+        }
       }
     } catch (error) {
-      console.error("Exception when logging job click:", error);
+      console.error("[LogJobClick] Exception when logging job click:", error);
     }
   };
-
-  // Removed logSearchPillsActivity function
 
   return (
 
@@ -542,6 +634,17 @@ export default function JobBoard() {
             boxSizing: "border-box",
             overflowX: "hidden",
           }}>
+            {user && user.email && (
+              <div className="user-email-display" style={{
+                padding: "10px 20px", 
+                fontSize: "0.9rem", 
+                textAlign: "center", 
+                borderBottom: "1px solid #374151",
+                marginBottom: "10px"
+              }}>
+                Logged in as: <strong>{user.email}</strong>
+              </div>
+            )}
             {/* <div style={{ marginBottom: "12px" }}>
               <button onClick={() => setShowSettings(true)} style={menuButtonStyle}>User Settings</button>
             </div> */}
@@ -608,7 +711,7 @@ export default function JobBoard() {
           <img src="/images/allGigs-logo-white.svg" alt="AllGigs Logo" style={{ height: "70px" }} />
 
           <p>
-            Discover your next opportunity from <span style={{ fontWeight: 600, color: "#0ccf83" }}>{filteredJobs.length}</span> curated positions
+            Discover your next opportunity from <span style={{ fontWeight: 600, color: "#0ccf83" }}>{sortedJobs.length}</span> curated positions
           </p>
         </div>
 
@@ -653,7 +756,6 @@ export default function JobBoard() {
             placeholder="Search jobs..." // Simplified placeholder
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            // Removed onKeyDown handler for pills, search is now based on debouncedSearchTerm
             style={{ flex: 1, padding: "0.75rem", borderRadius: "8px", border: "1px solid #e5e7eb", fontSize: "1rem" }}
           />
           {/* Removed Search Instructions for pills as pills are removed */}
@@ -733,11 +835,11 @@ export default function JobBoard() {
 
         {/* Job List */}
         <div className="job-list">
-          {paginatedJobs.map((job) => (
+          {(highlightedJobs.length > 0 ? highlightedJobs.slice((page ?? 0) * PAGE_SIZE, ((page ?? 0) + 1) * PAGE_SIZE) : paginatedJobs).map((job) => (
             <div className="job-card" key={job.UNIQUE_ID}>
               <div className="job-main">
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                  <h3 style={{ margin: 0 }}>{job.Title}</h3>
+                  <h3 style={{ margin: 0 }} dangerouslySetInnerHTML={{ __html: job.Title }}></h3>
                   {isJobNew(job) && (
                     <span
                       style={{
@@ -771,14 +873,13 @@ export default function JobBoard() {
                     </span>
                   )}
                 </div>
-                <p><strong></strong>{job.Company}</p>
+                <p><strong>Company:</strong> <span dangerouslySetInnerHTML={{ __html: job.Company }}></span></p>
                 <div className="job-pill-container">
-                  <p className="job-pill"><strong></strong> {job.rate}</p>
-                  <p className="job-pill"><strong></strong>{formatDate(job.date)}</p>
-                  <p className="job-pill"><strong></strong> {job.Location}</p>
-
+                  <p className="job-pill"><strong>Rate:</strong> {job.rate}</p>
+                  <p className="job-pill"><strong>Location:</strong> <span dangerouslySetInnerHTML={{ __html: job.Location }}></span></p>
+                  <p className="job-pill"><strong>Date:</strong> {job.date}</p>
                 </div>
-                <p ><strong></strong> {job.Summary}</p>
+                <p><strong>Summary:</strong> <span dangerouslySetInnerHTML={{ __html: job.Summary }}></span></p>
                 {/* Show poster information for allGigs jobs */}
                 {(job.source === 'allGigs' || job.tags?.includes('allGigs')) && job.added_by_email && (
                   <div style={{
@@ -854,7 +955,7 @@ export default function JobBoard() {
         )}
 
         {/* Pagination */}
-        {filteredJobs.length > 0 && (
+        {sortedJobs.length > 0 && (
           <div style={{
             display: "flex",
             flexWrap: "wrap",

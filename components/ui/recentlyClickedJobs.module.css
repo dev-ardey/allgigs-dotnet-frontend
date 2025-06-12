@@ -1,71 +1,167 @@
 .recentlyClickedContainer {
-  margin-top: 20px;
-  padding: 15px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  border: 1px solid #eee;
+  background-color: var(--card-background, #f9f9f9); /* Use CSS var, fallback to light grey */
+  padding: 15px; /* Reduced padding */
+  border-radius: var(--border-radius-md, 8px); /* Use CSS var, fallback */
+  box-shadow: var(--shadow-md, 0 2px 4px rgba(0, 0, 0, 0.1)); /* Use CSS var, fallback */
+  margin-bottom: 20px;
+  font-family: var(--font-sans);
 }
 
 .header {
-  font-size: 1.2em;
-  margin-bottom: 15px;
-  color: #333;
+  font-size: 1.3em; /* Reduced font size */
+  color: var(--text-color, #333); /* Use CSS var, fallback */
+  margin-bottom: 10px; /* Reduced margin */
+  border-bottom: 1px solid var(--border-color, #eee); /* Use CSS var, fallback */
+  padding-bottom: 8px; /* Reduced padding */
 }
 
 .loading,
 .noJobs {
-  padding: 10px;
+  padding: 15px; /* More padding */
   text-align: center;
-  color: #555;
+  color: #7f8c8d; /* Softer text color */
+  font-style: italic;
+  font-size: 0.9em; /* Reduced font size */
 }
 
-.jobList {
-  list-style-type: none;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Responsive grid */
-  gap: 10px; /* Reduced gap between cards */
+.jobRowContainer {
+  display: flex;
+  flex-direction: column; /* Stack rows vertically */
+  gap: 8px; /* Reduced gap */
 }
 
-.jobCard {
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+.jobRow {
+  background-color: var(--card-item-background, #fff); /* Use CSS var, fallback to white */
   padding: 10px; /* Reduced padding */
-  cursor: pointer;
-  transition: box-shadow 0.3s ease;
+  border: 1px solid var(--border-color, #ddd); /* Use CSS var, fallback */
+  border-radius: var(--border-radius-sm, 6px); /* Use CSS var, fallback */
+  display: flex;
+  justify-content: space-between; /* Space out info and meta sections */
+  align-items: center; /* Vertically align items in the row */
+  cursor: default; /* Changed cursor to default as row is not clickable */
 }
 
-.jobCard:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.jobInfo {
+  flex-grow: 1; /* Allow job info to take available space */
+  margin-right: 10px; /* Add some space before meta */
 }
 
 .jobTitle {
   font-size: 1em; /* Reduced font size */
-  font-weight: bold;
-  margin-top: 0;
-  margin-bottom: 5px; /* Reduced margin */
-  color: #007bff; /* Or your app's primary color */
+  font-weight: 600; /* Slightly bolder */
+  color: #000; /* Changed to black */
+  margin: 0 0 3px 0; /* Reduced margin */
 }
 
 .company {
-  font-size: 0.85em; /* Reduced font size */
-  color: #555;
-  margin-bottom: 8px; /* Reduced margin */
+  font-size: 0.8em; /* Reduced font size */
+  color: var(--text-secondary-color, #555); /* Use CSS var, fallback */
+  margin: 0;
 }
+
+.jobMeta {
+  display: flex;
+  flex-direction: column; /* Stack meta items vertically */
+  align-items: flex-end; /* Align meta items to the right */
+  font-size: 0.85em;
+  color: #777;
+  min-width: 120px; /* Ensure enough space for meta content */
+  text-align: right;
+  gap: 3px; /* Reduced gap */
+}
+
+.location,
+.viewedDate {
+  font-size: 0.75em; /* Reduced font size */
+  color: var(--text-tertiary-color, #777); /* Use CSS var, fallback */
+  margin: 0;
+}
+
+.expiration {
+  margin: 0 0 4px 0;
+  font-size: 0.8em;
+  color: #e74c3c; /* Reddish color for expiration */
+}
+
+.viewedDate {
+  color: #3498db; /* Bluish for viewed date if used */
+}
+
 
 .jobLink {
   font-size: 0.8em; /* Reduced font size */
-  color: #007bff;
+  color: var(--accent-color, #0ccf83); /* Kept green using CSS var */
   text-decoration: none;
-  display: inline-block; /* Allows for margin */
-  margin-top: 5px; /* Reduced margin */
+  padding: 4px 8px; /* Reduced padding */
+  border: 1px solid var(--accent-color, #0ccf83); /* Kept green using CSS var */
+  border-radius: var(--border-radius-xs, 4px);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  margin-top: 4px; /* Add a little space above the link */
 }
 
 .jobLink:hover {
-  text-decoration: underline;
+  background-color: var(--accent-color-hover, #0a9a62); /* Darker green for hover */
+  color: var(--button-text-color-hover, white);
 }
 
 .newJob {
-  border-left: 4px solid #28a745; /* Green border for new jobs */
+  border-left: 4px solid var(--accent-color, #28a745); /* Slightly thinner border */
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 600px) {
+  .jobRow {
+    flex-direction: column; /* Stack info and meta vertically on small screens */
+    align-items: flex-start; /* Align items to the start */
+  }
+
+  .jobMeta {
+    align-items: flex-start; /* Align meta items to the start on small screens */
+    text-align: left;
+    margin-top: 8px; /* Reduced margin */
+    min-width: 0; /* Allow meta to shrink */
+  }
+
+  .jobInfo {
+    margin-right: 0; /* Remove right margin when stacked */
+  }
+
+  .header {
+    font-size: 1.2em;
+  }
+
+  .jobTitle {
+    font-size: 1em;
+  }
+}
+
+@media (max-width: 768px) {
+  .recentlyClickedContainer {
+    padding: 10px;
+  }
+  .header {
+    font-size: 1.2em;
+  }
+  .jobRow {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 8px; /* Further reduced padding for mobile */
+  }
+
+  .jobInfo {
+    margin-right: 0; /* Remove right margin on mobile */
+    margin-bottom: 8px; /* Add bottom margin on mobile */
+  }
+
+  .jobMeta {
+    text-align: left;
+    width: 100%;
+    margin-top: 8px; /* Reduced margin */
+    align-items: flex-start;
+  }
+
+  .jobLink {
+    align-self: flex-start;
+    padding: 5px 10px; /* Keep link accessible */
+  }
 }

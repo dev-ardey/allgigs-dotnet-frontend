@@ -57,12 +57,12 @@ body {
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   border: 1px solid #e5e7eb;
-  padding: 2rem;
+  padding: 1.5rem; /* Reduced padding from 2rem */
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 2rem;
+  gap: 1.5rem; /* Reduced gap from 2rem */
 
   word-wrap: break-word;       /* breekt woorden die te lang zijn */
   overflow-wrap: break-word;   /* moderne variant */
@@ -245,4 +245,204 @@ body {
   word-break: break-word;
   overflow-wrap: anywhere;
   max-width: 100%;
+}
+
+/* Highlighted text style */
+.highlight {
+  background-color: #0ccf83; /* Green color already used in the project */
+  color: white;
+  font-weight: bold;
+}
+
+/* Mobile-First Responsive Design */
+@media (max-width: 768px) {
+  /* Container adjustments for mobile */
+  .job-board-container {
+    padding: 1rem;
+    max-width: 100%;
+  }
+
+  /* Header adjustments */
+  .job-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .job-header img {
+    height: 50px !important; /* Smaller logo on mobile */
+  }
+
+  .job-header p {
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+  }
+
+  /* Job card mobile optimizations */
+  .job-card {
+    padding: 1rem; /* Reduced padding from 1.5rem for mobile */
+    margin-bottom: 1rem;
+    border-radius: 12px;
+    gap: 1rem;
+  }
+
+  .job-main h3 {
+    font-size: 1.2rem !important;
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+  }
+
+  /* Job pill container - stack vertically on mobile */
+  .job-pill-container {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .job-pill {
+    margin: 0 !important;
+    font-size: 0.85rem;
+  }
+
+  /* Search input mobile optimization */
+  .job-filters input {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    padding: 1rem !important;
+    border-radius: 8px;
+  }
+
+  /* Active search pills - better mobile layout */
+  .job-filters + div {
+    margin-top: 0.75rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .job-filters + div span {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.8rem !important;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Recently clicked jobs mobile adjustments */
+  .recently-clicked-jobs {
+    padding: 1rem;
+  }
+
+  /* Pagination mobile optimization */
+  div[style*="justifyContent: center"] {
+    gap: 4px !important;
+    padding: 0.5rem !important;
+  }
+
+  div[style*="justifyContent: center"] button {
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+  }
+
+  /* View job button mobile optimization */
+  .view-job-btn, 
+  button[style*="backgroundColor: #4f46e5"] {
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    margin-top: 1rem !important;
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  /* Add job button mobile optimization */
+  button[style*="background: #10b981"] {
+    padding: 12px 20px !important;
+    font-size: 1rem !important;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  /* Contact info section mobile */
+  div[style*="backgroundColor: #f8fafc"] {
+    padding: 1rem !important;
+    margin-top: 1rem !important;
+    border-radius: 8px;
+  }
+
+  div[style*="backgroundColor: #f8fafc"] p {
+    font-size: 0.85rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .job-board-container {
+    padding: 0.75rem;
+  }
+
+  .job-card {
+    padding: 0.75rem; /* Reduced padding from 1rem for small mobile */
+    border-radius: 8px;
+  }
+
+  .job-header img {
+    height: 40px !important;
+  }
+
+  .job-main h3 {
+    font-size: 1.1rem !important;
+  }
+
+  /* Navbar mobile adjustments */
+  div[style*="position: sticky"] div[style*="height: 60px"] {
+    padding: 8px 16px !important;
+    height: 50px !important;
+  }
+
+  div[style*="position: sticky"] button[aria-label="Menu"] {
+    min-width: 36px !important;
+    min-height: 36px !important;
+    font-size: 20px !important;
+  }
+
+  /* Menu items mobile */
+  div[style*="background: #121f36"][style*="padding: 16px 0"] {
+    padding: 12px 0 !important;
+  }
+
+  /* Search pills smaller on very small screens */
+  .job-filters + div span {
+    padding: 0.375rem 0.75rem !important;
+    font-size: 0.75rem !important;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+  .job-header {
+    margin-bottom: 1rem;
+  }
+  
+  .job-card {
+    padding: 1rem; /* Reduced padding from 1.25rem for landscape mobile */
+  }
+}
+
+/* Touch-friendly improvements */
+@media (pointer: coarse) {
+  /* Larger touch targets */
+  button, a, input {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better spacing for thumb navigation */
+  .job-card {
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* High DPI displays (Retina) */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .job-header img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
 }

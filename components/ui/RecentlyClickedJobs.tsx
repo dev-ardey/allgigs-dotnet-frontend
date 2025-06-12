@@ -13,6 +13,7 @@ interface Job {
   Location?: string;
   Summary?: string;
   rate?: string;
+  clicked_at?: string; // Added to store when the job was clicked
   // Add any other job properties you expect to display from jobs.tsx Job type
 }
 
@@ -23,32 +24,45 @@ interface RecentlyClickedJobsProps {
   isJobNew: (job: Job) => boolean;   // Expects a Job object
 }
 
+const formatDateViewed = (clickedAtISO?: string): string => {
+  if (!clickedAtISO) return '';
+  const date = new Date(clickedAtISO);
+  return date.toLocaleDateString('en-CA'); // YYYY-MM-DD format
+};
+
 const RecentlyClickedJobs: React.FC<RecentlyClickedJobsProps> = ({ jobs, isLoading, onJobClick, isJobNew }) => {
   if (isLoading) {
     return <div className={styles.loading}>Loading recently clicked jobs...</div>;
   }
 
   if (jobs.length === 0) {
-    return <div className={styles.noJobs}>No jobs clicked in the last 10 days.</div>;
+    return <div className={styles.noJobs}>No jobs clicked yet.</div>;
   }
 
   return (
     <div className={styles.recentlyClickedContainer}>
       <h3 className={styles.header}>Recently Clicked Jobs</h3>
-      <ul className={styles.jobList}>
-        {jobs.map((job) => (
-          <li key={job.UNIQUE_ID} className={`${styles.jobCard} ${isJobNew(job) ? styles.newJob : ''}`} onClick={() => onJobClick(job)}>
-            <h4 className={styles.jobTitle}>{job.Title}</h4>
-            <p className={styles.company}>{job.Company}</p>
-            <p className={styles.date}>Date: {job.date}</p> {/* Displaying job.date */}
-            {job.Location && <p className={styles.location}>Location: {job.Location}</p>}
-            <a href={job.URL} target="_blank" rel="noopener noreferrer" className={styles.jobLink} onClick={(e) => e.stopPropagation()}>
-              View Job
-            </a>
-            {/* You can add more job details here if needed, e.g., job.Summary */}
-          </li>
-        ))}
-      </ul>
+      <div className={styles.jobRowContainer}>
+        {jobs.map((job) => {
+          const viewedDateText = formatDateViewed(job.clicked_at);
+
+          return (
+            <div key={job.UNIQUE_ID} className={`${styles.jobRow} ${isJobNew(job) ? styles.newJob : ''}`} onClick={() => onJobClick(job)}>
+              <div className={styles.jobInfo}>
+                <h4 className={styles.jobTitle}>{job.Title}</h4>
+                <p className={styles.company}>{job.Company}</p>
+              </div>
+              <div className={styles.jobMeta}>
+                {job.Location && <p className={styles.location}>{job.Location}</p>}
+                <p className={styles.viewedDate}>Viewed: {viewedDateText}</p>
+                <a href={job.URL} target="_blank" rel="noopener noreferrer" className={styles.jobLink} onClick={(e) => e.stopPropagation()}>
+                  View
+                </a>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
