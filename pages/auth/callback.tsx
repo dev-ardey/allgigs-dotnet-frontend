@@ -39,28 +39,78 @@ export default function AuthCallback() {
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: "4rem auto", textAlign: "center" }}>
+    <div style={{
+      maxWidth: 420,
+      margin: "4rem auto",
+      fontFamily: "'Montserrat', Arial, sans-serif",
+      background: '#fff',
+      borderRadius: '16px',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+      padding: '2.5rem 2rem',
+      textAlign: 'center',
+      boxSizing: 'border-box',
+    }}>
+      <img src="/images/allGigs-logo-white.svg" alt="AllGigs Logo" style={{ height: 60, marginBottom: 24 }} />
       {showPasswordForm ? (
-        <form onSubmit={handlePasswordSubmit}>
-          <h2>Set New Password</h2>
+        <form onSubmit={handlePasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', alignItems: 'center' }}>
+          <h2 style={{ color: '#121f36', fontSize: '1.3rem', marginBottom: 0 }}>Set New Password</h2>
           <input
             type="password"
             value={newPassword}
             onChange={e => setNewPassword(e.target.value)}
             placeholder="New password"
             required
-            style={{ width: "100%", padding: 8, marginBottom: 12, borderRadius: 6, border: "1px solid #ccc" }}
+            style={{
+              width: '100%',
+              padding: '0.85rem 1rem',
+              borderRadius: '6px',
+              border: '1.5px solid #0ccf83',
+              fontSize: '1rem',
+              fontFamily: "'Montserrat', Arial, sans-serif",
+              background: '#fff',
+              color: '#121f36',
+              marginBottom: 0
+            }}
           />
           <button
             type="submit"
-            style={{ width: "100%", padding: 10, borderRadius: 6, background: "#4f46e5", color: "#fff", fontWeight: "bold", border: "none" }}
+            style={{
+              width: '100%',
+              padding: '0.85rem 1rem',
+              borderRadius: '6px',
+              background: '#0ccf83',
+              color: '#000',
+              fontWeight: 700,
+              border: '2px solid #0ccf83',
+              fontSize: '1.1rem',
+              fontFamily: "'Montserrat', Arial, sans-serif",
+              boxShadow: '0 2px 8px rgba(12, 207, 131, 0.10)',
+              cursor: 'pointer',
+              marginTop: 0
+            }}
           >
             Set Password
           </button>
         </form>
       ) : (
-        <h2>{message}</h2>
+        <h2 style={{ color: '#121f36', fontSize: '1.1rem', fontFamily: "'Montserrat', Arial, sans-serif" }}>{message}</h2>
       )}
+      <style>{`
+        @media (max-width: 500px) {
+          div {
+            padding: 1.2rem 0.5rem !important;
+            max-width: 98vw !important;
+            border-radius: 10px !important;
+          }
+          input, button {
+            font-size: 1rem !important;
+            padding: 0.7rem 0.8rem !important;
+          }
+          h2 {
+            font-size: 1rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

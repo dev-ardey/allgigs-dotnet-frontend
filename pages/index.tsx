@@ -8,6 +8,8 @@ import Fuse from "fuse.js";
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { formatDate } from "../utils/formatDate";
 import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs'; // Added import
+import CompleteProfileForm from "../components/ui/CompleteProfileForm";
+import { useProfileCheck } from "../components/ui/useProfileCheck";
 
 
 interface Job {
@@ -53,7 +55,7 @@ export default function JobBoard() {
   const paginationButtonStyle: React.CSSProperties = {
     padding: "10px 16px",
     fontSize: "16px",
-    borderRadius: "8px",
+    borderRadius: "4px",
     border: "1px solid #d1d5db",
     backgroundColor: "#fff",
     color: "#000",
@@ -66,7 +68,7 @@ export default function JobBoard() {
     background: "#374151",
     color: "#fff",
     border: "none",
-    borderRadius: "6px",
+    borderRadius: "4px",
     padding: "10px 16px",
     fontSize: "0.95rem",
     cursor: "pointer",
@@ -81,7 +83,7 @@ export default function JobBoard() {
     background: "#dc2626",
     color: "#fff",
     border: "none",
-    borderRadius: "6px",
+    borderRadius: "4px",
     padding: "10px 16px", // Reverted to original padding
     fontSize: "0.95rem", // Reverted to original font size
     cursor: "pointer",
@@ -94,8 +96,9 @@ export default function JobBoard() {
   const [showMenu, setShowMenu] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showLogo, setShowLogo] = useState(false);
-
-
+  const [profile, setProfile] = useState<any>(null);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showMenuAddJobForm, setShowMenuAddJobForm] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -116,9 +119,18 @@ export default function JobBoard() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-
-
-
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("first_name, last_name, linkedin_URL, industry, job_title")
+      .eq("id", user.id)
+      .single()
+      .then(({ data, error }) => {
+        console.log('Fetched profile:', data, 'Error:', error);
+        setProfile(data);
+      });
+  }, [user]);
 
   // Log search term activity to Supabase
   const logSearchTermActivity = async (searchTermToLog: string) => {
@@ -510,6 +522,8 @@ export default function JobBoard() {
     }
   }, [debouncedSearchTerm, sortedJobs]);
 
+  const { needsProfile, loading: profileLoading } = useProfileCheck(user);
+
   if (!user) {
     return (
       <div>
@@ -518,9 +532,9 @@ export default function JobBoard() {
     );
   }
 
-  if (loading)
+  if (profileLoading || loading)
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
             <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -530,6 +544,10 @@ export default function JobBoard() {
         </div>
       </div>
     )
+
+  if (needsProfile) {
+    return <CompleteProfileForm onComplete={() => window.location.reload()} />;
+  }
 
   // Log job click to Supabase
   const logJobClick = async (job: Job) => {
@@ -568,6 +586,22 @@ export default function JobBoard() {
     } catch (error) {
       console.error("[LogJobClick] Exception when logging job click:", error);
     }
+  };
+
+  const menuButtonSharedStyle: React.CSSProperties = {
+    background: "#0ccf83",
+    color: "#000",
+    fontWeight: 700,
+    borderRadius: 6,
+    padding: "12px 16px",
+    border: "2px solid #0ccf83",
+    boxShadow: "0 2px 8px rgba(12, 207, 131, 0.15)",
+    cursor: "pointer",
+    fontSize: "1.1rem",
+    fontFamily: "'Montserrat', Arial, sans-serif",
+    transition: "background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s",
+    outline: 'none',
+    marginTop: 0,
   };
 
   return (
@@ -645,11 +679,137 @@ export default function JobBoard() {
                 Logged in as: <strong>{user.email}</strong>
               </div>
             )}
-            {/* <div style={{ marginBottom: "12px" }}>
-              <button onClick={() => setShowSettings(true)} style={menuButtonStyle}>User Settings</button>
+            {/* Personal Details Section */}
+            {profile ? (
+              <div style={{
+                background: "#fff",
+                color: "#121f36",
+                borderRadius: "12px",
+                margin: "10px 20px",
+                padding: "16px",
+                fontFamily: "'Montserrat', Arial, sans-serif",
+                fontSize: "0.98rem",
+                boxSizing: 'border-box',
+                border: '3px solid #0ccf83',
+                width: '48%',
+                display: 'inline-block',
+                verticalAlign: 'top',
+              }}>
+                <div style={{ fontWeight: 700, marginBottom: 8, color: '#0ccf83' }}>Your Details</div>
+                <div><strong>First Name:</strong> {profile.first_name || '-'}</div>
+                <div><strong>Last Name:</strong> {profile.last_name || '-'}</div>
+                <div><strong>LinkedIn:</strong> {profile.linkedin_URL || '-'}</div>
+                <div><strong>Industry:</strong> {profile.industry || '-'}</div>
+                <div><strong>Job Title:</strong> {profile.job_title || '-'}</div>
+                <button
+                  style={menuButtonSharedStyle}
+                  onMouseDown={e => e.currentTarget.style.transform = 'translateY(2px)'}
+                  onMouseUp={e => e.currentTarget.style.transform = ''}
+                  onMouseLeave={e => e.currentTarget.style.transform = ''}
+                  onClick={() => setShowEditProfile(true)}
+                >
+                  Edit Profile
+                </button>
+              </div>
+            ) : (
+              <div style={{ color: '#fff', textAlign: 'center', margin: '10px 0' }}>No personal details found.</div>
+            )}
+            {/* Add New Job and Logout buttons in hamburger menu */}
+            {/* <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', margin: '2.5rem 20px 0 20px' }}>
+              <button
+                style={{
+                  background: '#10b981',
+                  color: '#000',
+                  fontWeight: 700,
+                  borderRadius: 6,
+                  padding: '12px 16px',
+                  border: '2px solid #0ccf83',
+                  boxShadow: '0 2px 8px rgba(12, 207, 131, 0.15)',
+                  cursor: 'pointer',
+                  fontSize: '1.1rem',
+                  fontFamily: "'Montserrat', Arial, sans-serif",
+                  transition: 'background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s',
+                  outline: 'none',
+                }}
+                onMouseDown={e => e.currentTarget.style.transform = 'translateY(2px)'}
+                onMouseUp={e => e.currentTarget.style.transform = ''}
+                onMouseLeave={e => e.currentTarget.style.transform = ''}
+                onClick={() => setShowMenuAddJobForm(true)}
+              >
+                + Add New Job
+              </button>
+              <button
+                style={{
+                  background: '#dc2626',
+                  color: '#fff',
+                  fontWeight: 700,
+                  borderRadius: 6,
+                  padding: '12px 16px',
+                  border: 'none',
+                  boxShadow: '0 2px 8px rgba(220, 38, 38, 0.15)',
+                  cursor: 'pointer',
+                  fontSize: '1.1rem',
+                  fontFamily: "'Montserrat', Arial, sans-serif",
+                  marginTop: 0,
+                  transition: 'background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s',
+                  outline: 'none',
+                }}
+                onMouseDown={e => e.currentTarget.style.transform = 'translateY(2px)'}
+                onMouseUp={e => e.currentTarget.style.transform = ''}
+                onMouseLeave={e => e.currentTarget.style.transform = ''}
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
             </div> */}
-            <div>
-              <button onClick={handleLogout} style={logoutButtonStyle}>Logout</button>
+          </div>
+        )}
+
+        {/* Edit Profile Modal */}
+        {showEditProfile && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            zIndex: 2000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <div style={{ position: 'relative', width: '100%', maxWidth: 420, background: '#fff', borderRadius: 16, boxShadow: '0 2px 12px rgba(0,0,0,0.08)', padding: '2.5rem 2rem', fontFamily: "'Montserrat', Arial, sans-serif" }}>
+              <button
+                onClick={() => setShowEditProfile(false)}
+                style={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
+                  background: 'none',
+                  border: 'none',
+                  fontSize: 24,
+                  color: '#374151',
+                  cursor: 'pointer',
+                  zIndex: 10
+                }}
+                aria-label="Close"
+              >×</button>
+              <CompleteProfileForm
+                onComplete={async () => {
+                  setShowEditProfile(false);
+                  // Refresh profile info after editing
+                  if (user) {
+                    const { data, error } = await supabase
+                      .from("profiles")
+                      .select("first_name, last_name, linkedin_URL, industry, job_title")
+                      .eq("id", user.id)
+                      .single();
+                    setProfile(data);
+                  }
+                }}
+                initialValues={profile}
+              />
             </div>
           </div>
         )}
@@ -722,7 +882,7 @@ export default function JobBoard() {
               const newShowState = !showRecentlyClicked;
               setShowRecentlyClicked(newShowState);
               if (newShowState && recentlyClickedJobs.length === 0) { // Fetch only if opening and no jobs loaded
-                 // fetchRecentlyClickedJobs(); // fetch is now handled by useEffect
+                 // fetchRecentlyClickedJobs(); // fetch is now handled by use
               }
             }}
             style={{ 
@@ -756,7 +916,7 @@ export default function JobBoard() {
             placeholder="Search jobs..." // Simplified placeholder
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ flex: 1, padding: "0.75rem", borderRadius: "8px", border: "1px solid #e5e7eb", fontSize: "1rem" }}
+            style={{ flex: 1, padding: "0.75rem", borderRadius: "4px", border: "1px solid #e5e7eb", fontSize: "1rem" }}
           />
           {/* Removed Search Instructions for pills as pills are removed */}
         </div>
@@ -793,7 +953,7 @@ export default function JobBoard() {
               onClick={() => setShowAddJobForm(true)}
               style={{
                 padding: "12px 24px",
-                borderRadius: "8px",
+                borderRadius: "4px",
                 background: "#10b981",
                 color: "#fff",
                 fontWeight: "600",
@@ -1002,6 +1162,63 @@ export default function JobBoard() {
 
 
       </div>
+
+      {/* Add these buttons to the top right, outside the hamburger menu */}
+      <div style={{
+        position: 'fixed',
+        top: 18,
+        right: 24,
+        zIndex: 1200,
+        display: 'flex',
+        gap: '0.75rem',
+      }}>
+        <button
+          style={{
+            background: '#10b981',
+            color: '#000',
+            fontWeight: 700,
+            borderRadius: 6,
+            padding: '6px 12px',
+            border: '2px solid #0ccf83',
+            boxShadow: '0 2px 8px rgba(12, 207, 131, 0.15)',
+            cursor: 'pointer',
+            fontSize: '1.05rem',
+            fontFamily: "'Montserrat', Arial, sans-serif",
+            transition: 'background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s',
+            outline: 'none',
+          }}
+          onMouseDown={e => e.currentTarget.style.transform = 'translateY(2px)'}
+          onMouseUp={e => e.currentTarget.style.transform = ''}
+          onMouseLeave={e => e.currentTarget.style.transform = ''}
+          onClick={() => setShowAddJobForm(true)}
+        >
+          + Add New Job
+        </button>
+        <button
+          style={{
+            background: '#dc2626',
+            color: '#fff',
+            fontWeight: 700,
+            borderRadius: 6,
+            padding: '6px 12px',
+            border: 'none',
+            boxShadow: '0 2px 8px rgba(220, 38, 38, 0.15)',
+            cursor: 'pointer',
+            fontSize: '1.05rem',
+            fontFamily: "'Montserrat', Arial, sans-serif",
+            marginTop: 0,
+            transition: 'background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s',
+            outline: 'none',
+          }}
+          onMouseDown={e => e.currentTarget.style.transform = 'translateY(2px)'}
+          onMouseUp={e => e.currentTarget.style.transform = ''}
+          onMouseLeave={e => e.currentTarget.style.transform = ''}
+          onClick={handleLogout}
+        >
+          Logout
+        </button>
+      </div>
+
     </>
   )
 }

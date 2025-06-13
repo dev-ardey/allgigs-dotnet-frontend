@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { supabase } from "../../SupabaseClient";
 
 interface AddJobFormProps {
   onClose: () => void;
@@ -25,7 +24,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
       }}>
         <div style={{
           backgroundColor: "#fff",
-          borderRadius: "12px",
+          borderRadius: "4px",
           padding: "2rem",
           width: "90%",
           maxWidth: "400px",
@@ -41,7 +40,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
             style={{
               padding: "0.75rem 1.5rem",
               border: "none",
-              borderRadius: "6px",
+              borderRadius: "4px",
               backgroundColor: "#4f46e5",
               color: "#fff",
               fontSize: "0.875rem",
@@ -65,6 +64,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailStatus, setEmailStatus] = useState<null | 'success' | 'error'>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -78,91 +78,40 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
+    setEmailStatus(null);
 
     try {
       // Generate a unique ID for the job
       const uniqueId = `JOB_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Get current date
-      const currentDate = new Date().toISOString().split('T')[0];
 
-      // Create the job URL automatically (pointing to allGigs contact page)
-      const jobUrl = `https://allgigs.com/contact?job=${uniqueId}&poster=${user.email}`;
-
-      const jobData = {
-        UNIQUE_ID: uniqueId,
-        Title: formData.title,
-        Company: formData.company,
-        Location: formData.location,
-        rate: formData.rate,
-        Summary: formData.summary,
-        URL: jobUrl,
-        date: currentDate,
-        created_at: new Date().toISOString(),
-        inserted_at: new Date().toISOString(),
-        added_by: user.id,
-        added_by_email: user.email,
-        poster_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Anonymous',
-        source: 'allGigs',
-        tags: 'allGigs'
-      };
-
-      // Insert the job into the main table
-      const { error: insertError } = await supabase
-        .from("Allgigs_All_vacancies_NEW")
-        .insert([jobData]);
-
-      if (insertError) {
-        throw insertError;
+      // Send only the email, do not push to Supabase
+      const emailRes = await fetch('/api/send-job-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formData.title,
+          company: formData.company,
+          location: formData.location,
+          rate: formData.rate,
+          summary: formData.summary,
+          submittedBy: user.id,
+          submittedByEmail: user.email,
+          posterName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Anonymous',
+          submissionId: uniqueId
+        })
+      });
+      if (emailRes.ok) {
+        setEmailStatus('success');
+        onJobAdded();
+        setTimeout(() => {
+          onClose();
+        }, 1500);
+      } else {
+        setEmailStatus('error');
       }
-
-      // Log the job posting activity (similar to search logging)
-      try {
-        await supabase.from("job_postings_log").insert([
-          {
-            user_id: user.id,
-            user_email: user.email,
-            job_id: uniqueId,
-            job_title: formData.title,
-            company: formData.company,
-            location: formData.location,
-            rate: formData.rate,
-            posted_at: new Date().toISOString(),
-            user_agent: navigator.userAgent,
-            ip_address: null // Will be handled server-side if needed
-          }
-        ]);
-      } catch (logError) {
-        console.error("Error logging job posting:", logError);
-        // Don't fail the job posting if logging fails
-      }
-
-      // Optional: Also log in the existing job_additions table for backward compatibility
-      try {
-        await supabase.from("job_additions").insert([
-          {
-            user_id: user.id,
-            job_id: uniqueId,
-            job_title: formData.title,
-            company: formData.company,
-            added_at: new Date().toISOString()
-          }
-        ]);
-      } catch (legacyLogError) {
-        console.error("Error in legacy job additions log:", legacyLogError);
-        // Don't fail the job posting if legacy logging fails
-      }
-
-      // Success - close form and refresh job list
-      onJobAdded();
-      onClose();
-      
-      // Show success message (optional)
-      console.log("Job posted successfully:", uniqueId);
-      
-    } catch (err: any) {
-      setError(err.message || "Failed to add job. Please try again.");
-      console.error("Error posting job:", err);
+    } catch (emailError) {
+      setEmailStatus('error');
+      console.error('Error sending job email:', emailError);
     } finally {
       setIsSubmitting(false);
     }
@@ -183,7 +132,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
     }}>
       <div style={{
         backgroundColor: "#fff",
-        borderRadius: "12px",
+        borderRadius: "4px",
         padding: "2rem",
         width: "90%",
         maxWidth: "600px",
@@ -226,11 +175,41 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
             border: "1px solid #fecaca",
             color: "#dc2626",
             padding: "0.75rem",
-            borderRadius: "6px",
+            borderRadius: "4px",
             marginBottom: "1rem",
             fontSize: "0.875rem"
           }}>
             {error}
+          </div>
+        )}
+        {emailStatus === 'success' && (
+          <div style={{
+            backgroundColor: '#dcfce7',
+            border: '1px solid #bbf7d0',
+            color: '#166534',
+            padding: '0.75rem',
+            borderRadius: '4px',
+            marginBottom: '1rem',
+            fontSize: '0.95rem',
+            fontWeight: 500,
+            textAlign: 'center'
+          }}>
+            Job posted and email sent to JJ!
+          </div>
+        )}
+        {emailStatus === 'error' && (
+          <div style={{
+            backgroundColor: '#fee2e2',
+            border: '1px solid #fecaca',
+            color: '#dc2626',
+            padding: '0.75rem',
+            borderRadius: '4px',
+            marginBottom: '1rem',
+            fontSize: '0.95rem',
+            fontWeight: 500,
+            textAlign: 'center'
+          }}>
+            Job posted, but failed to send email to JJ.
           </div>
         )}
 
@@ -257,7 +236,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
                 width: "100%",
                 padding: "0.75rem",
                 border: "1px solid #d1d5db",
-                borderRadius: "6px",
+                borderRadius: "4px",
                 fontSize: "0.875rem",
                 outline: "none"
               }}
@@ -287,7 +266,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
                 width: "100%",
                 padding: "0.75rem",
                 border: "1px solid #d1d5db",
-                borderRadius: "6px",
+                borderRadius: "4px",
                 fontSize: "0.875rem",
                 outline: "none"
               }}
@@ -317,7 +296,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
                 width: "100%",
                 padding: "0.75rem",
                 border: "1px solid #d1d5db",
-                borderRadius: "6px",
+                borderRadius: "4px",
                 fontSize: "0.875rem",
                 outline: "none"
               }}
@@ -347,7 +326,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
                 width: "100%",
                 padding: "0.75rem",
                 border: "1px solid #d1d5db",
-                borderRadius: "6px",
+                borderRadius: "4px",
                 fontSize: "0.875rem",
                 outline: "none"
               }}
@@ -377,7 +356,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
                 width: "100%",
                 padding: "0.75rem",
                 border: "1px solid #d1d5db",
-                borderRadius: "6px",
+                borderRadius: "4px",
                 fontSize: "0.875rem",
                 outline: "none",
                 resize: "vertical",
@@ -406,7 +385,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
                 flex: 1,
                 padding: "0.75rem 1rem",
                 border: "1px solid #d1d5db",
-                borderRadius: "6px",
+                borderRadius: "4px",
                 backgroundColor: "#fff",
                 color: "#374151",
                 fontSize: "0.875rem",
@@ -423,7 +402,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
                 flex: 1,
                 padding: "0.75rem 1rem",
                 border: "none",
-                borderRadius: "6px",
+                borderRadius: "4px",
                 backgroundColor: isSubmitting ? "#9ca3af" : "#4f46e5",
                 color: "#fff",
                 fontSize: "0.875rem",

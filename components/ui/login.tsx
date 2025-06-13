@@ -2,27 +2,45 @@ import { useState } from "react";
 import { supabase } from "../../SupabaseClient";
 
 export default function LoginForm() {
-  const [name, setName] = useState("");
-  const [surname, setSurname] = useState("");
-  const [linkedin, setLinkedin] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
+  const [signedUp, setSignedUp] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
 
     if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      setMessage(error ? error.message : "Logged in!");
-    } else if (mode === "signup") {
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (!error && data.user) {
-        await supabase.from("profiles").insert([{ id: data.user.id, name, surname, linkedin }]);
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setMessage(error.message);
+        return;
       }
-      setMessage(error ? error.message : "Check your email to confirm your account!");
+      // Check if profile exists
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", data.user.id)
+        .single();
+      if (!profile && profileError && profileError.code === 'PGRST116') {
+        // Insert profile if it doesn't exist
+        const { error: insertError } = await supabase.from("profiles").insert([
+          {
+            id: data.user.id
+          }
+        ]);
+        if (insertError) {
+          setMessage(`Profile insert error: ${insertError.message}`);
+          return;
+        }
+      }
+      setMessage("Logged in!");
+    } else if (mode === "signup") {
+      const { error } = await supabase.auth.signUp({ email, password });
+      setSignedUp(true);
+      setMessage("");
     } else if (mode === "forgot") {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/callback?next=/jobs`,
@@ -47,9 +65,6 @@ export default function LoginForm() {
       }}>
         Discover your next opportunity from <span style={{ fontWeight: "bold", color: "#0ccf83" }}>1000</span> curated positions
       </p>
-
-
-
       <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         <input
           type="email"
@@ -59,15 +74,6 @@ export default function LoginForm() {
           onChange={e => setEmail(e.target.value)}
           style={inputStyle}
         />
-
-        {mode === "signup" && (
-          <>
-            <input type="text" placeholder="First name" value={name} onChange={e => setName(e.target.value)} required style={inputStyle} />
-            <input type="text" placeholder="Surname" value={surname} onChange={e => setSurname(e.target.value)} required style={inputStyle} />
-            <input type="url" placeholder="LinkedIn URL" value={linkedin} onChange={e => setLinkedin(e.target.value)} required style={inputStyle} />
-          </>
-        )}
-
         {mode !== "forgot" && (
           <input
             type="password"
@@ -78,13 +84,17 @@ export default function LoginForm() {
             style={inputStyle}
           />
         )}
-
-        <button type="submit" style={buttonStyle}>
+        <button
+          type="submit"
+          style={buttonStyle}
+          onMouseDown={e => (e.currentTarget.style.boxShadow = buttonActiveStyle.boxShadow, e.currentTarget.style.background = buttonActiveStyle.background, e.currentTarget.style.transform = buttonActiveStyle.transform)}
+          onMouseUp={e => (e.currentTarget.style.boxShadow = buttonStyle.boxShadow, e.currentTarget.style.background = buttonStyle.background, e.currentTarget.style.transform = "none")}
+          onMouseLeave={e => (e.currentTarget.style.boxShadow = buttonStyle.boxShadow, e.currentTarget.style.background = buttonStyle.background, e.currentTarget.style.transform = "none")}
+        >
           {mode === "login" && "Login"}
           {mode === "signup" && "Sign Up"}
           {mode === "forgot" && "Reset Password"}
         </button>
-        å
         <div style={{ fontSize: "0.9rem", marginTop: "0.5rem", color: "#c8c8c8" }}>
           {mode !== "forgot" && (
             <span onClick={() => setMode("forgot")} style={linkStyle}>Forgot?</span>
@@ -105,7 +115,11 @@ export default function LoginForm() {
             </div>
           )}
         </div>
-
+        {signedUp && (
+          <div style={{ marginTop: "1rem", color: "#0ccf83", fontWeight: 600 }}>
+            Thank you for signing up, please verify your email.
+          </div>
+        )}
         {message && (
           <div style={{ marginTop: "1rem", color: message.toLowerCase().includes("error") ? "#dc2626" : "#0ccf83" }}>
             {message}
@@ -118,7 +132,7 @@ export default function LoginForm() {
 
 const inputStyle: React.CSSProperties = {
   padding: "0.75rem 1rem",
-  borderRadius: "999px",
+  borderRadius: "4px",
   border: "1px solid #ccc",
   fontSize: "1rem",
   width: "100%",
@@ -127,14 +141,23 @@ const inputStyle: React.CSSProperties = {
 const buttonStyle: React.CSSProperties = {
   background: "#0ccf83",
   color: "#000",
-  fontWeight: 600,
-  borderRadius: "999px",
+  fontWeight: 700,
+  borderRadius: "4px",
   padding: "0.75rem 1.5rem",
-  border: "none",
+  border: "2px solid #0ccf83",
+  boxShadow: "0 2px 8px rgba(12, 207, 131, 0.15)",
   cursor: "pointer",
-  fontSize: "1rem",
+  fontSize: "1.1rem",
   alignSelf: "center",
+  transition: "background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s",
 };
+
+const buttonActiveStyle: React.CSSProperties = {
+  boxShadow: "0 1px 2px rgba(12, 207, 131, 0.25) inset",
+  background: "#0bbf73",
+  transform: "translateY(2px)",
+};
+
 const linkStyle: React.CSSProperties = {
   color: "#0ccf83",
   cursor: "pointer",
