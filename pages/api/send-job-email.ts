@@ -12,6 +12,7 @@ interface JobSubmissionData {
   submittedByEmail: string;
   posterName: string;
   submissionId: string; // will be used as job_id
+  user_id: string;
 }
 
 // Initialize Supabase client for server-side usage
@@ -31,11 +32,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Validate required fields
     const requiredFields = ['title', 'company', 'location', 'rate', 'summary', 'start_date', 'user_id', 'submittedByEmail'];
     const missingFields = requiredFields.filter(field => !jobData[field]);
-    
+
     if (missingFields.length > 0) {
-      return res.status(400).json({ 
-        error: 'Missing required fields', 
-        missingFields 
+      return res.status(400).json({
+        error: 'Missing required fields',
+        missingFields
       });
     }
 
@@ -173,16 +174,16 @@ The AllGigs Team
       return res.status(500).json({ error: 'Failed to save job to database', details: dbError.message, full: dbError });
     }
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       message: 'Job submission saved and email sent to jj@allgigs.nl',
       job_id: job_id
     });
   } catch (error) {
     console.error('Error processing job submission:', error);
-    res.status(500).json({ 
-      error: 'Internal server error', 
-      message: 'Failed to process job submission' 
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to process job submission'
     });
   }
 }
