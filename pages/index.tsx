@@ -696,11 +696,11 @@ export default function JobBoard() {
                 verticalAlign: 'top',
               }}>
                 <div style={{ fontWeight: 700, marginBottom: 8, color: '#0ccf83' }}>Your Details</div>
-                <div><strong>First Name:</strong> {profile.first_name || '-'}</div>
-                <div><strong>Last Name:</strong> {profile.last_name || '-'}</div>
-                <div><strong>LinkedIn:</strong> {profile.linkedin_URL || '-'}</div>
-                <div><strong>Industry:</strong> {profile.industry || '-'}</div>
-                <div><strong>Job Title:</strong> {profile.job_title || '-'}</div>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>First Name:</strong> <span style={{ marginLeft: 12 }}>{profile.first_name || '-'}</span></div>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>Last Name:</strong> <span style={{ marginLeft: 12 }}>{profile.last_name || '-'}</span></div>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>LinkedIn:</strong> <span style={{ marginLeft: 12 }}>{profile.linkedin_URL || '-'}</span></div>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>Industry:</strong> <span style={{ marginLeft: 12 }}>{profile.industry || '-'}</span></div>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>Job Title:</strong> <span style={{ marginLeft: 12 }}>{profile.job_title || '-'}</span></div>
                 <button
                   style={menuButtonSharedStyle}
                   onMouseDown={e => e.currentTarget.style.transform = 'translateY(2px)'}
@@ -862,8 +862,8 @@ export default function JobBoard() {
           }}
         >
           Logout
-        </button> */}
-        {/* </div> */}
+        </button>
+        </div> */}
 
         {/* Header */}
         <div className="job-header">
@@ -996,110 +996,45 @@ export default function JobBoard() {
         {/* Job List */}
         <div className="job-list">
           {(highlightedJobs.length > 0 ? highlightedJobs.slice((page ?? 0) * PAGE_SIZE, ((page ?? 0) + 1) * PAGE_SIZE) : paginatedJobs).map((job) => (
-            <div className="job-card" key={job.UNIQUE_ID}>
+            <div className="job-card" style={{ position: 'relative' }}>
+              {/* View Job button at top right */}
+              <a
+                href={job.URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="view-job-btn"
+                style={{
+                  position: 'absolute',
+                  top: 20,
+                  right: 20,
+                  zIndex: 2,
+                  borderRadius: '6px', // square like other buttons
+                  background: '#0ccf83',
+                  color: '#000',
+                  fontWeight: 700,
+                  border: '2px solid #0ccf83',
+                  padding: '8px 18px',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  transition: 'background 0.2s, color 0.2s, border 0.2s',
+                  textDecoration: 'none',
+                  boxShadow: '0 2px 8px rgba(12, 207, 131, 0.08)'
+                }}
+                onClick={() => logJobClick(job)}
+              >
+                View Job
+              </a>
               <div className="job-main">
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                  <h3 style={{ margin: 0 }} dangerouslySetInnerHTML={{ __html: job.Title }}></h3>
-                  {isJobNew(job) && (
-                    <span
-                      style={{
-                        backgroundColor: "#10b981",
-                        color: "white",
-                        fontSize: "0.75rem",
-                        fontWeight: "bold",
-                        padding: "2px 8px",
-                        borderRadius: "12px",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px",
-                      }}
-                    >
-                      New
-                    </span>
-                  )}
-                  {(job.source === 'allGigs' || job.tags?.includes('allGigs')) && (
-                    <span
-                      style={{
-                        backgroundColor: "#4f46e5",
-                        color: "white",
-                        fontSize: "0.75rem",
-                        fontWeight: "bold",
-                        padding: "2px 8px",
-                        borderRadius: "12px",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px",
-                      }}
-                    >
-                      allGigs
-                    </span>
-                  )}
+                <h3 className="job-title" dangerouslySetInnerHTML={{ __html: job.Title }} />
+                <div className="job-company"><strong>Company:</strong> <span dangerouslySetInnerHTML={{ __html: job.Company }} /></div>
+                <div className="job-details">
+                  <span><strong>Rate:</strong> {job.rate}</span>
+                  <span><strong>Location:</strong> <span dangerouslySetInnerHTML={{ __html: job.Location }} /></span>
+                  <span><strong>Date:</strong> {job.date}</span>
                 </div>
-                <p><strong>Company:</strong> <span dangerouslySetInnerHTML={{ __html: job.Company }}></span></p>
-                <div className="job-pill-container">
-                  <p className="job-pill"><strong>Rate:</strong> {job.rate}</p>
-                  <p className="job-pill"><strong>Location:</strong> <span dangerouslySetInnerHTML={{ __html: job.Location }}></span></p>
-                  <p className="job-pill"><strong>Date:</strong> {job.date}</p>
+                <div className="job-summary">
+                  <strong>Summary:</strong> <span dangerouslySetInnerHTML={{ __html: job.Summary }} />
                 </div>
-                <p><strong>Summary:</strong> <span dangerouslySetInnerHTML={{ __html: job.Summary }}></span></p>
-                {/* Show poster information for allGigs jobs */}
-                {(job.source === 'allGigs' || job.tags?.includes('allGigs')) && job.added_by_email && (
-                  <div style={{
-                    backgroundColor: "#f8fafc",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "6px",
-                    padding: "0.75rem",
-                    marginTop: "0.75rem"
-                  }}>
-                    <p style={{ margin: "0 0 0.5rem 0", fontSize: "0.875rem", fontWeight: "600", color: "#374151" }}>
-                      Contact Information:
-                    </p>
-                    <p style={{ margin: "0 0 0.25rem 0", fontSize: "0.875rem" }}>
-                      <strong>Name:</strong> {job.poster_name || 'Not provided'}
-                    </p>
-                    <p style={{ margin: 0, fontSize: "0.875rem" }}>
-                      <strong>Email:</strong> {job.added_by_email}
-                    </p>
-                  </div>
-                )}
-
-                {/* View Job button - different behavior for allGigs vs external jobs */}
-                {job.URL && (
-                  <>
-                    {(job.source === 'allGigs' || job.tags?.includes('allGigs')) ? (
-                      <button
-                        className="view-job-btn"
-                        onClick={() => {
-                          logJobClick(job);
-                          // For allGigs jobs, show contact info (already visible above)
-                          alert(`To apply for this job, please contact:\n\nName: ${job.poster_name || 'Not provided'}\nEmail: ${job.added_by_email}\n\nYou can also see the contact information above.`);
-                        }}
-                        style={{
-                          backgroundColor: "#4f46e5",
-                          color: "white",
-                          border: "none",
-                          padding: "8px 16px",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "14px",
-                          fontWeight: "500",
-                          marginTop: "0.75rem"
-                        }}
-                      >
-                        View Contact Info
-                      </button>
-                    ) : (
-                      <a
-                        href={job.URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="view-job-btn"
-                        onClick={() => logJobClick(job)}
-                      >
-                        View Job
-                      </a>
-                    )}
-                  </>
-                )}
-                {/* <div className="job-id">ID: {job.UNIQUE_ID.slice(-6)}</div> */}
               </div>
             </div>
           ))}

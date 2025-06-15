@@ -61,6 +61,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
     location: "",
     rate: "",
     summary: "",
+    start_date: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -94,9 +95,9 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
           location: formData.location,
           rate: formData.rate,
           summary: formData.summary,
-          submittedBy: user.id,
-          submittedByEmail: user.email,
-          posterName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Anonymous',
+          start_date: formData.start_date,
+          user_id: user.id, // send user_id for Supabase RLS
+          submittedByEmail: user.email, // email associated with user_id
           submissionId: uniqueId
         })
       });
@@ -371,6 +372,34 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
             }}>
               {formData.summary.length}/2000 characters (minimum 50 required)
             </div>
+          </div>
+
+          <div>
+            <label style={{
+              display: "block",
+              fontSize: "0.875rem",
+              fontWeight: "500",
+              color: "#374151",
+              marginBottom: "0.25rem"
+            }}>
+              Start Date *
+            </label>
+            <input
+              type="date"
+              name="start_date"
+              value={formData.start_date}
+              onChange={handleChange}
+              required
+              style={{
+                width: "100%",
+                padding: "0.75rem",
+                border: "1px solid #d1d5db",
+                borderRadius: "4px",
+                fontSize: "0.875rem",
+                outline: "none"
+              }}
+              placeholder="e.g., 2025-07-01"
+            />
           </div>
 
           <div style={{

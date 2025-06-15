@@ -51,16 +51,26 @@ export default function CompleteProfileForm({ onComplete, initialValues }: { onC
     }}>
       <h2 style={{ color: '#121f36', fontSize: '1.5rem', marginBottom: '0.5rem', fontFamily: "'Montserrat', Arial, sans-serif" }}>Complete Your Profile</h2>
       <p style={{ color: '#374151', fontSize: '1rem', marginBottom: 0, fontFamily: "'Montserrat', Arial, sans-serif" }}>Before you continue please fill out the following information:</p>
-      <label style={{ ...labelStyle, fontFamily: "'Montserrat', Arial, sans-serif" }}>First Name</label>
-      <input value={firstName} onChange={e => setFirstName(e.target.value)} required style={{ ...inputStyle, background: '#fff', color: '#121f36', border: '1.5px solid #0ccf83', boxSizing: 'border-box', fontFamily: "'Montserrat', Arial, sans-serif" }} />
-      <label style={{ ...labelStyle, fontFamily: "'Montserrat', Arial, sans-serif" }}>Last Name</label>
-      <input value={lastName} onChange={e => setLastName(e.target.value)} required style={{ ...inputStyle, background: '#fff', color: '#121f36', border: '1.5px solid #0ccf83', boxSizing: 'border-box', fontFamily: "'Montserrat', Arial, sans-serif" }} />
-      <label style={{ ...labelStyle, fontFamily: "'Montserrat', Arial, sans-serif" }}>LinkedIn</label>
-      <input value={linkedin} onChange={e => setLinkedin(e.target.value)} placeholder="e.g. linkedin.com/in/yourprofile" style={{ ...inputStyle, background: '#fff', color: '#121f36', border: '1.5px solid #0ccf83', boxSizing: 'border-box', fontFamily: "'Montserrat', Arial, sans-serif" }} />
-      <label style={{ ...labelStyle, fontFamily: "'Montserrat', Arial, sans-serif" }}>Industry</label>
-      <input value={industry} onChange={e => setIndustry(e.target.value)} required style={{ ...inputStyle, background: '#fff', color: '#121f36', border: '1.5px solid #0ccf83', boxSizing: 'border-box', fontFamily: "'Montserrat', Arial, sans-serif" }} />
-      <label style={{ ...labelStyle, fontFamily: "'Montserrat', Arial, sans-serif" }}>Job Title</label>
-      <input value={jobTitle} onChange={e => setJobTitle(e.target.value)} required style={{ ...inputStyle, background: '#fff', color: '#121f36', border: '1.5px solid #0ccf83', boxSizing: 'border-box', fontFamily: "'Montserrat', Arial, sans-serif" }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <label style={{ ...labelStyle, fontFamily: "'Montserrat', Arial, sans-serif", marginBottom: '0.3rem' }}>First Name</label>
+        <input value={firstName} onChange={e => setFirstName(e.target.value)} required style={{ ...inputStyle, marginBottom: '1rem', marginLeft: '0', background: '#fff', color: '#121f36', border: '1.5px solid #0ccf83', boxSizing: 'border-box', fontFamily: "'Montserrat', Arial, sans-serif" }} />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <label style={{ ...labelStyle, fontFamily: "'Montserrat', Arial, sans-serif", marginBottom: '0.3rem' }}>Last Name</label>
+        <input value={lastName} onChange={e => setLastName(e.target.value)} required style={{ ...inputStyle, marginBottom: '1rem', marginLeft: '0', background: '#fff', color: '#121f36', border: '1.5px solid #0ccf83', boxSizing: 'border-box', fontFamily: "'Montserrat', Arial, sans-serif" }} />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <label style={{ ...labelStyle, fontFamily: "'Montserrat', Arial, sans-serif", marginBottom: '0.3rem' }}>LinkedIn</label>
+        <input value={linkedin} onChange={e => setLinkedin(e.target.value)} placeholder="e.g. linkedin.com/in/yourprofile" style={{ ...inputStyle, marginBottom: '1rem', marginLeft: '0', background: '#fff', color: '#121f36', border: '1.5px solid #0ccf83', boxSizing: 'border-box', fontFamily: "'Montserrat', Arial, sans-serif" }} />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <label style={{ ...labelStyle, fontFamily: "'Montserrat', Arial, sans-serif", marginBottom: '0.3rem' }}>Industry</label>
+        <input value={industry} onChange={e => setIndustry(e.target.value)} required style={{ ...inputStyle, marginBottom: '1rem', marginLeft: '0', background: '#fff', color: '#121f36', border: '1.5px solid #0ccf83', boxSizing: 'border-box', fontFamily: "'Montserrat', Arial, sans-serif" }} />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <label style={{ ...labelStyle, fontFamily: "'Montserrat', Arial, sans-serif", marginBottom: '0.3rem' }}>Job Title</label>
+        <input value={jobTitle} onChange={e => setJobTitle(e.target.value)} required style={{ ...inputStyle, marginBottom: '1rem', marginLeft: '0', background: '#fff', color: '#121f36', border: '1.5px solid #0ccf83', boxSizing: 'border-box', fontFamily: "'Montserrat', Arial, sans-serif" }} />
+      </div>
       <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
         <button type="submit" style={{ ...buttonStyle, fontFamily: "'Montserrat', Arial, sans-serif" }}>Save Profile</button>
       </div>
