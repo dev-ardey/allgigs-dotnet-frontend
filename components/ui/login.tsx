@@ -87,9 +87,9 @@ export default function LoginForm() {
         <button
           type="submit"
           style={buttonStyle}
-          onMouseDown={e => (e.currentTarget.style.boxShadow = buttonActiveStyle.boxShadow, e.currentTarget.style.background = buttonActiveStyle.background, e.currentTarget.style.transform = buttonActiveStyle.transform)}
-          onMouseUp={e => (e.currentTarget.style.boxShadow = buttonStyle.boxShadow, e.currentTarget.style.background = buttonStyle.background, e.currentTarget.style.transform = "none")}
-          onMouseLeave={e => (e.currentTarget.style.boxShadow = buttonStyle.boxShadow, e.currentTarget.style.background = buttonStyle.background, e.currentTarget.style.transform = "none")}
+          onMouseDown={e => (e.currentTarget.style.boxShadow = buttonActiveStyle.boxShadow, e.currentTarget.style.background = String(buttonActiveStyle.background), e.currentTarget.style.transform = buttonActiveStyle.transform)}
+          onMouseUp={e => (e.currentTarget.style.boxShadow = buttonStyle.boxShadow, e.currentTarget.style.background = String(buttonStyle.background), e.currentTarget.style.transform = "none")}
+          onMouseLeave={e => (e.currentTarget.style.boxShadow = buttonStyle.boxShadow, e.currentTarget.style.background = String(buttonStyle.background), e.currentTarget.style.transform = "none")}
         >
           {mode === "login" && "Login"}
           {mode === "signup" && "Sign Up"}
