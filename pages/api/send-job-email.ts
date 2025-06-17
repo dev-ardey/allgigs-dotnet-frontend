@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const jobData: JobSubmissionData = req.body;
 
     // Validate required fields
-    const requiredFields = ['title', 'company', 'location', 'rate', 'summary', 'start_date', 'user_id', 'submittedByEmail'];
+    const requiredFields = ['title', 'company', 'location', 'rate', 'summary', 'start_date', 'submittedByEmail'];
     const missingFields = requiredFields.filter(field => !jobData[field]);
     
     if (missingFields.length > 0) {
@@ -37,6 +37,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         error: 'Missing required fields', 
         missingFields 
       });
+    }
+
+    // Extract user_id from Supabase Auth JWT in Authorization header
+    const authHeader = req.headers['authorization'];
+    const jwt = authHeader?.replace('Bearer ', '');
+    let user_id = null;
+    if (jwt) {
+      const { data, error } = await supabase.auth.getUser(jwt);
+      if (data?.user) {
+        user_id = data.user.id;
+      }
+    }
+    if (!user_id) {
+      return res.status(401).json({ error: 'Unauthorized: No user session found' });
     }
 
     // Generate unique IDs
@@ -64,7 +78,6 @@ ${jobData.summary}
 SUBMISSION DETAILS:
 ==================
 Job ID: ${job_id}
-Submitted by user_id: ${jobData.user_id}
 Submitted by email: ${jobData.submittedByEmail}
 Submission time: ${new Date().toISOString()}
 
@@ -125,7 +138,8 @@ The AllGigs Team
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'api-key': brevoApiKey
+          'api-key': brevoApiKey,
+          'accept': 'application/json'
         },
         body: JSON.stringify(brevoPayloadJJ)
       }),
@@ -133,7 +147,8 @@ The AllGigs Team
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'api-key': brevoApiKey
+          'api-key': brevoApiKey,
+          'accept': 'application/json'
         },
         body: JSON.stringify(brevoPayloadSubmitter)
       })
@@ -156,7 +171,7 @@ The AllGigs Team
       .insert([
         {
           id: row_id, // unique row id (primary key)
-          user_id: jobData.user_id, // the user who submitted the job
+          user_id: user_id, // the user who submitted the job
           created_at: new Date().toISOString(),
           Title: jobData.title,
           Company: jobData.company,

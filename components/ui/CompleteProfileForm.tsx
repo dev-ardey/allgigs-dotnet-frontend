@@ -7,6 +7,7 @@ export default function CompleteProfileForm({ onComplete, initialValues }: { onC
   const [linkedin, setLinkedin] = useState(initialValues?.linkedin_URL || "");
   const [industry, setIndustry] = useState(initialValues?.industry || "");
   const [jobTitle, setJobTitle] = useState(initialValues?.job_title || "");
+  const [location, setLocation] = useState(initialValues?.location || "");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -16,6 +17,7 @@ export default function CompleteProfileForm({ onComplete, initialValues }: { onC
       setLinkedin(initialValues.linkedin_URL || "");
       setIndustry(initialValues.industry || "");
       setJobTitle(initialValues.job_title || "");
+      setLocation(initialValues.location || "");
     }
   }, [initialValues]);
 
@@ -29,6 +31,7 @@ export default function CompleteProfileForm({ onComplete, initialValues }: { onC
       linkedin_URL: linkedin,
       industry,
       job_title: jobTitle,
+      location,
     });
     if (error) setError(error.message);
     else onComplete();
@@ -36,61 +39,64 @@ export default function CompleteProfileForm({ onComplete, initialValues }: { onC
 
   return (
     <form onSubmit={handleSubmit} style={{
-      display: "flex",
-      flexDirection: "column",
-      gap: "1rem",
-      maxWidth: 400,
-      margin: "2rem auto",
       background: '#fff',
-      padding: '2rem',
+      color: '#121f36',
       borderRadius: '12px',
-      boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+      margin: '10px 20px',
+      padding: '16px',
+      fontFamily: "'Montserrat', Arial, sans-serif",
+      fontSize: '0.98rem',
       boxSizing: 'border-box',
-      width: '100%',
-      fontFamily: "'Montserrat', Arial, sans-serif"
+      border: '3px solid #0ccf83',
+      width: 'calc(100% - 40px)',
+      maxWidth: 540,
+      display: 'block',
+      marginBottom: '1.2rem',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.06)'
     }}>
-      <h2 style={{ color: '#121f36', fontSize: '1.5rem', marginBottom: '0.5rem', fontFamily: "'Montserrat', Arial, sans-serif" }}>Complete Your Profile</h2>
-      <p style={{ color: '#374151', fontSize: '1rem', marginBottom: 0, fontFamily: "'Montserrat', Arial, sans-serif" }}>Before you continue please fill out the following information:</p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <label style={{ ...labelStyle, fontFamily: "'Montserrat', Arial, sans-serif", marginBottom: '0.3rem' }}>First Name</label>
-        <input value={firstName} onChange={e => setFirstName(e.target.value)} required style={{ ...inputStyle, marginBottom: '1rem', marginLeft: '0', background: '#fff', color: '#121f36', border: '1.5px solid #0ccf83', boxSizing: 'border-box', fontFamily: "'Montserrat', Arial, sans-serif" }} />
+      <div style={{ fontWeight: 700, marginBottom: 8, color: '#0ccf83', fontSize: '1.1rem' }}>Edit Your Details</div>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+        <strong style={{ minWidth: 90, display: 'inline-block' }}>First Name:</strong>
+        <input value={firstName} onChange={e => setFirstName(e.target.value)} required style={{ ...inputStyle, marginLeft: 12, background: '#f9fafb', color: '#121f36', border: '1.5px solid #0ccf83', fontSize: '0.98rem', padding: '0.4rem 0.7rem', borderRadius: 6, width: '75%' }} />
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <label style={{ ...labelStyle, fontFamily: "'Montserrat', Arial, sans-serif", marginBottom: '0.3rem' }}>Last Name</label>
-        <input value={lastName} onChange={e => setLastName(e.target.value)} required style={{ ...inputStyle, marginBottom: '1rem', marginLeft: '0', background: '#fff', color: '#121f36', border: '1.5px solid #0ccf83', boxSizing: 'border-box', fontFamily: "'Montserrat', Arial, sans-serif" }} />
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+        <strong style={{ minWidth: 90, display: 'inline-block' }}>Last Name:</strong>
+        <input value={lastName} onChange={e => setLastName(e.target.value)} required style={{ ...inputStyle, marginLeft: 12, background: '#f9fafb', color: '#121f36', border: '1.5px solid #0ccf83', fontSize: '0.98rem', padding: '0.4rem 0.7rem', borderRadius: 6, width: '75%' }} />
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <label style={{ ...labelStyle, fontFamily: "'Montserrat', Arial, sans-serif", marginBottom: '0.3rem' }}>LinkedIn</label>
-        <input value={linkedin} onChange={e => setLinkedin(e.target.value)} placeholder="e.g. linkedin.com/in/yourprofile" style={{ ...inputStyle, marginBottom: '1rem', marginLeft: '0', background: '#fff', color: '#121f36', border: '1.5px solid #0ccf83', boxSizing: 'border-box', fontFamily: "'Montserrat', Arial, sans-serif" }} />
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+        <strong style={{ minWidth: 90, display: 'inline-block' }}>LinkedIn:</strong>
+        <input value={linkedin} onChange={e => setLinkedin(e.target.value)} placeholder="e.g. linkedin.com/in/yourprofile" style={{ ...inputStyle, marginLeft: 12, background: '#f9fafb', color: '#121f36', border: '1.5px solid #0ccf83', fontSize: '0.98rem', padding: '0.4rem 0.7rem', borderRadius: 6, width: '75%' }} />
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <label style={{ ...labelStyle, fontFamily: "'Montserrat', Arial, sans-serif", marginBottom: '0.3rem' }}>Industry</label>
-        <input value={industry} onChange={e => setIndustry(e.target.value)} required style={{ ...inputStyle, marginBottom: '1rem', marginLeft: '0', background: '#fff', color: '#121f36', border: '1.5px solid #0ccf83', boxSizing: 'border-box', fontFamily: "'Montserrat', Arial, sans-serif" }} />
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+        <strong style={{ minWidth: 90, display: 'inline-block' }}>Industry:</strong>
+        <input value={industry} onChange={e => setIndustry(e.target.value)} required style={{ ...inputStyle, marginLeft: 12, background: '#f9fafb', color: '#121f36', border: '1.5px solid #0ccf83', fontSize: '0.98rem', padding: '0.4rem 0.7rem', borderRadius: 6, width: '75%' }} />
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <label style={{ ...labelStyle, fontFamily: "'Montserrat', Arial, sans-serif", marginBottom: '0.3rem' }}>Job Title</label>
-        <input value={jobTitle} onChange={e => setJobTitle(e.target.value)} required style={{ ...inputStyle, marginBottom: '1rem', marginLeft: '0', background: '#fff', color: '#121f36', border: '1.5px solid #0ccf83', boxSizing: 'border-box', fontFamily: "'Montserrat', Arial, sans-serif" }} />
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+        <strong style={{ minWidth: 90, display: 'inline-block' }}>Job Title:</strong>
+        <input value={jobTitle} onChange={e => setJobTitle(e.target.value)} required style={{ ...inputStyle, marginLeft: 12, background: '#f9fafb', color: '#121f36', border: '1.5px solid #0ccf83', fontSize: '0.98rem', padding: '0.4rem 0.7rem', borderRadius: 6, width: '75%' }} />
       </div>
-      <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-        <button type="submit" style={{ ...buttonStyle, fontFamily: "'Montserrat', Arial, sans-serif" }}>Save Profile</button>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+        <strong style={{ minWidth: 90, display: 'inline-block' }}>Location:</strong>
+        <input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Amsterdam, Remote" style={{ ...inputStyle, marginLeft: 12, background: '#f9fafb', color: '#121f36', border: '1.5px solid #0ccf83', fontSize: '0.98rem', padding: '0.4rem 0.7rem', borderRadius: 6, width: '75%' }} />
       </div>
-      {error && <div style={{color: "#dc2626", fontFamily: "'Montserrat', Arial, sans-serif"}}>{error}</div>}
-      <style>{`
-        @media (max-width: 500px) {
-          form {
-            padding: 1rem !important;
-            max-width: 98vw !important;
-            border-radius: 8px !important;
-          }
-          input {
-            font-size: 1rem !important;
-            padding: 0.6rem 0.8rem !important;
-          }
-          h2 {
-            font-size: 1.1rem !important;
-          }
-        }
-      `}</style>
+      <AvailableToRecruitersToggle />
+      <button type="submit" style={{
+        background: '#0ccf83',
+        color: '#000',
+        fontWeight: 700,
+        borderRadius: 6,
+        padding: '12px 16px',
+        border: '2px solid #0ccf83',
+        boxShadow: '0 2px 8px rgba(12, 207, 131, 0.15)',
+        cursor: 'pointer',
+        fontSize: '1.1rem',
+        fontFamily: "'Montserrat', Arial, sans-serif",
+        transition: 'background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s',
+        outline: 'none',
+        width: '100%',
+        marginTop: 16
+      }}>Save Profile</button>
+      {error && <div style={{color: "#dc2626", fontFamily: "'Montserrat', Arial, sans-serif", fontSize: '0.95rem', marginTop: 8}}>{error}</div>}
     </form>
   );
 }
@@ -122,3 +128,45 @@ const buttonStyle: React.CSSProperties = {
   alignSelf: "center",
   transition: "background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s",
 };
+
+function AvailableToRecruitersToggle() {
+  const [available, setAvailable] = useState(true);
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12, marginTop: 8 }}>
+      <label style={{ minWidth: 140, fontWeight: 600, color: '#374151', fontSize: '0.98rem', marginRight: 12 }}>
+        Available to Recruiters
+      </label>
+      <span style={{ marginRight: 8, color: available ? '#0ccf83' : '#aaa', fontWeight: available ? 700 : 400 }}>Yes</span>
+      <div
+        onClick={() => setAvailable(a => !a)}
+        style={{
+          width: 44,
+          height: 24,
+          borderRadius: 12,
+          background: available ? '#0ccf83' : '#ccc',
+          cursor: 'pointer',
+          position: 'relative',
+          margin: '0 8px',
+          transition: 'background 0.2s',
+          display: 'inline-block',
+        }}
+        aria-label="Toggle Available to Recruiters"
+      >
+        <div
+          style={{
+            width: 20,
+            height: 20,
+            borderRadius: '50%',
+            background: '#fff',
+            position: 'absolute',
+            top: 2,
+            left: available ? 22 : 2,
+            boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
+            transition: 'left 0.2s',
+          }}
+        />
+      </div>
+      <span style={{ marginLeft: 8, color: !available ? '#0ccf83' : '#aaa', fontWeight: !available ? 700 : 400 }}>No</span>
+    </div>
+  );
+}

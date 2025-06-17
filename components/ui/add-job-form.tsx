@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { supabase } from "../../SupabaseClient";
 
 interface AddJobFormProps {
   onClose: () => void;
@@ -85,10 +86,17 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
       // Generate a unique ID for the job
       const uniqueId = `JOB_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+      // Get the user's access token
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
       // Send only the email, do not push to Supabase
       const emailRes = await fetch('/api/send-job-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
         body: JSON.stringify({
           title: formData.title,
           company: formData.company,
@@ -96,7 +104,6 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
           rate: formData.rate,
           summary: formData.summary,
           start_date: formData.start_date,
-          user_id: user.id, // send user_id for Supabase RLS
           submittedByEmail: user.email, // email associated with user_id
           submissionId: uniqueId
         })

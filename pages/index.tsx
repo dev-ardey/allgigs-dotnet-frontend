@@ -123,7 +123,7 @@ export default function JobBoard() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("first_name, last_name, linkedin_URL, industry, job_title")
+      .select("first_name, last_name, linkedin_URL, industry, job_title, location")
       .eq("id", user.id)
       .single()
       .then(({ data, error }) => {
@@ -895,7 +895,7 @@ export default function JobBoard() {
             boxSizing: "border-box",
             overflowX: "hidden",
             position: 'absolute',
-            top: '120px', // Offset by header + search bar (adjust as needed)
+            top: typeof window !== 'undefined' ? window.scrollY + 60 : 60,
             left: 0,
             right: 0,
             margin: '0 auto',
@@ -907,7 +907,8 @@ export default function JobBoard() {
             flexDirection: 'column',
             alignItems: 'center',
             backgroundColor: 'rgb(18, 31, 54, 1)', // Ensure fully opaque
-          }}>
+          }}
+        >
           {user && user.email && (
             <div className="user-email-display" style={{
               padding: "10px 20px",
@@ -941,6 +942,9 @@ export default function JobBoard() {
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>LinkedIn:</strong> <span style={{ marginLeft: 12 }}>{profile.linkedin_URL || '-'}</span></div>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>Industry:</strong> <span style={{ marginLeft: 12 }}>{profile.industry || '-'}</span></div>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>Job Title:</strong> <span style={{ marginLeft: 12 }}>{profile.job_title || '-'}</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>Location:</strong> <span style={{ marginLeft: 12 }}>{profile.location || '-'}</span></div>
+              {/* Available to Recruiters Toggle */}
+              <AvailableToRecruitersToggle />
               <button
                 style={{ ...menuButtonStyle, width: '100%' }}
                 onMouseDown={e => e.currentTarget.style.transform = 'translateY(2px)'}
@@ -1115,15 +1119,20 @@ export default function JobBoard() {
 
       {/* Edit Profile Modal */}
       {showEditProfile && profile && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 3000
-        }}>
+        <div
+          style={{
+            position: 'absolute',
+            top: typeof window !== 'undefined' ? window.scrollY + 40 : 40,
+            left: 0,
+            right: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 3000,
+            minHeight: '100vh',
+          }}
+        >
           <div style={{
             background: '#fff',
             borderRadius: '12px',
@@ -1140,7 +1149,7 @@ export default function JobBoard() {
                 if (user) {
                   const { data, error } = await supabase
                     .from('profiles')
-                    .select('first_name, last_name, linkedin_URL, industry, job_title')
+                    .select('first_name, last_name, linkedin_URL, industry, job_title, location')
                     .eq('id', user.id)
                     .single();
                   setProfile(data);
@@ -1171,5 +1180,47 @@ export default function JobBoard() {
       )}
     </>
   )
+}
+
+function AvailableToRecruitersToggle() {
+  const [available, setAvailable] = useState(true);
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12, marginTop: 8 }}>
+      <label style={{ minWidth: 140, fontWeight: 600, color: '#374151', fontSize: '0.98rem', marginRight: 12 }}>
+        Available to Recruiters
+      </label>
+      <span style={{ marginRight: 8, color: available ? '#0ccf83' : '#aaa', fontWeight: available ? 700 : 400 }}>Yes</span>
+      <div
+        onClick={() => setAvailable(a => !a)}
+        style={{
+          width: 44,
+          height: 24,
+          borderRadius: 12,
+          background: available ? '#0ccf83' : '#ccc',
+          cursor: 'pointer',
+          position: 'relative',
+          margin: '0 8px',
+          transition: 'background 0.2s',
+          display: 'inline-block',
+        }}
+        aria-label="Toggle Available to Recruiters"
+      >
+        <div
+          style={{
+            width: 20,
+            height: 20,
+            borderRadius: '50%',
+            background: '#fff',
+            position: 'absolute',
+            top: 2,
+            left: available ? 22 : 2,
+            boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
+            transition: 'left 0.2s',
+          }}
+        />
+      </div>
+      <span style={{ marginLeft: 8, color: !available ? '#0ccf83' : '#aaa', fontWeight: !available ? 700 : 400 }}>No</span>
+    </div>
+  );
 }
 
