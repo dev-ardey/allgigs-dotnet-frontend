@@ -67,6 +67,16 @@ body {
   word-wrap: break-word;       /* breekt woorden die te lang zijn */
   overflow-wrap: break-word;   /* moderne variant */
   hyphens: auto;               /* optioneel: voeg streepjes toe bij afbreken */
+
+  /* Make it act like a button */
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.job-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12); /* Increased shadow on hover */
+  transform: translateY(-2px); /* Slight lift on hover */
+  border-color: #0ccf83; /* Highlight border on hover */
 }
 
 .job-main {
@@ -249,8 +259,10 @@ body {
 
 /* Highlighted text style */
 .highlight {
-  background-color: #0ccf83; /* Green color already used in the project */
-  color: white;
+  background: none !important;
+  color: inherit !important;
+  text-decoration: underline !important;
+  text-decoration-color: #0ccf83 !important;
   font-weight: bold;
 }
 
@@ -444,5 +456,17 @@ body {
   .job-header img {
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
+  }
+}
+
+@media (min-width: 768px) {
+  .hide-on-desktop {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) { /* equivalent to Tailwind's hidden md:block */
+  .hide-on-mobile {
+    display: none !important;
   }
 }

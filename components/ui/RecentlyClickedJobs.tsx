@@ -32,7 +32,7 @@ const formatDateViewed = (clickedAtISO?: string): string => {
 
 const RecentlyClickedJobs: React.FC<RecentlyClickedJobsProps> = ({ jobs, isLoading, onJobClick, isJobNew }) => {
   if (isLoading) {
-    return <div className={styles.loading}>Loading recently clicked jobs...</div>;
+    return <div className={styles.loading}>Loading manage jobs...</div>;
   }
 
   if (jobs.length === 0) {
@@ -41,7 +41,7 @@ const RecentlyClickedJobs: React.FC<RecentlyClickedJobsProps> = ({ jobs, isLoadi
 
   return (
     <div className={styles.recentlyClickedContainer}>
-      <h3 className={styles.header}>Recently Clicked Jobs</h3>
+      <h3 className={styles.header}>Manage Jobs</h3>
       <div className={styles.jobRowContainer}>
         {jobs.map((job) => {
           const viewedDateText = formatDateViewed(job.clicked_at);

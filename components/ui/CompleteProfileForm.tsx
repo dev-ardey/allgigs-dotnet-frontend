@@ -110,15 +110,15 @@ const inputStyle: React.CSSProperties = {
 };
 
 const buttonStyle: React.CSSProperties = {
-  background: "#0ccf83",
-  color: "#000",
+  background: "#374151",
+  color: "#fff",
   fontWeight: 700,
   borderRadius: "4px",
-  padding: "0.75rem 1.5rem",
-  border: "2px solid #0ccf83",
+  padding: "10px 16px",
+  border: "none",
   boxShadow: "0 2px 8px rgba(12, 207, 131, 0.15)",
   cursor: "pointer",
-  fontSize: "1.1rem",
+  fontSize: "0.95rem",
   alignSelf: "center",
   transition: "background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s",
 };
