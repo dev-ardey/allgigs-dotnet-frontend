@@ -1,10 +1,20 @@
 import { useState } from "react";
 import { supabase } from "../../SupabaseClient";
+import { sanitizeInput } from "../../utils/sanitizeInput";
 
 interface AddJobFormProps {
   onClose: () => void;
   onJobAdded: () => void;
   user: any;
+}
+
+interface FormData {
+  title: string;
+  company: string;
+  location: string;
+  rate: string;
+  summary: string;
+  start_date: string;
 }
 
 export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProps) {
@@ -56,7 +66,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
     );
   }
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     title: "",
     company: "",
     location: "",
@@ -67,6 +77,33 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emailStatus, setEmailStatus] = useState<null | 'success' | 'error'>(null);
+  const [validationErrors, setValidationErrors] = useState<Partial<FormData>>({});
+
+  const validateForm = (): boolean => {
+    const errors: Partial<FormData> = {};
+    
+    if (!formData.title.trim() || formData.title.length < 3) {
+      errors.title = "Title must be at least 3 characters";
+    }
+    if (!formData.company.trim() || formData.company.length < 2) {
+      errors.company = "Company name must be at least 2 characters";
+    }
+    if (!formData.location.trim()) {
+      errors.location = "Location is required";
+    }
+    if (!formData.rate.trim()) {
+      errors.rate = "Rate/Salary is required";
+    }
+    if (!formData.summary.trim() || formData.summary.length < 50) {
+      errors.summary = "Job description must be at least 50 characters";
+    }
+    if (!formData.start_date) {
+      errors.start_date = "Start date is required";
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -74,10 +111,23 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
       ...prev,
       [name]: value
     }));
+    
+    // Clear validation error for this field
+    if (validationErrors[name as keyof FormData]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsSubmitting(true);
     setError(null);
     setEmailStatus(null);
@@ -86,39 +136,54 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
       // Generate a unique ID for the job
       const uniqueId = `JOB_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      // Get the user's access token
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
+      // Get the user's access token with error handling
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        throw new Error(`Session error: ${sessionError.message}`);
+      }
+      
+      if (!session?.access_token) {
+        throw new Error("No valid session found. Please log in again.");
+      }
+
+      const token = session.access_token;
+
+      // Sanitize all form fields before sending
+      const sanitizedData = {
+        title: sanitizeInput(formData.title),
+        company: sanitizeInput(formData.company),
+        location: sanitizeInput(formData.location),
+        rate: sanitizeInput(formData.rate),
+        summary: sanitizeInput(formData.summary),
+        start_date: sanitizeInput(formData.start_date),
+        submittedByEmail: sanitizeInput(user.email),
+        submissionId: uniqueId
+      };
 
       // Send only the email, do not push to Supabase
       const emailRes = await fetch('/api/send-job-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` })
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          title: formData.title,
-          company: formData.company,
-          location: formData.location,
-          rate: formData.rate,
-          summary: formData.summary,
-          start_date: formData.start_date,
-          submittedByEmail: user.email, // email associated with user_id
-          submissionId: uniqueId
-        })
+        body: JSON.stringify(sanitizedData)
       });
-      if (emailRes.ok) {
-        setEmailStatus('success');
-        onJobAdded();
-        setTimeout(() => {
-          onClose();
-        }, 1500);
-      } else {
-        setEmailStatus('error');
+
+      if (!emailRes.ok) {
+        const errorData = await emailRes.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP ${emailRes.status}: ${emailRes.statusText}`);
       }
+
+      setEmailStatus('success');
+      onJobAdded();
+      setTimeout(() => {
+        onClose();
+      }, 1500);
     } catch (emailError) {
       setEmailStatus('error');
+      setError(emailError instanceof Error ? emailError.message : 'An unexpected error occurred');
       console.error('Error sending job email:', emailError);
     } finally {
       setIsSubmitting(false);

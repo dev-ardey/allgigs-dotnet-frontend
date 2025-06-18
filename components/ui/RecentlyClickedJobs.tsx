@@ -1,27 +1,31 @@
 import React from 'react';
 import styles from './recentlyClickedJobs.module.css';
 
-// Interface aligned with the Job type in pages/jobs.tsx
+// Interface aligned with the Job type in pages/index.tsx
 interface Job {
   UNIQUE_ID: string;
-  Title: string; // Was JOB_TITLE
-  Company: string; // Was COMPANY
-  URL: string; // Was JOB_URL
-  date: string; // Was DATE_ADDED, used for displaying date
-  created_at?: string; // For isJobNew compatibility
-  inserted_at?: string; // For isJobNew compatibility
-  Location?: string;
-  Summary?: string;
-  rate?: string;
-  clicked_at?: string; // Added to store when the job was clicked
-  // Add any other job properties you expect to display from jobs.tsx Job type
+  Title: string;
+  Company: string;
+  Location: string; // Made required to match index.tsx
+  rate: string;
+  date: string;
+  Summary: string;
+  URL: string;
+  created_at?: string;
+  inserted_at?: string;
+  added_by?: string;
+  added_by_email?: string;
+  poster_name?: string;
+  source?: string;
+  tags?: string;
+  clicked_at?: string;
 }
 
 interface RecentlyClickedJobsProps {
   jobs: Job[];
   isLoading: boolean;
-  onJobClick: (job: Job) => void; // Expects a Job object
-  isJobNew: (job: Job) => boolean;   // Expects a Job object
+  onJobClick: (job: Job) => void;
+  isJobNew: (job: Job) => boolean;
 }
 
 const formatDateViewed = (clickedAtISO?: string): string => {

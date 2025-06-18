@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../../SupabaseClient";
+import { sanitizeInput } from "../../utils/sanitizeInput";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -12,8 +13,10 @@ export default function LoginForm() {
     e.preventDefault();
     setMessage("");
 
+    const sanitizedEmail = sanitizeInput(email);
+
     if (mode === "login") {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email: sanitizedEmail, password });
       if (error) {
         setMessage(error.message);
         return;
@@ -38,11 +41,11 @@ export default function LoginForm() {
       }
       setMessage("Logged in!");
     } else if (mode === "signup") {
-      const { error } = await supabase.auth.signUp({ email, password });
+      await supabase.auth.signUp({ email: sanitizedEmail, password });
       setSignedUp(true);
       setMessage("");
     } else if (mode === "forgot") {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(sanitizedEmail, {
         redirectTo: `${window.location.origin}/auth/callback?next=/jobs`,
       });
       setMessage(error ? `Error: ${error.message}` : "Password reset email sent!");
@@ -87,9 +90,21 @@ export default function LoginForm() {
         <button
           type="submit"
           style={buttonStyle}
-          onMouseDown={e => (e.currentTarget.style.boxShadow = buttonActiveStyle.boxShadow, e.currentTarget.style.background = buttonActiveStyle.background, e.currentTarget.style.transform = buttonActiveStyle.transform)}
-          onMouseUp={e => (e.currentTarget.style.boxShadow = buttonStyle.boxShadow, e.currentTarget.style.background = buttonStyle.background, e.currentTarget.style.transform = "none")}
-          onMouseLeave={e => (e.currentTarget.style.boxShadow = buttonStyle.boxShadow, e.currentTarget.style.background = buttonStyle.background, e.currentTarget.style.transform = "none")}
+          onMouseDown={e => {
+            if (typeof buttonActiveStyle.boxShadow === 'string') e.currentTarget.style.boxShadow = buttonActiveStyle.boxShadow;
+            if (typeof buttonActiveStyle.background === 'string') e.currentTarget.style.background = buttonActiveStyle.background;
+            if (typeof buttonActiveStyle.transform === 'string') e.currentTarget.style.transform = buttonActiveStyle.transform;
+          }}
+          onMouseUp={e => {
+            if (typeof buttonStyle.boxShadow === 'string') e.currentTarget.style.boxShadow = buttonStyle.boxShadow;
+            if (typeof buttonStyle.background === 'string') e.currentTarget.style.background = buttonStyle.background;
+            e.currentTarget.style.transform = "none";
+          }}
+          onMouseLeave={e => {
+            if (typeof buttonStyle.boxShadow === 'string') e.currentTarget.style.boxShadow = buttonStyle.boxShadow;
+            if (typeof buttonStyle.background === 'string') e.currentTarget.style.background = buttonStyle.background;
+            e.currentTarget.style.transform = "none";
+          }}
         >
           {mode === "login" && "Login"}
           {mode === "signup" && "Sign Up"}

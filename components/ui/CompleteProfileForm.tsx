@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../SupabaseClient";
+import { sanitizeInput } from "../../utils/sanitizeInput";
 
-export default function CompleteProfileForm({ onComplete, initialValues }: { onComplete: () => void, initialValues?: any }) {
+interface CompleteProfileFormProps {
+  onComplete: () => void;
+  initialValues?: any;
+}
+
+export default function CompleteProfileForm({ onComplete, initialValues }: CompleteProfileFormProps) {
   const [firstName, setFirstName] = useState(initialValues?.first_name || "");
   const [lastName, setLastName] = useState(initialValues?.last_name || "");
   const [linkedin, setLinkedin] = useState(initialValues?.linkedin_URL || "");
@@ -23,18 +29,42 @@ export default function CompleteProfileForm({ onComplete, initialValues }: { onC
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase.from("profiles").upsert({
-      id: user.id,
-      first_name: firstName,
-      last_name: lastName,
-      linkedin_URL: linkedin,
-      industry,
-      job_title: jobTitle,
-      location,
-    });
-    if (error) setError(error.message);
-    else onComplete();
+    setError("");
+    
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        setError(`Authentication error: ${authError.message}`);
+        return;
+      }
+      
+      if (!user) {
+        setError("No authenticated user found. Please log in again.");
+        return;
+      }
+
+      // Sanitize all fields before upsert
+      const sanitizedProfile = {
+        id: user.id,
+        first_name: sanitizeInput(firstName),
+        last_name: sanitizeInput(lastName),
+        linkedin_URL: sanitizeInput(linkedin),
+        industry: sanitizeInput(industry),
+        job_title: sanitizeInput(jobTitle),
+        location: sanitizeInput(location),
+      };
+
+      const { error: updateError } = await supabase.from("profiles").upsert(sanitizedProfile);
+      
+      if (updateError) {
+        setError(`Profile update failed: ${updateError.message}`);
+      } else {
+        onComplete();
+      }
+    } catch (err) {
+      setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
   };
 
   return (
@@ -101,32 +131,12 @@ export default function CompleteProfileForm({ onComplete, initialValues }: { onC
   );
 }
 
-const labelStyle: React.CSSProperties = {
-  fontWeight: 600,
-  marginBottom: "0.1rem",
-  color: "#374151",
-};
-
 const inputStyle: React.CSSProperties = {
   padding: "0.75rem 1rem",
   borderRadius: "4px",
   border: "1px solid #ccc",
   fontSize: "1rem",
   width: "100%",
-};
-
-const buttonStyle: React.CSSProperties = {
-  background: "#374151",
-  color: "#fff",
-  fontWeight: 700,
-  borderRadius: "4px",
-  padding: "10px 16px",
-  border: "none",
-  boxShadow: "0 2px 8px rgba(12, 207, 131, 0.15)",
-  cursor: "pointer",
-  fontSize: "0.95rem",
-  alignSelf: "center",
-  transition: "background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s",
 };
 
 function AvailableToRecruitersToggle() {

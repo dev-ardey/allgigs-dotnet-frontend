@@ -1,5 +1,10 @@
 import "@fontsource/montserrat";
+import { ReactNode } from "react";
 
-export default function Layout({ children }) {
+interface LayoutProps {
+  children: ReactNode;
+}
+
+export default function Layout({ children }: LayoutProps) {
   return <>{children}</>;
 }

@@ -12,6 +12,7 @@ interface JobSubmissionData {
   submittedByEmail: string;
   posterName: string;
   submissionId: string; // will be used as job_id
+  [key: string]: string; // Index signature for dynamic property access
 }
 
 // Initialize Supabase client for server-side usage
@@ -28,9 +29,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const jobData: JobSubmissionData = req.body;
 
-    // Validate required fields
-    const requiredFields = ['title', 'company', 'location', 'rate', 'summary', 'start_date', 'submittedByEmail'];
-    const missingFields = requiredFields.filter(field => !jobData[field]);
+    // Validate required fields with proper type safety
+    const requiredFields: (keyof JobSubmissionData)[] = ['title', 'company', 'location', 'rate', 'summary', 'start_date', 'submittedByEmail'];
+    const missingFields = requiredFields.filter(field => {
+      const value = jobData[field];
+      return !value || (typeof value === 'string' && value.trim() === '');
+    });
     
     if (missingFields.length > 0) {
       return res.status(400).json({ 
@@ -42,13 +46,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Extract user_id from Supabase Auth JWT in Authorization header
     const authHeader = req.headers['authorization'];
     const jwt = authHeader?.replace('Bearer ', '');
-    let user_id = null;
+    let user_id: string | null = null;
+    
     if (jwt) {
-      const { data, error } = await supabase.auth.getUser(jwt);
-      if (data?.user) {
-        user_id = data.user.id;
+      try {
+        const { data, error } = await supabase.auth.getUser(jwt);
+        if (data?.user && !error) {
+          user_id = data.user.id;
+        } else if (error) {
+          console.error('Auth error:', error);
+        }
+      } catch (authError) {
+        console.error('Exception during auth:', authError);
       }
     }
+    
     if (!user_id) {
       return res.status(401).json({ error: 'Unauthorized: No user session found' });
     }
