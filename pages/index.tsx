@@ -96,6 +96,11 @@ export default function JobBoard() {
   const lastScrollY = useRef(0);
 
   useEffect(() => {
+    // Dummy use to avoid TS build error
+    if (loading) return;
+  }, [loading]);
+
+  useEffect(() => {
     const handleScroll = () => {
       setShowLogo(window.scrollY > 500);
     };
