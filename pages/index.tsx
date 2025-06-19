@@ -39,6 +39,8 @@ export default function JobBoard() {
   const [showAddJobForm, setShowAddJobForm] = useState(false);
   const PAGE_SIZE = 30;
   const [allJobs, setAllJobs] = useState<Job[]>([]);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
 
   // State for Recently Clicked Jobs
   const [showRecentlyClicked, setShowRecentlyClicked] = useState(false);
@@ -127,26 +129,26 @@ export default function JobBoard() {
 
   // Log search term activity to Supabase
   const logSearchTermActivity = async (searchTermToLog: string) => {
-    
+
     if (!user || !user.id || !searchTermToLog || searchTermToLog.trim() === "") {
       console.log("[logSearchTermActivity] Pre-condition failed. User:", user, "SearchTerm:", searchTermToLog);
       return;
     }
-    
+
     console.log("[logSearchTermActivity] Logging search term:", searchTermToLog, "for user:", user.id);
     console.log("[logSearchTermActivity] About to call supabase.from('search_logs').insert()");
-    
+
     try {
       const insertData = {
         user_id: user.id,
         search_term: searchTermToLog.trim(),
       };
       console.log("[logSearchTermActivity] Insert data:", insertData);
-      
+
       const { data, error } = await supabase.from("search_logs").insert([insertData]);
-      
+
       console.log("[logSearchTermActivity] Supabase response - data:", data, "error:", error);
-      
+
       if (error) {
         console.error("❌ Error logging search term:", error);
         console.error("❌ Error details:", {
@@ -174,18 +176,20 @@ export default function JobBoard() {
       if (!user || !user.id) console.log("[useEffect logSearchTerm] Reason: User or user.id is missing.");
       if (!debouncedSearchTerm || debouncedSearchTerm.trim() === "") console.log("[useEffect logSearchTerm] Reason: debouncedSearchTerm is empty or whitespace.");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearchTerm, user]); 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchTerm, user]);
 
   useEffect(() => {
     // Check auth state on mount
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user);
+      setIsAuthLoading(false);
     });
     // Listen for login/logout
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       const user = session?.user ?? null;
       setUser(user);
+      setIsAuthLoading(false);
     });
     return () => { listener?.subscription.unsubscribe(); };
   }, []);
@@ -352,7 +356,7 @@ export default function JobBoard() {
       if (!user || !user.id) console.log("[useEffect RecentlyClicked] Reason: User or user.id is missing.");
       if (!showRecentlyClicked) console.log("[useEffect RecentlyClicked] Reason: showRecentlyClicked is false.");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, showRecentlyClicked]);
 
   // Memoize the Fuse.js instance to avoid recreating it on every render
@@ -382,7 +386,7 @@ export default function JobBoard() {
       // If searchWords is empty (e.g., searchTerm was just spaces), 
       // no filtering by search term happens here, filtered remains allJobs.
     }
-    
+
     // Removed filtering by selectedIndustry and excludedTerms
 
     return filtered;
@@ -507,6 +511,10 @@ export default function JobBoard() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  if (isAuthLoading) {
+    return null; // of een loading spinner als je wil
+  }
+
   if (!user) {
     return (
       <div>
@@ -515,84 +523,60 @@ export default function JobBoard() {
     );
   }
 
-  if (profileLoading || loading)
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(to bottom right, #e0f2fe, #ffffff, #ede9fe)'
-      }}>
-        <div style={{
-          textAlign: 'center',
-          paddingTop: '20vh'
-        }}>
-          <div style={{
-            width: '64px',
-            height: '64px',
-            background: 'linear-gradient(to right, #2563eb, #9333ea)',
-            borderRadius: '9999px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 1rem auto',
-            animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
-          }}>
-            <div style={{
-              width: '32px',
-              height: '32px',
-              border: '4px solid white',
-              borderTopColor: 'transparent',
-              borderRadius: '9999px',
-              animation: 'spin 1s linear infinite'
-            }}></div>
-          </div>
-          <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#4b5563' }}>Loading amazing jobs...</div>
-          <div style={{ color: '#6b7280', marginTop: '0.5rem' }}>Please wait while we fetch the latest opportunities</div>
-        </div>
-      </div>
-    )
+
 
   if (needsProfile) {
     return <CompleteProfileForm onComplete={() => window.location.reload()} />;
   }
 
-  // Log job click to Supabase
   const logJobClick = async (job: Job) => {
     if (!user || !user.id) {
       console.error("[LogJobClick] User not available for logging job click. Aborting.");
       return;
     }
+
     console.log("[LogJobClick] Logging for user:", user.id, "Job ID:", job.UNIQUE_ID, "Title:", job.Title);
+
     try {
       const { error } = await supabase.from("job_clicks").insert([
         {
-          user_id: user.id, 
+          user_id: user.id,
           job_id: job.UNIQUE_ID,
           job_title: job.Title,
           company: job.Company,
           location: job.Location,
           rate: job.rate,
-          date_posted: job.date, 
+          date_posted: job.date,
           summary: job.Summary,
           url: job.URL,
           // clicked_at should be handled by DB default
         },
       ]);
+
       if (error) {
         console.error("[LogJobClick] Error logging job click:", error);
-      } else {
-        console.log("[LogJobClick] Job click logged successfully for job:", job.UNIQUE_ID);
-        // Refresh recently clicked jobs if the section is visible
-        if (showRecentlyClicked) {
-          console.log("[LogJobClick] Refreshing recently clicked jobs as section is visible.");
-          fetchRecentlyClickedJobs();
-        } else {
-          console.log("[LogJobClick] Recently clicked jobs section not visible, not refreshing immediately. Will refresh when opened.");
-        }
+        return;
       }
+
+      console.log("[LogJobClick] Job click logged successfully for job:", job.UNIQUE_ID);
+
+      // ✅ Check of job al in de lijst zit voordat je gaat herladen
+      const alreadyInList = recentlyClickedJobs.some(j => j.UNIQUE_ID === job.UNIQUE_ID);
+
+      if (showRecentlyClicked && !alreadyInList) {
+        console.log("[LogJobClick] Job not in list yet — refreshing recently clicked jobs.");
+        fetchRecentlyClickedJobs();
+      } else if (showRecentlyClicked && alreadyInList) {
+        console.log("[LogJobClick] Job already in recently clicked jobs — skipping refetch.");
+      } else {
+        console.log("[LogJobClick] Recently clicked jobs section not visible.");
+      }
+
     } catch (error) {
       console.error("[LogJobClick] Exception when logging job click:", error);
     }
   };
+
 
   return (
     <>
@@ -714,12 +698,11 @@ export default function JobBoard() {
       <div className="job-board-container">
 
         {/* Header */}
-        <div className="job-header">
-          {/* <h1>AllGigs<span className="allGigs-lightning">ϟ</span></h1> */}
-          <img src="/images/allGigs-logo-white.svg" alt="AllGigs Logo" style={{ height: "70px" }} />
+        <div className="job-header text-center flex flex-col items-center justify-center gap-2 px-4 py-6">
+          <img src="/images/allGigs-logo-white.svg" alt="AllGigs Logo" className="h-[70px]" />
 
-          <p>
-            Discover your next opportunity from <span style={{ fontWeight: 600, color: "#0ccf83" }}>{sortedJobs.length}</span> curated positions
+          <p className="text-white text-sm sm:text-base">
+            Discover your next opportunity from <span className="font-semibold text-[#0ccf83]">{sortedJobs.length}</span> curated positions
           </p>
         </div>
 
@@ -737,7 +720,9 @@ export default function JobBoard() {
               ...menuButtonStyle,
               width: "auto",
               marginBottom: "1rem",
-              background: showRecentlyClicked ? "#6b7280" : "#2563eb", // Adjusted color
+              background: showRecentlyClicked ? "#6b7280" : "#0ccf83", // Adjusted color
+              border: '2px solid #0ccf83',
+
               padding: "12px 20px",
               fontSize: "1rem",
             }}
@@ -746,13 +731,24 @@ export default function JobBoard() {
           </button>
 
           {showRecentlyClicked && (
-            <RecentlyClickedJobs
-              jobs={recentlyClickedJobs}
-              isLoading={loadingRecentlyClicked}
-              onJobClick={logJobClick}
-              isJobNew={isJobNew}
-            />
+            <div
+              style={{
+                border: "4px solid #0ccf83",
+                borderRadius: "12px",
+                padding: "1rem",
+                backgroundColor: "#f9fafb", // lichtgrijs achtergrondje optioneel
+                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.05)", // optioneel voor diepte
+              }}
+            >
+              <RecentlyClickedJobs
+                jobs={recentlyClickedJobs}
+                isLoading={loadingRecentlyClicked}
+                onJobClick={logJobClick}
+                isJobNew={isJobNew}
+              />
+            </div>
           )}
+
         </div>
 
         {/* Filters */}
@@ -866,9 +862,9 @@ export default function JobBoard() {
             boxShadow: "rgba(0, 0, 0, 0.3) 0px 4px 24px",
             boxSizing: "border-box",
             overflowX: "hidden",
-            position: 'absolute',
-            top: typeof window !== 'undefined' ? window.scrollY + 60 : 60,
-            left: 0,
+            // position: 'absolute',
+            position: 'fixed', //  vast aan scherm
+            top: 0, left: 0,
             right: 0,
             margin: '0 auto',
             width: '95vw',
@@ -879,6 +875,7 @@ export default function JobBoard() {
             flexDirection: 'column',
             alignItems: 'center',
             backgroundColor: 'rgb(18, 31, 54, 1)', // Ensure fully opaque
+
           }}
         >
           {user && user.email && (
@@ -1195,4 +1192,5 @@ function AvailableToRecruitersToggle() {
     </div>
   );
 }
+
 
