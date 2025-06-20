@@ -97,8 +97,11 @@ export default function JobBoard() {
 
   useEffect(() => {
     // Dummy use to avoid TS build error
+    
     if (loading) return;
   }, [loading]);
+  if (loading) return <p>Loading jobs...</p>;
+
 
   useEffect(() => {
     const handleScroll = () => {
