@@ -127,26 +127,26 @@ export default function JobBoard() {
 
   // Log search term activity to Supabase
   const logSearchTermActivity = async (searchTermToLog: string) => {
-    
+
     if (!user || !user.id || !searchTermToLog || searchTermToLog.trim() === "") {
       console.log("[logSearchTermActivity] Pre-condition failed. User:", user, "SearchTerm:", searchTermToLog);
       return;
     }
-    
+
     console.log("[logSearchTermActivity] Logging search term:", searchTermToLog, "for user:", user.id);
     console.log("[logSearchTermActivity] About to call supabase.from('search_logs').insert()");
-    
+
     try {
       const insertData = {
         user_id: user.id,
         search_term: searchTermToLog.trim(),
       };
       console.log("[logSearchTermActivity] Insert data:", insertData);
-      
+
       const { data, error } = await supabase.from("search_logs").insert([insertData]);
-      
+
       console.log("[logSearchTermActivity] Supabase response - data:", data, "error:", error);
-      
+
       if (error) {
         console.error("❌ Error logging search term:", error);
         console.error("❌ Error details:", {
@@ -174,8 +174,8 @@ export default function JobBoard() {
       if (!user || !user.id) console.log("[useEffect logSearchTerm] Reason: User or user.id is missing.");
       if (!debouncedSearchTerm || debouncedSearchTerm.trim() === "") console.log("[useEffect logSearchTerm] Reason: debouncedSearchTerm is empty or whitespace.");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearchTerm, user]); 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchTerm, user]);
 
   useEffect(() => {
     // Check auth state on mount
@@ -352,7 +352,7 @@ export default function JobBoard() {
       if (!user || !user.id) console.log("[useEffect RecentlyClicked] Reason: User or user.id is missing.");
       if (!showRecentlyClicked) console.log("[useEffect RecentlyClicked] Reason: showRecentlyClicked is false.");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, showRecentlyClicked]);
 
   // Memoize the Fuse.js instance to avoid recreating it on every render
@@ -382,7 +382,7 @@ export default function JobBoard() {
       // If searchWords is empty (e.g., searchTerm was just spaces), 
       // no filtering by search term happens here, filtered remains allJobs.
     }
-    
+
     // Removed filtering by selectedIndustry and excludedTerms
 
     return filtered;
@@ -565,13 +565,13 @@ export default function JobBoard() {
     try {
       const { error } = await supabase.from("job_clicks").insert([
         {
-          user_id: user.id, 
+          user_id: user.id,
           job_id: job.UNIQUE_ID,
           job_title: job.Title,
           company: job.Company,
           location: job.Location,
           rate: job.rate,
-          date_posted: job.date, 
+          date_posted: job.date,
           summary: job.Summary,
           url: job.URL,
           // clicked_at should be handled by DB default
@@ -737,7 +737,7 @@ export default function JobBoard() {
               ...menuButtonStyle,
               width: "auto",
               marginBottom: "1rem",
-              background: showRecentlyClicked ? "#6b7280" : "#2563eb", // Adjusted color
+              background: showRecentlyClicked ? "#6b7280" : "#0ccf83", // Adjusted color
               padding: "12px 20px",
               fontSize: "1rem",
             }}
