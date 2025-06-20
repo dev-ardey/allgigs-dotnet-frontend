@@ -494,6 +494,8 @@ export default function JobBoard() {
   }, [debouncedSearchTerm, sortedJobs]);
 
   const { needsProfile, loading: profileLoading } = useProfileCheck(user);
+  if (profileLoading) return <p>Checking profile...</p>;
+
 
   useEffect(() => {
     let ticking = false;
