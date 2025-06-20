@@ -1,6 +1,5 @@
 import "@fontsource/montserrat";
 import { ReactNode } from "react";
-import '../styles/globals.css';
 
 
 interface LayoutProps {
