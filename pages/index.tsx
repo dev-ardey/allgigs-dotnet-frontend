@@ -519,7 +519,8 @@ export default function JobBoard() {
     return (
       <div style={{
         minHeight: '100vh',
-        background: 'linear-gradient(to bottom right, #e0f2fe, #ffffff, #ede9fe)'
+        background: '#121f36',
+
       }}>
         <div style={{
           textAlign: 'center',
@@ -528,7 +529,7 @@ export default function JobBoard() {
           <div style={{
             width: '64px',
             height: '64px',
-            background: 'linear-gradient(to right, #2563eb, #9333ea)',
+            background: '#121f36',
             borderRadius: '9999px',
             display: 'flex',
             alignItems: 'center',
@@ -536,17 +537,17 @@ export default function JobBoard() {
             margin: '0 auto 1rem auto',
             animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
           }}>
-            <div style={{
+            {/* <div style={{
               width: '32px',
               height: '32px',
               border: '4px solid white',
               borderTopColor: 'transparent',
               borderRadius: '9999px',
               animation: 'spin 1s linear infinite'
-            }}></div>
+            }}></div> */}
           </div>
-          <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#4b5563' }}>Loading amazing jobs...</div>
-          <div style={{ color: '#6b7280', marginTop: '0.5rem' }}>Please wait while we fetch the latest opportunities</div>
+          <div style={{ fontSize: '1.25rem', fontWeight: 600, color: 'white' }}>Loading jobs...</div>
+          <div style={{ color: '#0ccf83', marginTop: '0.5rem' }}>Please wait while we fetch the latest opportunities</div>
         </div>
       </div>
     )
@@ -653,7 +654,7 @@ export default function JobBoard() {
             }}>
             <button
               style={{
-                background: '#10b981',
+                background: '#0ccf83',
                 color: '#000',
                 fontWeight: 700,
                 borderRadius: 6,
@@ -753,6 +754,7 @@ export default function JobBoard() {
               isJobNew={isJobNew}
             />
           )}
+
         </div>
 
         {/* Filters */}
