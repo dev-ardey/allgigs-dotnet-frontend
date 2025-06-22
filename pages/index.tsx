@@ -771,20 +771,21 @@ export default function JobBoard() {
             Manage Jobs
           </button>
 
-          {showRecentlyClicked && (
-            <RecentlyClickedJobs
-              jobs={recentlyClickedJobs}
-              isLoading={loadingRecentlyClicked}
-              onJobClick={logJobClick}
-              isJobNew={isJobNew}
-            />
-          )}
+          {showRecentlyClicked &&
+            (
+              <RecentlyClickedJobs
+                jobs={recentlyClickedJobs}
+                isLoading={loadingRecentlyClicked}
+                onJobClick={logJobClick}
+                isJobNew={isJobNew}
+              />
+            )}
         </div>
 
         {/* Filters */}
         {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" && (
           <div style={{ marginTop: "0.5rem", marginBottom: "1rem", textAlign: "left", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ fontSize: "0.9rem", color: "#555", marginRight: "0.25rem" }}>Active search:</span>
+            {/* <span style={{ fontSize: "0.9rem", color: "#555", marginRight: "0.25rem" }}>Active search:</span> */}
             {debouncedSearchTerm.trim().toLowerCase().split(/\s+/).filter(word => word.length > 0).map((word, index) => (
               <span
                 key={index}
@@ -794,10 +795,10 @@ export default function JobBoard() {
                   fontSize: "0.95rem",
                   fontWeight: 500,
                   cursor: "pointer",
-                  display: "inline-block"
+                  display: "inline-block",
                 }}
               >
-                {word}
+                {/* {word} */}
               </span>
             ))}
           </div>
