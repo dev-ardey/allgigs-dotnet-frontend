@@ -109,6 +109,14 @@ export default function JobBoard() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // jobs wordt nog door supabase gebruikt dus moet hij hier ook nog gefeteched worden
+  useEffect(() => {
+    const fetchJobs = async () => {
+      const { data } = await supabase.from("jobs").select("*");
+      if (data) setJobs(data);
+    };
+    fetchJobs();
+  }, []);
 
   // Debounce search term to improve performance
   useEffect(() => {
@@ -621,6 +629,14 @@ export default function JobBoard() {
     outline: 'none',
     marginTop: 0,
   };
+
+  console.log(showMenuAddJobForm); // voorkom build error tijdelijk
+  console.log(menuButtonSharedStyle); // voorkom build error tijdelijk
+  console.log(hasAddJobPermission); // voorkom build error tijdelijk
+  console.log(setShowMenuAddJobForm); // voorkom build error tijdelijk
+  console.log(hasMore); // voorkom build error tijdelijk
+  console.log(jobs); // voorkom build error tijdelijk
+
 
   return (
     <>
@@ -1147,7 +1163,7 @@ export default function JobBoard() {
               onComplete={async () => {
                 // Refetch profile
                 if (user) {
-                  const { data, error } = await supabase
+                  const { data } = await supabase
                     .from('profiles')
                     .select('first_name, last_name, linkedin_URL, industry, job_title, location')
                     .eq('id', user.id)
@@ -1173,7 +1189,7 @@ export default function JobBoard() {
               aria-label="Close"
               onClick={() => setShowEditProfile(false)}
             >
-              ×
+
             </button>
           </div>
         </div>
