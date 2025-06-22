@@ -699,7 +699,7 @@ export default function JobBoard() {
             >
               Post a Job
             </button>
-            <button
+            {/* <button
               style={{
                 background: '#dc2626',
                 color: '#fff',
@@ -721,7 +721,7 @@ export default function JobBoard() {
               onClick={handleLogout}
             >
               Logout
-            </button>
+            </button> */}
           </div>
         </div>
         {/* Search bar */}
@@ -989,7 +989,7 @@ export default function JobBoard() {
             </button>
             <button
 
-              className="hide-on-desktop"
+              // className="hide-on-desktop"
               style={logoutButtonStyle}
               onMouseDown={e => e.currentTarget.style.transform = 'translateY(2px)'}
               onMouseUp={e => e.currentTarget.style.transform = ''}
