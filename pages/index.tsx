@@ -691,6 +691,9 @@ export default function JobBoard() {
                 fontFamily: "'Montserrat', Arial, sans-serif",
                 transition: 'background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s',
                 outline: 'none',
+                marginTop: '20px'
+
+
               }}
               onMouseDown={e => e.currentTarget.style.transform = 'translateY(2px)'}
               onMouseUp={e => e.currentTarget.style.transform = ''}
@@ -786,7 +789,7 @@ export default function JobBoard() {
         {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" && (
           <div style={{ marginTop: "0.5rem", marginBottom: "1rem", textAlign: "left", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.5rem" }}>
             {/* <span style={{ fontSize: "0.9rem", color: "#555", marginRight: "0.25rem" }}>Active search:</span> */}
-            {debouncedSearchTerm.trim().toLowerCase().split(/\s+/).filter(word => word.length > 0).map((word, index) => (
+            {/* {debouncedSearchTerm.trim().toLowerCase().split(/\s+/).filter(word => word.length > 0).map((word, index) => (
               <span
                 key={index}
                 style={{
@@ -798,9 +801,9 @@ export default function JobBoard() {
                   display: "inline-block",
                 }}
               >
-                {/* {word} */}
+                {word}
               </span>
-            ))}
+            ))} */}
           </div>
         )}
 
@@ -913,7 +916,7 @@ export default function JobBoard() {
               padding: "10px 20px",
               fontSize: "0.9rem",
               textAlign: "center",
-              borderBottom: "1px solid #374151",
+              // borderBottom: "1px solid #374151",
               marginBottom: "10px"
             }}>
               Logged in as: <strong>{user.email}</strong>
