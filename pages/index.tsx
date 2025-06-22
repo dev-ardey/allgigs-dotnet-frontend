@@ -5,8 +5,8 @@ import { supabase } from "../SupabaseClient"
 import LoginForm from "../components/ui/login";
 import AddJobForm from "../components/ui/add-job-form";
 import Fuse from "fuse.js";
-import { SpeedInsights } from "@vercel/speed-insights/next"
-import { formatDate } from "../utils/formatDate";
+// import { SpeedInsights } from "@vercel/speed-insights/next"
+// import { formatDate } from "../utils/formatDate";
 import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs'; // Added import
 import CompleteProfileForm from "../components/ui/CompleteProfileForm";
 import { useProfileCheck } from "../components/ui/useProfileCheck";
