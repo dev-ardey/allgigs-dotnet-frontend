@@ -765,7 +765,7 @@ export default function JobBoard() {
               ...menuButtonStyle,
               width: "auto",
               marginBottom: "1rem",
-              background: showRecentlyClicked ? "#6b7280" : "#2563eb", // Adjusted color
+              background: showRecentlyClicked ? "#6b7280" : "#0ccf83", // Adjusted color
               padding: "12px 20px",
               fontSize: "1rem",
             }}
