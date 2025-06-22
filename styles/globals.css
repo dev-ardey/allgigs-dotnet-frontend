@@ -5,6 +5,7 @@ body {
   margin: 0;
   /* color: #222; */
     color: #222;
+  min-width: 300px;
 }
 
 .job-board-container {
@@ -71,6 +72,8 @@ body {
   /* Make it act like a button */
   cursor: pointer;
   transition: all 0.2s ease-in-out;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .job-card:hover {

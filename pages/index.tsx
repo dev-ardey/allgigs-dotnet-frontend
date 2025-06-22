@@ -85,7 +85,7 @@ export default function JobBoard() {
     padding: "10px 16px",
     fontSize: "0.95rem",
     cursor: "pointer",
-    width: "24%",
+    // width: "24%",
     display: "flex",
     justifySelf: "center",
     justifyContent: "center"
@@ -679,7 +679,7 @@ export default function JobBoard() {
             }}>
             <button
               style={{
-                background: '#10b981',
+                background: '#0ccf83',
                 color: '#000',
                 fontWeight: 700,
                 borderRadius: 6,
@@ -966,6 +966,30 @@ export default function JobBoard() {
           }}>
             <button
               className="hide-on-desktop"
+              style={{
+                background: '#0ccf83',
+                color: '#000',
+                fontWeight: 700,
+                borderRadius: 6,
+                padding: '6px 12px',
+                border: '2px solid #0ccf83',
+                boxShadow: '0 2px 8px rgba(12, 207, 131, 0.15)',
+                cursor: 'pointer',
+                fontSize: '1.05rem',
+                fontFamily: "'Montserrat', Arial, sans-serif",
+                transition: 'background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s',
+                outline: 'none',
+              }}
+              onMouseDown={e => e.currentTarget.style.transform = 'translateY(2px)'}
+              onMouseUp={e => e.currentTarget.style.transform = ''}
+              onMouseLeave={e => e.currentTarget.style.transform = ''}
+              onClick={() => setShowAddJobForm(true)}
+            >
+              Post a Job
+            </button>
+            <button
+
+              className="hide-on-desktop"
               style={logoutButtonStyle}
               onMouseDown={e => e.currentTarget.style.transform = 'translateY(2px)'}
               onMouseUp={e => e.currentTarget.style.transform = ''}
@@ -974,6 +998,7 @@ export default function JobBoard() {
             >
               Logout
             </button>
+
           </div>
         </div>
       )}
