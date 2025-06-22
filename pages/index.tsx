@@ -557,7 +557,7 @@ export default function JobBoard() {
               animation: 'spin 1s linear infinite'
             }}></div>
           </div>
-          <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#4b5563' }}>Loading amazing jobs...</div>
+          <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#4b5563' }}>Loading jobs...</div>
           <div style={{ color: '#6b7280', marginTop: '0.5rem' }}>Please wait while we fetch the latest opportunities</div>
         </div>
       </div>
