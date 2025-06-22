@@ -5,10 +5,11 @@ import { supabase } from "../SupabaseClient"
 import LoginForm from "../components/ui/login";
 import AddJobForm from "../components/ui/add-job-form";
 import Fuse from "fuse.js";
+import { SpeedInsights } from "@vercel/speed-insights/next"
+import { formatDate } from "../utils/formatDate";
 import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs'; // Added import
 import CompleteProfileForm from "../components/ui/CompleteProfileForm";
 import { useProfileCheck } from "../components/ui/useProfileCheck";
-import { sanitizeInput } from "../utils/sanitizeInput";
 
 
 interface Job {
@@ -31,10 +32,14 @@ interface Job {
 }
 
 export default function JobBoard() {
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  // Removed searchPills and disregardedPills state variables
   const [user, setUser] = useState<any>(null);
   const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  // Removed selectedIndustry and excludedTerms state variables
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [showAddJobForm, setShowAddJobForm] = useState(false);
   const PAGE_SIZE = 30;
@@ -45,6 +50,7 @@ export default function JobBoard() {
   const [recentlyClickedJobs, setRecentlyClickedJobs] = useState<Job[]>([]);
   const [loadingRecentlyClicked, setLoadingRecentlyClicked] = useState(false);
 
+  // const paginatedJobs = filteredJobs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const paginationButtonStyle: React.CSSProperties = {
     padding: "10px 16px",
     fontSize: "16px",
@@ -90,6 +96,7 @@ export default function JobBoard() {
   const [showLogo, setShowLogo] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showMenuAddJobForm, setShowMenuAddJobForm] = useState(false);
   const [headerVisible, setHeaderVisible] = useState(true);
   const lastScrollY = useRef(0);
 
@@ -127,26 +134,26 @@ export default function JobBoard() {
 
   // Log search term activity to Supabase
   const logSearchTermActivity = async (searchTermToLog: string) => {
-    
+
     if (!user || !user.id || !searchTermToLog || searchTermToLog.trim() === "") {
       console.log("[logSearchTermActivity] Pre-condition failed. User:", user, "SearchTerm:", searchTermToLog);
       return;
     }
-    
+
     console.log("[logSearchTermActivity] Logging search term:", searchTermToLog, "for user:", user.id);
     console.log("[logSearchTermActivity] About to call supabase.from('search_logs').insert()");
-    
+
     try {
       const insertData = {
         user_id: user.id,
         search_term: searchTermToLog.trim(),
       };
       console.log("[logSearchTermActivity] Insert data:", insertData);
-      
+
       const { data, error } = await supabase.from("search_logs").insert([insertData]);
-      
+
       console.log("[logSearchTermActivity] Supabase response - data:", data, "error:", error);
-      
+
       if (error) {
         console.error("❌ Error logging search term:", error);
         console.error("❌ Error details:", {
@@ -174,8 +181,11 @@ export default function JobBoard() {
       if (!user || !user.id) console.log("[useEffect logSearchTerm] Reason: User or user.id is missing.");
       if (!debouncedSearchTerm || debouncedSearchTerm.trim() === "") console.log("[useEffect logSearchTerm] Reason: debouncedSearchTerm is empty or whitespace.");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearchTerm, user]); 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchTerm, user]);
+
+  // Function to check if user has permission to add jobs
+  const hasAddJobPermission = (user: any): boolean => !!user && !!user.id;
 
   useEffect(() => {
     // Check auth state on mount
@@ -202,7 +212,8 @@ export default function JobBoard() {
     if (error) {
       console.error(error);
     } else {
-      setAllJobs(data || []);
+      setJobs(data || []);
+      setHasMore((data?.length || 0) === PAGE_SIZE);
     }
     setLoading(false);
   };
@@ -220,7 +231,8 @@ export default function JobBoard() {
       if (error) {
         console.error(error);
       } else {
-        setAllJobs(data || []);
+        setJobs(data || []);
+        setHasMore((data?.length || 0) === PAGE_SIZE);
       }
       setLoading(false);
     }
@@ -352,7 +364,7 @@ export default function JobBoard() {
       if (!user || !user.id) console.log("[useEffect RecentlyClicked] Reason: User or user.id is missing.");
       if (!showRecentlyClicked) console.log("[useEffect RecentlyClicked] Reason: showRecentlyClicked is false.");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, showRecentlyClicked]);
 
   // Memoize the Fuse.js instance to avoid recreating it on every render
@@ -382,7 +394,7 @@ export default function JobBoard() {
       // If searchWords is empty (e.g., searchTerm was just spaces), 
       // no filtering by search term happens here, filtered remains allJobs.
     }
-    
+
     // Removed filtering by selectedIndustry and excludedTerms
 
     return filtered;
@@ -565,13 +577,13 @@ export default function JobBoard() {
     try {
       const { error } = await supabase.from("job_clicks").insert([
         {
-          user_id: user.id, 
+          user_id: user.id,
           job_id: job.UNIQUE_ID,
           job_title: job.Title,
           company: job.Company,
           location: job.Location,
           rate: job.rate,
-          date_posted: job.date, 
+          date_posted: job.date,
           summary: job.Summary,
           url: job.URL,
           // clicked_at should be handled by DB default
@@ -592,6 +604,22 @@ export default function JobBoard() {
     } catch (error) {
       console.error("[LogJobClick] Exception when logging job click:", error);
     }
+  };
+
+  const menuButtonSharedStyle: React.CSSProperties = {
+    background: "#0ccf83",
+    color: "#000",
+    fontWeight: 700,
+    borderRadius: 6,
+    padding: "12px 16px",
+    border: "2px solid #0ccf83",
+    boxShadow: "0 2px 8px rgba(12, 207, 131, 0.15)",
+    cursor: "pointer",
+    fontSize: "1.1rem",
+    fontFamily: "'Montserrat', Arial, sans-serif",
+    transition: "background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s",
+    outline: 'none',
+    marginTop: 0,
   };
 
   return (
@@ -794,15 +822,15 @@ export default function JobBoard() {
             >
               <div className="job-card" style={{ position: 'relative' }}>
                 <div className="job-main">
-                  <h3 className="job-title" dangerouslySetInnerHTML={{ __html: sanitizeInput(job.Title) }} />
-                  <div className="job-company"><strong>Company:</strong> <span dangerouslySetInnerHTML={{ __html: sanitizeInput(job.Company) }} /></div>
+                  <h3 className="job-title" dangerouslySetInnerHTML={{ __html: job.Title }} />
+                  <div className="job-company"><strong>Company:</strong> <span dangerouslySetInnerHTML={{ __html: job.Company }} /></div>
                   <div className="job-details">
                     <span><strong>Rate:</strong> {job.rate}</span>
-                    <span><strong>Location:</strong> <span dangerouslySetInnerHTML={{ __html: sanitizeInput(job.Location) }} /></span>
+                    <span><strong>Location:</strong> <span dangerouslySetInnerHTML={{ __html: job.Location }} /></span>
                     <span><strong>Date:</strong> {job.date}</span>
                   </div>
                   <div className="job-summary">
-                    <strong>Summary:</strong> <span dangerouslySetInnerHTML={{ __html: sanitizeInput(job.Summary) }} />
+                    <strong>Summary:</strong> <span dangerouslySetInnerHTML={{ __html: job.Summary }} />
                   </div>
                 </div>
               </div>
@@ -1119,7 +1147,7 @@ export default function JobBoard() {
               onComplete={async () => {
                 // Refetch profile
                 if (user) {
-                  const { data } = await supabase
+                  const { data, error } = await supabase
                     .from('profiles')
                     .select('first_name, last_name, linkedin_URL, industry, job_title, location')
                     .eq('id', user.id)
@@ -1195,4 +1223,3 @@ function AvailableToRecruitersToggle() {
     </div>
   );
 }
-
