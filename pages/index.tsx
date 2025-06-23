@@ -481,6 +481,23 @@ export default function JobBoard() {
     return text.replace(regex, '<span class="highlight">$1</span>');
   };
 
+  useEffect(() => {
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+    if (showMenu) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`; // Compenseer verschuiving
+    } else {
+      document.body.style.overflow = 'auto';
+      document.body.style.paddingRight = '0px';
+    }
+
+    return () => {
+      document.body.style.overflow = 'auto';
+      document.body.style.paddingRight = '0px';
+    };
+  }, [showMenu]);
+
   // Real-time highlighting as user types (mobile-friendly)
   useEffect(() => {
     if (debouncedSearchTerm.trim() !== '') {
@@ -889,6 +906,20 @@ export default function JobBoard() {
       {/* Mobile Hamburger Menu Content - Visible only on mobile */}
       {showMenu && (
         <div
+          onClick={() => setShowMenu(false)} // klik sluit menu optioneel
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0, // ← belangrijk!
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            zIndex: 1999,
+          }}
+        />
+      )}
+      {showMenu && (
+        <div
           style={{
             background: "rgb(18, 31, 54)",
             color: "white",
@@ -896,8 +927,8 @@ export default function JobBoard() {
             boxShadow: "rgba(0, 0, 0, 0.3) 0px 4px 24px",
             boxSizing: "border-box",
             overflowX: "hidden",
-            position: 'absolute',
-            top: typeof window !== 'undefined' ? window.scrollY + 60 : 60,
+            // position: 'absolute',
+            // top: typeof window !== 'undefined' ? window.scrollY + 60 : 60,
             left: 0,
             right: 0,
             margin: '0 auto',
@@ -909,6 +940,8 @@ export default function JobBoard() {
             flexDirection: 'column',
             alignItems: 'center',
             backgroundColor: 'rgb(18, 31, 54, 1)', // Ensure fully opaque
+            position: 'fixed',
+            top: '60px',
           }}
         >
           {user && user.email && (
@@ -919,6 +952,8 @@ export default function JobBoard() {
               // borderBottom: "1px solid #374151",
               marginBottom: "10px"
             }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 8, color: '#0ccf83' }}>Your Details</div>
+
               Logged in as: <strong>{user.email}</strong>
             </div>
           )}
@@ -933,12 +968,12 @@ export default function JobBoard() {
               fontFamily: "'Montserrat', Arial, sans-serif",
               fontSize: "0.98rem",
               boxSizing: 'border-box',
-              border: '3px solid #0ccf83',
+              // border: '3px solid #0ccf83',
               width: 'calc(100% - 40px)', // Full width minus margins
               display: 'block',
-              marginBottom: '1.2rem'
+              marginBottom: '1.2rem',
+              zIndex: 999,
             }}>
-              <div style={{ fontWeight: 700, marginBottom: 8, color: '#0ccf83' }}>Your Details</div>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>First Name:</strong> <span style={{ marginLeft: 12 }}>{profile.first_name || '-'}</span></div>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>Last Name:</strong> <span style={{ marginLeft: 12 }}>{profile.last_name || '-'}</span></div>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>LinkedIn:</strong> <span style={{ marginLeft: 12 }}>{profile.linkedin_URL || '-'}</span></div>

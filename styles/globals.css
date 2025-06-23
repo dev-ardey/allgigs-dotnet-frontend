@@ -263,14 +263,14 @@ body {
 /* Highlighted text style */
 .highlight {
   background: none !important;
-  /* color: inherit !important; */
-  /* text-decoration: underline !important; */
-  /* text-decoration-color: #0ccf83 !important; */
+  color: inherit !important;
+  text-decoration: 5px underline !important;
+  text-decoration-color: #0ccf83 !important;
   font-weight: bold;
-  background-color: #0ccf83 !important;
-  padding: 5px;
-  color: white;
-  border-radius: 5px;
+  /* background-color: #0ccf83 !important; */
+  /* padding: 5px; */
+  /* color: white; */
+  /* border-radius: 5px; */
 }
 
 /* Mobile-First Responsive Design */
@@ -476,4 +476,12 @@ body {
   .hide-on-mobile {
     display: none !important;
   }
+
+  .highlight {
+  background: none !important;
+  color: inherit !important;
+  text-decoration: 3px underline !important;
+  text-decoration-color: #0ccf83 !important;
+  font-weight: bold;
+}
 }
