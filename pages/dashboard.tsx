@@ -1,20 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Save, X, Plus, Trash2, Upload, Briefcase, Sparkles, MousePointerClick, Users, TrendingUp, FileText, Search, Mouse } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs';
-
-
-// deze versie werkt vanaf nu is test
-
-import { supabase } from "../SupabaseClient"; // of jouw pad naar supabase client
-
+import { Edit2, Save, X, Plus, Trash2, Upload, Sparkles, MousePointerClick, Users, TrendingUp, FileText, Search, Mouse } from 'lucide-react';
+// import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+// import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs';
+import { supabase } from '../SupabaseClient';
 
 interface Profile {
   firstName: string;
   lastName: string;
-  linkedIn: string;
-  email: string;
-  phone: string;
+  job_title: string;
+  location: string;
+  linkedIn?: string;
+  industry: string;
+  linkedin_URL: string;
 }
 
 interface Document {
@@ -50,34 +47,97 @@ interface Job {
 
 export default function Dashboard() {
   const [isAvailable, setIsAvailable] = useState(true);
-  const [editMode, setEditMode] = useState(false);
   const [editKeywords, setEditKeywords] = useState(false);
   const [newKeyword, setNewKeyword] = useState('');
-
-  const [profile, setProfile] = useState<Profile>({
-    firstName: "John",
-    lastName: "Doe",
-    linkedIn: "https://linkedin.com/in/johndoe",
-    email: "john.doe@example.com",
-    phone: "+31 6 12345678"
-  });
-
-  const [editedProfile, setEditedProfile] = useState<Profile>({ ...profile });
   const [keywords, setKeywords] = useState(["Frontend", "Backend", "React", "Node.js", "TypeScript"]);
-  const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
-
-
+  // const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
   const [recentlyClickedJobs, setRecentlyClickedJobs] = useState<Job[]>([]);
-  const [showRecentlyClicked, setShowRecentlyClicked] = useState(false);
+  const [showRecentlyClicked] = useState(false);
   const [loadingRecentlyClicked, setLoadingRecentlyClicked] = useState(false);
-
-
   const [user, setUser] = useState<any>(null);
+  const emptyProfile: Profile = {
+    firstName: '',
+    lastName: '',
+    job_title: '',
+    location: '',
+    linkedIn: '',
+    industry: '',
+    linkedin_URL: '',
 
+  };
+  const [profile, setProfile] = useState<Profile>(emptyProfile);
+  const [editedProfile, setEditedProfile] = useState<Profile>(emptyProfile);
+  const [editMode, setEditMode] = useState(false);
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
+      if (!user) return;
 
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
+      if (error) {
+        console.error('Fout bij ophalen profiel:', error);
+      } else {
+        const fetchedProfile: Profile = {
+          firstName: data.first_name || '',
+          lastName: data.last_name || '',
+          // linkedIn: data.linkedin_URL || '',
+          industry: data.industry || '',
+          location: data.location || '',
+          job_title: data.job_title || '',
+          linkedin_URL: data.linkedin_URL || ''
+        };
+        setProfile(fetchedProfile);
+        setEditedProfile(fetchedProfile);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const saveProfile = async () => {
+    if (!editedProfile) return;
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const updates = {
+      first_name: editedProfile.firstName,
+      last_name: editedProfile.lastName,
+      linkedin_URL: editedProfile.linkedIn,
+      industry: editedProfile.industry,
+      location: editedProfile.location,
+      job_title: editedProfile.location,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', user.id);
+
+    if (error) {
+      console.error('Fout bij opslaan profiel:', error);
+    } else {
+      setProfile(editedProfile);
+      setEditMode(false);
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditedProfile(profile);
+    setEditMode(false);
+  };
 
 
 
@@ -221,15 +281,8 @@ export default function Dashboard() {
     alert(`Zoeken naar: ${term}`);
   };
 
-  const saveProfile = () => {
-    setProfile(editedProfile);
-    setEditMode(false);
-  };
 
-  const cancelEdit = () => {
-    setEditedProfile({ ...profile });
-    setEditMode(false);
-  };
+
 
   const removeDocument = (id: string) => {
     setDocuments(documents.filter(doc => doc.id !== id));
@@ -433,7 +486,7 @@ export default function Dashboard() {
                 {editMode ? (
                   <>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>Voornaam</label>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>First name</label>
                       <input
                         type="text"
                         value={editedProfile.firstName}
@@ -449,7 +502,7 @@ export default function Dashboard() {
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>Achternaam</label>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>Last name</label>
                       <input
                         type="text"
                         value={editedProfile.lastName}
@@ -465,11 +518,11 @@ export default function Dashboard() {
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>Email</label>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>Location</label>
                       <input
-                        type="email"
-                        value={editedProfile.email}
-                        onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
+                        type="location"
+                        value={editedProfile.location}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, location: e.target.value })}
                         style={{
                           width: '100%',
                           padding: '0.75rem',
@@ -481,11 +534,11 @@ export default function Dashboard() {
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>Telefoon</label>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>Job title</label>
                       <input
-                        type="tel"
-                        value={editedProfile.phone}
-                        onChange={(e) => setEditedProfile({ ...editedProfile, phone: e.target.value })}
+                        type="jobtitle"
+                        value={editedProfile.job_title}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, job_title: e.target.value })}
                         style={{
                           width: '100%',
                           padding: '0.75rem',
@@ -520,12 +573,12 @@ export default function Dashboard() {
                       <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#000' }}>{profile.firstName} {profile.lastName}</p>
                     </div>
                     <div>
-                      <span style={{ fontSize: '0.875rem', color: '#666' }}>Email</span>
-                      <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#000' }}>{profile.email}</p>
+                      <span style={{ fontSize: '0.875rem', color: '#666' }}>Location</span>
+                      <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#000' }}>{profile.location}</p>
                     </div>
                     <div>
-                      <span style={{ fontSize: '0.875rem', color: '#666' }}>Phone</span>
-                      <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#000' }}>{profile.phone}</p>
+                      <span style={{ fontSize: '0.875rem', color: '#666' }}>Job title</span>
+                      <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#000' }}>{profile.job_title}</p>
                     </div>
                     <div>
                       <span style={{ fontSize: '0.875rem', color: '#666' }}>LinkedIn</span>
