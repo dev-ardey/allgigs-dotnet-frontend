@@ -351,7 +351,7 @@ export default function Dashboard() {
             borderRadius: '16px',
             boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
             border: '1px solid #e5e7eb',
-            padding: '1.5rem'
+            padding: '1rem'
           }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}>
               <div style={{ position: 'relative' }}>
@@ -381,7 +381,7 @@ export default function Dashboard() {
                 </div>
               </div>
               <span style={{ fontSize: '1.25rem', fontWeight: '600', color: '#000' }}>
-                Beschikbaar voor recruiters
+                Available for recruiters
               </span>
               <span style={{
                 padding: '0.5rem 1rem',
@@ -396,7 +396,59 @@ export default function Dashboard() {
             </label>
           </div>
         </div>
+ {/* Recently Clicked Jobs Card */}
+        <div style={{
+          background: '#fff',
+          borderRadius: '16px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+          border: '1px solid #e5e7eb',
+          padding: '1.5rem',
+          marginBottom: '2rem'
+        }}>
+          <h2 style={{
+            fontSize: '1.25rem',
+            fontWeight: 600,
+            color: '#000',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <MousePointerClick style={{ width: '20px', height: '20px' }} />
+            Recently Clicked Jobs
+          </h2>
 
+          {loadingRecentlyClicked ? (
+            <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Loading...</p>
+          ) : recentlyClickedJobs.length === 0 ? (
+            <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>No recently clicked jobs</p>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Title</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Company</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Location</th>
+                  <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentlyClickedJobs.map((job) => (
+                  <tr
+                    key={job.UNIQUE_ID}
+                    style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }}
+                    onClick={() => logJobClick(job)}
+                  >
+                    <td style={{ padding: '0.75rem', fontWeight: 500, color: '#111827' }}>{job.Title}</td>
+                    <td style={{ padding: '0.75rem', color: '#374151' }}>{job.Company}</td>
+                    <td style={{ padding: '0.75rem', color: '#374151' }}>{job.Location}</td>
+                    <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#6b7280' }}>{job.date}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
         {/* Main Grid */}
         <div style={{
           display: 'grid',
@@ -404,6 +456,7 @@ export default function Dashboard() {
           gap: '2rem',
           marginBottom: '2rem'
         }}>
+          
           {/* Profile Card */}
           {isAvailable && (
             <div style={{
@@ -801,7 +854,7 @@ export default function Dashboard() {
               </ResponsiveContainer>
             </div> */}
             <p style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.5rem', margin: '0.5rem 0 0 0' }}>
-              Totaal deze week: {statsData.reduce((acc, day) => acc + day.views, 0)} bekeken vacatures
+              Total this week: {statsData.reduce((acc, day) => acc + day.views, 0)} clicked jobs
             </p>
           </div>
 
@@ -874,9 +927,9 @@ export default function Dashboard() {
             }}>
               <Plus style={{ width: '24px', height: '24px', color: '#166534' }} />
             </div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#000', marginBottom: '0.5rem' }}>Zelf job toevoegen</h2>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#000', marginBottom: '0.5rem' }}>Post a Job</h2>
             <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
-              Voeg een interessante vacature toe die je hebt gevonden
+              Add an interesting job that you found
             </p>
             <button
               onClick={() => alert('Nieuwe job toevoegen (mock)')}
@@ -891,7 +944,7 @@ export default function Dashboard() {
                 cursor: 'pointer'
               }}
             >
-              Nieuwe job uploaden
+              Submit new job
             </button>
           </div>
 
@@ -921,67 +974,15 @@ export default function Dashboard() {
           >
             <Upload style={{ width: '32px', height: '32px', color: '#999', marginBottom: '0.5rem' }} />
             <p style={{ fontSize: '0.875rem', color: '#666', margin: '0.25rem 0' }}>
-              Sleep bestanden hierheen of <span style={{ color: '#0ccf83', fontWeight: '600', cursor: 'pointer' }}>browse files</span>
+              Drag your files or <span style={{ color: '#0ccf83', fontWeight: '600', cursor: 'pointer' }}>browse files</span>
             </p>
-            <p style={{ fontSize: '0.75rem', color: '#999' }}>Max 10MB per bestand</p>
+            <p style={{ fontSize: '0.75rem', color: '#999' }}>Max 10MB per file</p>
           </div>
 
         </div>
 
 
-        {/* Recently Clicked Jobs Card */}
-        <div style={{
-          background: '#fff',
-          borderRadius: '16px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-          border: '1px solid #e5e7eb',
-          padding: '1.5rem',
-          marginBottom: '2rem'
-        }}>
-          <h2 style={{
-            fontSize: '1.25rem',
-            fontWeight: 600,
-            color: '#000',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <MousePointerClick style={{ width: '20px', height: '20px' }} />
-            Recently Clicked Jobs
-          </h2>
-
-          {loadingRecentlyClicked ? (
-            <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Loading...</p>
-          ) : recentlyClickedJobs.length === 0 ? (
-            <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>No recently clicked jobs</p>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Titel</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Bedrijf</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Locatie</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Datum</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentlyClickedJobs.map((job) => (
-                  <tr
-                    key={job.UNIQUE_ID}
-                    style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }}
-                    onClick={() => logJobClick(job)}
-                  >
-                    <td style={{ padding: '0.75rem', fontWeight: 500, color: '#111827' }}>{job.Title}</td>
-                    <td style={{ padding: '0.75rem', color: '#374151' }}>{job.Company}</td>
-                    <td style={{ padding: '0.75rem', color: '#374151' }}>{job.Location}</td>
-                    <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#6b7280' }}>{job.date}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+       
 
 
 
