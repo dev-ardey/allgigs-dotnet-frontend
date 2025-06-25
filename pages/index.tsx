@@ -10,6 +10,7 @@ import Fuse from "fuse.js";
 import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs'; // Added import
 import CompleteProfileForm from "../components/ui/CompleteProfileForm";
 import { useProfileCheck } from "../components/ui/useProfileCheck";
+import { useRouter } from "next/router";
 
 
 interface Job {
@@ -99,6 +100,15 @@ export default function JobBoard() {
   const [showMenuAddJobForm, setShowMenuAddJobForm] = useState(false);
   const [headerVisible, setHeaderVisible] = useState(true);
   const lastScrollY = useRef(0);
+  const router = useRouter();
+  const { search: querySearch } = router.query;
+
+  useEffect(() => {
+    if (querySearch && typeof querySearch === 'string') {
+      setSearchTerm(querySearch); // update state
+    }
+  }, [querySearch]);
+
 
   useEffect(() => {
     const handleScroll = () => {

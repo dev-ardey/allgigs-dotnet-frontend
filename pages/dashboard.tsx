@@ -3,6 +3,7 @@ import { Edit2, Save, X, Plus, Trash2, Upload, Sparkles, MousePointerClick, User
 // import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 // import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs';
 import { supabase } from '../SupabaseClient';
+import { useRouter } from 'next/router';
 
 interface Profile {
   firstName: string;
@@ -55,6 +56,10 @@ export default function Dashboard() {
   const [showRecentlyClicked] = useState(false);
   const [loadingRecentlyClicked, setLoadingRecentlyClicked] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const router = useRouter();
+  const searchJobs = (keyword: string) => {
+    router.push(`/?search=${encodeURIComponent(keyword)}`);
+  };
   const emptyProfile: Profile = {
     firstName: '',
     lastName: '',
@@ -276,12 +281,6 @@ export default function Dashboard() {
     setKeywords(keywords.filter((_, i) => i !== index));
   };
 
-  const searchJobs = (term: string) => {
-    // In real app: window.location.href = `/jobs?search=${term}`
-    alert(`Zoeken naar: ${term}`);
-  };
-
-
 
 
   const removeDocument = (id: string) => {
@@ -381,7 +380,7 @@ export default function Dashboard() {
                 </div>
               </div>
               <span style={{ fontSize: '1.25rem', fontWeight: '600', color: '#000' }}>
-                Available for recruiters
+                Available to recruiters
               </span>
               <span style={{
                 padding: '0.5rem 1rem',
@@ -396,7 +395,7 @@ export default function Dashboard() {
             </label>
           </div>
         </div>
- {/* Recently Clicked Jobs Card */}
+        {/* Recently Clicked Jobs Card */}
         <div style={{
           background: '#fff',
           borderRadius: '16px',
@@ -456,7 +455,7 @@ export default function Dashboard() {
           gap: '2rem',
           marginBottom: '2rem'
         }}>
-          
+
           {/* Profile Card */}
           {isAvailable && (
             <div style={{
@@ -656,7 +655,7 @@ export default function Dashboard() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#000', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Search style={{ width: '20px', height: '20px' }} />
-                Quicksearch favorites
+                Quicksearch
               </h2>
               <button
                 onClick={() => setEditKeywords(!editKeywords)}
@@ -678,7 +677,9 @@ export default function Dashboard() {
                 {editKeywords ? 'Done' : 'Edit'}
               </button>
             </div>
-
+            <p style={{ fontSize: '0.875rem', color: '#666', margin: '0.5rem 0 0.5rem 0' }}>
+              Click to quicksearch jobs
+            </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
               {keywords.map((keyword, index) => (
                 <span
@@ -982,7 +983,7 @@ export default function Dashboard() {
         </div>
 
 
-       
+
 
 
 
