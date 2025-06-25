@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Edit2, Save, X, Plus, Trash2, Upload, Sparkles, MousePointerClick, Users, TrendingUp, FileText, Search, Mouse } from 'lucide-react';
-// import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 // import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs';
 import { supabase } from '../SupabaseClient';
 import { useRouter } from 'next/router';
@@ -43,8 +43,12 @@ interface Job {
 }
 
 
-
-
+// Interface voor stats data
+interface StatsDay {
+  name: string;
+  date: string;
+  views: number;
+}
 
 export default function Dashboard() {
   const [isAvailable, setIsAvailable] = useState(true);
@@ -74,6 +78,127 @@ export default function Dashboard() {
   const [profile, setProfile] = useState<Profile>(emptyProfile);
   const [editedProfile, setEditedProfile] = useState<Profile>(emptyProfile);
   const [editMode, setEditMode] = useState(false);
+
+  const getLast7Days = (): StatsDay[] => {
+    const days: StatsDay[] = [];
+    const today = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+
+      const dayNames = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
+      const dayName = dayNames[date.getDay()];
+      const dateString = date.toISOString().split('T')[0];
+
+      // Null checks voor TypeScript
+      if (dayName && dateString) {
+        days.push({
+          name: dayName,
+          date: dateString,
+          views: 0 // Wordt gevuld met echte data
+        });
+      }
+    }
+
+    return days;
+  };
+
+  // Voeg deze state toe aan je component:
+  const [statsData, setStatsData] = useState<StatsDay[]>(getLast7Days());
+  const [loadingStats, setLoadingStats] = useState<boolean>(false);
+
+  // Functie om job clicks per dag op te halen
+  const fetchJobClicksStats = async () => {
+    if (!user || !user.id) return;
+
+    setLoadingStats(true);
+    try {
+      // Haal de laatste 7 dagen op
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 6);
+      startDate.setHours(0, 0, 0, 0);
+
+      const endDate = new Date();
+      endDate.setHours(23, 59, 59, 999);
+
+      const { data: clicks, error } = await supabase
+        .from('job_clicks')
+        .select('clicked_at')
+        .eq('user_id', user.id)
+        .gte('clicked_at', startDate.toISOString())
+        .lte('clicked_at', endDate.toISOString())
+        .order('clicked_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching job clicks stats:', error);
+        return;
+      }
+
+      // Genereer de laatste 7 dagen
+      const last7Days = getLast7Days();
+
+      // Tel clicks per dag
+      const clicksPerDay: { [key: string]: number } = {};
+      clicks?.forEach(click => {
+        if (click.clicked_at) {
+          const clickDate = new Date(click.clicked_at).toISOString().split('T')[0];
+          if (clickDate) {
+            clicksPerDay[clickDate] = (clicksPerDay[clickDate] || 0) + 1;
+          }
+        }
+      });
+
+      // Vul de stats data met echte cijfers
+      const updatedStats: StatsDay[] = last7Days.map(day => ({
+        ...day,
+        views: clicksPerDay[day.date] || 0
+      }));
+
+      setStatsData(updatedStats);
+
+    } catch (error) {
+      console.error('Error in fetchJobClicksStats:', error);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
+  // Voeg deze useEffect toe aan je component:
+  useEffect(() => {
+    if (user && user.id) {
+      fetchJobClicksStats();
+    }
+  }, [user]);
+
+  // Optioneel: refresh stats wanneer er een nieuwe job click is
+  // Voeg dit toe aan je logJobClick functie:
+  const logJobClick = async (job: Job) => {
+    if (!user || !user.id) return;
+    try {
+      await supabase.from("job_clicks").insert([
+        {
+          user_id: user.id,
+          job_id: job.UNIQUE_ID,
+          job_title: job.Title,
+          company: job.Company,
+          location: job.Location,
+          rate: job.rate,
+          date_posted: job.date,
+          summary: job.Summary,
+          url: job.URL,
+        },
+      ]);
+      console.log("Job click logged:", job.Title);
+
+      // Refresh stats na nieuwe click
+      fetchJobClicksStats();
+
+    } catch (err) {
+      console.error("Log job click failed:", err);
+    }
+  };
+
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -255,27 +380,27 @@ export default function Dashboard() {
     }
   };
 
-  const logJobClick = async (job: Job) => {
-    if (!user || !user.id) return;
-    try {
-      await supabase.from("job_clicks").insert([
-        {
-          user_id: user.id,
-          job_id: job.UNIQUE_ID,
-          job_title: job.Title,
-          company: job.Company,
-          location: job.Location,
-          rate: job.rate,
-          date_posted: job.date,
-          summary: job.Summary,
-          url: job.URL,
-        },
-      ]);
-      console.log("Job click logged:", job.Title);
-    } catch (err) {
-      console.error("Log job click failed:", err);
-    }
-  };
+  // const logJobClick = async (job: Job) => {
+  //   if (!user || !user.id) return;
+  //   try {
+  //     await supabase.from("job_clicks").insert([
+  //       {
+  //         user_id: user.id,
+  //         job_id: job.UNIQUE_ID,
+  //         job_title: job.Title,
+  //         company: job.Company,
+  //         location: job.Location,
+  //         rate: job.rate,
+  //         date_posted: job.date,
+  //         summary: job.Summary,
+  //         url: job.URL,
+  //       },
+  //     ]);
+  //     console.log("Job click logged:", job.Title);
+  //   } catch (err) {
+  //     console.error("Log job click failed:", err);
+  //   }
+  // };
 
 
   // const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([
@@ -305,15 +430,15 @@ export default function Dashboard() {
   ]);
 
   // Mock stats data
-  const statsData = [
-    { name: 'Ma', views: 12 },
-    { name: 'Di', views: 8 },
-    { name: 'Wo', views: 15 },
-    { name: 'Do', views: 22 },
-    { name: 'Vr', views: 18 },
-    { name: 'Za', views: 5 },
-    { name: 'Zo', views: 3 },
-  ];
+  // const statsData = [
+  //   { name: 'Ma', views: 12 },
+  //   { name: 'Di', views: 8 },
+  //   { name: 'Wo', views: 15 },
+  //   { name: 'Do', views: 22 },
+  //   { name: 'Vr', views: 18 },
+  //   { name: 'Za', views: 5 },
+  //   { name: 'Zo', views: 3 },
+  // ];
 
   const toggleAvailable = () => setIsAvailable(prev => !prev);
 
@@ -467,7 +592,7 @@ export default function Dashboard() {
             gap: '0.5rem'
           }}>
             <MousePointerClick style={{ width: '20px', height: '20px' }} />
-            Recently Clicked Jobs
+            Manage Jobs
           </h2>
 
           {loadingRecentlyClicked ? (
@@ -887,7 +1012,6 @@ export default function Dashboard() {
             </button>
           </div>
 
-
           {/* Stats Card */}
           <div style={{
             background: '#fff',
@@ -896,35 +1020,54 @@ export default function Dashboard() {
             border: '1px solid #e5e7eb',
             padding: '1.5rem'
           }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#000', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h2 style={{
+              fontSize: '1.25rem',
+              fontWeight: '600',
+              color: '#111827',
+              marginBottom: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
               <TrendingUp style={{ width: '20px', height: '20px' }} />
               Statistics
             </h2>
-            {/* <div style={{ height: '200px' }}>
+
+            <div style={{ height: '192px' }}>
+              {/* @ts-ignore */}
               <ResponsiveContainer width="100%" height="100%">
+                {/* @ts-ignore */}
                 <LineChart data={statsData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                  <XAxis dataKey="name" stroke="#666" fontSize={12} />
-                  <YAxis stroke="#666" fontSize={12} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'white', 
-                      border: '1px solid #e5e7eb', 
+                  {/* @ts-ignore */}
+                  <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
+                  {/* @ts-ignore */}
+                  <YAxis stroke="#6b7280" fontSize={12} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
                       borderRadius: '8px',
                       fontSize: '12px'
-                    }} 
+                    }}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="views" 
-                    stroke="#0ccf83" 
-                    strokeWidth={3}
-                    dot={{ fill: '#0ccf83', strokeWidth: 2, r: 5 }}
+                  {/* @ts-ignore */}
+                  <Line
+                    type="monotone"
+                    dataKey="views"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
-            </div> */}
-            <p style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.5rem', margin: '0.5rem 0 0 0' }}>
+            </div>
+
+            <p style={{
+              fontSize: '0.875rem',
+              color: '#6b7280',
+              marginTop: '0.5rem'
+            }}>
               Total this week: {statsData.reduce((acc, day) => acc + day.views, 0)} clicked jobs
             </p>
           </div>
