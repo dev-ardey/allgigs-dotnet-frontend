@@ -60,6 +60,7 @@ export default function Dashboard() {
   const searchJobs = (keyword: string) => {
     router.push(`/?search=${encodeURIComponent(keyword)}`);
   };
+  const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
   const emptyProfile: Profile = {
     firstName: '',
     lastName: '',
@@ -143,6 +144,58 @@ export default function Dashboard() {
     setEditedProfile(profile);
     setEditMode(false);
   };
+
+  const fetchRecommendedJobs = async (keywords: string[]) => {
+    const limitPerKeyword = 5;
+    const jobsPerKeyword: { [keyword: string]: Job[] } = {};
+
+    for (const keyword of keywords) {
+      const { data, error } = await supabase
+        .from("Allgigs_All_vacancies_NEW")
+        .select("*")
+        .ilike("Title", `%${keyword}%`)
+        .order("date", { ascending: false })
+        .limit(limitPerKeyword);
+
+      console.log(`Result for "${keyword}":`, data);
+
+
+      if (error) {
+        console.error(`Error fetching jobs for keyword "${keyword}":`, error);
+        jobsPerKeyword[keyword] = [];
+      } else {
+        jobsPerKeyword[keyword] = data || [];
+      }
+    }
+
+    const merged: Job[] = [];
+    let index = 0;
+    while (merged.length < 5) {
+      let added = false;
+      for (const keyword of keywords) {
+        const job = jobsPerKeyword[keyword]?.[index];
+        if (job) {
+          merged.push(job);
+          added = true;
+          if (merged.length === 5) break;
+        }
+      }
+      if (!added) break;
+      index++;
+    }
+
+    setRecommendedJobs(merged);
+  };
+
+
+  useEffect(() => {
+    console.log("Keywords used:", keywords);
+    if (keywords.length > 0) {
+      fetchRecommendedJobs(keywords);
+    } else {
+      setRecommendedJobs([]);
+    }
+  }, [keywords]);
 
 
 
@@ -774,19 +827,30 @@ export default function Dashboard() {
             border: '1px solid #e5e7eb',
             padding: '1.5rem'
           }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#000', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h2 style={{
+              fontSize: '1.25rem',
+              fontWeight: '600',
+              color: '#000',
+              marginBottom: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
               <Sparkles style={{ width: '20px', height: '20px' }} />
               Recommended gigs
             </h2>
-            {/* <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {recommendedJobs.slice(0, 4).map((job) => (
-                <div key={job.id} style={{
-                  padding: '1rem',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {recommendedJobs.map((job) => (
+                <div
+                  key={job.UNIQUE_ID}
+                  style={{
+                    padding: '1rem',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.12)';
                     e.currentTarget.style.borderColor = '#0ccf83';
@@ -796,12 +860,15 @@ export default function Dashboard() {
                     e.currentTarget.style.borderColor = '#e5e7eb';
                   }}
                 >
-                  <h3 style={{ fontWeight: '600', color: '#000', margin: '0 0 0.25rem 0', fontSize: '1rem' }}>{job.title}</h3>
-                  <p style={{ color: '#666', margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>{job.company} • {job.location}</p>
-                  {job.salary && <p style={{ color: '#0ccf83', fontWeight: '600', margin: 0, fontSize: '0.875rem' }}>{job.salary}</p>}
+                  <h3 style={{ fontWeight: '600', color: '#000', margin: '0 0 0.25rem 0', fontSize: '1rem' }}>{job.Title}</h3>
+                  <p style={{ color: '#666', margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>{job.Company} • {job.Location}</p>
+                  {job.rate && (
+                    <p style={{ color: '#0ccf83', fontWeight: '600', margin: 0, fontSize: '0.875rem' }}>{job.rate}</p>
+                  )}
                 </div>
               ))}
-            </div> */}
+            </div>
+
             <button style={{
               width: '100%',
               marginTop: '1rem',
@@ -813,10 +880,13 @@ export default function Dashboard() {
               fontWeight: '600',
               cursor: 'pointer',
               fontSize: '0.875rem'
-            }}>
+            }}
+              onClick={() => window.location.href = '/'}
+            >
               allGigs
             </button>
           </div>
+
 
           {/* Stats Card */}
           <div style={{
