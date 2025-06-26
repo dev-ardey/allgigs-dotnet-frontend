@@ -729,7 +729,7 @@ export default function JobBoard() {
             >
               Post a Job
             </button>
-            {/* <button
+             <button
               style={{
                 background: '#dc2626',
                 color: '#fff',
@@ -751,9 +751,10 @@ export default function JobBoard() {
               onClick={handleLogout}
             >
               Logout
-            </button> */}
+            </button> 
           </div>
         </div>
+        
         {/* Search bar */}
         <div className="job-filters">
           <input

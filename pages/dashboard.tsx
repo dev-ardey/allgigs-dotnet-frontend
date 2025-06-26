@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Save, X, Plus, Trash2, Upload, Sparkles, MousePointerClick, Users, TrendingUp, FileText, Search, Mouse } from 'lucide-react';
+import { Edit2, Save, X, Plus, Trash2, Upload, Sparkles, SearchCheck, MousePointerClick, Users, TrendingUp, FileText } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 // import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs';
 import { supabase } from '../SupabaseClient';
 import { useRouter } from 'next/router';
+import AddJobForm from '../components/ui/add-job-form';
+
 
 interface Profile {
   firstName: string;
@@ -106,7 +108,9 @@ export default function Dashboard() {
 
   // Voeg deze state toe aan je component:
   const [statsData, setStatsData] = useState<StatsDay[]>(getLast7Days());
+  // const [loadingStats, setLoadingStats] = useState<boolean>(false);
   const [loadingStats, setLoadingStats] = useState<boolean>(false);
+  console.log(loadingStats, "build error")
 
   // Functie om job clicks per dag op te halen
   const fetchJobClicksStats = async () => {
@@ -163,6 +167,28 @@ export default function Dashboard() {
       setLoadingStats(false);
     }
   };
+
+
+
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.reload();
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // Voeg deze useEffect toe aan je component:
   useEffect(() => {
@@ -380,48 +406,6 @@ export default function Dashboard() {
     }
   };
 
-  // const logJobClick = async (job: Job) => {
-  //   if (!user || !user.id) return;
-  //   try {
-  //     await supabase.from("job_clicks").insert([
-  //       {
-  //         user_id: user.id,
-  //         job_id: job.UNIQUE_ID,
-  //         job_title: job.Title,
-  //         company: job.Company,
-  //         location: job.Location,
-  //         rate: job.rate,
-  //         date_posted: job.date,
-  //         summary: job.Summary,
-  //         url: job.URL,
-  //       },
-  //     ]);
-  //     console.log("Job click logged:", job.Title);
-  //   } catch (err) {
-  //     console.error("Log job click failed:", err);
-  //   }
-  // };
-
-
-  // const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([
-  //   { id: "1", title: "Senior Frontend Developer", company: "TechCorp", visitedAt: "", location: "Amsterdam", salary: "€65k - €85k" },
-  //   { id: "2", title: "Backend Engineer", company: "CodeBase", location: "Rotterdam", salary: "€60k - €80k", visitedAt: "" },
-  //   { id: "3", title: "Full Stack Developer", company: "StartupXYZ", location: "Utrecht", salary: "€55k - €75k", visitedAt: "" },
-  //   { id: "4", title: "React Developer", company: "WebAgency", location: "Den Haag", salary: "€50k - €70k", visitedAt: "" },
-  //   { id: "5", title: "TypeScript Developer", company: "FinTech Pro", location: "Eindhoven", salary: "€70k - €90k", visitedAt: "" },
-  // ]);
-
-  // const [recentJobs, setRecentJobs] = useState<Job[]>([
-  //   { id: "a1", title: "DevOps Engineer", company: "CloudOps", visitedAt: "2025-06-24", location: "Amsterdam", salary: "€75k - €95k" },
-  //   { id: "a2", title: "React Developer", company: "Frontend.io", visitedAt: "2025-06-23", location: "Rotterdam", salary: "€60k - €80k" },
-  //   { id: "a3", title: "Product Manager", company: "TechStart", visitedAt: "2025-06-22", location: "Utrecht", salary: "€80k - €100k" },
-  //   { id: "a4", title: "UX Designer", company: "DesignHub", visitedAt: "2025-06-21", location: "Amsterdam", salary: "€55k - €75k" },
-  //   { id: "a5", title: "Data Scientist", company: "AI Solutions", visitedAt: "2025-06-20", location: "Den Haag", salary: "€70k - €90k" },
-  // ]);
-
-
-
-
 
   const [documents, setDocuments] = useState<Document[]>([
     { id: "1", name: "Resume.pdf", type: "PDF", size: "2.3 MB", uploadedAt: "2025-06-20" },
@@ -429,16 +413,8 @@ export default function Dashboard() {
     { id: "3", name: "Portfolio.pdf", type: "PDF", size: "4.7 MB", uploadedAt: "2025-06-15" },
   ]);
 
-  // Mock stats data
-  // const statsData = [
-  //   { name: 'Ma', views: 12 },
-  //   { name: 'Di', views: 8 },
-  //   { name: 'Wo', views: 15 },
-  //   { name: 'Do', views: 22 },
-  //   { name: 'Vr', views: 18 },
-  //   { name: 'Za', views: 5 },
-  //   { name: 'Zo', views: 3 },
-  // ];
+  const [showAddJobForm, setShowAddJobForm] = useState(false);
+
 
   const toggleAvailable = () => setIsAvailable(prev => !prev);
 
@@ -517,10 +493,78 @@ export default function Dashboard() {
             />
             Dashboard
           </h1>
+          <button
+            onClick={handleLogout}
+            style={{
+              width: 'fit-content',
+              padding: '0.75rem 1rem',
+              backgroundColor: '#ef4444',
+              border: 'none',
+              borderRadius: '8px',
+              color: '#fff',
+              fontSize: '0.95rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'background 0.2s ease-in-out',
+              display: 'flex',
+              marginLeft: 'auto'
+            }}
+          >
+            Log out
+          </button>
+
         </div>
+
       </header>
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '2rem' }}>
+
+
+        {/* Link to allGigs */}
+        {/* <div style={{
+          background: '#fff',
+          borderRadius: '16px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+          border: '1px solid #e5e7eb',
+          padding: '1.5rem',
+          marginBottom: '2rem'
+
+        }}>
+          <h2 style={{
+            fontSize: '1.25rem',
+            fontWeight: '600',
+            color: '#000',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <Search style={{ width: '20px', height: '20px' }} />
+            Search entire database for all Jobs
+          </h2>
+
+
+
+          <button style={{
+            width: '100%',
+            marginTop: '1rem',
+            padding: '0.75rem',
+            background: '#0ccf83',
+            color: '#000',
+            border: 'none',
+            borderRadius: '999px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            fontSize: '0.875rem'
+          }}
+            onClick={() => window.location.href = '/'}
+          >
+            allGigs
+          </button>
+        </div> */}
+
+
+
         {/* Availability Toggle */}
         <div style={{ marginBottom: '2rem' }}>
           <div style={{
@@ -626,6 +670,78 @@ export default function Dashboard() {
             </table>
           )}
         </div>
+
+        {/* Recommended Jobs */}
+        <div style={{
+          background: '#fff',
+          borderRadius: '16px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+          border: '1px solid #e5e7eb',
+          padding: '1.5rem',
+          marginBottom: '2rem'
+
+        }}>
+          <h2 style={{
+            fontSize: '1.25rem',
+            fontWeight: '600',
+            color: '#000',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <Sparkles style={{ width: '20px', height: '20px' }} />
+            Recommended gigs
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {recommendedJobs.map((job) => (
+              <div
+                key={job.UNIQUE_ID}
+                style={{
+                  padding: '1rem',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.12)';
+                  e.currentTarget.style.borderColor = '#0ccf83';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.borderColor = '#e5e7eb';
+                }}
+              >
+                <h3 style={{ fontWeight: '600', color: '#000', margin: '0 0 0.25rem 0', fontSize: '1rem' }}>{job.Title}</h3>
+                <p style={{ color: '#666', margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>{job.Company} • {job.Location}</p>
+                {job.rate && (
+                  <p style={{ color: '#0ccf83', fontWeight: '600', margin: 0, fontSize: '0.875rem' }}>{job.rate}</p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <button style={{
+            width: '100%',
+            marginTop: '1rem',
+            padding: '0.75rem',
+            background: '#0ccf83',
+            color: '#000',
+            border: 'none',
+            borderRadius: '999px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            fontSize: '0.875rem'
+          }}
+            onClick={() => window.location.href = '/'}
+          >
+            Search entire database on allGigs
+          </button>
+        </div>
+
+
         {/* Main Grid */}
         <div style={{
           display: 'grid',
@@ -634,193 +750,7 @@ export default function Dashboard() {
           marginBottom: '2rem'
         }}>
 
-          {/* Profile Card */}
-          {isAvailable && (
-            <div style={{
-              background: '#fff',
-              borderRadius: '16px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-              border: '1px solid #e5e7eb',
-              padding: '1.5rem'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#000', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Users style={{ width: '20px', height: '20px' }} />
-                  Profile
-                </h2>
-                {!editMode ? (
-                  <button
-                    onClick={() => setEditMode(true)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '0.5rem 1rem',
-                      fontSize: '0.875rem',
-                      background: '#0ccf83',
-                      color: '#000',
-                      borderRadius: '999px',
-                      border: 'none',
-                      fontWeight: '600',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <Edit2 style={{ width: '16px', height: '16px' }} />
-                    Edit
-                  </button>
-                ) : (
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
-                      onClick={saveProfile}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        padding: '0.5rem 1rem',
-                        fontSize: '0.875rem',
-                        background: '#0ccf83',
-                        color: '#000',
-                        borderRadius: '999px',
-                        border: 'none',
-                        fontWeight: '600',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <Save style={{ width: '16px', height: '16px' }} />
-                      Save
-                    </button>
-                    <button
-                      onClick={cancelEdit}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        padding: '0.5rem 1rem',
-                        fontSize: '0.875rem',
-                        background: '#f3f4f6',
-                        color: '#666',
-                        borderRadius: '999px',
-                        border: 'none',
-                        fontWeight: '600',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <X style={{ width: '16px', height: '16px' }} />
-                      Cancel
-                    </button>
-                  </div>
-                )}
-              </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {editMode ? (
-                  <>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>First name</label>
-                      <input
-                        type="text"
-                        value={editedProfile.firstName}
-                        onChange={(e) => setEditedProfile({ ...editedProfile, firstName: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          fontSize: '1rem',
-                          boxSizing: 'border-box'
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>Last name</label>
-                      <input
-                        type="text"
-                        value={editedProfile.lastName}
-                        onChange={(e) => setEditedProfile({ ...editedProfile, lastName: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          fontSize: '1rem',
-                          boxSizing: 'border-box'
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>Location</label>
-                      <input
-                        type="location"
-                        value={editedProfile.location}
-                        onChange={(e) => setEditedProfile({ ...editedProfile, location: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          fontSize: '1rem',
-                          boxSizing: 'border-box'
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>Job title</label>
-                      <input
-                        type="jobtitle"
-                        value={editedProfile.job_title}
-                        onChange={(e) => setEditedProfile({ ...editedProfile, job_title: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          fontSize: '1rem',
-                          boxSizing: 'border-box'
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>LinkedIn</label>
-                      <input
-                        type="url"
-                        value={editedProfile.linkedIn}
-                        onChange={(e) => setEditedProfile({ ...editedProfile, linkedIn: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '1px solid #ccc',
-                          borderRadius: '8px',
-                          fontSize: '1rem',
-                          boxSizing: 'border-box'
-                        }}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <span style={{ fontSize: '0.875rem', color: '#666' }}>Name</span>
-                      <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#000' }}>{profile.firstName} {profile.lastName}</p>
-                    </div>
-                    <div>
-                      <span style={{ fontSize: '0.875rem', color: '#666' }}>Location</span>
-                      <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#000' }}>{profile.location}</p>
-                    </div>
-                    <div>
-                      <span style={{ fontSize: '0.875rem', color: '#666' }}>Job title</span>
-                      <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#000' }}>{profile.job_title}</p>
-                    </div>
-                    <div>
-                      <span style={{ fontSize: '0.875rem', color: '#666' }}>LinkedIn</span>
-                      <a href={profile.linkedIn} style={{ fontWeight: '600', color: '#0ccf83', textDecoration: 'none', display: 'block', marginTop: '0.25rem' }} target="_blank" rel="noopener noreferrer">
-                        Checkout LinkedIn profile
-                      </a>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Keywords Card */}
           <div style={{
@@ -832,7 +762,7 @@ export default function Dashboard() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#000', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Search style={{ width: '20px', height: '20px' }} />
+                <SearchCheck style={{ width: '20px', height: '20px' }} />
                 Quicksearch
               </h2>
               <button
@@ -944,74 +874,6 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Recommended Jobs */}
-          <div style={{
-            background: '#fff',
-            borderRadius: '16px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-            border: '1px solid #e5e7eb',
-            padding: '1.5rem'
-          }}>
-            <h2 style={{
-              fontSize: '1.25rem',
-              fontWeight: '600',
-              color: '#000',
-              marginBottom: '1rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <Sparkles style={{ width: '20px', height: '20px' }} />
-              Recommended gigs
-            </h2>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {recommendedJobs.map((job) => (
-                <div
-                  key={job.UNIQUE_ID}
-                  style={{
-                    padding: '1rem',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '12px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.12)';
-                    e.currentTarget.style.borderColor = '#0ccf83';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = 'none';
-                    e.currentTarget.style.borderColor = '#e5e7eb';
-                  }}
-                >
-                  <h3 style={{ fontWeight: '600', color: '#000', margin: '0 0 0.25rem 0', fontSize: '1rem' }}>{job.Title}</h3>
-                  <p style={{ color: '#666', margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>{job.Company} • {job.Location}</p>
-                  {job.rate && (
-                    <p style={{ color: '#0ccf83', fontWeight: '600', margin: 0, fontSize: '0.875rem' }}>{job.rate}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <button style={{
-              width: '100%',
-              marginTop: '1rem',
-              padding: '0.75rem',
-              background: '#0ccf83',
-              color: '#000',
-              border: 'none',
-              borderRadius: '999px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              fontSize: '0.875rem'
-            }}
-              onClick={() => window.location.href = '/'}
-            >
-              allGigs
-            </button>
-          </div>
-
           {/* Stats Card */}
           <div style={{
             background: '#fff',
@@ -1071,6 +933,9 @@ export default function Dashboard() {
               Total this week: {statsData.reduce((acc, day) => acc + day.views, 0)} clicked jobs
             </p>
           </div>
+
+
+
 
 
           {/* Documents Card */}
@@ -1146,7 +1011,7 @@ export default function Dashboard() {
               Add an interesting job that you found
             </p>
             <button
-              onClick={() => alert('Nieuwe job toevoegen (mock)')}
+              onClick={() => setShowAddJobForm(true)}
               style={{
                 padding: '0.75rem 1.5rem',
                 background: '#0ccf83',
@@ -1196,9 +1061,204 @@ export default function Dashboard() {
         </div>
 
 
+        {/* Profile Card */}
+        {isAvailable && (
+          <div style={{
+            background: '#fff',
+            borderRadius: '16px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+            border: '1px solid #e5e7eb',
+            padding: '1.5rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#000', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Users style={{ width: '20px', height: '20px' }} />
+                Profile
+              </h2>
+              {!editMode ? (
+                <button
+                  onClick={() => setEditMode(true)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.875rem',
+                    background: '#0ccf83',
+                    color: '#000',
+                    borderRadius: '999px',
+                    border: 'none',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Edit2 style={{ width: '16px', height: '16px' }} />
+                  Edit
+                </button>
+              ) : (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={saveProfile}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.875rem',
+                      background: '#0ccf83',
+                      color: '#000',
+                      borderRadius: '999px',
+                      border: 'none',
+                      fontWeight: '600',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Save style={{ width: '16px', height: '16px' }} />
+                    Save
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.875rem',
+                      background: '#f3f4f6',
+                      color: '#666',
+                      borderRadius: '999px',
+                      border: 'none',
+                      fontWeight: '600',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <X style={{ width: '16px', height: '16px' }} />
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
 
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {editMode ? (
+                <>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>First name</label>
+                    <input
+                      type="text"
+                      value={editedProfile.firstName}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, firstName: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #ccc',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>Last name</label>
+                    <input
+                      type="text"
+                      value={editedProfile.lastName}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, lastName: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #ccc',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>Location</label>
+                    <input
+                      type="location"
+                      value={editedProfile.location}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, location: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #ccc',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>Job title</label>
+                    <input
+                      type="jobtitle"
+                      value={editedProfile.job_title}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, job_title: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #ccc',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>LinkedIn</label>
+                    <input
+                      type="url"
+                      value={editedProfile.linkedIn}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, linkedIn: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #ccc',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <span style={{ fontSize: '0.875rem', color: '#666' }}>Name</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#000' }}>{profile.firstName} {profile.lastName}</p>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.875rem', color: '#666' }}>Location</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#000' }}>{profile.location}</p>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.875rem', color: '#666' }}>Job title</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#000' }}>{profile.job_title}</p>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.875rem', color: '#666' }}>LinkedIn</span>
+                    <a href={profile.linkedIn} style={{ fontWeight: '600', color: '#0ccf83', textDecoration: 'none', display: 'block', marginTop: '0.25rem' }} target="_blank" rel="noopener noreferrer">
+                      LinkedIn profile
+                    </a>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
-
+        {showAddJobForm && user && (
+          <AddJobForm
+            onClose={() => setShowAddJobForm(false)}
+            onJobAdded={() => {
+              // Optioneel: herlaad jobs
+              console.log("Job toegevoegd");
+            }}
+            user={user}
+          />
+        )}
 
 
       </div>
