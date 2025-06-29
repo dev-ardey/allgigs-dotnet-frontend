@@ -644,30 +644,32 @@ export default function Dashboard() {
           ) : recentlyClickedJobs.length === 0 ? (
             <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>No recently clicked jobs</p>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Title</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Company</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Location</th>
-                  <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentlyClickedJobs.map((job) => (
-                  <tr
-                    key={job.UNIQUE_ID}
-                    style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }}
-                    onClick={() => logJobClick(job)}
-                  >
-                    <td style={{ padding: '0.75rem', fontWeight: 500, color: '#111827' }}>{job.Title}</td>
-                    <td style={{ padding: '0.75rem', color: '#374151' }}>{job.Company}</td>
-                    <td style={{ padding: '0.75rem', color: '#374151' }}>{job.Location}</td>
-                    <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#6b7280' }}>{job.date}</td>
+            <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
+              <table style={{ minWidth: '600px', width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                    <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Title</th>
+                    <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Company</th>
+                    <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Location</th>
+                    <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Date</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {recentlyClickedJobs.map((job) => (
+                    <tr
+                      key={job.UNIQUE_ID}
+                      style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }}
+                      onClick={() => logJobClick(job)}
+                    >
+                      <td style={{ padding: '0.75rem', fontWeight: 500, color: '#111827' }}>{job.Title}</td>
+                      <td style={{ padding: '0.75rem', color: '#374151' }}>{job.Company}</td>
+                      <td style={{ padding: '0.75rem', color: '#374151' }}>{job.Location}</td>
+                      <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#6b7280' }}>{job.date}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
