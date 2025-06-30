@@ -1136,14 +1136,15 @@ export default function Dashboard() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#121f36',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       fontFamily: "'Montserrat', Arial, sans-serif",
-      color: '#222'
+      color: '#fff'
     }}>
       {/* Header */}
       <header style={{
-        background: '#1a2b47',
-        borderBottom: '1px solid #2a3b57',
+        background: 'rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(16px)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
         padding: '1.5rem 2rem'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', maxWidth: '1100px', margin: '0 auto' }}>
@@ -1167,16 +1168,17 @@ export default function Dashboard() {
             style={{
               width: 'fit-content',
               padding: '0.75rem 1rem',
-              backgroundColor: '#ef4444',
+              backgroundColor: 'rgba(239, 68, 68, 0.8)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: '12px',
               color: '#fff',
               fontSize: '0.95rem',
               fontWeight: 600,
               cursor: 'pointer',
-              transition: 'background 0.2s ease-in-out',
+              transition: 'all 0.3s ease',
               display: 'flex',
-              marginLeft: 'auto'
+              marginLeft: 'auto',
+              backdropFilter: 'blur(8px)'
             }}
           >
             Log out
@@ -1243,11 +1245,13 @@ export default function Dashboard() {
         {/* Availability Toggle */}
         <div style={{ marginBottom: '2rem' }}>
           <div style={{
-            background: '#fff',
-            borderRadius: '16px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-            border: '1px solid #e5e7eb',
-            padding: '1rem'
+            background: 'rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '24px',
+            padding: '1rem',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            transition: 'all 0.3s ease'
           }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}>
               <div style={{ position: 'relative' }}>
@@ -1276,7 +1280,7 @@ export default function Dashboard() {
                   }} />
                 </div>
               </div>
-              <span style={{ fontSize: '1.25rem', fontWeight: '600', color: '#000' }}>
+              <span style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff' }}>
                 Available to recruiters
               </span>
               <span style={{
@@ -1294,17 +1298,19 @@ export default function Dashboard() {
         </div>
         {/* Recently Clicked Jobs Card */}
         <div style={{
-          background: '#fff',
-          borderRadius: '16px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-          border: '1px solid #e5e7eb',
+          background: 'rgba(255, 255, 255, 0.15)',
+          backdropFilter: 'blur(16px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '24px',
           padding: '1.5rem',
-          marginBottom: '2rem'
+          marginBottom: '2rem',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          transition: 'all 0.3s ease'
         }}>
           <h2 style={{
             fontSize: '1.25rem',
             fontWeight: 600,
-            color: '#000',
+            color: '#fff',
             marginBottom: '1rem',
             display: 'flex',
             alignItems: 'center',
@@ -1315,31 +1321,31 @@ export default function Dashboard() {
           </h2>
 
           {loadingRecentlyClicked ? (
-            <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Loading...</p>
+            <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Loading...</p>
           ) : recentlyClickedJobs.length === 0 ? (
-            <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>No recently clicked jobs</p>
+            <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>No recently clicked jobs</p>
           ) : (
             <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
               <table style={{ minWidth: '600px', width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
-                    <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Title</th>
-                    <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Company</th>
-                    <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Location</th>
-                    <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: '#374151' }}>Date</th>
+                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                    <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.9)' }}>Title</th>
+                    <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.9)' }}>Company</th>
+                    <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.9)' }}>Location</th>
+                    <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.9)' }}>Date</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recentlyClickedJobs.map((job) => (
                     <tr
                       key={job.UNIQUE_ID}
-                      style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }}
+                      style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer' }}
                       onClick={() => logJobClick(job)}
                     >
-                      <td style={{ padding: '0.75rem', fontWeight: 500, color: '#111827' }}>{job.Title}</td>
-                      <td style={{ padding: '0.75rem', color: '#374151' }}>{job.Company}</td>
-                      <td style={{ padding: '0.75rem', color: '#374151' }}>{job.Location}</td>
-                      <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#6b7280' }}>{job.date}</td>
+                      <td style={{ padding: '0.75rem', fontWeight: 500, color: '#fff' }}>{job.Title}</td>
+                      <td style={{ padding: '0.75rem', color: 'rgba(255, 255, 255, 0.8)' }}>{job.Company}</td>
+                      <td style={{ padding: '0.75rem', color: 'rgba(255, 255, 255, 0.8)' }}>{job.Location}</td>
+                      <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.7)' }}>{job.date}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1350,18 +1356,19 @@ export default function Dashboard() {
 
         {/* Recommended Jobs */}
         <div style={{
-          background: '#fff',
-          borderRadius: '16px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-          border: '1px solid #e5e7eb',
+          background: 'rgba(255, 255, 255, 0.15)',
+          backdropFilter: 'blur(16px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '24px',
           padding: '1.5rem',
-          marginBottom: '2rem'
-
+          marginBottom: '2rem',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          transition: 'all 0.3s ease'
         }}>
           <h2 style={{
             fontSize: '1.25rem',
             fontWeight: '600',
-            color: '#000',
+            color: '#fff',
             marginBottom: '1rem',
             display: 'flex',
             alignItems: 'center',
@@ -1377,24 +1384,28 @@ export default function Dashboard() {
                 key={job.UNIQUE_ID}
                 style={{
                   padding: '1rem',
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
                   borderRadius: '12px',
                   cursor: 'pointer',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(8px)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.12)';
-                  e.currentTarget.style.borderColor = '#0ccf83';
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.borderColor = '#e5e7eb';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
                 }}
               >
-                <h3 style={{ fontWeight: '600', color: '#000', margin: '0 0 0.25rem 0', fontSize: '1rem' }}>{job.Title}</h3>
-                <p style={{ color: '#666', margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>{job.Company} • {job.Location}</p>
+                <h3 style={{ fontWeight: '600', color: '#fff', margin: '0 0 0.25rem 0', fontSize: '1rem' }}>{job.Title}</h3>
+                <p style={{ color: 'rgba(255, 255, 255, 0.8)', margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>{job.Company} • {job.Location}</p>
                 {job.rate && (
-                  <p style={{ color: '#0ccf83', fontWeight: '600', margin: 0, fontSize: '0.875rem' }}>{job.rate}</p>
+                  <p style={{ color: '#fff', fontWeight: '600', margin: 0, fontSize: '0.875rem' }}>{job.rate}</p>
                 )}
               </div>
             ))}
@@ -1404,13 +1415,14 @@ export default function Dashboard() {
             width: '100%',
             marginTop: '1rem',
             padding: '0.75rem',
-            background: '#0ccf83',
-            color: '#000',
+            background: 'rgba(255, 255, 255, 0.2)',
+            color: '#fff',
             border: 'none',
-            borderRadius: '999px',
+            borderRadius: '12px',
             fontWeight: '600',
             cursor: 'pointer',
-            fontSize: '0.875rem'
+            fontSize: '0.875rem',
+            transition: 'all 0.3s ease'
           }}
             onClick={() => window.location.href = '/'}
           >
@@ -1431,14 +1443,16 @@ export default function Dashboard() {
 
           {/* Keywords Card */}
           <div style={{
-            background: '#fff',
-            borderRadius: '16px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-            border: '1px solid #e5e7eb',
-            padding: '1.5rem'
+            background: 'rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '24px',
+            padding: '1.5rem',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            transition: 'all 0.3s ease'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#000', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <SearchCheck style={{ width: '20px', height: '20px' }} />
                 Quicksearch
               </h2>
@@ -1450,19 +1464,20 @@ export default function Dashboard() {
                   gap: '0.5rem',
                   padding: '0.5rem 1rem',
                   fontSize: '0.875rem',
-                  background: '#0ccf83',
-                  color: '#000',
-                  borderRadius: '999px',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  color: '#fff',
+                  borderRadius: '12px',
                   border: 'none',
                   fontWeight: '600',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
                 }}
               >
                 <Edit2 style={{ width: '16px', height: '16px' }} />
                 {editKeywords ? 'Done' : 'Edit'}
               </button>
             </div>
-            <p style={{ fontSize: '0.875rem', color: '#666', margin: '0.5rem 0 0.5rem 0' }}>
+            <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.5rem 0 0.5rem 0' }}>
               Click to quicksearch jobs
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -1553,16 +1568,18 @@ export default function Dashboard() {
 
           {/* Stats Card */}
           <div style={{
-            background: '#fff',
-            borderRadius: '16px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-            border: '1px solid #e5e7eb',
-            padding: '1.5rem'
+            background: 'rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '24px',
+            padding: '1.5rem',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            transition: 'all 0.3s ease'
           }}>
             <h2 style={{
               fontSize: '1.25rem',
               fontWeight: '600',
-              color: '#111827',
+              color: '#fff',
               marginBottom: '1rem',
               display: 'flex',
               alignItems: 'center',
@@ -1604,7 +1621,7 @@ export default function Dashboard() {
 
             <p style={{
               fontSize: '0.875rem',
-              color: '#6b7280',
+              color: 'rgba(255, 255, 255, 0.8)',
               marginTop: '0.5rem'
             }}>
               Total this week: {statsData.reduce((acc, day) => acc + day.views, 0)} clicked jobs
@@ -1617,13 +1634,15 @@ export default function Dashboard() {
 
           {/* Documents Card */}
           <div style={{
-            background: '#fff',
-            borderRadius: '16px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-            border: '1px solid #e5e7eb',
-            padding: '1.5rem'
+            background: 'rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '24px',
+            padding: '1.5rem',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            transition: 'all 0.3s ease'
           }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#000', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <FileText style={{ width: '20px', height: '20px' }} />
               Documents
             </h2>
@@ -1634,12 +1653,14 @@ export default function Dashboard() {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '1rem',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '12px'
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(8px)'
                 }}>
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontWeight: '600', color: '#000', margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>{doc.name}</p>
-                    <p style={{ fontSize: '0.75rem', color: '#666', margin: 0 }}>{doc.type} • {doc.size}</p>
+                    <p style={{ fontWeight: '600', color: '#fff', margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>{doc.name}</p>
+                    <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)', margin: 0 }}>{doc.type} • {doc.size}</p>
                   </div>
                   <button
                     onClick={() => removeDocument(doc.id)}
@@ -1660,44 +1681,47 @@ export default function Dashboard() {
 
 
           <div style={{
-            background: '#fff',
-            borderRadius: '16px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-            border: '1px solid #e5e7eb',
+            background: 'rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '24px',
             padding: '2rem',
             textAlign: 'center',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            transition: 'all 0.3s ease'
           }}>
             <div style={{
               width: '48px',
               height: '48px',
-              background: '#dcfce7',
+              background: 'rgba(255, 255, 255, 0.2)',
               borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: '1rem'
             }}>
-              <Plus style={{ width: '24px', height: '24px', color: '#166534' }} />
+              <Plus style={{ width: '24px', height: '24px', color: '#fff' }} />
             </div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#000', marginBottom: '0.5rem' }}>Post a Job</h2>
-            <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', marginBottom: '0.5rem' }}>Post a Job</h2>
+            <p style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
               Add an interesting job that you found
             </p>
             <button
               onClick={() => setShowAddJobForm(true)}
               style={{
                 padding: '0.75rem 1.5rem',
-                background: '#0ccf83',
-                color: '#000',
-                borderRadius: '999px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                color: '#fff',
+                borderRadius: '12px',
                 border: 'none',
                 fontWeight: '600',
                 fontSize: '0.875rem',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
               }}
             >
               Submit new job
@@ -1708,31 +1732,33 @@ export default function Dashboard() {
           {/* Drag & Drop Upload */}
           <div
             style={{
-              border: '2px dashed #ccc',
+              border: '2px dashed rgba(255, 255, 255, 0.3)',
               borderRadius: '12px',
               padding: '1.5rem',
               textAlign: 'center',
               transition: 'border-color 0.3s',
-              marginTop: '1rem'
+              marginTop: '1rem',
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(8px)'
             }}
             onDragOver={(e) => {
               e.preventDefault();
-              e.currentTarget.style.borderColor = '#0ccf83';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.6)';
             }}
             onDragLeave={(e) => {
               e.preventDefault();
-              e.currentTarget.style.borderColor = '#ccc';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
             }}
             onDrop={(e) => {
               e.preventDefault();
               alert('Bestanden geüpload (mock)');
             }}
           >
-            <Upload style={{ width: '32px', height: '32px', color: '#999', marginBottom: '0.5rem' }} />
-            <p style={{ fontSize: '0.875rem', color: '#666', margin: '0.25rem 0' }}>
-              Drag your files or <span style={{ color: '#0ccf83', fontWeight: '600', cursor: 'pointer' }}>browse files</span>
+            <Upload style={{ width: '32px', height: '32px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '0.5rem' }} />
+            <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.25rem 0' }}>
+              Drag your files or <span style={{ color: '#fff', fontWeight: '600', cursor: 'pointer' }}>browse files</span>
             </p>
-            <p style={{ fontSize: '0.75rem', color: '#999' }}>Max 10MB per file</p>
+            <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>Max 10MB per file</p>
           </div>
 
         </div>
@@ -1741,14 +1767,16 @@ export default function Dashboard() {
         {/* Profile Card */}
         {isAvailable && (
           <div style={{
-            background: '#fff',
-            borderRadius: '16px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-            border: '1px solid #e5e7eb',
-            padding: '1.5rem'
+            background: 'rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '24px',
+            padding: '1.5rem',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            transition: 'all 0.3s ease'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#000', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Users style={{ width: '20px', height: '20px' }} />
                 Profile
               </h2>
@@ -1761,12 +1789,13 @@ export default function Dashboard() {
                     gap: '0.5rem',
                     padding: '0.5rem 1rem',
                     fontSize: '0.875rem',
-                    background: '#0ccf83',
-                    color: '#000',
-                    borderRadius: '999px',
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    color: '#fff',
+                    borderRadius: '12px',
                     border: 'none',
                     fontWeight: '600',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
                   }}
                 >
                   <Edit2 style={{ width: '16px', height: '16px' }} />
@@ -1782,12 +1811,13 @@ export default function Dashboard() {
                       gap: '0.25rem',
                       padding: '0.5rem 1rem',
                       fontSize: '0.875rem',
-                      background: '#0ccf83',
-                      color: '#000',
-                      borderRadius: '999px',
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      color: '#fff',
+                      borderRadius: '12px',
                       border: 'none',
                       fontWeight: '600',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
                     }}
                   >
                     <Save style={{ width: '16px', height: '16px' }} />
@@ -1801,12 +1831,13 @@ export default function Dashboard() {
                       gap: '0.25rem',
                       padding: '0.5rem 1rem',
                       fontSize: '0.875rem',
-                      background: '#f3f4f6',
-                      color: '#666',
-                      borderRadius: '999px',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      borderRadius: '12px',
                       border: 'none',
                       fontWeight: '600',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
                     }}
                   >
                     <X style={{ width: '16px', height: '16px' }} />
@@ -1820,7 +1851,7 @@ export default function Dashboard() {
               {editMode ? (
                 <>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>First name</label>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>First name</label>
                     <input
                       type="text"
                       value={editedProfile.firstName}
@@ -1828,15 +1859,18 @@ export default function Dashboard() {
                       style={{
                         width: '100%',
                         padding: '0.75rem',
-                        border: '1px solid #ccc',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
                         borderRadius: '8px',
                         fontSize: '1rem',
-                        boxSizing: 'border-box'
+                        boxSizing: 'border-box',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        color: '#fff',
+                        backdropFilter: 'blur(8px)'
                       }}
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>Last name</label>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Last name</label>
                     <input
                       type="text"
                       value={editedProfile.lastName}
@@ -1844,15 +1878,18 @@ export default function Dashboard() {
                       style={{
                         width: '100%',
                         padding: '0.75rem',
-                        border: '1px solid #ccc',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
                         borderRadius: '8px',
                         fontSize: '1rem',
-                        boxSizing: 'border-box'
+                        boxSizing: 'border-box',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        color: '#fff',
+                        backdropFilter: 'blur(8px)'
                       }}
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>Location</label>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Location</label>
                     <input
                       type="location"
                       value={editedProfile.location}
@@ -1860,15 +1897,18 @@ export default function Dashboard() {
                       style={{
                         width: '100%',
                         padding: '0.75rem',
-                        border: '1px solid #ccc',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
                         borderRadius: '8px',
                         fontSize: '1rem',
-                        boxSizing: 'border-box'
+                        boxSizing: 'border-box',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        color: '#fff',
+                        backdropFilter: 'blur(8px)'
                       }}
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>Job title</label>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Job title</label>
                     <input
                       type="jobtitle"
                       value={editedProfile.job_title}
@@ -1876,15 +1916,18 @@ export default function Dashboard() {
                       style={{
                         width: '100%',
                         padding: '0.75rem',
-                        border: '1px solid #ccc',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
                         borderRadius: '8px',
                         fontSize: '1rem',
-                        boxSizing: 'border-box'
+                        boxSizing: 'border-box',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        color: '#fff',
+                        backdropFilter: 'blur(8px)'
                       }}
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#666', marginBottom: '0.25rem' }}>LinkedIn</label>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>LinkedIn</label>
                     <input
                       type="url"
                       value={editedProfile.linkedIn}
@@ -1892,10 +1935,13 @@ export default function Dashboard() {
                       style={{
                         width: '100%',
                         padding: '0.75rem',
-                        border: '1px solid #ccc',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
                         borderRadius: '8px',
                         fontSize: '1rem',
-                        boxSizing: 'border-box'
+                        boxSizing: 'border-box',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        color: '#fff',
+                        backdropFilter: 'blur(8px)'
                       }}
                     />
                   </div>
@@ -1903,20 +1949,20 @@ export default function Dashboard() {
               ) : (
                 <>
                   <div>
-                    <span style={{ fontSize: '0.875rem', color: '#666' }}>Name</span>
-                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#000' }}>{profile.firstName} {profile.lastName}</p>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Name</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.firstName} {profile.lastName}</p>
                   </div>
                   <div>
-                    <span style={{ fontSize: '0.875rem', color: '#666' }}>Location</span>
-                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#000' }}>{profile.location}</p>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Location</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.location}</p>
                   </div>
                   <div>
-                    <span style={{ fontSize: '0.875rem', color: '#666' }}>Job title</span>
-                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#000' }}>{profile.job_title}</p>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Job title</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.job_title}</p>
                   </div>
                   <div>
-                    <span style={{ fontSize: '0.875rem', color: '#666' }}>LinkedIn</span>
-                    <a href={profile.linkedIn} style={{ fontWeight: '600', color: '#0ccf83', textDecoration: 'none', display: 'block', marginTop: '0.25rem' }} target="_blank" rel="noopener noreferrer">
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>LinkedIn</span>
+                    <a href={profile.linkedIn} style={{ fontWeight: '600', color: '#fff', textDecoration: 'none', display: 'block', marginTop: '0.25rem' }} target="_blank" rel="noopener noreferrer">
                       LinkedIn profile
                     </a>
                   </div>
