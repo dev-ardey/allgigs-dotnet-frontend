@@ -814,7 +814,7 @@ export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
   const searchJobs = (keyword: string) => {
-    router.push(`/?search=${encodeURIComponent(keyword)}`);
+    router.push(`/leadSearch?search=${encodeURIComponent(keyword)}`);
   };
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
   const emptyProfile: Profile = {
@@ -1564,7 +1564,7 @@ export default function Dashboard() {
             backdropFilter: 'blur(8px)',
             marginBottom: '1rem'
           }}
-            onClick={() => window.location.href = '/'}
+            onClick={() => router.push('/leadSearch')}
           >
             Search entire database on allGigs
           </button>
