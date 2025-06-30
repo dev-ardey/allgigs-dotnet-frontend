@@ -1448,7 +1448,7 @@ export default function Dashboard() {
 
         {/* Recently Clicked Jobs Card - COMMENTED OUT */}
         {/*
-        <div style={{
+          <div style={{
           background: 'rgba(255, 255, 255, 0.15)',
           backdropFilter: 'blur(16px)',
           border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -1834,7 +1834,7 @@ export default function Dashboard() {
               <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <SearchCheck style={{ width: '20px', height: '20px' }} />
                 Quicksearch
-              </h2>
+            </h2>
               <button
                 onClick={() => setEditKeywords(!editKeywords)}
                 style={{
@@ -1855,7 +1855,7 @@ export default function Dashboard() {
                 <Edit2 style={{ width: '16px', height: '16px' }} />
                 {editKeywords ? 'Done' : 'Edit'}
               </button>
-            </div>
+                  </div>
             <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.5rem 0 0.5rem 0' }}>
               Click to quicksearch jobs
             </p>
@@ -1894,20 +1894,20 @@ export default function Dashboard() {
                 >
                   {keyword}
                   {editKeywords && (
-                    <button
+                  <button
                       onClick={() => removeKeyword(index)}
-                      style={{
+                    style={{
                         marginLeft: '0.25rem',
-                        background: 'none',
-                        border: 'none',
+                      background: 'none',
+                      border: 'none',
                         color: '#fff',
-                        cursor: 'pointer',
+                      cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center'
-                      }}
-                    >
+                    }}
+                  >
                       <X style={{ width: '12px', height: '12px' }} />
-                    </button>
+                  </button>
                   )}
                 </span>
               ))}
@@ -1944,7 +1944,7 @@ export default function Dashboard() {
                 >
                   <Plus style={{ width: '16px', height: '16px' }} />
                 </button>
-              </div>
+          </div>
             )}
           </div>
           */}
