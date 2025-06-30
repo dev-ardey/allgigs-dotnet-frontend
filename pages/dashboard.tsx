@@ -1434,6 +1434,7 @@ export default function Dashboard() {
           </div>
         </div>
         {/* Recently Clicked Jobs Card */}
+        {/*
         <div style={{
           background: 'rgba(255, 255, 255, 0.15)',
           backdropFilter: 'blur(16px)',
@@ -1490,6 +1491,7 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+        */}
 
         {/* Recommended Jobs */}
         <div style={{
@@ -1512,7 +1514,7 @@ export default function Dashboard() {
             gap: '0.5rem'
           }}>
             <Sparkles style={{ width: '20px', height: '20px' }} />
-            Recommended gigs
+            Recommended Leads
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -1811,9 +1813,9 @@ export default function Dashboard() {
                   <Line
                     type="monotone"
                     dataKey="views"
-                    stroke="#fff"
+                    stroke="#9333ea"
                     strokeWidth={3}
-                    dot={{ fill: '#fff', strokeWidth: 2, r: 4 }}
+                    dot={{ fill: '#9333ea', strokeWidth: 2, r: 4 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
