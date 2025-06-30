@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Save, X, Plus, Trash2, Upload, Sparkles, SearchCheck, MousePointerClick, Users, TrendingUp, FileText, Bell, DollarSign, Settings, Building2, MapPin, Coins } from 'lucide-react';
+import { Edit2, Save, X, Plus, Trash2, Upload, Sparkles, SearchCheck, MousePointerClick, Users, TrendingUp, FileText, Bell, DollarSign, Settings, Building2, MapPin, Coins, User } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 // import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs';
 import { supabase } from '../SupabaseClient';
@@ -1365,77 +1365,7 @@ export default function Dashboard() {
           onLogClick={handleLeadLogClick}
         />
 
-
-
-        {/* Availability Toggle */}
-        <div style={{ marginBottom: '2rem' }}>
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.15)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '24px',
-            padding: '1rem',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s ease'
-          }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="checkbox"
-                  checked={isAvailable}
-                  onChange={toggleAvailable}
-                  style={{ display: 'none' }}
-                />
-                <div style={{
-                  width: '52px',
-                  height: '28px',
-                  borderRadius: '14px',
-                  background: isAvailable
-                    ? 'rgba(16, 185, 129, 0.3)'
-                    : 'rgba(255, 255, 255, 0.15)',
-                  border: isAvailable
-                    ? '1px solid rgba(16, 185, 129, 0.4)'
-                    : '1px solid rgba(255, 255, 255, 0.3)',
-                  backdropFilter: 'blur(8px)',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                }}>
-                  <div style={{
-                    width: '22px',
-                    height: '22px',
-                    background: isAvailable
-                      ? 'rgba(255, 255, 255, 0.95)'
-                      : 'rgba(255, 255, 255, 0.8)',
-                    borderRadius: '50%',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-                    transform: isAvailable ? 'translateX(26px)' : 'translateX(2px)',
-                    transition: 'all 0.3s ease',
-                    marginTop: '2px',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    backdropFilter: 'blur(4px)'
-                  }} />
-                </div>
-              </div>
-              <span style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff' }}>
-                Available to recruiters
-              </span>
-              <span style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '999px',
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                background: isAvailable ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                color: isAvailable ? '#10b981' : 'rgba(255, 255, 255, 0.8)',
-                border: isAvailable ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.2)',
-                backdropFilter: 'blur(8px)'
-              }}>
-                {isAvailable ? 'Active' : 'No data is visible for recruiters'}
-              </span>
-            </label>
-          </div>
-        </div>
         {/* Recently Clicked Jobs Card */}
-        {/*
         <div style={{
           background: 'rgba(255, 255, 255, 0.15)',
           backdropFilter: 'blur(16px)',
@@ -1492,7 +1422,6 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-        */}
 
         {/* Recommended Jobs */}
         <div style={{
@@ -1887,29 +1816,50 @@ export default function Dashboard() {
 
 
         {/* Profile Dashboard */}
-        {isAvailable && (
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.15)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '24px',
-            padding: '2rem',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s ease'
-          }}>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Users style={{ width: '24px', height: '24px' }} />
-                Profile Dashboard
-              </h2>
-              {!editMode ? (
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.15)',
+          backdropFilter: 'blur(16px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '24px',
+          padding: '2rem',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          transition: 'all 0.3s ease'
+        }}>
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Users style={{ width: '24px', height: '24px' }} />
+              Profile Dashboard
+            </h2>
+            {!editMode ? (
+              <button
+                onClick={() => setEditMode(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.75rem 1.25rem',
+                  fontSize: '0.875rem',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  color: '#fff',
+                  borderRadius: '12px',
+                  border: 'none',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <Edit2 style={{ width: '16px', height: '16px' }} />
+                Edit Profile
+              </button>
+            ) : (
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
-                  onClick={() => setEditMode(true)}
+                  onClick={saveProfile}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.5rem',
+                    gap: '0.25rem',
                     padding: '0.75rem 1.25rem',
                     fontSize: '0.875rem',
                     background: 'rgba(255, 255, 255, 0.2)',
@@ -1921,538 +1871,679 @@ export default function Dashboard() {
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  <Edit2 style={{ width: '16px', height: '16px' }} />
-                  Edit Profile
+                  <Save style={{ width: '16px', height: '16px' }} />
+                  Save
                 </button>
-              ) : (
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button
-                    onClick={saveProfile}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.25rem',
-                      padding: '0.75rem 1.25rem',
-                      fontSize: '0.875rem',
-                      background: 'rgba(255, 255, 255, 0.2)',
-                      color: '#fff',
-                      borderRadius: '12px',
-                      border: 'none',
-                      fontWeight: '600',
-                      cursor: 'pointer',
+                <button
+                  onClick={cancelEdit}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    padding: '0.75rem 1.25rem',
+                    fontSize: '0.875rem',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    borderRadius: '12px',
+                    border: 'none',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <X style={{ width: '16px', height: '16px' }} />
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Mail Notifications Section */}
+          <div style={{ marginBottom: '2rem' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Bell style={{ width: '18px', height: '18px', color: '#3b82f6' }} />
+              Mail Notifications
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Follow-up Reminder Settings */}
+              <div style={{
+                background: 'rgba(59, 130, 246, 0.1)',
+                borderRadius: '12px',
+                padding: '1rem',
+                border: '1px solid rgba(59, 130, 246, 0.3)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                  <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#fff' }}>Follow-up Reminders</span>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={mailNotifications.followUpReminders}
+                      onChange={(e) => setMailNotifications(prev => ({ ...prev, followUpReminders: e.target.checked }))}
+                      style={{ display: 'none' }}
+                    />
+                    <div style={{
+                      width: '40px',
+                      height: '20px',
+                      borderRadius: '10px',
+                      background: mailNotifications.followUpReminders ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255, 255, 255, 0.15)',
+                      border: mailNotifications.followUpReminders ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid rgba(255, 255, 255, 0.3)',
                       transition: 'all 0.3s ease'
-                    }}
-                  >
-                    <Save style={{ width: '16px', height: '16px' }} />
-                    Save
-                  </button>
-                  <button
-                    onClick={cancelEdit}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.25rem',
-                      padding: '0.75rem 1.25rem',
-                      fontSize: '0.875rem',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      borderRadius: '12px',
-                      border: 'none',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    <X style={{ width: '16px', height: '16px' }} />
-                    Cancel
-                  </button>
+                    }}>
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        background: 'rgba(255, 255, 255, 0.9)',
+                        borderRadius: '50%',
+                        transform: mailNotifications.followUpReminders ? 'translateX(20px)' : 'translateX(2px)',
+                        transition: 'all 0.3s ease',
+                        marginTop: '1px'
+                      }} />
+                    </div>
+                  </label>
                 </div>
-              )}
-            </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Remind me after:</span>
+                  <select
+                    value={followUpDays}
+                    onChange={(e) => setFollowUpDays(parseInt(e.target.value))}
+                    style={{
+                      padding: '0.5rem',
+                      background: 'rgba(59, 130, 246, 0.1)',
+                      border: '1px solid rgba(59, 130, 246, 0.3)',
+                      borderRadius: '6px',
+                      color: '#fff',
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    <option value={1}>1 day</option>
+                    <option value={2}>2 days</option>
+                    <option value={3}>3 days</option>
+                    <option value={5}>5 days</option>
+                    <option value={7}>1 week</option>
+                  </select>
+                </div>
+              </div>
 
-            {/* Mail Notifications Section */}
-            <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Bell style={{ width: '18px', height: '18px' }} />
-                Mail Notifications
-              </h3>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {/* Follow-up Reminder Settings */}
-                <div style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '12px',
-                  padding: '1rem',
-                  border: '1px solid rgba(255, 255, 255, 0.2)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                    <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#fff' }}>Follow-up Reminders</span>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              {/* Notification Toggles */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+                {[
+                  { key: 'leadNotifications', label: 'New Lead Notifications', desc: 'Get notified when new leads are added' },
+                  { key: 'applicationStatusUpdates', label: 'Application Updates', desc: 'Status changes on your applications' },
+                  { key: 'interviewReminders', label: 'Interview Reminders', desc: 'Reminders for upcoming interviews' },
+                  { key: 'weeklyDigest', label: 'Weekly Summary', desc: 'Weekly overview of your activity' },
+                  { key: 'marketInsights', label: 'Market Insights', desc: 'Industry trends and salary updates' },
+                  { key: 'systemUpdates', label: 'System Updates', desc: 'Platform updates and announcements' }
+                ].map((notification) => (
+                  <div key={notification.key} style={{
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}>
+                    <div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#fff', marginBottom: '0.25rem' }}>
+                        {notification.label}
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+                        {notification.desc}
+                      </div>
+                    </div>
+                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                       <input
                         type="checkbox"
-                        checked={mailNotifications.followUpReminders}
-                        onChange={(e) => setMailNotifications(prev => ({ ...prev, followUpReminders: e.target.checked }))}
+                        checked={mailNotifications[notification.key as keyof typeof mailNotifications]}
+                        onChange={(e) => setMailNotifications(prev => ({
+                          ...prev,
+                          [notification.key]: e.target.checked
+                        }))}
                         style={{ display: 'none' }}
                       />
                       <div style={{
-                        width: '40px',
-                        height: '20px',
-                        borderRadius: '10px',
-                        background: mailNotifications.followUpReminders ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.15)',
-                        border: mailNotifications.followUpReminders ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.3)',
+                        width: '36px',
+                        height: '18px',
+                        borderRadius: '9px',
+                        background: mailNotifications[notification.key as keyof typeof mailNotifications]
+                          ? 'rgba(59, 130, 246, 0.3)'
+                          : 'rgba(255, 255, 255, 0.15)',
+                        border: mailNotifications[notification.key as keyof typeof mailNotifications]
+                          ? '1px solid rgba(59, 130, 246, 0.4)'
+                          : '1px solid rgba(255, 255, 255, 0.3)',
                         transition: 'all 0.3s ease'
                       }}>
                         <div style={{
-                          width: '16px',
-                          height: '16px',
+                          width: '14px',
+                          height: '14px',
                           background: 'rgba(255, 255, 255, 0.9)',
                           borderRadius: '50%',
-                          transform: mailNotifications.followUpReminders ? 'translateX(20px)' : 'translateX(2px)',
+                          transform: mailNotifications[notification.key as keyof typeof mailNotifications] ? 'translateX(18px)' : 'translateX(2px)',
                           transition: 'all 0.3s ease',
                           marginTop: '1px'
                         }} />
                       </div>
                     </label>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Remind me after:</span>
-                    <select
-                      value={followUpDays}
-                      onChange={(e) => setFollowUpDays(parseInt(e.target.value))}
-                      style={{
-                        padding: '0.5rem',
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: '6px',
-                        color: '#fff',
-                        fontSize: '0.875rem'
-                      }}
-                    >
-                      <option value={1}>1 day</option>
-                      <option value={2}>2 days</option>
-                      <option value={3}>3 days</option>
-                      <option value={5}>5 days</option>
-                      <option value={7}>1 week</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Notification Toggles */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-                  {[
-                    { key: 'leadNotifications', label: 'New Lead Notifications', desc: 'Get notified when new leads are added' },
-                    { key: 'applicationStatusUpdates', label: 'Application Updates', desc: 'Status changes on your applications' },
-                    { key: 'interviewReminders', label: 'Interview Reminders', desc: 'Reminders for upcoming interviews' },
-                    { key: 'weeklyDigest', label: 'Weekly Summary', desc: 'Weekly overview of your activity' },
-                    { key: 'marketInsights', label: 'Market Insights', desc: 'Industry trends and salary updates' },
-                    { key: 'systemUpdates', label: 'System Updates', desc: 'Platform updates and announcements' }
-                  ].map((notification) => (
-                    <div key={notification.key} style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '12px',
-                      padding: '1rem',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between'
-                    }}>
-                      <div>
-                        <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#fff', marginBottom: '0.25rem' }}>
-                          {notification.label}
-                        </div>
-                        <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)' }}>
-                          {notification.desc}
-                        </div>
-                      </div>
-                      <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                        <input
-                          type="checkbox"
-                          checked={mailNotifications[notification.key as keyof typeof mailNotifications]}
-                          onChange={(e) => setMailNotifications(prev => ({
-                            ...prev,
-                            [notification.key]: e.target.checked
-                          }))}
-                          style={{ display: 'none' }}
-                        />
-                        <div style={{
-                          width: '36px',
-                          height: '18px',
-                          borderRadius: '9px',
-                          background: mailNotifications[notification.key as keyof typeof mailNotifications]
-                            ? 'rgba(16, 185, 129, 0.3)'
-                            : 'rgba(255, 255, 255, 0.15)',
-                          border: mailNotifications[notification.key as keyof typeof mailNotifications]
-                            ? '1px solid rgba(16, 185, 129, 0.4)'
-                            : '1px solid rgba(255, 255, 255, 0.3)',
-                          transition: 'all 0.3s ease'
-                        }}>
-                          <div style={{
-                            width: '14px',
-                            height: '14px',
-                            background: 'rgba(255, 255, 255, 0.9)',
-                            borderRadius: '50%',
-                            transform: mailNotifications[notification.key as keyof typeof mailNotifications]
-                              ? 'translateX(18px)'
-                              : 'translateX(2px)',
-                            transition: 'all 0.3s ease',
-                            marginTop: '1px'
-                          }} />
-                        </div>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Documents Section */}
-            <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <FileText style={{ width: '18px', height: '18px' }} />
-                Documents
-              </h3>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                {/* Documents List */}
-                <div style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '12px',
-                  padding: '1rem',
-                  border: '1px solid rgba(255, 255, 255, 0.2)'
-                }}>
-                  <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#fff', marginBottom: '1rem' }}>Your Documents</h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    {documents.map((doc) => (
-                      <div key={doc.id} style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '1rem',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: '12px',
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(8px)'
-                      }}>
-                        <div style={{ flex: 1 }}>
-                          <p style={{ fontWeight: '600', color: '#fff', margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>{doc.name}</p>
-                          <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)', margin: 0 }}>{doc.type} • {doc.size}</p>
-                        </div>
-                        <button
-                          onClick={() => removeDocument(doc.id)}
-                          style={{
-                            color: '#dc2626',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            padding: '0.25rem'
-                          }}
-                        >
-                          <Trash2 style={{ width: '16px', height: '16px' }} />
-                        </button>
-                      </div>
-                    ))}
-                    {documents.length === 0 && (
-                      <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center', padding: '1rem' }}>
-                        No documents uploaded yet
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Drag & Drop Upload */}
-                <div
-                  style={{
-                    border: '2px dashed rgba(255, 255, 255, 0.3)',
-                    borderRadius: '12px',
-                    padding: '1.5rem',
-                    textAlign: 'center',
-                    transition: 'border-color 0.3s',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(8px)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minHeight: '200px'
-                  }}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.6)';
-                  }}
-                  onDragLeave={(e) => {
-                    e.preventDefault();
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    alert('Bestanden geüpload (mock)');
-                  }}
-                >
-                  <Upload style={{ width: '32px', height: '32px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '0.5rem' }} />
-                  <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.25rem 0' }}>
-                    Drag your files or <span style={{ color: '#fff', fontWeight: '600', cursor: 'pointer' }}>browse files</span>
-                  </p>
-                  <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>Max 10MB per file</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Personal Info Section */}
-            <div>
-              <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Settings style={{ width: '18px', height: '18px' }} />
-                Personal Information
-              </h3>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {editMode ? (
-                  <>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>First name</label>
-                        <input
-                          type="text"
-                          value={editedProfile.firstName}
-                          onChange={(e) => setEditedProfile({ ...editedProfile, firstName: e.target.value })}
-                          style={{
-                            width: '100%',
-                            padding: '0.75rem',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            borderRadius: '8px',
-                            fontSize: '1rem',
-                            boxSizing: 'border-box',
-                            background: 'rgba(255, 255, 255, 0.1)',
-                            color: '#fff',
-                            backdropFilter: 'blur(8px)'
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Last name</label>
-                        <input
-                          type="text"
-                          value={editedProfile.lastName}
-                          onChange={(e) => setEditedProfile({ ...editedProfile, lastName: e.target.value })}
-                          style={{
-                            width: '100%',
-                            padding: '0.75rem',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            borderRadius: '8px',
-                            fontSize: '1rem',
-                            boxSizing: 'border-box',
-                            background: 'rgba(255, 255, 255, 0.1)',
-                            color: '#fff',
-                            backdropFilter: 'blur(8px)'
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Location</label>
-                        <input
-                          type="text"
-                          value={editedProfile.location}
-                          onChange={(e) => setEditedProfile({ ...editedProfile, location: e.target.value })}
-                          style={{
-                            width: '100%',
-                            padding: '0.75rem',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            borderRadius: '8px',
-                            fontSize: '1rem',
-                            boxSizing: 'border-box',
-                            background: 'rgba(255, 255, 255, 0.1)',
-                            color: '#fff',
-                            backdropFilter: 'blur(8px)'
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Job title</label>
-                        <input
-                          type="text"
-                          value={editedProfile.job_title}
-                          onChange={(e) => setEditedProfile({ ...editedProfile, job_title: e.target.value })}
-                          style={{
-                            width: '100%',
-                            padding: '0.75rem',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            borderRadius: '8px',
-                            fontSize: '1rem',
-                            boxSizing: 'border-box',
-                            background: 'rgba(255, 255, 255, 0.1)',
-                            color: '#fff',
-                            backdropFilter: 'blur(8px)'
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>LinkedIn</label>
-                      <input
-                        type="url"
-                        value={editedProfile.linkedIn}
-                        onChange={(e) => setEditedProfile({ ...editedProfile, linkedIn: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          borderRadius: '8px',
-                          fontSize: '1rem',
-                          boxSizing: 'border-box',
-                          background: 'rgba(255, 255, 255, 0.1)',
-                          color: '#fff',
-                          backdropFilter: 'blur(8px)'
-                        }}
-                      />
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Hourly Rate (€)</label>
-                        <input
-                          type="number"
-                          value={editedProfile.hourlyRate || ''}
-                          onChange={(e) => setEditedProfile({ ...editedProfile, hourlyRate: parseInt(e.target.value) || 0 })}
-                          style={{
-                            width: '100%',
-                            padding: '0.75rem',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            borderRadius: '8px',
-                            fontSize: '1rem',
-                            boxSizing: 'border-box',
-                            background: 'rgba(255, 255, 255, 0.1)',
-                            color: '#fff',
-                            backdropFilter: 'blur(8px)'
-                          }}
-                          placeholder="75"
-                        />
-                      </div>
-                      <div>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.75rem', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.2)', backdropFilter: 'blur(8px)', marginTop: '1.5rem' }}>
-                          <div style={{ position: 'relative' }}>
-                            <input
-                              type="checkbox"
-                              checked={editedProfile.isAvailableForWork || false}
-                              onChange={(e) => setEditedProfile({ ...editedProfile, isAvailableForWork: e.target.checked })}
-                              style={{ display: 'none' }}
-                            />
-                            <div style={{
-                              width: '44px',
-                              height: '24px',
-                              borderRadius: '12px',
-                              background: editedProfile.isAvailableForWork
-                                ? 'rgba(16, 185, 129, 0.3)'
-                                : 'rgba(255, 255, 255, 0.15)',
-                              border: editedProfile.isAvailableForWork
-                                ? '1px solid rgba(16, 185, 129, 0.4)'
-                                : '1px solid rgba(255, 255, 255, 0.3)',
-                              backdropFilter: 'blur(8px)',
-                              transition: 'all 0.3s ease'
-                            }}>
-                              <div style={{
-                                width: '18px',
-                                height: '18px',
-                                background: editedProfile.isAvailableForWork
-                                  ? 'rgba(255, 255, 255, 0.95)'
-                                  : 'rgba(255, 255, 255, 0.8)',
-                                borderRadius: '50%',
-                                transform: editedProfile.isAvailableForWork ? 'translateX(22px)' : 'translateX(2px)',
-                                transition: 'all 0.3s ease',
-                                marginTop: '2px',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                backdropFilter: 'blur(4px)'
-                              }} />
-                            </div>
-                          </div>
-                          <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)' }}>
-                            Available for work
-                          </span>
-                        </label>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-                    <div style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '12px',
-                      padding: '1rem',
-                      border: '1px solid rgba(255, 255, 255, 0.2)'
-                    }}>
-                      <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Name</span>
-                      <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.firstName} {profile.lastName}</p>
-                    </div>
-                    <div style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '12px',
-                      padding: '1rem',
-                      border: '1px solid rgba(255, 255, 255, 0.2)'
-                    }}>
-                      <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Location</span>
-                      <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.location}</p>
-                    </div>
-                    <div style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '12px',
-                      padding: '1rem',
-                      border: '1px solid rgba(255, 255, 255, 0.2)'
-                    }}>
-                      <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Job title</span>
-                      <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.job_title}</p>
-                    </div>
-                    <div style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '12px',
-                      padding: '1rem',
-                      border: '1px solid rgba(255, 255, 255, 0.2)'
-                    }}>
-                      <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>LinkedIn</span>
-                      <a href={profile.linkedIn} style={{ fontWeight: '600', color: '#fff', textDecoration: 'none', display: 'block', marginTop: '0.25rem' }} target="_blank" rel="noopener noreferrer">
-                        LinkedIn profile
-                      </a>
-                    </div>
-                    <div style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '12px',
-                      padding: '1rem',
-                      border: '1px solid rgba(255, 255, 255, 0.2)'
-                    }}>
-                      <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Hourly Rate</span>
-                      <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <DollarSign style={{ width: '16px', height: '16px' }} />
-                        €{profile.hourlyRate || 75}/hour
-                      </p>
-                    </div>
-                    <div style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '12px',
-                      padding: '1rem',
-                      border: '1px solid rgba(255, 255, 255, 0.2)'
-                    }}>
-                      <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Availability</span>
-                      <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: profile.isAvailableForWork ? '#10b981' : 'rgba(255, 255, 255, 0.6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {profile.isAvailableForWork ? '✓ Available for work' : '✗ Not available'}
-                      </p>
-                    </div>
-                  </div>
-                )}
+                ))}
               </div>
             </div>
           </div>
-        )}
 
-        {showAddJobForm && user && (
-          <AddJobForm
-            onClose={() => setShowAddJobForm(false)}
-            onJobAdded={() => {
-              // Optioneel: herlaad jobs
-              console.log("Job toegevoegd");
-            }}
-            user={user}
-          />
-        )}
+          {/* Documents Section */}
+          <div style={{ marginBottom: '2rem' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FileText style={{ width: '18px', height: '18px' }} />
+              Documents
+            </h3>
 
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              {/* Documents List */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                padding: '1rem',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#fff', marginBottom: '1rem' }}>Your Documents</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {documents.map((doc) => (
+                    <div key={doc.id} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '1rem',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '12px',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      backdropFilter: 'blur(8px)'
+                    }}>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontWeight: '600', color: '#fff', margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>{doc.name}</p>
+                        <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)', margin: 0 }}>{doc.type} • {doc.size}</p>
+                      </div>
+                      <button
+                        onClick={() => removeDocument(doc.id)}
+                        style={{
+                          color: '#dc2626',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: '0.25rem'
+                        }}
+                      >
+                        <Trash2 style={{ width: '16px', height: '16px' }} />
+                      </button>
+                    </div>
+                  ))}
+                  {documents.length === 0 && (
+                    <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center', padding: '1rem' }}>
+                      No documents uploaded yet
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Drag & Drop Upload */}
+              <div
+                style={{
+                  border: '2px dashed rgba(255, 255, 255, 0.3)',
+                  borderRadius: '12px',
+                  padding: '1.5rem',
+                  textAlign: 'center',
+                  transition: 'border-color 0.3s',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(8px)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: '200px'
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.6)';
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  alert('Bestanden geüpload (mock)');
+                }}
+              >
+                <Upload style={{ width: '32px', height: '32px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '0.5rem' }} />
+                <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.25rem 0' }}>
+                  Drag your files or <span style={{ color: '#fff', fontWeight: '600', cursor: 'pointer' }}>browse files</span>
+                </p>
+                <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>Max 10MB per file</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Personal Information Section */}
+          <div style={{ marginBottom: '2rem' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <User style={{ width: '18px', height: '18px', color: '#10b981' }} />
+              Personal Information
+            </h3>
+
+            {editMode ? (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>First Name</label>
+                    <input
+                      type="text"
+                      value={editedProfile.firstName}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, firstName: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        boxSizing: 'border-box',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        color: '#fff',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                      placeholder="John"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Last Name</label>
+                    <input
+                      type="text"
+                      value={editedProfile.lastName}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, lastName: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        boxSizing: 'border-box',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        color: '#fff',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                      placeholder="Doe"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Job Title</label>
+                    <input
+                      type="text"
+                      value={editedProfile.job_title}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, job_title: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        boxSizing: 'border-box',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        color: '#fff',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                      placeholder="Senior Developer"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Location</label>
+                    <input
+                      type="text"
+                      value={editedProfile.location}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, location: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        boxSizing: 'border-box',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        color: '#fff',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                      placeholder="Amsterdam, Netherlands"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>LinkedIn URL</label>
+                    <input
+                      type="url"
+                      value={editedProfile.linkedin_URL}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, linkedin_URL: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        boxSizing: 'border-box',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        color: '#fff',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                      placeholder="https://linkedin.com/in/johndoe"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Industry</label>
+                    <input
+                      type="text"
+                      value={editedProfile.industry}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, industry: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        boxSizing: 'border-box',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        color: '#fff',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                      placeholder="Technology"
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Hourly Rate (€)</label>
+                    <input
+                      type="number"
+                      value={editedProfile.hourlyRate || ''}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, hourlyRate: parseInt(e.target.value) || 0 })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        boxSizing: 'border-box',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        color: '#fff',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                      placeholder="75"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.75rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)', backdropFilter: 'blur(8px)', marginTop: '1.5rem' }}>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type="checkbox"
+                          checked={editedProfile.isAvailableForWork || false}
+                          onChange={(e) => setEditedProfile({ ...editedProfile, isAvailableForWork: e.target.checked })}
+                          style={{ display: 'none' }}
+                        />
+                        <div style={{
+                          width: '44px',
+                          height: '24px',
+                          borderRadius: '12px',
+                          background: editedProfile.isAvailableForWork
+                            ? 'rgba(16, 185, 129, 0.3)'
+                            : 'rgba(255, 255, 255, 0.15)',
+                          border: editedProfile.isAvailableForWork
+                            ? '1px solid rgba(16, 185, 129, 0.4)'
+                            : '1px solid rgba(255, 255, 255, 0.3)',
+                          backdropFilter: 'blur(8px)',
+                          transition: 'all 0.3s ease'
+                        }}>
+                          <div style={{
+                            width: '18px',
+                            height: '18px',
+                            background: editedProfile.isAvailableForWork
+                              ? 'rgba(255, 255, 255, 0.95)'
+                              : 'rgba(255, 255, 255, 0.8)',
+                            borderRadius: '50%',
+                            transform: editedProfile.isAvailableForWork ? 'translateX(22px)' : 'translateX(2px)',
+                            transition: 'all 0.3s ease',
+                            marginTop: '2px',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            backdropFilter: 'blur(4px)'
+                          }} />
+                        </div>
+                      </div>
+                      <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)' }}>
+                        Available for work
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Available to Recruiters Toggle */}
+                <div style={{
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  marginTop: '1rem'
+                }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type="checkbox"
+                          checked={isAvailable}
+                          onChange={toggleAvailable}
+                          style={{ display: 'none' }}
+                        />
+                        <div style={{
+                          width: '52px',
+                          height: '28px',
+                          borderRadius: '14px',
+                          background: isAvailable
+                            ? 'rgba(16, 185, 129, 0.3)'
+                            : 'rgba(255, 255, 255, 0.15)',
+                          border: isAvailable
+                            ? '1px solid rgba(16, 185, 129, 0.4)'
+                            : '1px solid rgba(255, 255, 255, 0.3)',
+                          backdropFilter: 'blur(8px)',
+                          transition: 'all 0.3s ease',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                        }}>
+                          <div style={{
+                            width: '22px',
+                            height: '22px',
+                            background: isAvailable
+                              ? 'rgba(255, 255, 255, 0.95)'
+                              : 'rgba(255, 255, 255, 0.8)',
+                            borderRadius: '50%',
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                            transform: isAvailable ? 'translateX(26px)' : 'translateX(2px)',
+                            transition: 'all 0.3s ease',
+                            marginTop: '2px',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            backdropFilter: 'blur(4px)'
+                          }} />
+                        </div>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '1rem', fontWeight: '600', color: '#fff', display: 'block' }}>
+                          Available to recruiters
+                        </span>
+                        <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+                          Make your profile visible to recruiters
+                        </span>
+                      </div>
+                    </div>
+                    <span style={{
+                      padding: '0.5rem 1rem',
+                      borderRadius: '999px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      background: isAvailable ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                      color: isAvailable ? '#10b981' : 'rgba(255, 255, 255, 0.8)',
+                      border: isAvailable ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.2)',
+                      backdropFilter: 'blur(8px)'
+                    }}>
+                      {isAvailable ? 'Active' : 'Hidden'}
+                    </span>
+                  </label>
+                </div>
+              </>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+                <div style={{
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  border: '1px solid rgba(16, 185, 129, 0.3)'
+                }}>
+                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Name</span>
+                  <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.firstName} {profile.lastName}</p>
+                </div>
+                <div style={{
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  border: '1px solid rgba(16, 185, 129, 0.3)'
+                }}>
+                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Location</span>
+                  <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.location}</p>
+                </div>
+                <div style={{
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  border: '1px solid rgba(16, 185, 129, 0.3)'
+                }}>
+                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Job title</span>
+                  <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.job_title}</p>
+                </div>
+                <div style={{
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  border: '1px solid rgba(16, 185, 129, 0.3)'
+                }}>
+                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>LinkedIn</span>
+                  <a href={profile.linkedIn} style={{ fontWeight: '600', color: '#fff', textDecoration: 'none', display: 'block', marginTop: '0.25rem' }} target="_blank" rel="noopener noreferrer">
+                    LinkedIn profile
+                  </a>
+                </div>
+                <div style={{
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  border: '1px solid rgba(16, 185, 129, 0.3)'
+                }}>
+                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Hourly Rate</span>
+                  <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <DollarSign style={{ width: '16px', height: '16px' }} />
+                    €{profile.hourlyRate || 75}/hour
+                  </p>
+                </div>
+                <div style={{
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  border: '1px solid rgba(16, 185, 129, 0.3)'
+                }}>
+                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Availability</span>
+                  <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: profile.isAvailableForWork ? '#10b981' : 'rgba(255, 255, 255, 0.6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    {profile.isAvailableForWork ? '✓ Available for work' : '✗ Not available'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Available to Recruiters Toggle - Always Visible */}
+            {!editMode && (
+              <div style={{
+                background: 'rgba(16, 185, 129, 0.1)',
+                borderRadius: '12px',
+                padding: '1rem',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                marginTop: '1.5rem'
+              }}>
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="checkbox"
+                        checked={isAvailable}
+                        onChange={toggleAvailable}
+                        style={{ display: 'none' }}
+                      />
+                      <div style={{
+                        width: '52px',
+                        height: '28px',
+                        borderRadius: '14px',
+                        background: isAvailable
+                          ? 'rgba(16, 185, 129, 0.3)'
+                          : 'rgba(255, 255, 255, 0.15)',
+                        border: isAvailable
+                          ? '1px solid rgba(16, 185, 129, 0.4)'
+                          : '1px solid rgba(255, 255, 255, 0.3)',
+                        backdropFilter: 'blur(8px)',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                      }}>
+                        <div style={{
+                          width: '22px',
+                          height: '22px',
+                          background: isAvailable
+                            ? 'rgba(255, 255, 255, 0.95)'
+                            : 'rgba(255, 255, 255, 0.8)',
+                          borderRadius: '50%',
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                          transform: isAvailable ? 'translateX(26px)' : 'translateX(2px)',
+                          transition: 'all 0.3s ease',
+                          marginTop: '2px',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          backdropFilter: 'blur(4px)'
+                        }} />
+                      </div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '1rem', fontWeight: '600', color: '#fff', display: 'block' }}>
+                        Available to recruiters
+                      </span>
+                      <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Make your profile visible to recruiters
+                      </span>
+                    </div>
+                  </div>
+                  <span style={{
+                    padding: '0.5rem 1rem',
+                    borderRadius: '999px',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    background: isAvailable ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                    color: isAvailable ? '#10b981' : 'rgba(255, 255, 255, 0.8)',
+                    border: isAvailable ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.2)',
+                    backdropFilter: 'blur(8px)'
+                  }}>
+                    {isAvailable ? 'Active' : 'Hidden'}
+                  </span>
+                </label>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+
+      {showAddJobForm && user && (
+        <AddJobForm
+          onClose={() => setShowAddJobForm(false)}
+          onJobAdded={() => {
+            // Optioneel: herlaad jobs
+            console.log("Job toegevoegd");
+          }}
+          user={user}
+        />
+      )}
+
     </div>
   )
 }
