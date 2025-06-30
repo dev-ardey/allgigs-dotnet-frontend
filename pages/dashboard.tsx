@@ -1013,9 +1013,49 @@ export default function Dashboard() {
 
 
 
-  const handleLeadStatusChange = (leadId: string, newStatus: LeadStatus) => {
-    // hier jouw supabase-update of wat je maar wilt
-    console.log('Status veranderd:', leadId, newStatus);
+  const [qualifiedLeads, setQualifiedLeads] = useState<Lead[]>([]);
+
+  // Map recentlyClickedJobs to Lead objects with status
+  useEffect(() => {
+    setQualifiedLeads(
+      recentlyClickedJobs
+        .filter((job: any) => typeof job.UNIQUE_ID === 'string')
+        .map((job: any) => ({
+          ...job,
+          UNIQUE_ID: job.UNIQUE_ID as string,
+          Title: job.Title || '',
+          Company: job.Company || '',
+          Location: job.Location || '',
+          rate: job.rate || '',
+          date: job.date || '',
+          Summary: job.Summary || '',
+          URL: job.URL || '',
+          clicked_at: job.clicked_at || '',
+          status: job.status as LeadStatus || LeadStatus.NEW,
+        }))
+    );
+  }, [recentlyClickedJobs]);
+
+  // Update status in Supabase and local state
+  const handleLeadStatusChange = async (leadId: string, newStatus: LeadStatus) => {
+    if (!user || !user.id) return;
+    try {
+      // Update status in Supabase job_clicks for this user/job
+      await supabase
+        .from('job_clicks')
+        .update({ status: newStatus })
+        .eq('user_id', user.id)
+        .eq('job_id', leadId);
+
+      // Update local state for immediate UI feedback
+      setQualifiedLeads((prevLeads) =>
+        prevLeads.map((lead) =>
+          lead.UNIQUE_ID === leadId ? { ...lead, status: newStatus } : lead
+        )
+      );
+    } catch (error) {
+      console.error('Failed to update lead status:', error);
+    }
   };
 
   const handleLeadLogClick = (lead: Lead) => {
@@ -1122,7 +1162,7 @@ export default function Dashboard() {
         </div> */}
 
         <QualifiedLeadsSection
-          leads={MOCK_LEADS}
+          leads={qualifiedLeads}
           onStatusChange={handleLeadStatusChange}
           onLogClick={handleLeadLogClick}
         />
