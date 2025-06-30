@@ -810,6 +810,7 @@ export default function Dashboard() {
   const [recentlyClickedJobs, setRecentlyClickedJobs] = useState<Job[]>([]);
   const [showRecentlyClicked] = useState(false);
   const [loadingRecentlyClicked, setLoadingRecentlyClicked] = useState(false);
+  console.log(loadingRecentlyClicked, "loadingRecentlyClicked");
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
   const searchJobs = (keyword: string) => {
@@ -986,6 +987,8 @@ export default function Dashboard() {
       console.error("Log job click failed:", err);
     }
   };
+
+  console.log(logJobClick, "logJobClick");
 
 
   useEffect(() => {
