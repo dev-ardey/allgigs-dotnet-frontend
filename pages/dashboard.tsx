@@ -690,7 +690,7 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
             gap: '0.5rem'
           }}>
             <TrendingUp style={{ width: '20px', height: '20px' }} />
-            Job Click Statistics
+            Lead Click Statistics
           </h3>
 
           <div style={{
@@ -737,7 +737,7 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
             color: 'rgba(255, 255, 255, 0.8)',
             marginTop: '0.5rem'
           }}>
-            Total this week: {statsData.reduce((acc, day) => acc + day.views, 0)} clicked jobs
+            Total this week: {statsData.reduce((acc, day) => acc + day.views, 0)} clicked leads
           </p>
         </div>
       </div>
@@ -1438,7 +1438,8 @@ export default function Dashboard() {
           statsData={statsData}
         />
 
-        {/* Recently Clicked Jobs Card */}
+        {/* Recently Clicked Jobs Card - COMMENTED OUT */}
+        {/*
         <div style={{
           background: 'rgba(255, 255, 255, 0.15)',
           backdropFilter: 'blur(16px)',
@@ -1495,6 +1496,7 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+        */}
 
         {/* Recommended Jobs */}
         <div style={{
@@ -1517,141 +1519,71 @@ export default function Dashboard() {
             gap: '0.5rem'
           }}>
             <Sparkles style={{ width: '20px', height: '20px' }} />
-            Recommended Leads
+            Lead Search
           </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {recommendedJobs.map((job) => (
-              <div
-                key={job.UNIQUE_ID}
-                style={{
-                  padding: '1rem',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(8px)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                }}
-              >
-                <h3 style={{ fontWeight: '600', color: '#fff', margin: '0 0 0.5rem 0', fontSize: '1rem' }}>{job.Title}</h3>
-
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                  {/* Company - Blue Balloon */}
-                  <div style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '20px',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    background: 'rgba(59, 130, 246, 0.3)',
-                    color: '#fff',
-                    border: '1px solid rgba(59, 130, 246, 0.4)',
-                    backdropFilter: 'blur(8px)'
-                  }}>
-                    <Building2 style={{ width: '14px', height: '14px', color: '#fff' }} />
-                    {job.Company}
-                  </div>
-
-                  {/* Location - Green Balloon */}
-                  <div style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '20px',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    background: 'rgba(16, 185, 129, 0.3)',
-                    color: '#fff',
-                    border: '1px solid rgba(16, 185, 129, 0.4)',
-                    backdropFilter: 'blur(8px)'
-                  }}>
-                    <MapPin style={{ width: '14px', height: '14px', color: '#fff' }} />
-                    {job.Location}
-                  </div>
-                </div>
-
-                {/* Rate - Purple Balloon */}
-                {job.rate && (
-                  <div style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '20px',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    background: 'rgba(147, 51, 234, 0.3)',
-                    color: '#fff',
-                    border: '1px solid rgba(147, 51, 234, 0.4)',
-                    backdropFilter: 'blur(8px)'
-                  }}>
-                    <Coins style={{ width: '14px', height: '14px', color: '#fff' }} />
-                    {job.rate}
-                  </div>
-                )}
-              </div>
-            ))}
+          {/* Lead Search Section */}
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '16px',
+            padding: '1rem',
+            marginBottom: '1rem'
+          }}>
+            <h3 style={{
+              fontSize: '1rem',
+              fontWeight: '600',
+              color: '#fff',
+              marginBottom: '0.75rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <SearchCheck style={{ width: '18px', height: '18px' }} />
+              Lead Search
+            </h3>
+            <button style={{
+              width: '100%',
+              padding: '0.75rem',
+              background: 'rgba(16, 185, 129, 0.3)',
+              color: '#fff',
+              border: '1px solid rgba(16, 185, 129, 0.4)',
+              borderRadius: '12px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              transition: 'all 0.3s ease',
+              backdropFilter: 'blur(8px)'
+            }}
+              onClick={() => window.location.href = '/'}
+            >
+              Search entire database on allGigs
+            </button>
           </div>
 
-          <button style={{
-            width: '100%',
-            marginTop: '1rem',
-            padding: '0.75rem',
-            background: 'rgba(255, 255, 255, 0.2)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '12px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            fontSize: '0.875rem',
-            transition: 'all 0.3s ease'
-          }}
-            onClick={() => window.location.href = '/'}
-          >
-            Search entire database on allGigs
-          </button>
-        </div>
-
-
-        {/* Main Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-          gap: '2rem',
-          marginBottom: '2rem'
-        }}>
-
-
-
-          {/* Keywords Card */}
+          {/* Quick Search Section */}
           <div style={{
-            background: 'rgba(255, 255, 255, 0.15)',
-            backdropFilter: 'blur(16px)',
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(8px)',
             border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '24px',
-            padding: '1.5rem',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s ease'
+            borderRadius: '16px',
+            padding: '1rem',
+            marginBottom: '1rem'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <SearchCheck style={{ width: '20px', height: '20px' }} />
-                Quicksearch
-              </h2>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+              <h3 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                color: '#fff',
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <SearchCheck style={{ width: '18px', height: '18px' }} />
+                Quick Search
+              </h3>
               <button
                 onClick={() => setEditKeywords(!editKeywords)}
                 style={{
@@ -1765,9 +1697,258 @@ export default function Dashboard() {
             )}
           </div>
 
+          {/* Recommended Leads Section */}
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '16px',
+            padding: '1rem'
+          }}>
+            <h3 style={{
+              fontSize: '1rem',
+              fontWeight: '600',
+              color: '#fff',
+              marginBottom: '0.75rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <Sparkles style={{ width: '18px', height: '18px' }} />
+              Recommended Leads
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {recommendedJobs.map((job) => (
+                <div
+                  key={job.UNIQUE_ID}
+                  style={{
+                    padding: '1rem',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(8px)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  }}
+                >
+                  <h3 style={{ fontWeight: '600', color: '#fff', margin: '0 0 0.5rem 0', fontSize: '1rem' }}>{job.Title}</h3>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    {/* Company - Blue Balloon */}
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '20px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      background: 'rgba(59, 130, 246, 0.3)',
+                      color: '#fff',
+                      border: '1px solid rgba(59, 130, 246, 0.4)',
+                      backdropFilter: 'blur(8px)'
+                    }}>
+                      <Building2 style={{ width: '14px', height: '14px', color: '#fff' }} />
+                      {job.Company}
+                    </div>
+
+                    {/* Location - Green Balloon */}
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '20px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      background: 'rgba(16, 185, 129, 0.3)',
+                      color: '#fff',
+                      border: '1px solid rgba(16, 185, 129, 0.4)',
+                      backdropFilter: 'blur(8px)'
+                    }}>
+                      <MapPin style={{ width: '14px', height: '14px', color: '#fff' }} />
+                      {job.Location}
+                    </div>
+                  </div>
+
+                  {/* Rate - Purple Balloon */}
+                  {job.rate && (
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '20px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      background: 'rgba(147, 51, 234, 0.3)',
+                      color: '#fff',
+                      border: '1px solid rgba(147, 51, 234, 0.4)',
+                      backdropFilter: 'blur(8px)'
+                    }}>
+                      <Coins style={{ width: '14px', height: '14px', color: '#fff' }} />
+                      {job.rate}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Main Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+          gap: '2rem',
+          marginBottom: '2rem'
+        }}>
+
+          {/* Keywords Card - COMMENTED OUT (moved to Recommended Leads section) */}
+          {/*
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '24px',
+            padding: '1.5rem',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            transition: 'all 0.3s ease'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <SearchCheck style={{ width: '20px', height: '20px' }} />
+                Quicksearch
+              </h2>
+              <button
+                onClick={() => setEditKeywords(!editKeywords)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.5rem 1rem',
+                  fontSize: '0.875rem',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  color: '#fff',
+              borderRadius: '12px',
+                  border: 'none',
+              fontWeight: '600',
+              cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <Edit2 style={{ width: '16px', height: '16px' }} />
+                {editKeywords ? 'Done' : 'Edit'}
+              </button>
+            </div>
+            <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.5rem 0 0.5rem 0' }}>
+              Click to quicksearch jobs
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+              {keywords.map((keyword, index) => (
+                <span
+                  key={index}
+                  onClick={() => !editKeywords && searchJobs(keyword)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '999px',
+              fontSize: '0.875rem',
+                    fontWeight: '600',
+                    background: editKeywords ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                    color: '#fff',
+                    border: '1px solid rgba(245, 158, 11, 0.4)',
+                    cursor: editKeywords ? 'default' : 'pointer',
+                    transition: 'all 0.2s',
+                    backdropFilter: 'blur(8px)'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!editKeywords) {
+                      e.currentTarget.style.background = 'rgba(245, 158, 11, 0.4)';
+                      e.currentTarget.style.color = '#fff';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!editKeywords) {
+                      e.currentTarget.style.background = 'rgba(245, 158, 11, 0.2)';
+                      e.currentTarget.style.color = '#fff';
+                    }
+                  }}
+                >
+                  {keyword}
+                  {editKeywords && (
+                    <button
+                      onClick={() => removeKeyword(index)}
+                      style={{
+                        marginLeft: '0.25rem',
+                        background: 'none',
+                        border: 'none',
+                        color: '#fff',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <X style={{ width: '12px', height: '12px' }} />
+                    </button>
+                  )}
+                </span>
+              ))}
+            </div>
+
+            {editKeywords && (
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input
+                  type="text"
+                  value={newKeyword}
+                  onChange={(e) => setNewKeyword(e.target.value)}
+                  onKeyDown={handleKeywordKeyDown}
+                  placeholder="Nieuwe zoekterm..."
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem'
+                  }}
+                />
+                <button
+                  onClick={handleKeywordAdd}
+                  style={{
+                    padding: '0.75rem',
+                    background: 'rgba(245, 158, 11, 0.2)',
+                    color: '#fff',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(245, 158, 11, 0.4)',
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(8px)',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <Plus style={{ width: '16px', height: '16px' }} />
+                </button>
+              </div>
+            )}
+          </div>
+          */}
+
           {/* Stats Card - REMOVED (moved to Qualified Leads section) */}
 
-          {/* Post a Job Card */}
+          {/* Post a Job Card - COMMENTED OUT */}
+          {/*
           <div style={{
             background: 'rgba(255, 255, 255, 0.15)',
             backdropFilter: 'blur(16px)',
@@ -1815,6 +1996,7 @@ export default function Dashboard() {
               Submit new job
             </button>
           </div>
+          */}
 
         </div>
 
