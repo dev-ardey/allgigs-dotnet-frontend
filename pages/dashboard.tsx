@@ -1504,23 +1504,39 @@ export default function Dashboard() {
           backdropFilter: 'blur(16px)',
           border: '1px solid rgba(255, 255, 255, 0.2)',
           borderRadius: '24px',
-          padding: '1.5rem',
+          padding: '2rem',
           marginBottom: '2rem',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
           transition: 'all 0.3s ease'
         }}>
-          <h2 style={{
-            fontSize: '1.25rem',
-            fontWeight: '600',
-            color: '#fff',
-            marginBottom: '1rem',
+          {/* Header */}
+          <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem'
+            justifyContent: 'space-between',
+            marginBottom: '2rem'
           }}>
-            <Sparkles style={{ width: '20px', height: '20px' }} />
-            Lead Search
-          </h2>
+            <div>
+              <h2 style={{
+                fontSize: '2rem',
+                fontWeight: '700',
+                margin: '0 0 0.5rem 0',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem'
+              }}>
+                <Sparkles style={{ width: '32px', height: '32px' }} />
+                Lead Search
+              </h2>
+              <p style={{
+                fontSize: '1.1rem',
+                opacity: 0.9,
+                margin: 0
+              }}>
+                Find leads and opportunities across the platform
+              </p>
+            </div>
+          </div>
 
           {/* Search entire database button */}
           <button style={{
@@ -1993,10 +2009,26 @@ export default function Dashboard() {
         }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Users style={{ width: '24px', height: '24px' }} />
-              Profile Dashboard
-            </h2>
+            <div>
+              <h2 style={{
+                fontSize: '2rem',
+                fontWeight: '700',
+                margin: '0 0 0.5rem 0',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem'
+              }}>
+                <Users style={{ width: '32px', height: '32px' }} />
+                Profile Dashboard
+              </h2>
+              <p style={{
+                fontSize: '1.1rem',
+                opacity: 0.9,
+                margin: 0
+              }}>
+                Manage your professional profile and preferences
+              </p>
+            </div>
             {!editMode ? (
               <button
                 onClick={() => setEditMode(true)}
