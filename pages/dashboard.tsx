@@ -1522,45 +1522,25 @@ export default function Dashboard() {
             Lead Search
           </h2>
 
-          {/* Lead Search Section */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.1)',
+          {/* Search entire database button */}
+          <button style={{
+            width: '100%',
+            padding: '0.75rem',
+            background: 'rgba(16, 185, 129, 0.3)',
+            color: '#fff',
+            border: '1px solid rgba(16, 185, 129, 0.4)',
+            borderRadius: '12px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            fontSize: '0.875rem',
+            transition: 'all 0.3s ease',
             backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '16px',
-            padding: '1rem',
             marginBottom: '1rem'
-          }}>
-            <h3 style={{
-              fontSize: '1rem',
-              fontWeight: '600',
-              color: '#fff',
-              marginBottom: '0.75rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <SearchCheck style={{ width: '18px', height: '18px' }} />
-              Lead Search
-            </h3>
-            <button style={{
-              width: '100%',
-              padding: '0.75rem',
-              background: 'rgba(16, 185, 129, 0.3)',
-              color: '#fff',
-              border: '1px solid rgba(16, 185, 129, 0.4)',
-              borderRadius: '12px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-              transition: 'all 0.3s ease',
-              backdropFilter: 'blur(8px)'
-            }}
-              onClick={() => window.location.href = '/'}
-            >
-              Search entire database on allGigs
-            </button>
-          </div>
+          }}
+            onClick={() => window.location.href = '/'}
+          >
+            Search entire database on allGigs
+          </button>
 
           {/* Quick Search Section */}
           <div style={{
