@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { supabase } from '../SupabaseClient';
 import { useRouter } from 'next/router';
 import AddJobForm from '../components/ui/add-job-form';
+import LoginForm from '../components/ui/login';
 
 // Qualified Leads Interfaces en Types
 import {
@@ -1277,6 +1278,15 @@ export default function Dashboard() {
     // hier jouw logica bij click
     console.log('Lead aangeklikt:', lead);
   };
+
+  // Authentication check
+  if (!user) {
+    return (
+      <div>
+        <LoginForm />
+      </div>
+    );
+  }
 
   return (
     <div style={{
