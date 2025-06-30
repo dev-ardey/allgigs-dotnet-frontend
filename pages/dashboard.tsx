@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Save, X, Plus, Trash2, Upload, Sparkles, SearchCheck, MousePointerClick, Users, TrendingUp, FileText } from 'lucide-react';
+import { Edit2, Save, X, Plus, Trash2, Upload, Sparkles, SearchCheck, MousePointerClick, Users, TrendingUp, FileText, Bell, DollarSign, Settings } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 // import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs';
 import { supabase } from '../SupabaseClient';
@@ -455,7 +455,7 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
             { label: 'Conversion Rate', value: salesKPIs.conversion_rate, suffix: '%' },
             { label: 'Potential Revenue', value: `€${(salesKPIs.potential_revenue / 1000).toFixed(0)}K`, suffix: '' },
             { label: 'Pipeline Health', value: salesKPIs.pipeline_health, suffix: '%' },
-            { label: 'Active Apps', value: salesKPIs.active_applications, suffix: '' },
+            { label: 'Active Appl', value: salesKPIs.active_applications, suffix: '' },
             { label: 'Interviews', value: salesKPIs.interviews_scheduled, suffix: '' }
           ].map((kpi, index) => (
             <div
@@ -682,6 +682,8 @@ interface Profile {
   linkedIn?: string;
   industry: string;
   linkedin_URL: string;
+  isAvailableForWork?: boolean;
+  hourlyRate?: number;
 }
 
 interface Document {
@@ -742,11 +744,24 @@ export default function Dashboard() {
     linkedIn: '',
     industry: '',
     linkedin_URL: '',
-
+    isAvailableForWork: true,
+    hourlyRate: 75,
   };
   const [profile, setProfile] = useState<Profile>(emptyProfile);
   const [editedProfile, setEditedProfile] = useState<Profile>(emptyProfile);
   const [editMode, setEditMode] = useState(false);
+
+  // Mail notification settings
+  const [mailNotifications, setMailNotifications] = useState({
+    leadNotifications: true,
+    followUpReminders: true,
+    weeklyDigest: true,
+    applicationStatusUpdates: true,
+    interviewReminders: true,
+    marketInsights: false,
+    systemUpdates: true
+  });
+  const [followUpDays, setFollowUpDays] = useState(3);
 
   const getLast7Days = (): StatsDay[] => {
     const days: StatsDay[] = [];
@@ -2076,6 +2091,70 @@ export default function Dashboard() {
                       }}
                     />
                   </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Hourly Rate (€)</label>
+                    <input
+                      type="number"
+                      value={editedProfile.hourlyRate || ''}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, hourlyRate: parseInt(e.target.value) || 0 })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        boxSizing: 'border-box',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        color: '#fff',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                      placeholder="75"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.75rem', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.2)', backdropFilter: 'blur(8px)' }}>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type="checkbox"
+                          checked={editedProfile.isAvailableForWork || false}
+                          onChange={(e) => setEditedProfile({ ...editedProfile, isAvailableForWork: e.target.checked })}
+                          style={{ display: 'none' }}
+                        />
+                        <div style={{
+                          width: '44px',
+                          height: '24px',
+                          borderRadius: '12px',
+                          background: editedProfile.isAvailableForWork
+                            ? 'rgba(16, 185, 129, 0.3)'
+                            : 'rgba(255, 255, 255, 0.15)',
+                          border: editedProfile.isAvailableForWork
+                            ? '1px solid rgba(16, 185, 129, 0.4)'
+                            : '1px solid rgba(255, 255, 255, 0.3)',
+                          backdropFilter: 'blur(8px)',
+                          transition: 'all 0.3s ease'
+                        }}>
+                          <div style={{
+                            width: '18px',
+                            height: '18px',
+                            background: editedProfile.isAvailableForWork
+                              ? 'rgba(255, 255, 255, 0.95)'
+                              : 'rgba(255, 255, 255, 0.8)',
+                            borderRadius: '50%',
+                            transform: editedProfile.isAvailableForWork ? 'translateX(22px)' : 'translateX(2px)',
+                            transition: 'all 0.3s ease',
+                            marginTop: '2px',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            backdropFilter: 'blur(4px)'
+                          }} />
+                        </div>
+                      </div>
+                      <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)' }}>
+                        Available for work
+                      </span>
+                    </label>
+                  </div>
                 </>
               ) : (
                 <>
@@ -2097,6 +2176,19 @@ export default function Dashboard() {
                       LinkedIn profile
                     </a>
                   </div>
+                  <div>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Hourly Rate</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <DollarSign style={{ width: '16px', height: '16px' }} />
+                      €{profile.hourlyRate || 75}/hour
+                    </p>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Availability</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: profile.isAvailableForWork ? '#10b981' : 'rgba(255, 255, 255, 0.6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      {profile.isAvailableForWork ? '✓ Available for work' : '✗ Not available'}
+                    </p>
+                  </div>
                 </>
               )}
             </div>
@@ -2114,6 +2206,192 @@ export default function Dashboard() {
           />
         )}
 
+        {/* Mail Notification Settings */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.15)',
+          backdropFilter: 'blur(16px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '24px',
+          padding: '1.5rem',
+          marginTop: '2rem',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          transition: 'all 0.3s ease'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Bell style={{ width: '20px', height: '20px' }} />
+              Mail Notifications
+            </h2>
+            <Settings style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.7)' }} />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Follow-up Reminder Settings */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '12px',
+              padding: '1rem',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#fff' }}>Follow-up Reminders</span>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={mailNotifications.followUpReminders}
+                    onChange={(e) => setMailNotifications(prev => ({ ...prev, followUpReminders: e.target.checked }))}
+                    style={{ display: 'none' }}
+                  />
+                  <div style={{
+                    width: '40px',
+                    height: '20px',
+                    borderRadius: '10px',
+                    background: mailNotifications.followUpReminders ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.15)',
+                    border: mailNotifications.followUpReminders ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.3)',
+                    transition: 'all 0.3s ease'
+                  }}>
+                    <div style={{
+                      width: '16px',
+                      height: '16px',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      borderRadius: '50%',
+                      transform: mailNotifications.followUpReminders ? 'translateX(20px)' : 'translateX(2px)',
+                      transition: 'all 0.3s ease',
+                      marginTop: '1px'
+                    }} />
+                  </div>
+                </label>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Remind me after:</span>
+                <select
+                  value={followUpDays}
+                  onChange={(e) => setFollowUpDays(parseInt(e.target.value))}
+                  style={{
+                    padding: '0.5rem',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '6px',
+                    color: '#fff',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  <option value={1}>1 day</option>
+                  <option value={2}>2 days</option>
+                  <option value={3}>3 days</option>
+                  <option value={5}>5 days</option>
+                  <option value={7}>1 week</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Notification Toggles */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+              {[
+                { key: 'leadNotifications', label: 'New Lead Notifications', desc: 'Get notified when new leads are added' },
+                { key: 'applicationStatusUpdates', label: 'Application Updates', desc: 'Status changes on your applications' },
+                { key: 'interviewReminders', label: 'Interview Reminders', desc: 'Reminders for upcoming interviews' },
+                { key: 'weeklyDigest', label: 'Weekly Summary', desc: 'Weekly overview of your activity' },
+                { key: 'marketInsights', label: 'Market Insights', desc: 'Industry trends and salary updates' },
+                { key: 'systemUpdates', label: 'System Updates', desc: 'Platform updates and announcements' }
+              ].map((notification) => (
+                <div key={notification.key} style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#fff', marginBottom: '0.25rem' }}>
+                      {notification.label}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+                      {notification.desc}
+                    </div>
+                  </div>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={mailNotifications[notification.key as keyof typeof mailNotifications]}
+                      onChange={(e) => setMailNotifications(prev => ({
+                        ...prev,
+                        [notification.key]: e.target.checked
+                      }))}
+                      style={{ display: 'none' }}
+                    />
+                    <div style={{
+                      width: '36px',
+                      height: '18px',
+                      borderRadius: '9px',
+                      background: mailNotifications[notification.key as keyof typeof mailNotifications]
+                        ? 'rgba(16, 185, 129, 0.3)'
+                        : 'rgba(255, 255, 255, 0.15)',
+                      border: mailNotifications[notification.key as keyof typeof mailNotifications]
+                        ? '1px solid rgba(16, 185, 129, 0.4)'
+                        : '1px solid rgba(255, 255, 255, 0.3)',
+                      transition: 'all 0.3s ease'
+                    }}>
+                      <div style={{
+                        width: '14px',
+                        height: '14px',
+                        background: 'rgba(255, 255, 255, 0.9)',
+                        borderRadius: '50%',
+                        transform: mailNotifications[notification.key as keyof typeof mailNotifications]
+                          ? 'translateX(18px)'
+                          : 'translateX(2px)',
+                        transition: 'all 0.3s ease',
+                        marginTop: '1px'
+                      }} />
+                    </div>
+                  </label>
+                </div>
+              ))}
+            </div>
+
+            {/* Save Button */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+              <button
+                onClick={() => {
+                  // Mock save functionality
+                  console.log('Mail settings saved:', mailNotifications);
+                  console.log('Follow-up days:', followUpDays);
+                  alert('Mail notification settings saved!');
+                }}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  color: '#fff',
+                  borderRadius: '12px',
+                  border: 'none',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <Save style={{ width: '16px', height: '16px' }} />
+                Save Settings
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {showAddJobForm && user && (
+          <AddJobForm
+            onClose={() => setShowAddJobForm(false)}
+            onJobAdded={() => {
+              // Optioneel: herlaad jobs
+              console.log("Job toegevoegd");
+            }}
+            user={user}
+          />
+        )}
 
       </div>
     </div>
