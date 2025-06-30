@@ -429,20 +429,23 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
 
         {/* Leads Table */}
         <div style={{
-          background: 'rgba(255, 255, 255, 0.95)',
+          background: 'transparent',
+          backdropFilter: 'blur(16px)',
           borderRadius: '20px',
           overflow: 'hidden',
-          border: '1px solid rgba(255, 255, 255, 0.2)'
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
         }}>
           <div style={{
             padding: '1.5rem',
-            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
-            background: 'rgba(255, 255, 255, 0.98)'
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            background: 'rgba(255, 255, 255, 0.05)',
+            backdropFilter: 'blur(8px)'
           }}>
             <h3 style={{
               fontSize: '1.25rem',
               fontWeight: '600',
-              color: '#1f2937',
+              color: '#fff',
               margin: 0,
               display: 'flex',
               alignItems: 'center',
@@ -456,13 +459,13 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ background: '#f8fafc' }}>
-                  <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontWeight: '600' }}>Lead</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontWeight: '600' }}>Status</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontWeight: '600' }}>Progress</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontWeight: '600' }}>Value</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontWeight: '600' }}>Timer</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontWeight: '600' }}>Actions</th>
+                <tr style={{ background: 'transparent' }}>
+                  <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Lead</th>
+                  <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Status</th>
+                  <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Progress</th>
+                  <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Value</th>
+                  <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Timer</th>
+                  <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -476,20 +479,20 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
                     <tr
                       key={lead.UNIQUE_ID}
                       style={{
-                        borderBottom: '1px solid #f1f5f9',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
                         cursor: 'pointer',
                         transition: 'background 0.2s'
                       }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
                       onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                       onClick={() => onLogClick(lead)}
                     >
                       <td style={{ padding: '1rem' }}>
                         <div>
-                          <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '0.95rem' }}>
+                          <div style={{ fontWeight: '600', color: '#fff', fontSize: '0.95rem' }}>
                             {lead.Title}
                           </div>
-                          <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                          <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.875rem' }}>
                             {lead.Company} • {lead.Location}
                           </div>
                         </div>
@@ -528,17 +531,17 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
                               borderRadius: '3px'
                             }} />
                           </div>
-                          <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                          <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)' }}>
                             {Math.round((Object.keys(LeadStatus).indexOf(status) + 1) * 14.28)}%
                           </span>
                         </div>
                       </td>
 
                       <td style={{ padding: '1rem' }}>
-                        <div style={{ color: '#059669', fontWeight: '600', fontSize: '0.95rem' }}>
+                        <div style={{ color: '#10b981', fontWeight: '600', fontSize: '0.95rem' }}>
                           €{(lead.potential_value || 0).toLocaleString()}
                         </div>
-                        <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>
+                        <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem' }}>
                           Quality: {lead.quality_score || 0}%
                         </div>
                       </td>
@@ -559,7 +562,7 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
                             {daysSince}d
                           </span>
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                        <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)' }}>
                           {config.nextAction}
                         </div>
                       </td>
@@ -582,21 +585,22 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
                                   borderRadius: '8px',
                                   border: 'none',
                                   cursor: 'pointer',
-                                  background: isActive ? optionConfig.color : '#f1f5f9',
-                                  color: isActive ? 'white' : '#6b7280',
+                                  background: isActive ? optionConfig.color : 'rgba(255, 255, 255, 0.1)',
+                                  color: isActive ? 'white' : 'rgba(255, 255, 255, 0.7)',
                                   transition: 'all 0.2s',
-                                  opacity: isActive ? 1 : 0.7
+                                  opacity: isActive ? 1 : 0.7,
+                                  backdropFilter: 'blur(8px)'
                                 }}
                                 onMouseEnter={(e) => {
                                   if (!isActive) {
-                                    e.currentTarget.style.background = optionConfig.bgColor;
-                                    e.currentTarget.style.color = optionConfig.color;
+                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                                    e.currentTarget.style.color = '#fff';
                                   }
                                 }}
                                 onMouseLeave={(e) => {
                                   if (!isActive) {
-                                    e.currentTarget.style.background = '#f1f5f9';
-                                    e.currentTarget.style.color = '#6b7280';
+                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
                                   }
                                 }}
                               >
