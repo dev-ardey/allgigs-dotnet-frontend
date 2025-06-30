@@ -261,72 +261,7 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
     }}>
 
       {/* Feature Modal Popup */}
-      {showFeatureModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0,0,0,0.35)',
-          zIndex: 1000,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <div style={{
-            background: 'rgba(255,255,255,0.15)',
-            color: '#222',
-            borderRadius: '24px',
-            padding: '2rem',
-            minWidth: '320px',
-            boxShadow: '0 4px 32px rgba(0,0,0,0.15)',
-            position: 'relative',
-            textAlign: 'center',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255,255,255,0.25)',
-          }}>
-            <button
-              onClick={() => setShowFeatureModal(null)}
-              style={{
-                position: 'absolute',
-                top: '1rem',
-                right: '1rem',
-                background: 'none',
-                border: 'none',
-                color: '#888',
-                fontSize: '1.25rem',
-                cursor: 'pointer',
-              }}
-              aria-label="Close"
-            >
-              <X style={{ width: '20px', height: '20px' }} />
-            </button>
-            <h2 style={{ fontWeight: 700, fontSize: '1.25rem', marginBottom: '1rem', color: '#fff' }}>{showFeatureModal}</h2>
-            <p style={{ marginBottom: '1rem', color: '#fff', fontSize: '1rem' }}>
-              {showFeatureModal === 'AI Agent' && (
-                <>This AI agent will search for jobs, apply with your profile, contact the lead, make calendar appointments with recruiters, and more.</>
-              )}
-              {showFeatureModal === 'Tooling' && (
-                <>Get access to tools that help you get better results and streamline your job search process.</>
-              )}
-              {showFeatureModal === 'Marketing' && (
-                <>Access checklists, extra information, and tips for higher success rates in your applications.</>
-              )}
-            </p>
-            <p style={{ marginBottom: '1.5rem', color: '#fff' }}>Interested?</p>
-            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', fontWeight: 600, fontSize: '1rem', color: '#fff' }}>
-              <span>Notify me when it's done</span>
-              <input
-                type="checkbox"
-                checked={!!notifyMe[showFeatureModal]}
-                onChange={() => setNotifyMe((prev) => ({ ...prev, [showFeatureModal]: !prev[showFeatureModal] }))}
-                style={{ width: '20px', height: '20px' }}
-              />
-            </label>
-          </div>
-        </div>
-      )}
+
 
       {/* Content */}
       <div style={{ position: 'relative' }}>
@@ -361,33 +296,149 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
           {/* CRM Features (Locked) */}
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             {[
-              { icon: Mail, label: 'Marketing' },
-              { icon: Zap, label: 'Tooling' },
-              { icon: Sparkles, label: 'AI Agent' }
+              { icon: Mail, label: 'Marketing', color: 'rgba(16, 185, 129, 0.3)', borderColor: 'rgba(16, 185, 129, 0.4)' },
+              { icon: Zap, label: 'Tooling', color: 'rgba(59, 130, 246, 0.3)', borderColor: 'rgba(59, 130, 246, 0.4)' },
+              { icon: Sparkles, label: 'AI Agent', color: 'rgba(147, 51, 234, 0.3)', borderColor: 'rgba(147, 51, 234, 0.4)' }
             ].map((feature, index) => (
-              <button
-                key={index}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.75rem 1rem',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '12px',
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  opacity: 1
-                }}
-                onClick={() => setShowFeatureModal(feature.label)}
-              >
-                <feature.icon style={{ width: '16px', height: '16px' }} />
-                {feature.label}
-                <Lock style={{ width: '14px', height: '14px' }} />
-              </button>
+              <div key={index} style={{ position: 'relative' }}>
+                <button
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.75rem 1rem',
+                    background: feature.color,
+                    border: `1px solid ${feature.borderColor}`,
+                    borderRadius: '12px',
+                    color: '#fff',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    opacity: 1,
+                    backdropFilter: 'blur(8px)',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                  }}
+                  onClick={() => setShowFeatureModal(feature.label)}
+                >
+                  <feature.icon style={{ width: '16px', height: '16px' }} />
+                  {feature.label}
+                  <Lock style={{ width: '14px', height: '14px' }} />
+                </button>
+
+                {/* Balloon Tooltip */}
+                {showFeatureModal === feature.label && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    marginTop: '0.5rem',
+                    background: feature.color.replace('0.3', '0.8'),
+                    border: `1px solid ${feature.borderColor}`,
+                    borderRadius: '16px',
+                    padding: '1.5rem',
+                    minWidth: '280px',
+                    maxWidth: '320px',
+                    backdropFilter: 'blur(60px) saturate(200%)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                    zIndex: 1000,
+                    color: '#fff'
+                  }}>
+                    {/* Arrow pointing up */}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '100%',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: 0,
+                      height: 0,
+                      borderLeft: '8px solid transparent',
+                      borderRight: '8px solid transparent',
+                      borderBottom: `8px solid ${feature.borderColor}`
+                    }} />
+
+                    <h3 style={{
+                      fontSize: '1.1rem',
+                      fontWeight: '700',
+                      marginBottom: '0.75rem',
+                      color: '#fff'
+                    }}>
+                      {feature.label}
+                    </h3>
+
+                    <p style={{
+                      fontSize: '0.95rem',
+                      marginBottom: '1rem',
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      lineHeight: '1.4'
+                    }}>
+                      {feature.label === 'AI Agent' && (
+                        <>This AI agent will search for jobs, apply with your profile, contact the lead, make calendar appointments with recruiters, and more.</>
+                      )}
+                      {feature.label === 'Tooling' && (
+                        <>Get access to tools that help you get better results and streamline your job search process.</>
+                      )}
+                      {feature.label === 'Marketing' && (
+                        <>Access checklists, extra information, and tips for higher success rates in your applications.</>
+                      )}
+                    </p>
+
+                    <div style={{ textAlign: 'center' }}>
+                      <p style={{
+                        fontSize: '0.9rem',
+                        marginBottom: '1rem',
+                        color: '#fff',
+                        fontWeight: '600'
+                      }}>
+                        Interested?
+                      </p>
+
+                      <button
+                        onClick={() => {
+                          setNotifyMe((prev) => ({ ...prev, [feature.label]: !prev[feature.label] }));
+                          setShowFeatureModal(null);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.5rem',
+                          width: '100%',
+                          padding: '0.75rem 1rem',
+                          background: 'rgba(255, 255, 255, 0.2)',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                          borderRadius: '8px',
+                          color: '#fff',
+                          fontSize: '0.9rem',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          backdropFilter: 'blur(8px)'
+                        }}
+                      >
+                        {notifyMe[feature.label] ? '✓ Notify me when ready' : 'Notify me when ready'}
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => setShowFeatureModal(null)}
+                      style={{
+                        position: 'absolute',
+                        top: '0.75rem',
+                        right: '0.75rem',
+                        background: 'none',
+                        border: 'none',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        cursor: 'pointer',
+                        padding: '0.25rem'
+                      }}
+                    >
+                      <X style={{ width: '16px', height: '16px' }} />
+                    </button>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>
