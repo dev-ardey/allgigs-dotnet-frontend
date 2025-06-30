@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Save, X, Plus, Trash2, Upload, Sparkles, SearchCheck, MousePointerClick, Users, TrendingUp, FileText, Bell, DollarSign, Settings } from 'lucide-react';
+import { Edit2, Save, X, Plus, Trash2, Upload, Sparkles, SearchCheck, MousePointerClick, Users, TrendingUp, FileText, Bell, DollarSign, Settings, Building2, MapPin, Wallet } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 // import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs';
 import { supabase } from '../SupabaseClient';
@@ -1539,10 +1539,64 @@ export default function Dashboard() {
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
                 }}
               >
-                <h3 style={{ fontWeight: '600', color: '#fff', margin: '0 0 0.25rem 0', fontSize: '1rem' }}>{job.Title}</h3>
-                <p style={{ color: 'rgba(255, 255, 255, 0.8)', margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>{job.Company} • {job.Location}</p>
+                <h3 style={{ fontWeight: '600', color: '#fff', margin: '0 0 0.5rem 0', fontSize: '1rem' }}>{job.Title}</h3>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  {/* Company - Blue Balloon */}
+                  <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '20px',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    background: 'rgba(59, 130, 246, 0.3)',
+                    color: '#fff',
+                    border: '1px solid rgba(59, 130, 246, 0.4)',
+                    backdropFilter: 'blur(8px)'
+                  }}>
+                    <Building2 style={{ width: '14px', height: '14px', color: '#fff' }} />
+                    {job.Company}
+                  </div>
+
+                  {/* Location - Green Balloon */}
+                  <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '20px',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    background: 'rgba(16, 185, 129, 0.3)',
+                    color: '#fff',
+                    border: '1px solid rgba(16, 185, 129, 0.4)',
+                    backdropFilter: 'blur(8px)'
+                  }}>
+                    <MapPin style={{ width: '14px', height: '14px', color: '#fff' }} />
+                    {job.Location}
+                  </div>
+                </div>
+
+                {/* Rate - Purple Balloon */}
                 {job.rate && (
-                  <p style={{ color: '#fff', fontWeight: '600', margin: 0, fontSize: '0.875rem' }}>{job.rate}</p>
+                  <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '20px',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    background: 'rgba(147, 51, 234, 0.3)',
+                    color: '#fff',
+                    border: '1px solid rgba(147, 51, 234, 0.4)',
+                    backdropFilter: 'blur(8px)'
+                  }}>
+                    <Wallet style={{ width: '14px', height: '14px', color: '#fff' }} />
+                    {job.rate}
+                  </div>
                 )}
               </div>
             ))}
