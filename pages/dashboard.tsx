@@ -1225,8 +1225,8 @@ export default function Dashboard() {
             style={{
               width: 'fit-content',
               padding: '0.75rem 1rem',
-              backgroundColor: 'rgba(239, 68, 68, 0.8)',
-              border: 'none',
+              background: 'rgba(239, 68, 68, 0.2)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
               borderRadius: '12px',
               color: '#fff',
               fontSize: '0.95rem',
@@ -1235,7 +1235,8 @@ export default function Dashboard() {
               transition: 'all 0.3s ease',
               display: 'flex',
               marginLeft: 'auto',
-              backdropFilter: 'blur(8px)'
+              backdropFilter: 'blur(16px)',
+              boxShadow: '0 4px 16px rgba(239, 68, 68, 0.1)'
             }}
           >
             Log out
@@ -1319,21 +1320,32 @@ export default function Dashboard() {
                   style={{ display: 'none' }}
                 />
                 <div style={{
-                  width: '48px',
-                  height: '24px',
-                  borderRadius: '12px',
-                  background: isAvailable ? '#0ccf83' : '#ccc',
-                  transition: 'all 0.2s'
+                  width: '52px',
+                  height: '28px',
+                  borderRadius: '14px',
+                  background: isAvailable
+                    ? 'rgba(16, 185, 129, 0.3)'
+                    : 'rgba(255, 255, 255, 0.15)',
+                  border: isAvailable
+                    ? '1px solid rgba(16, 185, 129, 0.4)'
+                    : '1px solid rgba(255, 255, 255, 0.3)',
+                  backdropFilter: 'blur(8px)',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
                 }}>
                   <div style={{
-                    width: '20px',
-                    height: '20px',
-                    background: 'white',
+                    width: '22px',
+                    height: '22px',
+                    background: isAvailable
+                      ? 'rgba(255, 255, 255, 0.95)'
+                      : 'rgba(255, 255, 255, 0.8)',
                     borderRadius: '50%',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
                     transform: isAvailable ? 'translateX(26px)' : 'translateX(2px)',
-                    transition: 'transform 0.2s',
-                    marginTop: '2px'
+                    transition: 'all 0.3s ease',
+                    marginTop: '2px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    backdropFilter: 'blur(4px)'
                   }} />
                 </div>
               </div>
@@ -1345,8 +1357,10 @@ export default function Dashboard() {
                 borderRadius: '999px',
                 fontSize: '0.875rem',
                 fontWeight: '600',
-                background: isAvailable ? '#dcfce7' : '#f3f4f6',
-                color: isAvailable ? '#166534' : '#666'
+                background: isAvailable ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                color: isAvailable ? '#10b981' : 'rgba(255, 255, 255, 0.8)',
+                border: isAvailable ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(8px)'
               }}>
                 {isAvailable ? 'Active' : 'No data is visible for recruiters'}
               </span>
