@@ -203,13 +203,15 @@ interface QualifiedLeadsSectionProps {
   leads: Lead[];
   onStatusChange: (leadId: string, newStatus: LeadStatus) => void;
   onLogClick: (lead: Lead) => void;
+  statsData: StatsDay[];
 }
 
 // mock qualifiedLeads met mockdata
 const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
   leads = MOCK_LEADS,
   onStatusChange,
-  onLogClick
+  onLogClick,
+  statsData
 }) => {
   const [salesKPIs] = useState<SalesKPIs>(MOCK_SALES_KPI);
   const [expandedLead, setExpandedLead] = useState<string | null>(null);
@@ -667,6 +669,76 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* Statistics Section */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.1)',
+          borderRadius: '20px',
+          padding: '1.5rem',
+          marginTop: '1.5rem',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          backdropFilter: 'blur(8px)'
+        }}>
+          <h3 style={{
+            fontSize: '1.25rem',
+            fontWeight: '600',
+            color: '#fff',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <TrendingUp style={{ width: '20px', height: '20px' }} />
+            Job Click Statistics
+          </h3>
+
+          <div style={{
+            height: '192px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '12px',
+            padding: '1rem',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)'
+          }}>
+            {/* @ts-ignore */}
+            <ResponsiveContainer width="100%" height="100%">
+              {/* @ts-ignore */}
+              <LineChart data={statsData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.2)" />
+                {/* @ts-ignore */}
+                <XAxis dataKey="name" stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
+                {/* @ts-ignore */}
+                <YAxis stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                    backdropFilter: 'blur(16px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    color: '#fff'
+                  }}
+                />
+                {/* @ts-ignore */}
+                <Line
+                  type="monotone"
+                  dataKey="views"
+                  stroke="#9333ea"
+                  strokeWidth={3}
+                  dot={{ fill: '#9333ea', strokeWidth: 2, r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          <p style={{
+            fontSize: '0.875rem',
+            color: 'rgba(255, 255, 255, 0.8)',
+            marginTop: '0.5rem'
+          }}>
+            Total this week: {statsData.reduce((acc, day) => acc + day.views, 0)} clicked jobs
+          </p>
         </div>
       </div>
     </div>
@@ -1363,6 +1435,7 @@ export default function Dashboard() {
           leads={qualifiedLeads}
           onStatusChange={handleLeadStatusChange}
           onLogClick={handleLeadLogClick}
+          statsData={statsData}
         />
 
         {/* Recently Clicked Jobs Card */}
@@ -1692,76 +1765,7 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Stats Card */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.15)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '24px',
-            padding: '1.5rem',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s ease'
-          }}>
-            <h2 style={{
-              fontSize: '1.25rem',
-              fontWeight: '600',
-              color: '#fff',
-              marginBottom: '1rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <TrendingUp style={{ width: '20px', height: '20px' }} />
-              Statistics
-            </h2>
-
-            <div style={{
-              height: '192px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '12px',
-              padding: '1rem',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)'
-            }}>
-              {/* @ts-ignore */}
-              <ResponsiveContainer width="100%" height="100%">
-                {/* @ts-ignore */}
-                <LineChart data={statsData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.2)" />
-                  {/* @ts-ignore */}
-                  <XAxis dataKey="name" stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
-                  {/* @ts-ignore */}
-                  <YAxis stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                      backdropFilter: 'blur(16px)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                      color: '#fff'
-                    }}
-                  />
-                  {/* @ts-ignore */}
-                  <Line
-                    type="monotone"
-                    dataKey="views"
-                    stroke="#9333ea"
-                    strokeWidth={3}
-                    dot={{ fill: '#9333ea', strokeWidth: 2, r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-
-            <p style={{
-              fontSize: '0.875rem',
-              color: 'rgba(255, 255, 255, 0.8)',
-              marginTop: '0.5rem'
-            }}>
-              Total this week: {statsData.reduce((acc, day) => acc + day.views, 0)} clicked jobs
-            </p>
-          </div>
+          {/* Stats Card - REMOVED (moved to Qualified Leads section) */}
 
           {/* Post a Job Card */}
           <div style={{
