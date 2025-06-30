@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Edit2, Save, X, Plus, Trash2, Upload, Sparkles, SearchCheck, MousePointerClick, Users, TrendingUp, FileText, Bell, DollarSign, Settings, Building2, MapPin, Coins, User } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Edit2, Save, X, Plus, Trash2, Upload, Sparkles, SearchCheck, Users, TrendingUp, FileText, Bell, DollarSign, Building2, MapPin, Coins, User, Target, Mail, Zap, Lock } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 // import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs';
 import { supabase } from '../SupabaseClient';
@@ -8,12 +8,10 @@ import AddJobForm from '../components/ui/add-job-form';
 
 // Qualified Leads Interfaces en Types
 import {
-  Clock, CheckCircle, Phone, Video, XCircle, Trophy, Lock, Target,
+  Clock, CheckCircle, Phone, Video, XCircle, Trophy,
   // AlertCircle,
   // ChevronRight,
-  Zap,
   // Brain,
-  Mail
 } from 'lucide-react';
 
 // Lead Status Enum
@@ -214,23 +212,22 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
   statsData
 }) => {
   const [salesKPIs] = useState<SalesKPIs>(MOCK_SALES_KPI);
-  const [expandedLead, setExpandedLead] = useState<string | null>(null);
   // Popup state for locked features
   const [showFeatureModal, setShowFeatureModal] = useState<null | string>(null);
   const [notifyMe, setNotifyMe] = useState<{ [key: string]: boolean }>({});
 
   // Timer functie voor dagen sinds actie
-  const calculateDaysSinceAction = (lead: Lead): number => {
+  const calculateDaysSinceAction = useCallback((lead: Lead): number => {
     if (!lead.applied_at && !lead.follow_up_date) return 0;
 
     const lastActionDate = new Date(lead.follow_up_date || lead.applied_at || Date.now());
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - lastActionDate.getTime());
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
+  }, []);
 
   // Status change handler met automatische timer
-  const handleStatusChange = (leadId: string, newStatus: LeadStatus) => {
+  const handleStatusChange = useCallback((leadId: string, newStatus: LeadStatus) => {
     onStatusChange(leadId, newStatus);
 
     // Auto-start timer voor follow-up
@@ -238,15 +235,15 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
       // Hier zou je de follow_up_date kunnen instellen
       console.log(`Timer started for lead ${leadId} - follow up in 3 days`);
     }
-  };
+  }, [onStatusChange]);
 
   // Urgency indicator
-  const getUrgencyColor = (daysSince: number, status: LeadStatus): string => {
+  const getUrgencyColor = useCallback((daysSince: number, status: LeadStatus): string => {
     if (status === LeadStatus.DENIED || status === LeadStatus.SUCCEEDED) return '#6b7280';
     if (daysSince > 7) return '#ef4444';
     if (daysSince > 3) return '#f59e0b';
     return '#10b981';
-  };
+  }, []);
 
   return (
     <div style={{
@@ -650,9 +647,10 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
                                   cursor: 'pointer',
                                   background: isActive ? optionConfig.color : 'rgba(255, 255, 255, 0.1)',
                                   color: isActive ? 'white' : 'rgba(255, 255, 255, 0.7)',
-                                  transition: 'all 0.2s',
+                                  transition: 'all 0.1s ease',
                                   opacity: isActive ? 1 : 0.7,
-                                  backdropFilter: 'blur(8px)'
+                                  backdropFilter: 'blur(8px)',
+                                  transform: 'scale(1)'
                                 }}
                                 onMouseEnter={(e) => {
                                   if (!isActive) {
