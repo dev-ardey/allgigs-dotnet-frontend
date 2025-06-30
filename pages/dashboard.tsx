@@ -6,6 +6,556 @@ import { supabase } from '../SupabaseClient';
 import { useRouter } from 'next/router';
 import AddJobForm from '../components/ui/add-job-form';
 
+// Qualified Leads Interfaces en Types
+import {
+  Clock, CheckCircle, Phone, Video, XCircle, Trophy, Lock, Target,
+  // AlertCircle,
+  // ChevronRight,
+  Zap,
+  // Brain,
+  Mail
+} from 'lucide-react';
+
+// Lead Status Enum
+enum LeadStatus {
+  NEW = 'new',
+  APPLIED = 'applied',
+  FOLLOW_UP = 'follow_up',
+  SPOKEN = 'spoken',
+  INTERVIEWED = 'interviewed',
+  DENIED = 'denied',
+  SUCCEEDED = 'succeeded'
+}
+
+// Lead Interface
+interface Lead {
+  UNIQUE_ID?: string;
+  Title?: string;
+  Company?: string;
+  Location?: string;
+  rate?: string;
+  date?: string;
+  Summary?: string;
+  URL?: string;
+  created_at?: string;
+  inserted_at?: string;
+  added_by?: string;
+  added_by_email?: string;
+  poster_name?: string;
+  source?: string;
+  tags?: string;
+  clicked_at?: string;
+
+  // CRM specifieke velden
+  status?: LeadStatus;
+  applied_at?: string;
+  follow_up_date?: string;
+  last_contact?: string;
+  notes?: string;
+  potential_value?: number;
+  quality_score?: number;
+  days_since_action?: number;
+  next_action_due?: string;
+}
+
+// Sales KPI Interface
+export interface SalesKPIs {
+  total_leads: number;
+  conversion_rate: number;
+  potential_revenue: number;
+  lead_quality_score: number;
+  cost_per_application: number;
+  pipeline_health: number;
+  active_applications: number;
+  interviews_scheduled: number;
+  average_response_time: number;
+}
+
+// Status configuratie met styling en acties
+const STATUS_CONFIG = {
+  [LeadStatus.NEW]: {
+    label: 'New Lead',
+    color: '#6366f1',
+    bgColor: '#f0f9ff',
+    icon: Clock,
+    nextAction: 'Review & Apply',
+    daysUntilNext: 0
+  },
+  [LeadStatus.APPLIED]: {
+    label: 'Applied',
+    color: '#f59e0b',
+    bgColor: '#fffbeb',
+    icon: CheckCircle,
+    nextAction: 'Follow-up',
+    daysUntilNext: 3
+  },
+  [LeadStatus.FOLLOW_UP]: {
+    label: 'Follow-up Sent',
+    color: '#3b82f6',
+    bgColor: '#eff6ff',
+    icon: Clock,
+    nextAction: 'Phone Call',
+    daysUntilNext: 5
+  },
+  [LeadStatus.SPOKEN]: {
+    label: 'Spoken',
+    color: '#8b5cf6',
+    bgColor: '#f5f3ff',
+    icon: Phone,
+    nextAction: 'Interview',
+    daysUntilNext: 7
+  },
+  [LeadStatus.INTERVIEWED]: {
+    label: 'Interviewed',
+    color: '#06b6d4',
+    bgColor: '#ecfeff',
+    icon: Video,
+    nextAction: 'Await Response',
+    daysUntilNext: 10
+  },
+  [LeadStatus.DENIED]: {
+    label: 'Denied',
+    color: '#ef4444',
+    bgColor: '#fef2f2',
+    icon: XCircle,
+    nextAction: 'Learn & Improve',
+    daysUntilNext: 0
+  },
+  [LeadStatus.SUCCEEDED]: {
+    label: 'Success!',
+    color: '#10b981',
+    bgColor: '#f0fdf4',
+    icon: Trophy,
+    nextAction: 'Celebrate',
+    daysUntilNext: 0
+  }
+};
+
+// Mock data voor demo
+const MOCK_LEADS: Lead[] = [
+  {
+    UNIQUE_ID: '1',
+    Title: 'Senior Frontend Developer',
+    Company: 'TechCorp Amsterdam',
+    Location: 'Amsterdam, NL',
+    rate: '€75/hour',
+    date: '2025-06-28',
+    Summary: 'React, TypeScript, 5+ years experience',
+    URL: 'https://example.com/job1',
+    status: LeadStatus.APPLIED,
+    applied_at: '2025-06-29T10:00:00Z',
+    follow_up_date: '2025-07-02T10:00:00Z',
+    potential_value: 15000,
+    quality_score: 85,
+    days_since_action: 1,
+    notes: 'Interesting company, good culture fit'
+  },
+  {
+    UNIQUE_ID: '2',
+    Title: 'React Developer',
+    Company: 'StartupHub',
+    Location: 'Rotterdam, NL',
+    rate: '€65/hour',
+    date: '2025-06-27',
+    Summary: 'React, Node.js, startup environment',
+    URL: 'https://example.com/job2',
+    status: LeadStatus.FOLLOW_UP,
+    applied_at: '2025-06-26T14:00:00Z',
+    follow_up_date: '2025-06-30T14:00:00Z',
+    potential_value: 12000,
+    quality_score: 78,
+    days_since_action: 3,
+    notes: 'Quick response needed, competitive role'
+  },
+  {
+    UNIQUE_ID: '3',
+    Title: 'Full Stack Engineer',
+    Company: 'InnovateLabs',
+    Location: 'Utrecht, NL',
+    rate: '€80/hour',
+    date: '2025-06-25',
+    Summary: 'React, Node.js, PostgreSQL, 3+ years',
+    URL: 'https://example.com/job3',
+    status: LeadStatus.INTERVIEWED,
+    applied_at: '2025-06-20T09:00:00Z',
+    follow_up_date: '2025-06-25T16:00:00Z',
+    potential_value: 18000,
+    quality_score: 92,
+    days_since_action: 5,
+    notes: 'Great interview, waiting for final decision'
+  }
+];
+
+// Sales KPI Mock Data
+const MOCK_SALES_KPI: SalesKPIs = {
+  total_leads: 24,
+  conversion_rate: 12.5, // percentage
+  potential_revenue: 45000,
+  lead_quality_score: 82,
+  cost_per_application: 25,
+  pipeline_health: 78,
+  active_applications: 8,
+  interviews_scheduled: 3,
+  average_response_time: 4.2
+};
+
+interface QualifiedLeadsSectionProps {
+  leads: Lead[];
+  onStatusChange: (leadId: string, newStatus: LeadStatus) => void;
+  onLogClick: (lead: Lead) => void;
+}
+
+// mock qualifiedLeads met mockdata
+const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
+  leads = MOCK_LEADS,
+  onStatusChange,
+  onLogClick
+}) => {
+  const [salesKPIs] = useState<SalesKPIs>(MOCK_SALES_KPI);
+  const [expandedLead, setExpandedLead] = useState<string | null>(null);
+  // tijdelijk voor build
+  console.log(expandedLead, setExpandedLead)
+
+  // Timer functie voor dagen sinds actie
+  const calculateDaysSinceAction = (lead: Lead): number => {
+    if (!lead.applied_at && !lead.follow_up_date) return 0;
+
+    const lastActionDate = new Date(lead.follow_up_date || lead.applied_at || Date.now());
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - lastActionDate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  // Status change handler met automatische timer
+  const handleStatusChange = (leadId: string, newStatus: LeadStatus) => {
+    onStatusChange(leadId, newStatus);
+
+    // Auto-start timer voor follow-up
+    if (newStatus === LeadStatus.APPLIED) {
+      // Hier zou je de follow_up_date kunnen instellen
+      console.log(`Timer started for lead ${leadId} - follow up in 3 days`);
+    }
+  };
+
+  // Urgency indicator
+  const getUrgencyColor = (daysSince: number, status: LeadStatus): string => {
+    if (status === LeadStatus.DENIED || status === LeadStatus.SUCCEEDED) return '#6b7280';
+    if (daysSince > 7) return '#ef4444';
+    if (daysSince > 3) return '#f59e0b';
+    return '#10b981';
+  };
+
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      borderRadius: '24px',
+      padding: '2rem',
+      marginBottom: '2rem',
+      color: 'white',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Glasmorphism overlay */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: '24px',
+        border: '1px solid rgba(255, 255, 255, 0.2)'
+      }} />
+
+      {/* Content */}
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '2rem'
+        }}>
+          <div>
+            <h2 style={{
+              fontSize: '2rem',
+              fontWeight: '700',
+              margin: '0 0 0.5rem 0',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem'
+            }}>
+              <Target style={{ width: '32px', height: '32px' }} />
+              Qualified Leads
+            </h2>
+            <p style={{
+              fontSize: '1.1rem',
+              opacity: 0.9,
+              margin: 0
+            }}>
+              Track your sales pipeline and manage lead progression
+            </p>
+          </div>
+
+          {/* CRM Features (Locked) */}
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            {[
+              { icon: Mail, label: 'Marketing' },
+              { icon: Zap, label: 'Tooling' },
+              { icon: Sparkles, label: 'AI Agent' }
+            ].map((feature, index) => (
+              <button
+                key={index}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.75rem 1rem',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '12px',
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  cursor: 'not-allowed',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <feature.icon style={{ width: '16px', height: '16px' }} />
+                {feature.label}
+                <Lock style={{ width: '14px', height: '14px' }} />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Sales KPIs Row */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+          gap: '1rem',
+          marginBottom: '2rem'
+        }}>
+          {[
+            { label: 'Total Leads', value: salesKPIs.total_leads, suffix: '' },
+            { label: 'Conversion Rate', value: salesKPIs.conversion_rate, suffix: '%' },
+            { label: 'Potential Revenue', value: `€${(salesKPIs.potential_revenue / 1000).toFixed(0)}K`, suffix: '' },
+            { label: 'Pipeline Health', value: salesKPIs.pipeline_health, suffix: '%' },
+            { label: 'Active Apps', value: salesKPIs.active_applications, suffix: '' },
+            { label: 'Interviews', value: salesKPIs.interviews_scheduled, suffix: '' }
+          ].map((kpi, index) => (
+            <div
+              key={index}
+              style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                textAlign: 'center',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+              }}
+            >
+              <div style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '0.25rem' }}>
+                {kpi.value}{kpi.suffix}
+              </div>
+              <div style={{ fontSize: '0.875rem', opacity: 0.8 }}>
+                {kpi.label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Leads Table */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          borderRadius: '20px',
+          overflow: 'hidden',
+          border: '1px solid rgba(255, 255, 255, 0.2)'
+        }}>
+          <div style={{
+            padding: '1.5rem',
+            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+            background: 'rgba(255, 255, 255, 0.98)'
+          }}>
+            <h3 style={{
+              fontSize: '1.25rem',
+              fontWeight: '600',
+              color: '#1f2937',
+              margin: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <TrendingUp style={{ width: '20px', height: '20px' }} />
+              Lead Pipeline
+            </h3>
+          </div>
+
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#f8fafc' }}>
+                  <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontWeight: '600' }}>Lead</th>
+                  <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontWeight: '600' }}>Status</th>
+                  <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontWeight: '600' }}>Progress</th>
+                  <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontWeight: '600' }}>Value</th>
+                  <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontWeight: '600' }}>Timer</th>
+                  <th style={{ padding: '1rem', textAlign: 'left', color: '#374151', fontWeight: '600' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leads.map((lead) => {
+                  const daysSince = calculateDaysSinceAction(lead);
+                  const status = lead.status || LeadStatus.NEW;
+                  const config = STATUS_CONFIG[status];
+                  const urgencyColor = getUrgencyColor(daysSince, status);
+
+                  return (
+                    <tr
+                      key={lead.UNIQUE_ID}
+                      style={{
+                        borderBottom: '1px solid #f1f5f9',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      onClick={() => onLogClick(lead)}
+                    >
+                      <td style={{ padding: '1rem' }}>
+                        <div>
+                          <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '0.95rem' }}>
+                            {lead.Title}
+                          </div>
+                          <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                            {lead.Company} • {lead.Location}
+                          </div>
+                        </div>
+                      </td>
+
+                      <td style={{ padding: '1rem' }}>
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '20px',
+                          fontSize: '0.875rem',
+                          fontWeight: '600',
+                          background: config.bgColor,
+                          color: config.color
+                        }}>
+                          <config.icon style={{ width: '14px', height: '14px' }} />
+                          {config.label}
+                        </span>
+                      </td>
+
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <div style={{
+                            width: '100px',
+                            height: '6px',
+                            background: '#e5e7eb',
+                            borderRadius: '3px',
+                            overflow: 'hidden'
+                          }}>
+                            <div style={{
+                              width: `${(Object.keys(LeadStatus).indexOf(status) + 1) * 14.28}%`,
+                              height: '100%',
+                              background: `linear-gradient(90deg, ${config.color}, ${config.color}cc)`,
+                              borderRadius: '3px'
+                            }} />
+                          </div>
+                          <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                            {Math.round((Object.keys(LeadStatus).indexOf(status) + 1) * 14.28)}%
+                          </span>
+                        </div>
+                      </td>
+
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ color: '#059669', fontWeight: '600', fontSize: '0.95rem' }}>
+                          €{(lead.potential_value || 0).toLocaleString()}
+                        </div>
+                        <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>
+                          Quality: {lead.quality_score || 0}%
+                        </div>
+                      </td>
+
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: urgencyColor
+                          }} />
+                          <span style={{
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            color: urgencyColor
+                          }}>
+                            {daysSince}d
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                          {config.nextAction}
+                        </div>
+                      </td>
+
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          {Object.values(LeadStatus).map((statusOption) => {
+                            const isActive = statusOption === status;
+                            const optionConfig = STATUS_CONFIG[statusOption];
+
+                            return (
+                              <button
+                                key={statusOption}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusChange(lead.UNIQUE_ID!, statusOption);
+                                }}
+                                style={{
+                                  padding: '0.5rem',
+                                  borderRadius: '8px',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  background: isActive ? optionConfig.color : '#f1f5f9',
+                                  color: isActive ? 'white' : '#6b7280',
+                                  transition: 'all 0.2s',
+                                  opacity: isActive ? 1 : 0.7
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!isActive) {
+                                    e.currentTarget.style.background = optionConfig.bgColor;
+                                    e.currentTarget.style.color = optionConfig.color;
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (!isActive) {
+                                    e.currentTarget.style.background = '#f1f5f9';
+                                    e.currentTarget.style.color = '#6b7280';
+                                  }
+                                }}
+                              >
+                                <optionConfig.icon style={{ width: '16px', height: '16px' }} />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 interface Profile {
   firstName: string;
@@ -463,7 +1013,15 @@ export default function Dashboard() {
 
 
 
+  const handleLeadStatusChange = (leadId: string, newStatus: LeadStatus) => {
+    // hier jouw supabase-update of wat je maar wilt
+    console.log('Status veranderd:', leadId, newStatus);
+  };
 
+  const handleLeadLogClick = (lead: Lead) => {
+    // hier jouw logica bij click
+    console.log('Lead aangeklikt:', lead);
+  };
   return (
     <div style={{
       minHeight: '100vh',
@@ -562,6 +1120,12 @@ export default function Dashboard() {
             allGigs
           </button>
         </div> */}
+
+        <QualifiedLeadsSection
+          leads={MOCK_LEADS}
+          onStatusChange={handleLeadStatusChange}
+          onLogClick={handleLeadLogClick}
+        />
 
 
 
