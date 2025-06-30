@@ -509,9 +509,19 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
             </h3>
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
+          <div style={{
+            overflowX: 'auto',
+            maxHeight: leads.length > 10 ? '400px' : 'auto',
+            overflowY: leads.length > 10 ? 'auto' : 'visible'
+          }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
+              <thead style={{
+                position: 'sticky',
+                top: 0,
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(16px)',
+                zIndex: 10
+              }}>
                 <tr style={{ background: 'transparent' }}>
                   <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Lead</th>
                   <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Status</th>
