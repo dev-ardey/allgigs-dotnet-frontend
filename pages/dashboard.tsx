@@ -213,8 +213,9 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
 }) => {
   const [salesKPIs] = useState<SalesKPIs>(MOCK_SALES_KPI);
   const [expandedLead, setExpandedLead] = useState<string | null>(null);
-  // tijdelijk voor build
-  console.log(expandedLead, setExpandedLead)
+  // Popup state for locked features
+  const [showFeatureModal, setShowFeatureModal] = useState<null | string>(null);
+  const [notifyMe, setNotifyMe] = useState<{ [key: string]: boolean }>({});
 
   // Timer functie voor dagen sinds actie
   const calculateDaysSinceAction = (lead: Lead): number => {
@@ -268,6 +269,63 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
         border: '1px solid rgba(255, 255, 255, 0.2)'
       }} />
 
+      {/* Feature Modal Popup */}
+      {showFeatureModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.35)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <div style={{
+            background: 'rgba(255,255,255,0.15)',
+            color: '#222',
+            borderRadius: '24px',
+            padding: '2rem',
+            minWidth: '320px',
+            boxShadow: '0 4px 32px rgba(0,0,0,0.15)',
+            position: 'relative',
+            textAlign: 'center',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255,255,255,0.25)',
+          }}>
+            <button
+              onClick={() => setShowFeatureModal(null)}
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: 'none',
+                border: 'none',
+                color: '#888',
+                fontSize: '1.25rem',
+                cursor: 'pointer',
+              }}
+              aria-label="Close"
+            >
+              <X style={{ width: '20px', height: '20px' }} />
+            </button>
+            <h2 style={{ fontWeight: 700, fontSize: '1.25rem', marginBottom: '1rem', color: '#fff' }}>{showFeatureModal}</h2>
+            <p style={{ marginBottom: '1.5rem', color: '#fff' }}>Interested?</p>
+            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', fontWeight: 600, fontSize: '1rem', color: '#fff' }}>
+              <span>Notify me when it's done</span>
+              <input
+                type="checkbox"
+                checked={!!notifyMe[showFeatureModal]}
+                onChange={() => setNotifyMe((prev) => ({ ...prev, [showFeatureModal]: !prev[showFeatureModal] }))}
+                style={{ width: '20px', height: '20px' }}
+              />
+            </label>
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 1 }}>
         {/* Header */}
@@ -318,9 +376,11 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
                   color: 'rgba(255, 255, 255, 0.7)',
                   fontSize: '0.875rem',
                   fontWeight: '600',
-                  cursor: 'not-allowed',
-                  transition: 'all 0.2s'
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  opacity: 1
                 }}
+                onClick={() => setShowFeatureModal(feature.label)}
               >
                 <feature.icon style={{ width: '16px', height: '16px' }} />
                 {feature.label}
