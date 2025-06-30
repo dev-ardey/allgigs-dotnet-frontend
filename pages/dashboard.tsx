@@ -312,6 +312,17 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
               <X style={{ width: '20px', height: '20px' }} />
             </button>
             <h2 style={{ fontWeight: 700, fontSize: '1.25rem', marginBottom: '1rem', color: '#fff' }}>{showFeatureModal}</h2>
+            <p style={{ marginBottom: '1rem', color: '#fff', fontSize: '1rem' }}>
+              {showFeatureModal === 'AI Agent' && (
+                <>This AI agent will search for jobs, apply with your profile, contact the lead, make calendar appointments with recruiters, and more.</>
+              )}
+              {showFeatureModal === 'Tooling' && (
+                <>Get access to tools that help you get better results and streamline your job search process.</>
+              )}
+              {showFeatureModal === 'Marketing' && (
+                <>Access checklists, extra information, and tips for higher success rates in your applications.</>
+              )}
+            </p>
             <p style={{ marginBottom: '1.5rem', color: '#fff' }}>Interested?</p>
             <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', fontWeight: 600, fontSize: '1rem', color: '#fff' }}>
               <span>Notify me when it's done</span>
