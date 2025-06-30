@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Save, X, Plus, Trash2, Upload, Sparkles, SearchCheck, MousePointerClick, Users, TrendingUp, FileText, Bell, DollarSign, Settings, Building2, MapPin, Wallet } from 'lucide-react';
+import { Edit2, Save, X, Plus, Trash2, Upload, Sparkles, SearchCheck, MousePointerClick, Users, TrendingUp, FileText, Bell, DollarSign, Settings, Building2, MapPin, Coins } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 // import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs';
 import { supabase } from '../SupabaseClient';
@@ -1596,7 +1596,7 @@ export default function Dashboard() {
                     border: '1px solid rgba(147, 51, 234, 0.4)',
                     backdropFilter: 'blur(8px)'
                   }}>
-                    <Wallet style={{ width: '14px', height: '14px', color: '#fff' }} />
+                    <Coins style={{ width: '14px', height: '14px', color: '#fff' }} />
                     {job.rate}
                   </div>
                 )}
@@ -1686,22 +1686,23 @@ export default function Dashboard() {
                     borderRadius: '999px',
                     fontSize: '0.875rem',
                     fontWeight: '600',
-                    background: editKeywords ? '#f3f4f6' : '#f3f4f6',
-                    color: '#000',
-                    border: '1px solid #e5e7eb',
+                    background: editKeywords ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                    color: '#fff',
+                    border: '1px solid rgba(245, 158, 11, 0.4)',
                     cursor: editKeywords ? 'default' : 'pointer',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s',
+                    backdropFilter: 'blur(8px)'
                   }}
                   onMouseEnter={(e) => {
                     if (!editKeywords) {
-                      e.currentTarget.style.background = '#0ccf83';
-                      e.currentTarget.style.color = '#000';
+                      e.currentTarget.style.background = 'rgba(245, 158, 11, 0.4)';
+                      e.currentTarget.style.color = '#fff';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!editKeywords) {
-                      e.currentTarget.style.background = '#f3f4f6';
-                      e.currentTarget.style.color = '#000';
+                      e.currentTarget.style.background = 'rgba(245, 158, 11, 0.2)';
+                      e.currentTarget.style.color = '#fff';
                     }
                   }}
                 >
@@ -1713,7 +1714,7 @@ export default function Dashboard() {
                         marginLeft: '0.25rem',
                         background: 'none',
                         border: 'none',
-                        color: '#666',
+                        color: '#fff',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center'
@@ -1746,11 +1747,13 @@ export default function Dashboard() {
                   onClick={handleKeywordAdd}
                   style={{
                     padding: '0.75rem',
-                    background: '#0ccf83',
-                    color: '#000',
-                    borderRadius: '8px',
-                    border: 'none',
-                    cursor: 'pointer'
+                    background: 'rgba(245, 158, 11, 0.2)',
+                    color: '#fff',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(245, 158, 11, 0.4)',
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(8px)',
+                    transition: 'all 0.3s ease'
                   }}
                 >
                   <Plus style={{ width: '16px', height: '16px' }} />
