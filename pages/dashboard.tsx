@@ -248,26 +248,17 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'rgba(255, 255, 255, 0.15)',
+      backdropFilter: 'blur(16px)',
+      border: '1px solid rgba(255, 255, 255, 0.2)',
       borderRadius: '24px',
       padding: '2rem',
       marginBottom: '2rem',
       color: 'white',
       position: 'relative',
-      overflow: 'hidden'
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+      transition: 'all 0.3s ease'
     }}>
-      {/* Glasmorphism overlay */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(255, 255, 255, 0.1)',
-        backdropFilter: 'blur(10px)',
-        borderRadius: '24px',
-        border: '1px solid rgba(255, 255, 255, 0.2)'
-      }} />
 
       {/* Feature Modal Popup */}
       {showFeatureModal && (
@@ -338,7 +329,7 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
       )}
 
       {/* Content */}
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      <div style={{ position: 'relative' }}>
         {/* Header */}
         <div style={{
           display: 'flex',
@@ -1136,16 +1127,78 @@ export default function Dashboard() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: `
+        radial-gradient(ellipse at top left, rgba(139, 69, 189, 0.15) 0%, transparent 50%), 
+        radial-gradient(ellipse at bottom right, rgba(59, 130, 246, 0.15) 0%, transparent 50%), 
+        linear-gradient(135deg, #1a0b2e 0%, #16213e 25%, #0f3460 50%, #16213e 75%, #1a0b2e 100%)
+      `,
       fontFamily: "'Montserrat', Arial, sans-serif",
-      color: '#fff'
+      color: '#fff',
+      position: 'relative',
+      overflow: 'hidden'
     }}>
+      {/* Floating Orbs */}
+      <div style={{
+        position: 'absolute',
+        top: '10%',
+        right: '15%',
+        width: '300px',
+        height: '300px',
+        background: `radial-gradient(circle, 
+          rgba(147, 51, 234, 0.1) 0%, 
+          rgba(147, 51, 234, 0.05) 40%, 
+          transparent 70%
+        )`,
+        borderRadius: '50%',
+        filter: 'blur(40px)',
+        animation: 'float1 6s ease-in-out infinite',
+        pointerEvents: 'none',
+        zIndex: 0
+      }} />
+
+      <div style={{
+        position: 'absolute',
+        bottom: '20%',
+        left: '10%',
+        width: '200px',
+        height: '200px',
+        background: `radial-gradient(circle, 
+          rgba(59, 130, 246, 0.08) 0%, 
+          rgba(59, 130, 246, 0.04) 40%, 
+          transparent 70%
+        )`,
+        borderRadius: '50%',
+        filter: 'blur(30px)',
+        animation: 'float2 8s ease-in-out infinite',
+        pointerEvents: 'none',
+        zIndex: 0
+      }} />
+
+      <div style={{
+        position: 'absolute',
+        top: '60%',
+        right: '40%',
+        width: '120px',
+        height: '120px',
+        background: `radial-gradient(circle, 
+          rgba(236, 72, 153, 0.06) 0%, 
+          transparent 60%
+        )`,
+        borderRadius: '50%',
+        filter: 'blur(20px)',
+        animation: 'float3 10s ease-in-out infinite',
+        pointerEvents: 'none',
+        zIndex: 0
+      }} />
+
       {/* Header */}
       <header style={{
         background: 'rgba(255, 255, 255, 0.1)',
         backdropFilter: 'blur(16px)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-        padding: '1.5rem 2rem'
+        padding: '1.5rem 2rem',
+        position: 'relative',
+        zIndex: 10
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', maxWidth: '1100px', margin: '0 auto' }}>
 
@@ -1188,7 +1241,7 @@ export default function Dashboard() {
 
       </header>
 
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '2rem' }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '2rem', position: 'relative', zIndex: 5 }}>
 
 
         {/* Link to allGigs */}
@@ -1589,31 +1642,40 @@ export default function Dashboard() {
               Statistics
             </h2>
 
-            <div style={{ height: '192px' }}>
+            <div style={{
+              height: '192px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '12px',
+              padding: '1rem',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}>
               {/* @ts-ignore */}
               <ResponsiveContainer width="100%" height="100%">
                 {/* @ts-ignore */}
                 <LineChart data={statsData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.2)" />
                   {/* @ts-ignore */}
-                  <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
+                  <XAxis dataKey="name" stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
                   {/* @ts-ignore */}
-                  <YAxis stroke="#6b7280" fontSize={12} />
+                  <YAxis stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'white',
-                      border: '1px solid #e5e7eb',
+                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                      backdropFilter: 'blur(16px)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
                       borderRadius: '8px',
-                      fontSize: '12px'
+                      fontSize: '12px',
+                      color: '#fff'
                     }}
                   />
                   {/* @ts-ignore */}
                   <Line
                     type="monotone"
                     dataKey="views"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                    stroke="#fff"
+                    strokeWidth={3}
+                    dot={{ fill: '#fff', strokeWidth: 2, r: 4 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
