@@ -11,6 +11,7 @@ import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs'; // Added
 import CompleteProfileForm from "../components/ui/CompleteProfileForm";
 import { useProfileCheck } from "../components/ui/useProfileCheck";
 import { useRouter } from "next/router";
+import GlobalNav from "../components/ui/GlobalNav";
 
 
 interface Job {
@@ -649,6 +650,7 @@ export default function JobBoard() {
 
   return (
     <>
+      <GlobalNav currentPage="leadSearch" />
       {/* Sticky header + search bar container */}
       <div
         style={{
