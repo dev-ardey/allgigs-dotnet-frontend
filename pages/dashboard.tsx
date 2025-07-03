@@ -765,6 +765,11 @@ interface Profile {
   linkedin_URL: string;
   isAvailableForWork?: boolean;
   hourlyRate?: number;
+  age?: number;
+  lastYearEarnings?: number;
+  gender?: string;
+  interests?: string;
+  mainProblem?: string;
 }
 
 interface Document {
@@ -828,6 +833,11 @@ export default function Dashboard() {
     linkedin_URL: '',
     isAvailableForWork: true,
     hourlyRate: 75,
+    age: 30,
+    lastYearEarnings: 75000,
+    gender: 'Prefer not to say',
+    interests: 'Technology, Innovation, Problem Solving',
+    mainProblem: 'Finding the right opportunities',
   };
   const [profile, setProfile] = useState<Profile>(emptyProfile);
   const [editedProfile, setEditedProfile] = useState<Profile>(emptyProfile);
@@ -2252,7 +2262,7 @@ export default function Dashboard() {
                           color: '#fff',
                           backdropFilter: 'blur(8px)'
                         }}
-                        placeholder="John"
+                        placeholder="For example John"
                       />
                     </div>
                     <div>
@@ -2272,7 +2282,7 @@ export default function Dashboard() {
                           color: '#fff',
                           backdropFilter: 'blur(8px)'
                         }}
-                        placeholder="Doe"
+                        placeholder="For example Doe"
                       />
                     </div>
                     <div>
@@ -2292,7 +2302,7 @@ export default function Dashboard() {
                           color: '#fff',
                           backdropFilter: 'blur(8px)'
                         }}
-                        placeholder="Senior Developer"
+                        placeholder="For example Senior Developer"
                       />
                     </div>
                     <div>
@@ -2312,7 +2322,7 @@ export default function Dashboard() {
                           color: '#fff',
                           backdropFilter: 'blur(8px)'
                         }}
-                        placeholder="Amsterdam, Netherlands"
+                        placeholder="For example Amsterdam, Netherlands"
                       />
                     </div>
                     <div>
@@ -2332,7 +2342,7 @@ export default function Dashboard() {
                           color: '#fff',
                           backdropFilter: 'blur(8px)'
                         }}
-                        placeholder="https://linkedin.com/in/johndoe"
+                        placeholder="For example https://linkedin.com/in/johndoe"
                       />
                     </div>
                     <div>
@@ -2352,12 +2362,76 @@ export default function Dashboard() {
                           color: '#fff',
                           backdropFilter: 'blur(8px)'
                         }}
-                        placeholder="Technology"
+                        placeholder="For example Technology"
                       />
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Age</label>
+                      <input
+                        type="number"
+                        value={editedProfile.age || ''}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, age: parseInt(e.target.value) || 0 })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          boxSizing: 'border-box',
+                          background: 'rgba(16, 185, 129, 0.1)',
+                          color: '#fff',
+                          backdropFilter: 'blur(8px)'
+                        }}
+                        placeholder="For example 30"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Last Year Earnings (€)</label>
+                      <input
+                        type="number"
+                        value={editedProfile.lastYearEarnings || ''}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, lastYearEarnings: parseInt(e.target.value) || 0 })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          boxSizing: 'border-box',
+                          background: 'rgba(16, 185, 129, 0.1)',
+                          color: '#fff',
+                          backdropFilter: 'blur(8px)'
+                        }}
+                        placeholder="For example 75000"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Gender</label>
+                      <select
+                        value={editedProfile.gender || ''}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, gender: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          boxSizing: 'border-box',
+                          background: 'rgba(16, 185, 129, 0.1)',
+                          color: '#fff',
+                          backdropFilter: 'blur(8px)'
+                        }}
+                      >
+                        <option value="">Select gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Non-binary">Non-binary</option>
+                        <option value="Prefer not to say">Prefer not to say</option>
+                      </select>
+                    </div>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Hourly Rate (€)</label>
                       <input
@@ -2375,9 +2449,57 @@ export default function Dashboard() {
                           color: '#fff',
                           backdropFilter: 'blur(8px)'
                         }}
-                        placeholder="75"
+                        placeholder="For example 75"
                       />
                     </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Interests</label>
+                      <textarea
+                        value={editedProfile.interests || ''}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, interests: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          boxSizing: 'border-box',
+                          background: 'rgba(16, 185, 129, 0.1)',
+                          color: '#fff',
+                          backdropFilter: 'blur(8px)',
+                          minHeight: '80px',
+                          resize: 'vertical'
+                        }}
+                        placeholder="For example Technology, Innovation, Problem Solving"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>What is your main problem?</label>
+                      <textarea
+                        value={editedProfile.mainProblem || ''}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, mainProblem: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          boxSizing: 'border-box',
+                          background: 'rgba(16, 185, 129, 0.1)',
+                          color: '#fff',
+                          backdropFilter: 'blur(8px)',
+                          minHeight: '80px',
+                          resize: 'vertical'
+                        }}
+                        placeholder="For example Finding the right opportunities"
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.75rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)', backdropFilter: 'blur(8px)', marginTop: '1.5rem' }}>
                         <div style={{ position: 'relative' }}>
@@ -2556,6 +2678,54 @@ export default function Dashboard() {
                       {profile.isAvailableForWork ? '✓ Available for work' : '✗ Not available'}
                     </p>
                   </div>
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                  }}>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Age</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.age || 'Not specified'} years old</p>
+                  </div>
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                  }}>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Last Year Earnings</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <DollarSign style={{ width: '16px', height: '16px' }} />
+                      €{(profile.lastYearEarnings || 0).toLocaleString()}
+                    </p>
+                  </div>
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                  }}>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Gender</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.gender || 'Not specified'}</p>
+                  </div>
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                  }}>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Interests</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.interests || 'Not specified'}</p>
+                  </div>
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                  }}>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Main Problem</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.mainProblem || 'Not specified'}</p>
+                  </div>
                 </div>
               )}
 
@@ -2646,6 +2816,21 @@ export default function Dashboard() {
           />
         )}
       </div>
+
+      {/* Global styles for placeholders */}
+      <style jsx global>{`
+        input::placeholder,
+        textarea::placeholder {
+          color: rgba(255, 255, 255, 0.7) !important;
+          font-style: italic;
+          font-weight: 400;
+        }
+        
+        input:focus::placeholder,
+        textarea:focus::placeholder {
+          color: rgba(255, 255, 255, 0.8) !important;
+        }
+      `}</style>
     </div>
   )
 }
