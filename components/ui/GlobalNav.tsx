@@ -24,7 +24,7 @@ export default function GlobalNav({ currentPage = 'dashboard' }: GlobalNavProps)
     return (
         <>
             {/* Hamburger Menu Button */}
-            <div style={{ position: 'fixed', top: 24, left: 24, zIndex: 1000 }}>
+            <div style={{ position: 'fixed', top: 24, left: 24, zIndex: 1200 }}>
                 <button
                     onClick={() => setMenuOpen(!menuOpen)}
                     style={{

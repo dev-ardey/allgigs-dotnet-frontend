@@ -482,6 +482,9 @@ export default function JobBoard() {
   // Add a state to track highlighted jobs
   const [highlightedJobs, setHighlightedJobs] = useState<Job[]>([]);
 
+  // State to track expanded summaries
+  const [expandedSummaries, setExpandedSummaries] = useState<Set<string>>(new Set());
+
   // Function to normalize text and remove weird spacing/characters
   const normalizeText = (text: string): string => {
     if (!text) return '';
@@ -490,6 +493,30 @@ export default function JobBoard() {
       .replace(/\s+/g, ' ')             // Replace multiple spaces with single space
       .replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000]/g, ' ') // Replace various unicode spaces
       .trim();
+  };
+
+  // Function to check if summary is long and needs truncation
+  const isSummaryLong = (summary: string): boolean => {
+    return normalizeText(summary).length > 200; // Adjust character limit as needed
+  };
+
+  // Function to get truncated summary
+  const getTruncatedSummary = (summary: string): string => {
+    const normalized = normalizeText(summary);
+    return normalized.length > 200 ? normalized.substring(0, 200) + '...' : normalized;
+  };
+
+  // Function to toggle summary expansion
+  const toggleSummaryExpansion = (jobId: string) => {
+    setExpandedSummaries(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(jobId)) {
+        newSet.delete(jobId);
+      } else {
+        newSet.add(jobId);
+      }
+      return newSet;
+    });
   };
 
   // Function to highlight search terms in job text
@@ -951,6 +978,10 @@ export default function JobBoard() {
               {(highlightedJobs.length > 0 ? highlightedJobs.slice((page ?? 0) * PAGE_SIZE, ((page ?? 0) + 1) * PAGE_SIZE) : paginatedJobs).map((job) => (
                 <div
                   key={job.UNIQUE_ID}
+                  onClick={() => {
+                    logJobClick(job);
+                    window.open(job.URL, '_blank', 'noopener,noreferrer');
+                  }}
                   style={{
                     background: 'rgba(255, 255, 255, 0.1)',
                     backdropFilter: 'blur(8px)',
@@ -1025,7 +1056,7 @@ export default function JobBoard() {
                         {job.rate && job.rate.trim() !== '' && (
                           <span style={{
                             background: 'rgba(16, 185, 129, 0.2)',
-                            color: '#10b981',
+                            color: '#fff',
                             padding: '0.25rem 0.75rem',
                             borderRadius: '12px',
                             fontSize: '0.875rem',
@@ -1038,7 +1069,7 @@ export default function JobBoard() {
                         {job.date && job.date.trim() !== '' && (
                           <span style={{
                             background: 'rgba(59, 130, 246, 0.2)',
-                            color: '#3b82f6',
+                            color: '#fff',
                             padding: '0.25rem 0.75rem',
                             borderRadius: '12px',
                             fontSize: '0.875rem',
@@ -1052,7 +1083,7 @@ export default function JobBoard() {
                           <span
                             style={{
                               background: 'rgba(236, 72, 153, 0.2)',
-                              color: '#ec4899',
+                              color: '#fff',
                               padding: '0.25rem 0.75rem',
                               borderRadius: '12px',
                               fontSize: '0.875rem',
@@ -1065,18 +1096,53 @@ export default function JobBoard() {
                       </div>
                     </div>
                   </div>
-                  <p
-                    style={{
-                      fontSize: '1rem',
-                      color: 'rgba(255, 255, 255, 0.85)',
-                      lineHeight: '1.6',
-                      margin: '0 0 1rem 0',
-                      fontFamily: "'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-                      letterSpacing: 'normal',
-                      wordSpacing: 'normal'
-                    }}
-                    dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.Summary, debouncedSearchTerm.split(' ')) }}
-                  />
+                  <div style={{ margin: '0 0 1rem 0' }}>
+                    <p
+                      style={{
+                        fontSize: '1rem',
+                        color: 'rgba(255, 255, 255, 0.85)',
+                        lineHeight: '1.6',
+                        margin: '0',
+                        fontFamily: "'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+                        letterSpacing: 'normal',
+                        wordSpacing: 'normal'
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: highlightSearchTerms(
+                          expandedSummaries.has(job.UNIQUE_ID) ? job.Summary : getTruncatedSummary(job.Summary),
+                          debouncedSearchTerm.split(' ')
+                        )
+                      }}
+                    />
+                    {isSummaryLong(job.Summary) && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent job card click
+                          toggleSummaryExpansion(job.UNIQUE_ID);
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#10b981',
+                          fontSize: '0.875rem',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          padding: '0.25rem 0',
+                          marginTop: '0.5rem',
+                          textDecoration: 'underline',
+                          transition: 'color 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = '#34d399';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = '#10b981';
+                        }}
+                      >
+                        {expandedSummaries.has(job.UNIQUE_ID) ? 'Read less' : 'Read more'}
+                      </button>
+                    )}
+                  </div>
 
                   {/* Show poster information for allGigs jobs */}
                   {(job.source === 'allGigs' || job.tags?.includes('allGigs')) && job.added_by_email && (
@@ -1099,36 +1165,7 @@ export default function JobBoard() {
                     </div>
                   )}
 
-                  {/* View Job button */}
-                  <a
-                    href={job.URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => logJobClick(job)}
-                    style={{
-                      display: 'inline-block',
-                      padding: '0.75rem 1.5rem',
-                      background: 'rgba(16, 185, 129, 0.2)',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
-                      borderRadius: '12px',
-                      color: '#10b981',
-                      fontSize: '0.95rem',
-                      fontWeight: '600',
-                      textDecoration: 'none',
-                      transition: 'all 0.3s ease',
-                      backdropFilter: 'blur(8px)'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(16, 185, 129, 0.3)';
-                      e.currentTarget.style.transform = 'translateY(-1px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(16, 185, 129, 0.2)';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                    }}
-                  >
-                    View Job →
-                  </a>
+
                 </div>
               ))}
             </div>
