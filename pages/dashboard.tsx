@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Edit2, Save, X, Plus, Trash2, Upload, Sparkles, SearchCheck, Users, TrendingUp, FileText, Bell, DollarSign, Building2, MapPin, Coins, User, Target, Mail, Zap, Lock } from 'lucide-react';
+import { Edit2, Save, X, Plus, Trash2, Upload, Sparkles, SearchCheck, Users, TrendingUp, FileText, Bell, DollarSign, Building2, MapPin, Coins, User, Target, Mail, Zap, Lock, Menu } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 // import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs';
 import { supabase } from '../SupabaseClient';
 import { useRouter } from 'next/router';
 import AddJobForm from '../components/ui/add-job-form';
+import GlobalNav from '../components/ui/GlobalNav';
 
 // Qualified Leads Interfaces en Types
 import {
@@ -1291,6 +1292,7 @@ export default function Dashboard() {
       position: 'relative',
       overflow: 'hidden'
     }}>
+      <GlobalNav currentPage="dashboard" />
       {/* Floating Orbs */}
       <div style={{
         position: 'absolute',
@@ -1345,730 +1347,599 @@ export default function Dashboard() {
         zIndex: 0
       }} />
 
-      {/* Header */}
-      <header style={{
-        background: 'rgba(255, 255, 255, 0.1)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-        padding: '1.5rem 2rem',
-        position: 'relative',
-        zIndex: 10
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', maxWidth: '1100px', margin: '0 auto' }}>
-
-          <h1 style={{
-            fontSize: '2rem',
-            fontWeight: 'bold',
-            color: 'white',
-            display: 'flex',
-            alignItems: 'center'
-          }}>
-            <img
-              src="/images/allGigs-logo-white.svg"
-              alt="AllGigs Logo"
-              style={{ height: "40px", transition: "opacity 0.3s" }}
-            />
-            Dashboard
-          </h1>
-          <button
-            onClick={handleLogout}
-            style={{
-              width: 'fit-content',
-              padding: '0.75rem 1rem',
-              background: 'rgba(239, 68, 68, 0.2)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              borderRadius: '12px',
-              color: '#fff',
-              fontSize: '0.95rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              marginLeft: 'auto',
-              backdropFilter: 'blur(16px)',
-              boxShadow: '0 4px 16px rgba(239, 68, 68, 0.1)'
-            }}
-          >
-            Log out
-          </button>
-
-        </div>
-
-      </header>
-
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '2rem', position: 'relative', zIndex: 5 }}>
+      {/* Main dashboard content */}
+      <div style={{ filter: 'none', transition: 'filter 0.2s' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '2rem', position: 'relative', zIndex: 5 }}>
 
 
-        {/* Link to allGigs */}
-        {/* <div style={{
-          background: '#fff',
-          borderRadius: '16px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-          border: '1px solid #e5e7eb',
-          padding: '1.5rem',
-          marginBottom: '2rem'
-
-        }}>
-          <h2 style={{
-            fontSize: '1.25rem',
-            fontWeight: '600',
-            color: '#000',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <Search style={{ width: '20px', height: '20px' }} />
-            Search entire database for all Jobs
-          </h2>
-
-
-
-          <button style={{
-            width: '100%',
-            marginTop: '1rem',
-            padding: '0.75rem',
-            background: '#0ccf83',
-            color: '#000',
-            border: 'none',
-            borderRadius: '999px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            fontSize: '0.875rem'
-          }}
-            onClick={() => window.location.href = '/'}
-          >
-            allGigs
-          </button>
-        </div> */}
-
-        <QualifiedLeadsSection
-          leads={qualifiedLeads}
-          onStatusChange={handleLeadStatusChange}
-          onLogClick={handleLeadLogClick}
-          statsData={statsData}
-        />
-
-        {/* Recently Clicked Jobs Card - COMMENTED OUT */}
-        {/*
-          <div style={{
-          background: 'rgba(255, 255, 255, 0.15)',
-          backdropFilter: 'blur(16px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '24px',
-          padding: '1.5rem',
-          marginBottom: '2rem',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-          transition: 'all 0.3s ease'
-        }}>
-          <h2 style={{
-            fontSize: '1.25rem',
-            fontWeight: 600,
-            color: '#fff',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <MousePointerClick style={{ width: '20px', height: '20px' }} />
-            Manage Jobs
-          </h2>
-
-          {loadingRecentlyClicked ? (
-            <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Loading...</p>
-          ) : recentlyClickedJobs.length === 0 ? (
-            <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>No recently clicked jobs</p>
-          ) : (
-            <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
-              <table style={{ minWidth: '600px', width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.2)' }}>
-                    <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.9)' }}>Title</th>
-                    <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.9)' }}>Company</th>
-                    <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.9)' }}>Location</th>
-                    <th style={{ textAlign: 'left', padding: '0.75rem', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.9)' }}>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentlyClickedJobs.map((job) => (
-                    <tr
-                      key={job.UNIQUE_ID}
-                      style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer' }}
-                      onClick={() => logJobClick(job)}
-                    >
-                      <td style={{ padding: '0.75rem', fontWeight: 500, color: '#fff' }}>{job.Title}</td>
-                      <td style={{ padding: '0.75rem', color: 'rgba(255, 255, 255, 0.8)' }}>{job.Company}</td>
-                      <td style={{ padding: '0.75rem', color: 'rgba(255, 255, 255, 0.8)' }}>{job.Location}</td>
-                      <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.7)' }}>{job.date}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-        */}
-
-        {/* Recommended Jobs */}
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.15)',
-          backdropFilter: 'blur(16px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '24px',
-          padding: '2rem',
-          marginBottom: '2rem',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-          transition: 'all 0.3s ease'
-        }}>
-          {/* Header */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+          {/* Link to allGigs */}
+          {/* <div style={{
+            background: '#fff',
+            borderRadius: '16px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+            border: '1px solid #e5e7eb',
+            padding: '1.5rem',
             marginBottom: '2rem'
+
           }}>
-            <div>
-              <h2 style={{
-                fontSize: '2rem',
-                fontWeight: '700',
-                margin: '0 0 0.5rem 0',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem'
-              }}>
-                <Sparkles style={{ width: '32px', height: '32px' }} />
-                Lead Search
-              </h2>
-              <p style={{
-                fontSize: '1.1rem',
-                opacity: 0.9,
-                margin: 0
-              }}>
-                Find leads and opportunities across the platform
-              </p>
-            </div>
-          </div>
-
-          {/* Search entire database button */}
-          <button style={{
-            width: '100%',
-            padding: '0.75rem',
-            background: 'rgba(16, 185, 129, 0.3)',
-            color: '#fff',
-            border: '1px solid rgba(16, 185, 129, 0.4)',
-            borderRadius: '12px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            fontSize: '0.875rem',
-            transition: 'all 0.3s ease',
-            backdropFilter: 'blur(8px)',
-            marginBottom: '1rem'
-          }}
-            onClick={() => router.push('/leadSearch')}
-          >
-            Search entire database on allGigs
-          </button>
-
-          {/* Quick Search Section */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '16px',
-            padding: '1rem',
-            marginBottom: '1rem'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <h3 style={{
-                fontSize: '1rem',
-                fontWeight: '600',
-                color: '#fff',
-                margin: 0,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <SearchCheck style={{ width: '18px', height: '18px' }} />
-                Quick Search
-              </h3>
-              <button
-                onClick={() => setEditKeywords(!editKeywords)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.5rem 1rem',
-                  fontSize: '0.875rem',
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  color: '#fff',
-                  borderRadius: '12px',
-                  border: 'none',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                <Edit2 style={{ width: '16px', height: '16px' }} />
-                {editKeywords ? 'Done' : 'Edit'}
-              </button>
-            </div>
-            <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.5rem 0 0.5rem 0' }}>
-              Click to quicksearch jobs
-            </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-              {keywords.map((keyword, index) => (
-                <span
-                  key={index}
-                  onClick={() => !editKeywords && searchJobs(keyword)}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '999px',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    background: editKeywords ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                    color: '#fff',
-                    border: '1px solid rgba(245, 158, 11, 0.4)',
-                    cursor: editKeywords ? 'default' : 'pointer',
-                    transition: 'all 0.2s',
-                    backdropFilter: 'blur(8px)'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!editKeywords) {
-                      e.currentTarget.style.background = 'rgba(245, 158, 11, 0.4)';
-                      e.currentTarget.style.color = '#fff';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!editKeywords) {
-                      e.currentTarget.style.background = 'rgba(245, 158, 11, 0.2)';
-                      e.currentTarget.style.color = '#fff';
-                    }
-                  }}
-                >
-                  {keyword}
-                  {editKeywords && (
-                    <button
-                      onClick={() => removeKeyword(index)}
-                      style={{
-                        marginLeft: '0.25rem',
-                        background: 'none',
-                        border: 'none',
-                        color: '#fff',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center'
-                      }}
-                    >
-                      <X style={{ width: '12px', height: '12px' }} />
-                    </button>
-                  )}
-                </span>
-              ))}
-            </div>
-
-            {editKeywords && (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input
-                  type="text"
-                  value={newKeyword}
-                  onChange={(e) => setNewKeyword(e.target.value)}
-                  onKeyDown={handleKeywordKeyDown}
-                  placeholder="Nieuwe zoekterm..."
-                  style={{
-                    flex: 1,
-                    padding: '0.75rem',
-                    border: '1px solid #ccc',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem'
-                  }}
-                />
-                <button
-                  onClick={handleKeywordAdd}
-                  style={{
-                    padding: '0.75rem',
-                    background: 'rgba(245, 158, 11, 0.2)',
-                    color: '#fff',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(245, 158, 11, 0.4)',
-                    cursor: 'pointer',
-                    backdropFilter: 'blur(8px)',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  <Plus style={{ width: '16px', height: '16px' }} />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Recommended Leads Section */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '16px',
-            padding: '1rem'
-          }}>
-            <h3 style={{
-              fontSize: '1rem',
+            <h2 style={{
+              fontSize: '1.25rem',
               fontWeight: '600',
-              color: '#fff',
-              marginBottom: '0.75rem',
+              color: '#000',
+              marginBottom: '1rem',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem'
             }}>
-              <Sparkles style={{ width: '18px', height: '18px' }} />
-              Recommended Leads
-            </h3>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {recommendedJobs.map((job) => (
-                <div
-                  key={job.UNIQUE_ID}
-                  style={{
-                    padding: '1rem',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(8px)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = 'none';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                  }}
-                >
-                  <h3 style={{ fontWeight: '600', color: '#fff', margin: '0 0 0.5rem 0', fontSize: '1rem' }}>{job.Title}</h3>
-
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    {/* Company - Blue Balloon */}
-                    <div style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '0.5rem 0.75rem',
-                      borderRadius: '20px',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      background: 'rgba(59, 130, 246, 0.3)',
-                      color: '#fff',
-                      border: '1px solid rgba(59, 130, 246, 0.4)',
-                      backdropFilter: 'blur(8px)'
-                    }}>
-                      <Building2 style={{ width: '14px', height: '14px', color: '#fff' }} />
-                      {job.Company}
-                    </div>
-
-                    {/* Location - Green Balloon */}
-                    <div style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '0.5rem 0.75rem',
-                      borderRadius: '20px',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      background: 'rgba(16, 185, 129, 0.3)',
-                      color: '#fff',
-                      border: '1px solid rgba(16, 185, 129, 0.4)',
-                      backdropFilter: 'blur(8px)'
-                    }}>
-                      <MapPin style={{ width: '14px', height: '14px', color: '#fff' }} />
-                      {job.Location}
-                    </div>
-                  </div>
-
-                  {/* Rate - Purple Balloon */}
-                  {job.rate && (
-                    <div style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '0.5rem 0.75rem',
-                      borderRadius: '20px',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      background: 'rgba(147, 51, 234, 0.3)',
-                      color: '#fff',
-                      border: '1px solid rgba(147, 51, 234, 0.4)',
-                      backdropFilter: 'blur(8px)'
-                    }}>
-                      <Coins style={{ width: '14px', height: '14px', color: '#fff' }} />
-                      {job.rate}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Main Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-          gap: '2rem',
-          marginBottom: '2rem'
-        }}>
-
-          {/* Keywords Card - COMMENTED OUT (moved to Recommended Leads section) */}
-          {/*
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.15)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '24px',
-            padding: '1.5rem',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s ease'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <SearchCheck style={{ width: '20px', height: '20px' }} />
-                Quicksearch
+              <Search style={{ width: '20px', height: '20px' }} />
+              Search entire database for all Jobs
             </h2>
-              <button
-                onClick={() => setEditKeywords(!editKeywords)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.5rem 1rem',
-                  fontSize: '0.875rem',
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  color: '#fff',
-              borderRadius: '12px',
-                  border: 'none',
+
+
+
+            <button style={{
+              width: '100%',
+              marginTop: '1rem',
+              padding: '0.75rem',
+              background: '#0ccf83',
+              color: '#000',
+              border: 'none',
+              borderRadius: '999px',
               fontWeight: '600',
               cursor: 'pointer',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                <Edit2 style={{ width: '16px', height: '16px' }} />
-                {editKeywords ? 'Done' : 'Edit'}
-              </button>
-                  </div>
-            <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.5rem 0 0.5rem 0' }}>
-              Click to quicksearch jobs
-            </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-              {keywords.map((keyword, index) => (
-                <span
-                  key={index}
-                  onClick={() => !editKeywords && searchJobs(keyword)}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '999px',
-              fontSize: '0.875rem',
-                    fontWeight: '600',
-                    background: editKeywords ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                    color: '#fff',
-                    border: '1px solid rgba(245, 158, 11, 0.4)',
-                    cursor: editKeywords ? 'default' : 'pointer',
-                    transition: 'all 0.2s',
-                    backdropFilter: 'blur(8px)'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!editKeywords) {
-                      e.currentTarget.style.background = 'rgba(245, 158, 11, 0.4)';
-                      e.currentTarget.style.color = '#fff';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!editKeywords) {
-                      e.currentTarget.style.background = 'rgba(245, 158, 11, 0.2)';
-                      e.currentTarget.style.color = '#fff';
-                    }
-                  }}
-                >
-                  {keyword}
-                  {editKeywords && (
-                  <button
-                      onClick={() => removeKeyword(index)}
-                    style={{
-                        marginLeft: '0.25rem',
-                      background: 'none',
-                      border: 'none',
-                        color: '#fff',
-                      cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center'
-                    }}
-                  >
-                      <X style={{ width: '12px', height: '12px' }} />
-                  </button>
-                  )}
-                </span>
-              ))}
-            </div>
+              fontSize: '0.875rem'
+            }}
+              onClick={() => window.location.href = '/'}
+            >
+              allGigs
+            </button>
+          </div> */}
 
-            {editKeywords && (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input
-                  type="text"
-                  value={newKeyword}
-                  onChange={(e) => setNewKeyword(e.target.value)}
-                  onKeyDown={handleKeywordKeyDown}
-                  placeholder="Nieuwe zoekterm..."
-                  style={{
-                    flex: 1,
-                    padding: '0.75rem',
-                    border: '1px solid #ccc',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem'
-                  }}
-                />
-                <button
-                  onClick={handleKeywordAdd}
-                  style={{
-                    padding: '0.75rem',
-                    background: 'rgba(245, 158, 11, 0.2)',
-                    color: '#fff',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(245, 158, 11, 0.4)',
-                    cursor: 'pointer',
-                    backdropFilter: 'blur(8px)',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  <Plus style={{ width: '16px', height: '16px' }} />
-                </button>
-          </div>
-            )}
-          </div>
-          */}
+          <QualifiedLeadsSection
+            leads={qualifiedLeads}
+            onStatusChange={handleLeadStatusChange}
+            onLogClick={handleLeadLogClick}
+            statsData={statsData}
+          />
 
-          {/* Stats Card - REMOVED (moved to Qualified Leads section) */}
-
-          {/* Post a Job Card - COMMENTED OUT */}
-          {/*
+          {/* Recommended Jobs */}
           <div style={{
             background: 'rgba(255, 255, 255, 0.15)',
             backdropFilter: 'blur(16px)',
             border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '24px',
             padding: '2rem',
-            textAlign: 'center',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
+            marginBottom: '2rem',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
             transition: 'all 0.3s ease'
           }}>
+            {/* Header */}
             <div style={{
-              width: '48px',
-              height: '48px',
-              background: 'rgba(255, 255, 255, 0.2)',
-              borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '1rem'
+              justifyContent: 'space-between',
+              marginBottom: '2rem'
             }}>
-              <Plus style={{ width: '24px', height: '24px', color: '#fff' }} />
-            </div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', marginBottom: '0.5rem' }}>Post a Job</h2>
-            <p style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
-              Add an interesting job that you found
-            </p>
-            <button
-              onClick={() => setShowAddJobForm(true)}
-              style={{
-                padding: '0.75rem 1.5rem',
-                background: 'rgba(255, 255, 255, 0.2)',
-                color: '#fff',
-                borderRadius: '12px',
-                border: 'none',
-                fontWeight: '600',
-                fontSize: '0.875rem',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
-            >
-              Submit new job
-            </button>
-          </div>
-          */}
-
-        </div>
-
-
-        {/* Profile Dashboard */}
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.15)',
-          backdropFilter: 'blur(16px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '24px',
-          padding: '2rem',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-          transition: 'all 0.3s ease'
-        }}>
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
-            <div>
-              <h2 style={{
-                fontSize: '2rem',
-                fontWeight: '700',
-                margin: '0 0 0.5rem 0',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem'
-              }}>
-                <Users style={{ width: '32px', height: '32px' }} />
-                Profile Dashboard
-              </h2>
-              <p style={{
-                fontSize: '1.1rem',
-                opacity: 0.9,
-                margin: 0
-              }}>
-                Manage your professional profile and preferences
-              </p>
-            </div>
-            {!editMode ? (
-              <button
-                onClick={() => setEditMode(true)}
-                style={{
+              <div>
+                <h2 style={{
+                  fontSize: '2rem',
+                  fontWeight: '700',
+                  margin: '0 0 0.5rem 0',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.75rem 1.25rem',
+                  gap: '0.75rem'
+                }}>
+                  <Sparkles style={{ width: '32px', height: '32px' }} />
+                  Lead Search
+                </h2>
+                <p style={{
+                  fontSize: '1.1rem',
+                  opacity: 0.9,
+                  margin: 0
+                }}>
+                  Find leads and opportunities across the platform
+                </p>
+              </div>
+            </div>
+
+            {/* Search entire database button */}
+            <button style={{
+              width: '100%',
+              padding: '0.75rem',
+              background: 'rgba(16, 185, 129, 0.3)',
+              color: '#fff',
+              border: '1px solid rgba(16, 185, 129, 0.4)',
+              borderRadius: '12px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              transition: 'all 0.3s ease',
+              backdropFilter: 'blur(8px)',
+              marginBottom: '1rem'
+            }}
+              onClick={() => router.push('/leadSearch')}
+            >
+              Search entire database on allGigs
+            </button>
+
+            {/* Quick Search Section */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '16px',
+              padding: '1rem',
+              marginBottom: '1rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                <h3 style={{
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  color: '#fff',
+                  margin: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <SearchCheck style={{ width: '18px', height: '18px' }} />
+                  Quick Search
+                </h3>
+                <button
+                  onClick={() => setEditKeywords(!editKeywords)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.875rem',
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    color: '#fff',
+                    borderRadius: '12px',
+                    border: 'none',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <Edit2 style={{ width: '16px', height: '16px' }} />
+                  {editKeywords ? 'Done' : 'Edit'}
+                </button>
+              </div>
+              <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.5rem 0 0.5rem 0' }}>
+                Click to quicksearch jobs
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                {keywords.map((keyword, index) => (
+                  <span
+                    key={index}
+                    onClick={() => !editKeywords && searchJobs(keyword)}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '999px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      background: editKeywords ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                      color: '#fff',
+                      border: '1px solid rgba(245, 158, 11, 0.4)',
+                      cursor: editKeywords ? 'default' : 'pointer',
+                      transition: 'all 0.2s',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!editKeywords) {
+                        e.currentTarget.style.background = 'rgba(245, 158, 11, 0.4)';
+                        e.currentTarget.style.color = '#fff';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!editKeywords) {
+                        e.currentTarget.style.background = 'rgba(245, 158, 11, 0.2)';
+                        e.currentTarget.style.color = '#fff';
+                      }
+                    }}
+                  >
+                    {keyword}
+                    {editKeywords && (
+                      <button
+                        onClick={() => removeKeyword(index)}
+                        style={{
+                          marginLeft: '0.25rem',
+                          background: 'none',
+                          border: 'none',
+                          color: '#fff',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <X style={{ width: '12px', height: '12px' }} />
+                      </button>
+                    )}
+                  </span>
+                ))}
+              </div>
+
+              {editKeywords && (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    value={newKeyword}
+                    onChange={(e) => setNewKeyword(e.target.value)}
+                    onKeyDown={handleKeywordKeyDown}
+                    placeholder="Nieuwe zoekterm..."
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      border: '1px solid #ccc',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem'
+                    }}
+                  />
+                  <button
+                    onClick={handleKeywordAdd}
+                    style={{
+                      padding: '0.75rem',
+                      background: 'rgba(245, 158, 11, 0.2)',
+                      color: '#fff',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(245, 158, 11, 0.4)',
+                      cursor: 'pointer',
+                      backdropFilter: 'blur(8px)',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <Plus style={{ width: '16px', height: '16px' }} />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Recommended Leads Section */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '16px',
+              padding: '1rem'
+            }}>
+              <h3 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                color: '#fff',
+                marginBottom: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <Sparkles style={{ width: '18px', height: '18px' }} />
+                Recommended Leads
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {recommendedJobs.map((job) => (
+                  <div
+                    key={job.UNIQUE_ID}
+                    style={{
+                      padding: '1rem',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.boxShadow = 'none';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                    }}
+                  >
+                    <h3 style={{ fontWeight: '600', color: '#fff', margin: '0 0 0.5rem 0', fontSize: '1rem' }}>{job.Title}</h3>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      {/* Company - Blue Balloon */}
+                      <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '20px',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        background: 'rgba(59, 130, 246, 0.3)',
+                        color: '#fff',
+                        border: '1px solid rgba(59, 130, 246, 0.4)',
+                        backdropFilter: 'blur(8px)'
+                      }}>
+                        <Building2 style={{ width: '14px', height: '14px', color: '#fff' }} />
+                        {job.Company}
+                      </div>
+
+                      {/* Location - Green Balloon */}
+                      <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '20px',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        background: 'rgba(16, 185, 129, 0.3)',
+                        color: '#fff',
+                        border: '1px solid rgba(16, 185, 129, 0.4)',
+                        backdropFilter: 'blur(8px)'
+                      }}>
+                        <MapPin style={{ width: '14px', height: '14px', color: '#fff' }} />
+                        {job.Location}
+                      </div>
+                    </div>
+
+                    {/* Rate - Purple Balloon */}
+                    {job.rate && (
+                      <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '20px',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        background: 'rgba(147, 51, 234, 0.3)',
+                        color: '#fff',
+                        border: '1px solid rgba(147, 51, 234, 0.4)',
+                        backdropFilter: 'blur(8px)'
+                      }}>
+                        <Coins style={{ width: '14px', height: '14px', color: '#fff' }} />
+                        {job.rate}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Main Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+            gap: '2rem',
+            marginBottom: '2rem'
+          }}>
+
+            {/* Keywords Card - COMMENTED OUT (moved to Recommended Leads section) */}
+            {/*
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.15)',
+              backdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '24px',
+              padding: '1.5rem',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+              transition: 'all 0.3s ease'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <SearchCheck style={{ width: '20px', height: '20px' }} />
+                  Quicksearch
+              </h2>
+                <button
+                  onClick={() => setEditKeywords(!editKeywords)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.875rem',
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    color: '#fff',
+                borderRadius: '12px',
+                    border: 'none',
+                fontWeight: '600',
+                cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <Edit2 style={{ width: '16px', height: '16px' }} />
+                  {editKeywords ? 'Done' : 'Edit'}
+              </button>
+                  </div>
+                <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.5rem 0 0.5rem 0' }}>
+                  Click to quicksearch jobs
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                  {keywords.map((keyword, index) => (
+                    <span
+                      key={index}
+                      onClick={() => !editKeywords && searchJobs(keyword)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.5rem 1rem',
+                        borderRadius: '999px',
                   fontSize: '0.875rem',
+                        fontWeight: '600',
+                        background: editKeywords ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                        color: '#fff',
+                        border: '1px solid rgba(245, 158, 11, 0.4)',
+                        cursor: editKeywords ? 'default' : 'pointer',
+                        transition: 'all 0.2s',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!editKeywords) {
+                          e.currentTarget.style.background = 'rgba(245, 158, 11, 0.4)';
+                          e.currentTarget.style.color = '#fff';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!editKeywords) {
+                          e.currentTarget.style.background = 'rgba(245, 158, 11, 0.2)';
+                          e.currentTarget.style.color = '#fff';
+                        }
+                      }}
+                    >
+                      {keyword}
+                      {editKeywords && (
+                    <button
+                        onClick={() => removeKeyword(index)}
+                      style={{
+                          marginLeft: '0.25rem',
+                        background: 'none',
+                        border: 'none',
+                          color: '#fff',
+                        cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center'
+                      }}
+                    >
+                        <X style={{ width: '12px', height: '12px' }} />
+                    </button>
+                    )}
+                  </span>
+                ))}
+                </div>
+
+                {editKeywords && (
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      type="text"
+                      value={newKeyword}
+                      onChange={(e) => setNewKeyword(e.target.value)}
+                      onKeyDown={handleKeywordKeyDown}
+                      placeholder="Nieuwe zoekterm..."
+                      style={{
+                        flex: 1,
+                        padding: '0.75rem',
+                        border: '1px solid #ccc',
+                        borderRadius: '8px',
+                        fontSize: '0.875rem'
+                      }}
+                    />
+                    <button
+                      onClick={handleKeywordAdd}
+                      style={{
+                        padding: '0.75rem',
+                        background: 'rgba(245, 158, 11, 0.2)',
+                        color: '#fff',
+                        borderRadius: '12px',
+                        border: '1px solid rgba(245, 158, 11, 0.4)',
+                        cursor: 'pointer',
+                        backdropFilter: 'blur(8px)',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      <Plus style={{ width: '16px', height: '16px' }} />
+                    </button>
+              </div>
+                )}
+              </div>
+              */}
+
+            {/* Stats Card - REMOVED (moved to Qualified Leads section) */}
+
+            {/* Post a Job Card - COMMENTED OUT */}
+            {/*
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.15)',
+              backdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '24px',
+              padding: '2rem',
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+              transition: 'all 0.3s ease'
+            }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '1rem'
+              }}>
+                <Plus style={{ width: '24px', height: '24px', color: '#fff' }} />
+              </div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', marginBottom: '0.5rem' }}>Post a Job</h2>
+              <p style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
+                Add an interesting job that you found
+              </p>
+              <button
+                onClick={() => setShowAddJobForm(true)}
+                style={{
+                  padding: '0.75rem 1.5rem',
                   background: 'rgba(255, 255, 255, 0.2)',
                   color: '#fff',
                   borderRadius: '12px',
                   border: 'none',
                   fontWeight: '600',
+                  fontSize: '0.875rem',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease'
                 }}
               >
-                <Edit2 style={{ width: '16px', height: '16px' }} />
-                Edit Profile
+                Submit new job
               </button>
-            ) : (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+            </div>
+            */}
+
+          </div>
+
+
+          {/* Profile Dashboard */}
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '24px',
+            padding: '2rem',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            transition: 'all 0.3s ease'
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+              <div>
+                <h2 style={{
+                  fontSize: '2rem',
+                  fontWeight: '700',
+                  margin: '0 0 0.5rem 0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem'
+                }}>
+                  <Users style={{ width: '32px', height: '32px' }} />
+                  Profile Dashboard
+                </h2>
+                <p style={{
+                  fontSize: '1.1rem',
+                  opacity: 0.9,
+                  margin: 0
+                }}>
+                  Manage your professional profile and preferences
+                </p>
+              </div>
+              {!editMode ? (
                 <button
-                  onClick={saveProfile}
+                  onClick={() => setEditMode(true)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.25rem',
+                    gap: '0.5rem',
                     padding: '0.75rem 1.25rem',
                     fontSize: '0.875rem',
                     background: 'rgba(255, 255, 255, 0.2)',
@@ -2080,462 +1951,622 @@ export default function Dashboard() {
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  <Save style={{ width: '16px', height: '16px' }} />
-                  Save
+                  <Edit2 style={{ width: '16px', height: '16px' }} />
+                  Edit Profile
                 </button>
-                <button
-                  onClick={cancelEdit}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.25rem',
-                    padding: '0.75rem 1.25rem',
-                    fontSize: '0.875rem',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    borderRadius: '12px',
-                    border: 'none',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  <X style={{ width: '16px', height: '16px' }} />
-                  Cancel
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Mail Notifications Section */}
-          <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Bell style={{ width: '18px', height: '18px', color: '#3b82f6' }} />
-              Mail Notifications
-            </h3>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {/* Follow-up Reminder Settings */}
-              <div style={{
-                background: 'rgba(59, 130, 246, 0.1)',
-                borderRadius: '12px',
-                padding: '1rem',
-                border: '1px solid rgba(59, 130, 246, 0.3)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                  <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#fff' }}>Follow-up Reminders</span>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={mailNotifications.followUpReminders}
-                      onChange={(e) => setMailNotifications(prev => ({ ...prev, followUpReminders: e.target.checked }))}
-                      style={{ display: 'none' }}
-                    />
-                    <div style={{
-                      width: '40px',
-                      height: '20px',
-                      borderRadius: '10px',
-                      background: mailNotifications.followUpReminders ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255, 255, 255, 0.15)',
-                      border: mailNotifications.followUpReminders ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid rgba(255, 255, 255, 0.3)',
-                      transition: 'all 0.3s ease'
-                    }}>
-                      <div style={{
-                        width: '16px',
-                        height: '16px',
-                        background: 'rgba(255, 255, 255, 0.9)',
-                        borderRadius: '50%',
-                        transform: mailNotifications.followUpReminders ? 'translateX(20px)' : 'translateX(2px)',
-                        transition: 'all 0.3s ease',
-                        marginTop: '1px'
-                      }} />
-                    </div>
-                  </label>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Remind me after:</span>
-                  <select
-                    value={followUpDays}
-                    onChange={(e) => setFollowUpDays(parseInt(e.target.value))}
+              ) : (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={saveProfile}
                     style={{
-                      padding: '0.5rem',
-                      background: 'rgba(59, 130, 246, 0.1)',
-                      border: '1px solid rgba(59, 130, 246, 0.3)',
-                      borderRadius: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.75rem 1.25rem',
+                      fontSize: '0.875rem',
+                      background: 'rgba(255, 255, 255, 0.2)',
                       color: '#fff',
-                      fontSize: '0.875rem'
+                      borderRadius: '12px',
+                      border: 'none',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
                     }}
                   >
-                    <option value={1}>1 day</option>
-                    <option value={2}>2 days</option>
-                    <option value={3}>3 days</option>
-                    <option value={5}>5 days</option>
-                    <option value={7}>1 week</option>
-                  </select>
+                    <Save style={{ width: '16px', height: '16px' }} />
+                    Save
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.75rem 1.25rem',
+                      fontSize: '0.875rem',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      borderRadius: '12px',
+                      border: 'none',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <X style={{ width: '16px', height: '16px' }} />
+                    Cancel
+                  </button>
                 </div>
-              </div>
+              )}
+            </div>
 
-              {/* Notification Toggles */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-                {[
-                  { key: 'leadNotifications', label: 'New Lead Notifications', desc: 'Get notified when new leads are added' },
-                  { key: 'applicationStatusUpdates', label: 'Application Updates', desc: 'Status changes on your applications' },
-                  { key: 'interviewReminders', label: 'Interview Reminders', desc: 'Reminders for upcoming interviews' },
-                  { key: 'weeklyDigest', label: 'Weekly Summary', desc: 'Weekly overview of your activity' },
-                  { key: 'marketInsights', label: 'Market Insights', desc: 'Industry trends and salary updates' },
-                  { key: 'systemUpdates', label: 'System Updates', desc: 'Platform updates and announcements' }
-                ].map((notification) => (
-                  <div key={notification.key} style={{
-                    background: 'rgba(59, 130, 246, 0.1)',
-                    borderRadius: '12px',
-                    padding: '1rem',
-                    border: '1px solid rgba(59, 130, 246, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
-                  }}>
-                    <div>
-                      <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#fff', marginBottom: '0.25rem' }}>
-                        {notification.label}
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)' }}>
-                        {notification.desc}
-                      </div>
-                    </div>
-                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+            {/* Mail Notifications Section */}
+            <div style={{ marginBottom: '2rem' }}>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Bell style={{ width: '18px', height: '18px', color: '#3b82f6' }} />
+                Mail Notifications
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* Follow-up Reminder Settings */}
+                <div style={{
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  border: '1px solid rgba(59, 130, 246, 0.3)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                    <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#fff' }}>Follow-up Reminders</span>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                       <input
                         type="checkbox"
-                        checked={mailNotifications[notification.key as keyof typeof mailNotifications]}
-                        onChange={(e) => setMailNotifications(prev => ({
-                          ...prev,
-                          [notification.key]: e.target.checked
-                        }))}
+                        checked={mailNotifications.followUpReminders}
+                        onChange={(e) => setMailNotifications(prev => ({ ...prev, followUpReminders: e.target.checked }))}
                         style={{ display: 'none' }}
                       />
                       <div style={{
-                        width: '36px',
-                        height: '18px',
-                        borderRadius: '9px',
-                        background: mailNotifications[notification.key as keyof typeof mailNotifications]
-                          ? 'rgba(59, 130, 246, 0.3)'
-                          : 'rgba(255, 255, 255, 0.15)',
-                        border: mailNotifications[notification.key as keyof typeof mailNotifications]
-                          ? '1px solid rgba(59, 130, 246, 0.4)'
-                          : '1px solid rgba(255, 255, 255, 0.3)',
+                        width: '40px',
+                        height: '20px',
+                        borderRadius: '10px',
+                        background: mailNotifications.followUpReminders ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255, 255, 255, 0.15)',
+                        border: mailNotifications.followUpReminders ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid rgba(255, 255, 255, 0.3)',
                         transition: 'all 0.3s ease'
                       }}>
                         <div style={{
-                          width: '14px',
-                          height: '14px',
+                          width: '16px',
+                          height: '16px',
                           background: 'rgba(255, 255, 255, 0.9)',
                           borderRadius: '50%',
-                          transform: mailNotifications[notification.key as keyof typeof mailNotifications] ? 'translateX(18px)' : 'translateX(2px)',
+                          transform: mailNotifications.followUpReminders ? 'translateX(20px)' : 'translateX(2px)',
                           transition: 'all 0.3s ease',
                           marginTop: '1px'
                         }} />
                       </div>
                     </label>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Remind me after:</span>
+                    <select
+                      value={followUpDays}
+                      onChange={(e) => setFollowUpDays(parseInt(e.target.value))}
+                      style={{
+                        padding: '0.5rem',
+                        background: 'rgba(59, 130, 246, 0.1)',
+                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '0.875rem'
+                      }}
+                    >
+                      <option value={1}>1 day</option>
+                      <option value={2}>2 days</option>
+                      <option value={3}>3 days</option>
+                      <option value={5}>5 days</option>
+                      <option value={7}>1 week</option>
+                    </select>
+                  </div>
+                </div>
 
-          {/* Documents Section */}
-          <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FileText style={{ width: '18px', height: '18px' }} />
-              Documents
-            </h3>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-              {/* Documents List */}
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                padding: '1rem',
-                border: '1px solid rgba(255, 255, 255, 0.2)'
-              }}>
-                <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#fff', marginBottom: '1rem' }}>Your Documents</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {documents.map((doc) => (
-                    <div key={doc.id} style={{
+                {/* Notification Toggles */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+                  {[
+                    { key: 'leadNotifications', label: 'New Lead Notifications', desc: 'Get notified when new leads are added' },
+                    { key: 'applicationStatusUpdates', label: 'Application Updates', desc: 'Status changes on your applications' },
+                    { key: 'interviewReminders', label: 'Interview Reminders', desc: 'Reminders for upcoming interviews' },
+                    { key: 'weeklyDigest', label: 'Weekly Summary', desc: 'Weekly overview of your activity' },
+                    { key: 'marketInsights', label: 'Market Insights', desc: 'Industry trends and salary updates' },
+                    { key: 'systemUpdates', label: 'System Updates', desc: 'Platform updates and announcements' }
+                  ].map((notification) => (
+                    <div key={notification.key} style={{
+                      background: 'rgba(59, 130, 246, 0.1)',
+                      borderRadius: '12px',
+                      padding: '1rem',
+                      border: '1px solid rgba(59, 130, 246, 0.3)',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '1rem',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      borderRadius: '12px',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      backdropFilter: 'blur(8px)'
+                      justifyContent: 'space-between'
                     }}>
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontWeight: '600', color: '#fff', margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>{doc.name}</p>
-                        <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)', margin: 0 }}>{doc.type} • {doc.size}</p>
+                      <div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#fff', marginBottom: '0.25rem' }}>
+                          {notification.label}
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+                          {notification.desc}
+                        </div>
                       </div>
-                      <button
-                        onClick={() => removeDocument(doc.id)}
-                        style={{
-                          color: '#dc2626',
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          padding: '0.25rem'
-                        }}
-                      >
-                        <Trash2 style={{ width: '16px', height: '16px' }} />
-                      </button>
-                    </div>
-                  ))}
-                  {documents.length === 0 && (
-                    <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center', padding: '1rem' }}>
-                      No documents uploaded yet
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Drag & Drop Upload */}
-              <div
-                style={{
-                  border: '2px dashed rgba(255, 255, 255, 0.3)',
-                  borderRadius: '12px',
-                  padding: '1.5rem',
-                  textAlign: 'center',
-                  transition: 'border-color 0.3s',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(8px)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: '200px'
-                }}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.6)';
-                }}
-                onDragLeave={(e) => {
-                  e.preventDefault();
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  alert('Bestanden geüpload (mock)');
-                }}
-              >
-                <Upload style={{ width: '32px', height: '32px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '0.5rem' }} />
-                <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.25rem 0' }}>
-                  Drag your files or <span style={{ color: '#fff', fontWeight: '600', cursor: 'pointer' }}>browse files</span>
-                </p>
-                <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>Max 10MB per file</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Personal Information Section */}
-          <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <User style={{ width: '18px', height: '18px', color: '#10b981' }} />
-              Personal Information
-            </h3>
-
-            {editMode ? (
-              <>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>First Name</label>
-                    <input
-                      type="text"
-                      value={editedProfile.firstName}
-                      onChange={(e) => setEditedProfile({ ...editedProfile, firstName: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '1px solid rgba(16, 185, 129, 0.3)',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        boxSizing: 'border-box',
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        color: '#fff',
-                        backdropFilter: 'blur(8px)'
-                      }}
-                      placeholder="John"
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Last Name</label>
-                    <input
-                      type="text"
-                      value={editedProfile.lastName}
-                      onChange={(e) => setEditedProfile({ ...editedProfile, lastName: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '1px solid rgba(16, 185, 129, 0.3)',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        boxSizing: 'border-box',
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        color: '#fff',
-                        backdropFilter: 'blur(8px)'
-                      }}
-                      placeholder="Doe"
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Job Title</label>
-                    <input
-                      type="text"
-                      value={editedProfile.job_title}
-                      onChange={(e) => setEditedProfile({ ...editedProfile, job_title: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '1px solid rgba(16, 185, 129, 0.3)',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        boxSizing: 'border-box',
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        color: '#fff',
-                        backdropFilter: 'blur(8px)'
-                      }}
-                      placeholder="Senior Developer"
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Location</label>
-                    <input
-                      type="text"
-                      value={editedProfile.location}
-                      onChange={(e) => setEditedProfile({ ...editedProfile, location: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '1px solid rgba(16, 185, 129, 0.3)',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        boxSizing: 'border-box',
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        color: '#fff',
-                        backdropFilter: 'blur(8px)'
-                      }}
-                      placeholder="Amsterdam, Netherlands"
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>LinkedIn URL</label>
-                    <input
-                      type="url"
-                      value={editedProfile.linkedin_URL}
-                      onChange={(e) => setEditedProfile({ ...editedProfile, linkedin_URL: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '1px solid rgba(16, 185, 129, 0.3)',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        boxSizing: 'border-box',
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        color: '#fff',
-                        backdropFilter: 'blur(8px)'
-                      }}
-                      placeholder="https://linkedin.com/in/johndoe"
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Industry</label>
-                    <input
-                      type="text"
-                      value={editedProfile.industry}
-                      onChange={(e) => setEditedProfile({ ...editedProfile, industry: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '1px solid rgba(16, 185, 129, 0.3)',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        boxSizing: 'border-box',
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        color: '#fff',
-                        backdropFilter: 'blur(8px)'
-                      }}
-                      placeholder="Technology"
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Hourly Rate (€)</label>
-                    <input
-                      type="number"
-                      value={editedProfile.hourlyRate || ''}
-                      onChange={(e) => setEditedProfile({ ...editedProfile, hourlyRate: parseInt(e.target.value) || 0 })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '1px solid rgba(16, 185, 129, 0.3)',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        boxSizing: 'border-box',
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        color: '#fff',
-                        backdropFilter: 'blur(8px)'
-                      }}
-                      placeholder="75"
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.75rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)', backdropFilter: 'blur(8px)', marginTop: '1.5rem' }}>
-                      <div style={{ position: 'relative' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                         <input
                           type="checkbox"
-                          checked={editedProfile.isAvailableForWork || false}
-                          onChange={(e) => setEditedProfile({ ...editedProfile, isAvailableForWork: e.target.checked })}
+                          checked={mailNotifications[notification.key as keyof typeof mailNotifications]}
+                          onChange={(e) => setMailNotifications(prev => ({
+                            ...prev,
+                            [notification.key]: e.target.checked
+                          }))}
                           style={{ display: 'none' }}
                         />
                         <div style={{
-                          width: '44px',
-                          height: '24px',
-                          borderRadius: '12px',
-                          background: editedProfile.isAvailableForWork
-                            ? 'rgba(16, 185, 129, 0.3)'
+                          width: '36px',
+                          height: '18px',
+                          borderRadius: '9px',
+                          background: mailNotifications[notification.key as keyof typeof mailNotifications]
+                            ? 'rgba(59, 130, 246, 0.3)'
                             : 'rgba(255, 255, 255, 0.15)',
-                          border: editedProfile.isAvailableForWork
-                            ? '1px solid rgba(16, 185, 129, 0.4)'
+                          border: mailNotifications[notification.key as keyof typeof mailNotifications]
+                            ? '1px solid rgba(59, 130, 246, 0.4)'
                             : '1px solid rgba(255, 255, 255, 0.3)',
-                          backdropFilter: 'blur(8px)',
                           transition: 'all 0.3s ease'
                         }}>
                           <div style={{
-                            width: '18px',
-                            height: '18px',
-                            background: editedProfile.isAvailableForWork
-                              ? 'rgba(255, 255, 255, 0.95)'
-                              : 'rgba(255, 255, 255, 0.8)',
+                            width: '14px',
+                            height: '14px',
+                            background: 'rgba(255, 255, 255, 0.9)',
                             borderRadius: '50%',
-                            transform: editedProfile.isAvailableForWork ? 'translateX(22px)' : 'translateX(2px)',
+                            transform: mailNotifications[notification.key as keyof typeof mailNotifications] ? 'translateX(18px)' : 'translateX(2px)',
                             transition: 'all 0.3s ease',
-                            marginTop: '2px',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            backdropFilter: 'blur(4px)'
+                            marginTop: '1px'
                           }} />
                         </div>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Documents Section */}
+            <div style={{ marginBottom: '2rem' }}>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <FileText style={{ width: '18px', height: '18px' }} />
+                Documents
+              </h3>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                {/* Documents List */}
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  border: '1px solid rgba(255, 255, 255, 0.2)'
+                }}>
+                  <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#fff', marginBottom: '1rem' }}>Your Documents</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {documents.map((doc) => (
+                      <div key={doc.id} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '1rem',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '12px',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        backdropFilter: 'blur(8px)'
+                      }}>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontWeight: '600', color: '#fff', margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>{doc.name}</p>
+                          <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)', margin: 0 }}>{doc.type} • {doc.size}</p>
+                        </div>
+                        <button
+                          onClick={() => removeDocument(doc.id)}
+                          style={{
+                            color: '#dc2626',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '0.25rem'
+                          }}
+                        >
+                          <Trash2 style={{ width: '16px', height: '16px' }} />
+                        </button>
                       </div>
-                      <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)' }}>
-                        Available for work
-                      </span>
-                    </label>
+                    ))}
+                    {documents.length === 0 && (
+                      <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center', padding: '1rem' }}>
+                        No documents uploaded yet
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                {/* Available to Recruiters Toggle */}
+                {/* Drag & Drop Upload */}
+                <div
+                  style={{
+                    border: '2px dashed rgba(255, 255, 255, 0.3)',
+                    borderRadius: '12px',
+                    padding: '1.5rem',
+                    textAlign: 'center',
+                    transition: 'border-color 0.3s',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(8px)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: '200px'
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.6)';
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    alert('Bestanden geüpload (mock)');
+                  }}
+                >
+                  <Upload style={{ width: '32px', height: '32px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '0.5rem' }} />
+                  <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.25rem 0' }}>
+                    Drag your files or <span style={{ color: '#fff', fontWeight: '600', cursor: 'pointer' }}>browse files</span>
+                  </p>
+                  <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>Max 10MB per file</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Personal Information Section */}
+            <div style={{ marginBottom: '2rem' }}>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <User style={{ width: '18px', height: '18px', color: '#10b981' }} />
+                Personal Information
+              </h3>
+
+              {editMode ? (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>First Name</label>
+                      <input
+                        type="text"
+                        value={editedProfile.firstName}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, firstName: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          boxSizing: 'border-box',
+                          background: 'rgba(16, 185, 129, 0.1)',
+                          color: '#fff',
+                          backdropFilter: 'blur(8px)'
+                        }}
+                        placeholder="John"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Last Name</label>
+                      <input
+                        type="text"
+                        value={editedProfile.lastName}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, lastName: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          boxSizing: 'border-box',
+                          background: 'rgba(16, 185, 129, 0.1)',
+                          color: '#fff',
+                          backdropFilter: 'blur(8px)'
+                        }}
+                        placeholder="Doe"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Job Title</label>
+                      <input
+                        type="text"
+                        value={editedProfile.job_title}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, job_title: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          boxSizing: 'border-box',
+                          background: 'rgba(16, 185, 129, 0.1)',
+                          color: '#fff',
+                          backdropFilter: 'blur(8px)'
+                        }}
+                        placeholder="Senior Developer"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Location</label>
+                      <input
+                        type="text"
+                        value={editedProfile.location}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, location: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          boxSizing: 'border-box',
+                          background: 'rgba(16, 185, 129, 0.1)',
+                          color: '#fff',
+                          backdropFilter: 'blur(8px)'
+                        }}
+                        placeholder="Amsterdam, Netherlands"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>LinkedIn URL</label>
+                      <input
+                        type="url"
+                        value={editedProfile.linkedin_URL}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, linkedin_URL: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          boxSizing: 'border-box',
+                          background: 'rgba(16, 185, 129, 0.1)',
+                          color: '#fff',
+                          backdropFilter: 'blur(8px)'
+                        }}
+                        placeholder="https://linkedin.com/in/johndoe"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Industry</label>
+                      <input
+                        type="text"
+                        value={editedProfile.industry}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, industry: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          boxSizing: 'border-box',
+                          background: 'rgba(16, 185, 129, 0.1)',
+                          color: '#fff',
+                          backdropFilter: 'blur(8px)'
+                        }}
+                        placeholder="Technology"
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Hourly Rate (€)</label>
+                      <input
+                        type="number"
+                        value={editedProfile.hourlyRate || ''}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, hourlyRate: parseInt(e.target.value) || 0 })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          boxSizing: 'border-box',
+                          background: 'rgba(16, 185, 129, 0.1)',
+                          color: '#fff',
+                          backdropFilter: 'blur(8px)'
+                        }}
+                        placeholder="75"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.75rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)', backdropFilter: 'blur(8px)', marginTop: '1.5rem' }}>
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            type="checkbox"
+                            checked={editedProfile.isAvailableForWork || false}
+                            onChange={(e) => setEditedProfile({ ...editedProfile, isAvailableForWork: e.target.checked })}
+                            style={{ display: 'none' }}
+                          />
+                          <div style={{
+                            width: '44px',
+                            height: '24px',
+                            borderRadius: '12px',
+                            background: editedProfile.isAvailableForWork
+                              ? 'rgba(16, 185, 129, 0.3)'
+                              : 'rgba(255, 255, 255, 0.15)',
+                            border: editedProfile.isAvailableForWork
+                              ? '1px solid rgba(16, 185, 129, 0.4)'
+                              : '1px solid rgba(255, 255, 255, 0.3)',
+                            backdropFilter: 'blur(8px)',
+                            transition: 'all 0.3s ease'
+                          }}>
+                            <div style={{
+                              width: '18px',
+                              height: '18px',
+                              background: editedProfile.isAvailableForWork
+                                ? 'rgba(255, 255, 255, 0.95)'
+                                : 'rgba(255, 255, 255, 0.8)',
+                              borderRadius: '50%',
+                              transform: editedProfile.isAvailableForWork ? 'translateX(22px)' : 'translateX(2px)',
+                              transition: 'all 0.3s ease',
+                              marginTop: '2px',
+                              border: '1px solid rgba(255, 255, 255, 0.2)',
+                              backdropFilter: 'blur(4px)'
+                            }} />
+                          </div>
+                        </div>
+                        <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)' }}>
+                          Available for work
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Available to Recruiters Toggle */}
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    marginTop: '1rem'
+                  }}>
+                    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            type="checkbox"
+                            checked={isAvailable}
+                            onChange={toggleAvailable}
+                            style={{ display: 'none' }}
+                          />
+                          <div style={{
+                            width: '52px',
+                            height: '28px',
+                            borderRadius: '14px',
+                            background: isAvailable
+                              ? 'rgba(16, 185, 129, 0.3)'
+                              : 'rgba(255, 255, 255, 0.15)',
+                            border: isAvailable
+                              ? '1px solid rgba(16, 185, 129, 0.4)'
+                              : '1px solid rgba(255, 255, 255, 0.3)',
+                            backdropFilter: 'blur(8px)',
+                            transition: 'all 0.3s ease',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                          }}>
+                            <div style={{
+                              width: '22px',
+                              height: '22px',
+                              background: isAvailable
+                                ? 'rgba(255, 255, 255, 0.95)'
+                                : 'rgba(255, 255, 255, 0.8)',
+                              borderRadius: '50%',
+                              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                              transform: isAvailable ? 'translateX(26px)' : 'translateX(2px)',
+                              transition: 'all 0.3s ease',
+                              marginTop: '2px',
+                              border: '1px solid rgba(255, 255, 255, 0.2)',
+                              backdropFilter: 'blur(4px)'
+                            }} />
+                          </div>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '1rem', fontWeight: '600', color: '#fff', display: 'block' }}>
+                            Available to recruiters
+                          </span>
+                          <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+                            Make your profile visible to recruiters
+                          </span>
+                        </div>
+                      </div>
+                      <span style={{
+                        padding: '0.5rem 1rem',
+                        borderRadius: '999px',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        background: isAvailable ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                        color: isAvailable ? '#10b981' : 'rgba(255, 255, 255, 0.8)',
+                        border: isAvailable ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.2)',
+                        backdropFilter: 'blur(8px)'
+                      }}>
+                        {isAvailable ? 'Active' : 'Hidden'}
+                      </span>
+                    </label>
+                  </div>
+                </>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                  }}>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Name</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.firstName} {profile.lastName}</p>
+                  </div>
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                  }}>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Location</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.location}</p>
+                  </div>
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                  }}>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Job title</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.job_title}</p>
+                  </div>
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                  }}>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>LinkedIn</span>
+                    <a href={profile.linkedIn} style={{ fontWeight: '600', color: '#fff', textDecoration: 'none', display: 'block', marginTop: '0.25rem' }} target="_blank" rel="noopener noreferrer">
+                      LinkedIn profile
+                    </a>
+                  </div>
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                  }}>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Hourly Rate</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <DollarSign style={{ width: '16px', height: '16px' }} />
+                      €{profile.hourlyRate || 75}/hour
+                    </p>
+                  </div>
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                  }}>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Availability</span>
+                    <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: profile.isAvailableForWork ? '#10b981' : 'rgba(255, 255, 255, 0.6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      {profile.isAvailableForWork ? '✓ Available for work' : '✗ Not available'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Available to Recruiters Toggle - Always Visible */}
+              {!editMode && (
                 <div style={{
                   background: 'rgba(16, 185, 129, 0.1)',
                   borderRadius: '12px',
                   padding: '1rem',
                   border: '1px solid rgba(16, 185, 129, 0.3)',
-                  marginTop: '1rem'
+                  marginTop: '1.5rem'
                 }}>
                   <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -2599,160 +2630,22 @@ export default function Dashboard() {
                     </span>
                   </label>
                 </div>
-              </>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-                <div style={{
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  borderRadius: '12px',
-                  padding: '1rem',
-                  border: '1px solid rgba(16, 185, 129, 0.3)'
-                }}>
-                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Name</span>
-                  <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.firstName} {profile.lastName}</p>
-                </div>
-                <div style={{
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  borderRadius: '12px',
-                  padding: '1rem',
-                  border: '1px solid rgba(16, 185, 129, 0.3)'
-                }}>
-                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Location</span>
-                  <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.location}</p>
-                </div>
-                <div style={{
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  borderRadius: '12px',
-                  padding: '1rem',
-                  border: '1px solid rgba(16, 185, 129, 0.3)'
-                }}>
-                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Job title</span>
-                  <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.job_title}</p>
-                </div>
-                <div style={{
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  borderRadius: '12px',
-                  padding: '1rem',
-                  border: '1px solid rgba(16, 185, 129, 0.3)'
-                }}>
-                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>LinkedIn</span>
-                  <a href={profile.linkedIn} style={{ fontWeight: '600', color: '#fff', textDecoration: 'none', display: 'block', marginTop: '0.25rem' }} target="_blank" rel="noopener noreferrer">
-                    LinkedIn profile
-                  </a>
-                </div>
-                <div style={{
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  borderRadius: '12px',
-                  padding: '1rem',
-                  border: '1px solid rgba(16, 185, 129, 0.3)'
-                }}>
-                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Hourly Rate</span>
-                  <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <DollarSign style={{ width: '16px', height: '16px' }} />
-                    €{profile.hourlyRate || 75}/hour
-                  </p>
-                </div>
-                <div style={{
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  borderRadius: '12px',
-                  padding: '1rem',
-                  border: '1px solid rgba(16, 185, 129, 0.3)'
-                }}>
-                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Availability</span>
-                  <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: profile.isAvailableForWork ? '#10b981' : 'rgba(255, 255, 255, 0.6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    {profile.isAvailableForWork ? '✓ Available for work' : '✗ Not available'}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Available to Recruiters Toggle - Always Visible */}
-            {!editMode && (
-              <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
-                borderRadius: '12px',
-                padding: '1rem',
-                border: '1px solid rgba(16, 185, 129, 0.3)',
-                marginTop: '1.5rem'
-              }}>
-                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ position: 'relative' }}>
-                      <input
-                        type="checkbox"
-                        checked={isAvailable}
-                        onChange={toggleAvailable}
-                        style={{ display: 'none' }}
-                      />
-                      <div style={{
-                        width: '52px',
-                        height: '28px',
-                        borderRadius: '14px',
-                        background: isAvailable
-                          ? 'rgba(16, 185, 129, 0.3)'
-                          : 'rgba(255, 255, 255, 0.15)',
-                        border: isAvailable
-                          ? '1px solid rgba(16, 185, 129, 0.4)'
-                          : '1px solid rgba(255, 255, 255, 0.3)',
-                        backdropFilter: 'blur(8px)',
-                        transition: 'all 0.3s ease',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                      }}>
-                        <div style={{
-                          width: '22px',
-                          height: '22px',
-                          background: isAvailable
-                            ? 'rgba(255, 255, 255, 0.95)'
-                            : 'rgba(255, 255, 255, 0.8)',
-                          borderRadius: '50%',
-                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-                          transform: isAvailable ? 'translateX(26px)' : 'translateX(2px)',
-                          transition: 'all 0.3s ease',
-                          marginTop: '2px',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          backdropFilter: 'blur(4px)'
-                        }} />
-                      </div>
-                    </div>
-                    <div>
-                      <span style={{ fontSize: '1rem', fontWeight: '600', color: '#fff', display: 'block' }}>
-                        Available to recruiters
-                      </span>
-                      <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.7)' }}>
-                        Make your profile visible to recruiters
-                      </span>
-                    </div>
-                  </div>
-                  <span style={{
-                    padding: '0.5rem 1rem',
-                    borderRadius: '999px',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    background: isAvailable ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                    color: isAvailable ? '#10b981' : 'rgba(255, 255, 255, 0.8)',
-                    border: isAvailable ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.2)',
-                    backdropFilter: 'blur(8px)'
-                  }}>
-                    {isAvailable ? 'Active' : 'Hidden'}
-                  </span>
-                </label>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
+
+        {showAddJobForm && user && (
+          <AddJobForm
+            onClose={() => setShowAddJobForm(false)}
+            onJobAdded={() => {
+              // Optioneel: herlaad jobs
+              console.log("Job toegevoegd");
+            }}
+            user={user}
+          />
+        )}
       </div>
-
-      {showAddJobForm && user && (
-        <AddJobForm
-          onClose={() => setShowAddJobForm(false)}
-          onJobAdded={() => {
-            // Optioneel: herlaad jobs
-            console.log("Job toegevoegd");
-          }}
-          user={user}
-        />
-      )}
-
     </div>
   )
 }
