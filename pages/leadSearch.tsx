@@ -482,14 +482,25 @@ export default function JobBoard() {
   // Add a state to track highlighted jobs
   const [highlightedJobs, setHighlightedJobs] = useState<Job[]>([]);
 
+  // Function to normalize text and remove weird spacing/characters
+  const normalizeText = (text: string): string => {
+    if (!text) return '';
+    return text
+      .replace(/&nbsp;/g, ' ')           // Replace non-breaking spaces
+      .replace(/\s+/g, ' ')             // Replace multiple spaces with single space
+      .replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000]/g, ' ') // Replace various unicode spaces
+      .trim();
+  };
+
   // Function to highlight search terms in job text
   const highlightSearchTerms = (text: string, searchWords: string[]): string => {
-    if (!searchWords || searchWords.length === 0) return text;
+    if (!searchWords || searchWords.length === 0) return normalizeText(text);
 
+    const normalizedText = normalizeText(text);
     // Escape special regex characters and create case-insensitive regex
     const escapedWords = searchWords.map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
     const regex = new RegExp(`(${escapedWords.join('|')})`, 'gi');
-    return text.replace(regex, '<span class="highlight">$1</span>');
+    return normalizedText.replace(regex, '<span class="highlight">$1</span>');
   };
 
   useEffect(() => {
@@ -567,9 +578,15 @@ export default function JobBoard() {
     return (
       <div style={{
         minHeight: '100vh',
-        // background: 'linear-gradient(to bottom right, #e0f2fe, #ffffff, #ede9fe)'
-        background: '#121f36'
-
+        background: `
+          radial-gradient(ellipse at top left, rgba(139, 69, 189, 0.15) 0%, transparent 50%), 
+          radial-gradient(ellipse at bottom right, rgba(59, 130, 246, 0.15) 0%, transparent 50%), 
+          linear-gradient(135deg, #1a0b2e 0%, #16213e 25%, #0f3460 50%, #16213e 75%, #1a0b2e 100%)
+        `,
+        fontFamily: "'Montserrat', Arial, sans-serif",
+        color: '#fff',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
         <div style={{
           textAlign: 'center',
@@ -651,610 +668,556 @@ export default function JobBoard() {
   return (
     <>
       <GlobalNav currentPage="leadSearch" />
-      {/* Sticky header + search bar container */}
-      <div
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 1000,
-          backgroundColor: "#121f36",
-          width: "100%",
-          transition: "transform 0.3s cubic-bezier(.4,0,.2,1)",
-          transform: headerVisible ? "translateY(0)" : "translateY(-100%)"
-        }}
-      >
-        {/* Navbar */}
+
+      {/* Main Container with Glassmorphism Background */}
+      <div style={{
+        minHeight: '100vh',
+        background: `
+          radial-gradient(ellipse at top left, rgba(139, 69, 189, 0.15) 0%, transparent 50%), 
+          radial-gradient(ellipse at bottom right, rgba(59, 130, 246, 0.15) 0%, transparent 50%), 
+          linear-gradient(135deg, #1a0b2e 0%, #16213e 25%, #0f3460 50%, #16213e 75%, #1a0b2e 100%)
+        `,
+        fontFamily: "'Montserrat', Arial, sans-serif",
+        color: '#fff',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {/* Floating Orbs */}
         <div style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "12px 20px",
-          height: "60px",
-          boxSizing: "border-box"
-        }}>
-          {/* Burger left */}
-          <div style={{ width: "44px", display: "flex", justifyContent: "flex-start" }}>
-            <button
-              onClick={() => setShowMenu(prev => !prev)}
-              style={{
-                background: "none",
-                border: "none",
-                color: "white",
-                fontSize: "24px",
-                cursor: "pointer",
-                minWidth: "44px",
-                minHeight: "44px"
-              }}
-              aria-label="Menu"
-            >
-              ☰
-            </button>
-          </div>
-          {/* Centered title */}
-          {showLogo && (
-            <img
-              src="/images/allGigs-logo-white.svg"
-              alt="AllGigs Logo"
-              style={{ height: "40px", transition: "opacity 0.3s" }}
-            />
-          )}
-          {/* Top Right Buttons (Post a Job & Logout) - Visible on Desktop */}
-          <div className="hide-on-mobile" /* Hide on mobile */
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: '0.75rem',
-              padding: '0 20px 12px 20px',
-            }}>
-            <button
-              style={{
-                background: '#0ccf83',
-                color: '#000',
-                fontWeight: 700,
-                borderRadius: 6,
-                padding: '6px 12px',
-                border: '2px solid #0ccf83',
-                boxShadow: '0 2px 8px rgba(12, 207, 131, 0.15)',
-                cursor: 'pointer',
-                fontSize: '1.05rem',
-                fontFamily: "'Montserrat', Arial, sans-serif",
-                transition: 'background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s',
-                outline: 'none',
-                marginTop: '20px'
+          position: 'absolute',
+          top: '10%',
+          right: '15%',
+          width: '300px',
+          height: '300px',
+          background: `radial-gradient(circle, 
+            rgba(147, 51, 234, 0.1) 0%, 
+            rgba(147, 51, 234, 0.05) 40%, 
+            transparent 70%
+          )`,
+          borderRadius: '50%',
+          filter: 'blur(40px)',
+          animation: 'float1 6s ease-in-out infinite',
+          pointerEvents: 'none',
+          zIndex: 0
+        }} />
 
+        <div style={{
+          position: 'absolute',
+          bottom: '20%',
+          left: '10%',
+          width: '200px',
+          height: '200px',
+          background: `radial-gradient(circle, 
+            rgba(59, 130, 246, 0.08) 0%, 
+            rgba(59, 130, 246, 0.04) 40%, 
+            transparent 70%
+          )`,
+          borderRadius: '50%',
+          filter: 'blur(30px)',
+          animation: 'float2 8s ease-in-out infinite',
+          pointerEvents: 'none',
+          zIndex: 0
+        }} />
 
-              }}
-              onMouseDown={e => e.currentTarget.style.transform = 'translateY(2px)'}
-              onMouseUp={e => e.currentTarget.style.transform = ''}
-              onMouseLeave={e => e.currentTarget.style.transform = ''}
-              onClick={() => setShowAddJobForm(true)}
-            >
-              Post a Job
-            </button>
-            <button
-              style={{
-                background: '#dc2626',
-                color: '#fff',
-                fontWeight: 700,
-                borderRadius: 6,
-                padding: '6px 12px',
-                border: 'none',
-                boxShadow: '0 2px 8px rgba(220, 38, 38, 0.15)',
-                cursor: 'pointer',
-                fontSize: '1.05rem',
-                fontFamily: "'Montserrat', Arial, sans-serif",
-                marginTop: 0,
-                transition: 'background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s',
-                outline: 'none',
-              }}
-              onMouseDown={e => e.currentTarget.style.transform = 'translateY(2px)'}
-              onMouseUp={e => e.currentTarget.style.transform = ''}
-              onMouseLeave={e => e.currentTarget.style.transform = ''}
-              onClick={handleLogout}
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-
-        {/* Search bar */}
-        <div className="job-filters">
-          <input
-            placeholder="Search jobs..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ flex: 1, padding: "0.75rem", borderRadius: "4px", border: "1px solid #e5e7eb", fontSize: "1rem" }}
-          />
-        </div>
-      </div>
-      {/* End sticky header + search bar */}
-
-      {/* Main Job Board Content Container */}
-      <div className="job-board-container">
+        <div style={{
+          position: 'absolute',
+          top: '60%',
+          right: '40%',
+          width: '120px',
+          height: '120px',
+          background: `radial-gradient(circle, 
+            rgba(236, 72, 153, 0.06) 0%, 
+            transparent 60%
+          )`,
+          borderRadius: '50%',
+          filter: 'blur(20px)',
+          animation: 'float3 10s ease-in-out infinite',
+          pointerEvents: 'none',
+          zIndex: 0
+        }} />
 
         {/* Header */}
-        <div className="job-header">
-          {/* <h1>AllGigs<span className="allGigs-lightning">ϟ</span></h1> */}
-          <img src="/images/allGigs-logo-white.svg" alt="AllGigs Logo" style={{ height: "70px" }} />
+        <header style={{
+          background: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(16px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+          padding: '1.5rem 2rem',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          transform: headerVisible ? 'translateY(0)' : 'translateY(-100%)',
+          transition: 'transform 0.3s ease-in-out'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', maxWidth: '1100px', margin: '0 auto' }}>
+            <h1 style={{
+              fontSize: '2rem',
+              fontWeight: 'bold',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem'
+            }}>
+              <img
+                src="/images/allGigs-logo-white.svg"
+                alt="AllGigs Logo"
+                style={{ height: "40px", transition: "opacity 0.3s" }}
+              />
+              Lead Search
+            </h1>
 
-          <p>
-            Discover your next opportunity from <span style={{ fontWeight: 600, color: "#0ccf83" }}>{sortedJobs.length}</span> curated positions
-          </p>
-        </div>
+            {/* Search Bar */}
+            <div style={{ flex: 1, maxWidth: '500px', marginLeft: '2rem' }}>
+              <input
+                placeholder="Search jobs and opportunities..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  fontSize: '1rem',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(8px)',
+                  color: '#fff',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
 
-        {/* Manage Jobs Section */}
-        <div style={{ marginBottom: "2rem", padding: "1rem 0" }}>
-          <button
-            onClick={() => {
-              const newShowState = !showRecentlyClicked;
-              setShowRecentlyClicked(newShowState);
-              if (newShowState && recentlyClickedJobs.length === 0) { // Fetch only if opening and no jobs loaded
-                // fetchRecentlyClickedJobs(); // fetch is now handled by use
-              }
-            }}
-            style={{
-              ...menuButtonStyle,
-              width: "auto",
-              marginBottom: "1rem",
-              background: showRecentlyClicked ? "#6b7280" : "#0ccf83", // Adjusted color
-              padding: "12px 20px",
-              fontSize: "1rem",
-            }}
-          >
-            Manage Jobs
-          </button>
+            {/* Header Buttons */}
+            <div style={{ display: 'flex', gap: '0.75rem', marginLeft: 'auto' }}>
+              <button
+                onClick={() => setShowAddJobForm(true)}
+                style={{
+                  padding: '0.75rem 1rem',
+                  background: 'rgba(16, 185, 129, 0.2)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '0.95rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  backdropFilter: 'blur(16px)',
+                  boxShadow: '0 4px 16px rgba(16, 185, 129, 0.1)'
+                }}
+              >
+                Post a Job
+              </button>
+              <button
+                onClick={handleLogout}
+                style={{
+                  padding: '0.75rem 1rem',
+                  background: 'rgba(239, 68, 68, 0.2)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '0.95rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  backdropFilter: 'blur(16px)',
+                  boxShadow: '0 4px 16px rgba(239, 68, 68, 0.1)'
+                }}
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </header>
 
-          {showRecentlyClicked &&
-            (
+        {/* Main Content */}
+        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '8rem 2rem 2rem 2rem', position: 'relative', zIndex: 5 }}>
+
+          {/* Stats Header */}
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '24px',
+            padding: '1.5rem',
+            marginBottom: '2rem',
+            textAlign: 'center'
+          }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#fff', margin: '0 0 0.5rem 0' }}>
+              Discover Your Next Opportunity
+            </h2>
+            <p style={{ fontSize: '1.1rem', color: 'rgba(255, 255, 255, 0.8)', margin: 0 }}>
+              From <span style={{ fontWeight: '600', color: '#10b981' }}>{sortedJobs.length}</span> curated positions
+            </p>
+          </div>
+
+          {/* Active Search Pills */}
+          {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" && (
+            <div style={{
+              marginBottom: '2rem',
+              background: 'rgba(255, 255, 255, 0.05)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              padding: '1rem'
+            }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.8)', marginRight: '0.5rem' }}>
+                  Active search:
+                </span>
+                {debouncedSearchTerm.trim().toLowerCase().split(/\s+/).filter(word => word.length > 0).map((word, index) => (
+                  <span
+                    key={index}
+                    style={{
+                      background: 'rgba(16, 185, 129, 0.3)',
+                      color: '#10b981',
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '12px',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      border: '1px solid rgba(16, 185, 129, 0.4)',
+                      backdropFilter: 'blur(4px)'
+                    }}
+                  >
+                    {word}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Manage Jobs Section */}
+          {showRecentlyClicked && (
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '24px',
+              padding: '1.5rem',
+              marginBottom: '2rem'
+            }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', marginBottom: '1rem' }}>
+                Recently Clicked Jobs
+              </h3>
               <RecentlyClickedJobs
                 jobs={recentlyClickedJobs}
                 isLoading={loadingRecentlyClicked}
                 onJobClick={logJobClick}
                 isJobNew={isJobNew}
               />
-            )}
-        </div>
+            </div>
+          )}
 
-        {/* Filters */}
-        {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" && (
-          <div style={{ marginTop: "0.5rem", marginBottom: "1rem", textAlign: "left", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.5rem" }}>
-            {/* <span style={{ fontSize: "0.9rem", color: "#555", marginRight: "0.25rem" }}>Active search:</span> */}
-            {/* {debouncedSearchTerm.trim().toLowerCase().split(/\s+/).filter(word => word.length > 0).map((word, index) => (
-              <span
-                key={index}
-                style={{
-                  color: "#2563eb", // Blue link color
-                  textDecoration: "underline",
-                  fontSize: "0.95rem",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  display: "inline-block",
-                }}
-              >
-                {word}
-              </span>
-            ))} */}
-          </div>
-        )}
-
-        {/* Job List */}
-        <div className="job-list">
-          {(highlightedJobs.length > 0 ? highlightedJobs.slice((page ?? 0) * PAGE_SIZE, ((page ?? 0) + 1) * PAGE_SIZE) : paginatedJobs).map((job) => (
-            <a
-              key={job.UNIQUE_ID}
-              href={job.URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => logJobClick(job)}
+          {/* Toggle Manage Jobs Button */}
+          <div style={{ marginBottom: '2rem' }}>
+            <button
+              onClick={() => {
+                const newShowState = !showRecentlyClicked;
+                setShowRecentlyClicked(newShowState);
+                if (newShowState && recentlyClickedJobs.length === 0) {
+                  // fetchRecentlyClickedJobs();
+                }
+              }}
               style={{
-                textDecoration: 'none',
-                color: 'inherit',
-                display: 'block',
+                padding: '0.75rem 1.5rem',
+                background: showRecentlyClicked ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+                border: showRecentlyClicked ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
+                borderRadius: '12px',
+                color: '#fff',
+                fontSize: '1rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                backdropFilter: 'blur(8px)'
               }}
             >
-              <div className="job-card" style={{ position: 'relative' }}>
-                <div className="job-main">
-                  <h3 className="job-title" dangerouslySetInnerHTML={{ __html: job.Title }} />
-                  <div className="job-company"><strong>Company:</strong> <span dangerouslySetInnerHTML={{ __html: job.Company }} /></div>
-                  <div className="job-details">
-                    <span><strong>Rate:</strong> {job.rate}</span>
-                    <span><strong>Location:</strong> <span dangerouslySetInnerHTML={{ __html: job.Location }} /></span>
-                    <span><strong>Date:</strong> {job.date}</span>
-                  </div>
-                  <div className="job-summary">
-                    <strong>Summary:</strong> <span dangerouslySetInnerHTML={{ __html: job.Summary }} />
-                  </div>
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
+              {showRecentlyClicked ? 'Hide Manage Jobs' : 'Show Manage Jobs'}
+            </button>
+          </div>
 
-        {/* Pagination */}
-        {sortedJobs.length > 0 && (
+          {/* Job List Container */}
           <div style={{
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            gap: "8px",
-            padding: "1rem",
-            marginTop: "2rem",
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '24px',
+            padding: '1.5rem'
           }}>
-            {/* Only show First and Prev if not on first page */}
-            {page > 0 && (
-              <>
-                <button onClick={() => setPage(0)} style={paginationButtonStyle}>« First</button>
-                <button onClick={() => setPage(prev => Math.max(prev - 1, 0))} style={paginationButtonStyle}>← Prev</button>
-              </>
-            )}
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', marginBottom: '1.5rem' }}>
+              Available Opportunities
+            </h3>
 
-            {/* Page numbers */}
-            {pageNumbers.map(num => (
-              <button
-                key={num}
-                onClick={() => setPage(num)}
-                style={{
-                  ...paginationButtonStyle,
-                  backgroundColor: num === page ? "#0ccf83" : "#fff",
-                  color: num === page ? "#fff" : "#000",
-                  fontWeight: num === page ? "bold" : "normal",
-                }}
-              >
-                {num + 1}
-              </button>
-            ))}
+            {/* Job Cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {(highlightedJobs.length > 0 ? highlightedJobs.slice((page ?? 0) * PAGE_SIZE, ((page ?? 0) + 1) * PAGE_SIZE) : paginatedJobs).map((job) => (
+                <div
+                  key={job.UNIQUE_ID}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '16px',
+                    padding: '1.5rem',
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <h3
+                          style={{
+                            fontSize: '1.5rem',
+                            fontWeight: '700',
+                            color: '#fff',
+                            margin: 0
+                          }}
+                          dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.Title, debouncedSearchTerm.split(' ')) }}
+                        />
+                        {isJobNew(job) && (
+                          <span style={{
+                            backgroundColor: "#10b981",
+                            color: "white",
+                            fontSize: "0.75rem",
+                            fontWeight: "bold",
+                            padding: "2px 8px",
+                            borderRadius: "12px",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px",
+                          }}>
+                            New
+                          </span>
+                        )}
+                        {(job.source === 'allGigs' || job.tags?.includes('allGigs')) && (
+                          <span style={{
+                            backgroundColor: "#4f46e5",
+                            color: "white",
+                            fontSize: "0.75rem",
+                            fontWeight: "bold",
+                            padding: "2px 8px",
+                            borderRadius: "12px",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px",
+                          }}>
+                            allGigs
+                          </span>
+                        )}
+                      </div>
+                      <p
+                        style={{
+                          fontSize: '1.1rem',
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          margin: '0 0 0.75rem 0',
+                          fontWeight: '600'
+                        }}
+                        dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.Company, debouncedSearchTerm.split(' ')) }}
+                      />
+                      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                        {job.rate && job.rate.trim() !== '' && (
+                          <span style={{
+                            background: 'rgba(16, 185, 129, 0.2)',
+                            color: '#10b981',
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '12px',
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            border: '1px solid rgba(16, 185, 129, 0.3)'
+                          }}>
+                            {job.rate}
+                          </span>
+                        )}
+                        {job.date && job.date.trim() !== '' && (
+                          <span style={{
+                            background: 'rgba(59, 130, 246, 0.2)',
+                            color: '#3b82f6',
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '12px',
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            border: '1px solid rgba(59, 130, 246, 0.3)'
+                          }}>
+                            {job.date}
+                          </span>
+                        )}
+                        {job.Location && job.Location.trim() !== '' && (
+                          <span
+                            style={{
+                              background: 'rgba(236, 72, 153, 0.2)',
+                              color: '#ec4899',
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '12px',
+                              fontSize: '0.875rem',
+                              fontWeight: '600',
+                              border: '1px solid rgba(236, 72, 153, 0.3)'
+                            }}
+                            dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.Location, debouncedSearchTerm.split(' ')) }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <p
+                    style={{
+                      fontSize: '1rem',
+                      color: 'rgba(255, 255, 255, 0.85)',
+                      lineHeight: '1.6',
+                      margin: '0 0 1rem 0',
+                      fontFamily: "'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+                      letterSpacing: 'normal',
+                      wordSpacing: 'normal'
+                    }}
+                    dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.Summary, debouncedSearchTerm.split(' ')) }}
+                  />
 
-            {/* Only show Next and Last if not on last page */}
-            {page < totalPages - 1 && (
-              <>
-                <button onClick={() => setPage(prev => Math.min(prev + 1, totalPages - 1))} style={paginationButtonStyle}>→ Next</button>
-                <button onClick={() => setPage(totalPages - 1)} style={paginationButtonStyle}>» Last</button>
-              </>
+                  {/* Show poster information for allGigs jobs */}
+                  {(job.source === 'allGigs' || job.tags?.includes('allGigs')) && job.added_by_email && (
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      padding: '0.75rem',
+                      marginBottom: '1rem'
+                    }}>
+                      <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.9)' }}>
+                        Contact Information:
+                      </p>
+                      <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>
+                        <strong>Name:</strong> {job.poster_name || 'Not provided'}
+                      </p>
+                      <p style={{ margin: 0, fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>
+                        <strong>Email:</strong> {job.added_by_email}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* View Job button */}
+                  <a
+                    href={job.URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => logJobClick(job)}
+                    style={{
+                      display: 'inline-block',
+                      padding: '0.75rem 1.5rem',
+                      background: 'rgba(16, 185, 129, 0.2)',
+                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      borderRadius: '12px',
+                      color: '#10b981',
+                      fontSize: '0.95rem',
+                      fontWeight: '600',
+                      textDecoration: 'none',
+                      transition: 'all 0.3s ease',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(16, 185, 129, 0.3)';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(16, 185, 129, 0.2)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }}
+                  >
+                    View Job →
+                  </a>
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {getPageNumbers().length > 1 && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                marginTop: '2rem',
+                flexWrap: 'wrap'
+              }}>
+                {getPageNumbers().map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    onClick={() => setPage(pageNum)}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: page === pageNum ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+                      border: page === pageNum ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      backdropFilter: 'blur(8px)',
+                      fontWeight: page === pageNum ? '600' : '400'
+                    }}
+                  >
+                    {pageNum + 1}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
-        )}
+        </div>
 
+        {/* Add Job Form Modal */}
+        {showAddJobForm && user && (
+          <AddJobForm
+            onClose={() => setShowAddJobForm(false)}
+            onJobAdded={() => {
+              console.log("Job toegevoegd");
+            }}
+            user={user}
+          />
+        )}
       </div>
 
-      {/* Mobile Hamburger Menu Content - Visible only on mobile */}
-      {showMenu && (
-        <div
-          onClick={() => setShowMenu(false)} // klik sluit menu optioneel
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0, // ← belangrijk!
-            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-            zIndex: 1999,
-          }}
-        />
-      )}
-      {showMenu && (
-        <div
-          style={{
-            background: "rgb(18, 31, 54)",
-            color: "white",
-            padding: "24px 0 24px 0",
-            boxShadow: "rgba(0, 0, 0, 0.3) 0px 4px 24px",
-            boxSizing: "border-box",
-            overflowX: "hidden",
-            // position: 'absolute',
-            // top: typeof window !== 'undefined' ? window.scrollY + 60 : 60,
-            left: 0,
-            right: 0,
-            margin: '0 auto',
-            width: '95vw',
-            maxWidth: '420px',
-            borderRadius: '16px',
-            zIndex: 2000, // Above everything except modals
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            backgroundColor: 'rgb(18, 31, 54, 1)', // Ensure fully opaque
-            position: 'fixed',
-            top: '60px',
-          }}
-        >
-          {user && user.email && (
-            <div className="user-email-display" style={{
-              padding: "10px 20px",
-              fontSize: "0.9rem",
-              textAlign: "center",
-              // borderBottom: "1px solid #374151",
-              marginBottom: "10px"
-            }}>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 8, color: '#0ccf83' }}>Your Details</div>
-
-              Logged in as: <strong>{user.email}</strong>
-            </div>
-          )}
-          {/* Profile Details Section in menu */}
-          {profile ? (
-            <div style={{
-              background: "#fff",
-              color: "#121f36",
-              borderRadius: "12px",
-              margin: "10px 20px",
-              padding: "16px",
-              fontFamily: "'Montserrat', Arial, sans-serif",
-              fontSize: "0.98rem",
-              boxSizing: 'border-box',
-              // border: '3px solid #0ccf83',
-              width: 'calc(100% - 40px)', // Full width minus margins
-              display: 'block',
-              marginBottom: '1.2rem',
-              zIndex: 999,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>First Name:</strong> <span style={{ marginLeft: 12 }}>{profile.first_name || '-'}</span></div>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>Last Name:</strong> <span style={{ marginLeft: 12 }}>{profile.last_name || '-'}</span></div>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>LinkedIn:</strong> <span style={{ marginLeft: 12 }}>{profile.linkedin_URL || '-'}</span></div>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>Industry:</strong> <span style={{ marginLeft: 12 }}>{profile.industry || '-'}</span></div>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>Job Title:</strong> <span style={{ marginLeft: 12 }}>{profile.job_title || '-'}</span></div>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}><strong style={{ minWidth: 90, display: 'inline-block' }}>Location:</strong> <span style={{ marginLeft: 12 }}>{profile.location || '-'}</span></div>
-              {/* Available to Recruiters Toggle */}
-              <AvailableToRecruitersToggle />
-              <button
-                style={{ ...menuButtonStyle, width: '100%' }}
-                onMouseDown={e => e.currentTarget.style.transform = 'translateY(2px)'}
-                onMouseUp={e => e.currentTarget.style.transform = ''}
-                onMouseLeave={e => e.currentTarget.style.transform = ''}
-                onClick={() => setShowEditProfile(true)}
-              >
-                Edit Profile
-              </button>
-            </div>
-          ) : (
-            <div style={{ color: '#fff', textAlign: 'center', margin: '10px 0' }}>No personal details found.</div>
-          )}
-          {/* Add New Job and Logout buttons in hamburger menu, only on mobile */}
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1.2rem',
-            margin: '2.5rem 20px 0 20px',
-            width: 'calc(100% - 40px)', // Full width minus margins
-          }}>
-            <button
-              className="hide-on-desktop"
-              style={{
-                background: '#0ccf83',
-                color: '#000',
-                fontWeight: 700,
-                borderRadius: 6,
-                padding: '6px 12px',
-                border: '2px solid #0ccf83',
-                boxShadow: '0 2px 8px rgba(12, 207, 131, 0.15)',
-                cursor: 'pointer',
-                fontSize: '1.05rem',
-                fontFamily: "'Montserrat', Arial, sans-serif",
-                transition: 'background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s',
-                outline: 'none',
-              }}
-              onMouseDown={e => e.currentTarget.style.transform = 'translateY(2px)'}
-              onMouseUp={e => e.currentTarget.style.transform = ''}
-              onMouseLeave={e => e.currentTarget.style.transform = ''}
-              onClick={() => setShowAddJobForm(true)}
-            >
-              Post a Job
-            </button>
-            <button
-
-              // className="hide-on-desktop"
-              style={logoutButtonStyle}
-              onMouseDown={e => e.currentTarget.style.transform = 'translateY(2px)'}
-              onMouseUp={e => e.currentTarget.style.transform = ''}
-              onMouseLeave={e => e.currentTarget.style.transform = ''}
-              onClick={handleLogout}
-            >
-              Logout
-            </button>
-
-          </div>
-        </div>
-      )}
-
-      {/* Profile Details Section (Modal) */}
-      {showSettings && (
-        <div style={{
-          position: 'fixed',
-          inset: '0',
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '1rem',
-          zIndex: 1000 // Higher z-index for modals
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '0.5rem',
-            padding: '1.5rem',
-            maxWidth: '28rem',
-            width: '100%',
-            maxHeight: '90vh',
-            overflowY: 'auto'
-          }}>
-            <h2 style={{
-              fontSize: '1.25rem',
-              lineHeight: '1.75rem',
-              fontWeight: 700,
-              marginBottom: '1rem',
-              color: '#1f2937'
-            }}>Profile Details</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.75rem',
-                  lineHeight: '1rem',
-                  fontWeight: 500,
-                  color: '#374151'
-                }}>Name</label>
-                <p style={{
-                  marginTop: '0.25rem',
-                  fontSize: '0.875rem',
-                  lineHeight: '1.25rem',
-                  color: '#111827'
-                }}>{profile.first_name} {profile.last_name}</p>
-              </div>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.75rem',
-                  lineHeight: '1rem',
-                  fontWeight: 500,
-                  color: '#374151'
-                }}>Job Title</label>
-                <p style={{
-                  marginTop: '0.25rem',
-                  fontSize: '0.875rem',
-                  lineHeight: '1.25rem',
-                  color: '#111827'
-                }}>{profile.job_title || 'Not set'}</p>
-              </div>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.75rem',
-                  lineHeight: '1rem',
-                  fontWeight: 500,
-                  color: '#374151'
-                }}>Industry</label>
-                <p style={{
-                  marginTop: '0.25rem',
-                  fontSize: '0.875rem',
-                  lineHeight: '1.25rem',
-                  color: '#111827'
-                }}>{profile.industry || 'Not set'}</p>
-              </div>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.75rem',
-                  lineHeight: '1rem',
-                  fontWeight: 500,
-                  color: '#374151'
-                }}>LinkedIn URL</label>
-                <p style={{
-                  marginTop: '0.25rem',
-                  fontSize: '0.875rem',
-                  lineHeight: '1.25rem',
-                  color: '#111827',
-                  wordBreak: 'break-all'
-                }}>
-                  {profile.linkedin_URL ? (
-                    <a href={profile.linkedin_URL} target="_blank" rel="noopener noreferrer" style={{
-                      color: '#2563eb',
-                      textDecoration: 'none'
-                    }} onMouseOver={e => e.currentTarget.style.color = '#1e40af'} onMouseOut={e => e.currentTarget.style.color = '#2563eb'}>
-                      {profile.linkedin_URL}
-                    </a>
-                  ) : (
-                    'Not set'
-                  )}
-                </p>
-              </div>
-            </div>
-            <div style={{
-              marginTop: '1.5rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem'
-            }}>
-              <button
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  backgroundColor: '#2563eb',
-                  color: 'white',
-                  borderRadius: '0.25rem',
-                  transition: 'background-color 0.2s',
-                  border: 'none',
-                  cursor: 'pointer'
-                }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#1e40af'} onMouseOut={e => e.currentTarget.style.backgroundColor = '#2563eb'}
-                onClick={() => setShowSettings(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Job Form Modal */}
-      {showAddJobForm && user && (
-        <AddJobForm
-          onClose={() => setShowAddJobForm(false)}
-          onJobAdded={refreshJobs}
-          user={user}
-        />
-      )}
-
-      {/* Edit Profile Modal */}
-      {showEditProfile && profile && (
-        <div
-          style={{
-            position: 'absolute',
-            top: typeof window !== 'undefined' ? window.scrollY + 40 : 40,
-            left: 0,
-            right: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 3000,
-            minHeight: '100vh',
-          }}
-        >
-          <div style={{
-            background: '#fff',
-            borderRadius: '12px',
-            padding: '2rem',
-            maxWidth: 420,
-            width: '100%',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
-            position: 'relative',
-          }}>
-            <CompleteProfileForm
-              initialValues={profile}
-              onComplete={async () => {
-                // Refetch profile
-                if (user) {
-                  const { data } = await supabase
-                    .from('profiles')
-                    .select('first_name, last_name, linkedin_URL, industry, job_title, location')
-                    .eq('id', user.id)
-                    .single();
-                  setProfile(data);
-                }
-                setShowEditProfile(false);
-                setShowMenu(false); // Optionally close menu after editing
-              }}
-            />
-            <button
-              style={{
-                position: 'absolute',
-                top: 12,
-                right: 12,
-                background: 'transparent',
-                border: 'none',
-                fontSize: '1.5rem',
-                color: '#374151',
-                cursor: 'pointer',
-                zIndex: 1
-              }}
-              aria-label="Close"
-              onClick={() => setShowEditProfile(false)}
-            >
-
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Global Styles */}
+      <style jsx global>{`
+        @keyframes float1 {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        @keyframes float2 {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-15px) rotate(-180deg); }
+        }
+        @keyframes float3 {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-10px) rotate(90deg); }
+        }
+        
+        /* Search highlighting */
+        .highlight {
+          background: rgba(255, 255, 0, 0.3);
+          color: #fff;
+          border-radius: 4px;
+          font-weight: 600;
+        }
+        
+        /* Hide scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.5);
+        }
+      `}</style>
     </>
-  )
+  );
 }
 
 function AvailableToRecruitersToggle() {
