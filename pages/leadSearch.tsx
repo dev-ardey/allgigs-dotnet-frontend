@@ -7,7 +7,7 @@ import AddJobForm from "../components/ui/add-job-form";
 import Fuse from "fuse.js";
 // import { SpeedInsights } from "@vercel/speed-insights/next"
 // import { formatDate } from "../utils/formatDate";
-import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs'; // Added import
+// import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs'; // Added import
 import CompleteProfileForm from "../components/ui/CompleteProfileForm";
 import { useProfileCheck } from "../components/ui/useProfileCheck";
 import { useRouter } from "next/router";
@@ -49,9 +49,9 @@ export default function JobBoard() {
   const [allJobs, setAllJobs] = useState<Job[]>([]);
 
   // State for Recently Clicked Jobs
-  const [showRecentlyClicked, setShowRecentlyClicked] = useState(false);
-  const [recentlyClickedJobs, setRecentlyClickedJobs] = useState<Job[]>([]);
-  const [loadingRecentlyClicked, setLoadingRecentlyClicked] = useState(false);
+  // const [showRecentlyClicked, setShowRecentlyClicked] = useState(false);
+  // const [recentlyClickedJobs, setRecentlyClickedJobs] = useState<Job[]>([]);
+  // const [loadingRecentlyClicked, setLoadingRecentlyClicked] = useState(false);
 
   // Add a state to track highlighted jobs
   const [highlightedJobs, setHighlightedJobs] = useState<Job[]>([]);
@@ -70,51 +70,51 @@ export default function JobBoard() {
   const leadSearchSectionRef = useRef<HTMLDivElement>(null);
 
   // const paginatedJobs = filteredJobs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const paginationButtonStyle: React.CSSProperties = {
-    padding: "10px 16px",
-    fontSize: "16px",
-    borderRadius: "4px",
-    border: "1px solid #d1d5db",
-    backgroundColor: "#fff",
-    color: "#000",
-    cursor: "pointer",
-    minWidth: "44px",
-    minHeight: "44px",
-    flexShrink: 0
-  };
-  const menuButtonStyle = {
-    background: "#374151",
-    color: "#fff",
-    border: "none",
-    borderRadius: "4px",
-    padding: "10px 16px",
-    fontSize: "0.95rem",
-    cursor: "pointer",
-    width: "80%",
-    display: "flex",
-    justifySelf: "center",
-    justifyContent: "center"
-  };
+  // const paginationButtonStyle: React.CSSProperties = {
+  //   padding: "10px 16px",
+  //   fontSize: "16px",
+  //   borderRadius: "4px",
+  //   border: "1px solid #d1d5db",
+  //   backgroundColor: "#fff",
+  //   color: "#000",
+  //   cursor: "pointer",
+  //   minWidth: "44px",
+  //   minHeight: "44px",
+  //   flexShrink: 0
+  // };
+  // const menuButtonStyle = {
+  //   background: "#374151",
+  //   color: "#fff",
+  //   border: "none",
+  //   borderRadius: "4px",
+  //   padding: "10px 16px",
+  //   fontSize: "0.95rem",
+  //   cursor: "pointer",
+  //   width: "80%",
+  //   display: "flex",
+  //   justifySelf: "center",
+  //   justifyContent: "center"
+  // };
 
-  const logoutButtonStyle = {
-    background: "#dc2626",
-    color: "#fff",
-    border: "none",
-    borderRadius: "4px",
-    padding: "10px 16px",
-    fontSize: "0.95rem",
-    cursor: "pointer",
-    // width: "24%",
-    display: "flex",
-    justifySelf: "center",
-    justifyContent: "center"
-  };
+  // const logoutButtonStyle = {
+  //   background: "#dc2626",
+  //   color: "#fff",
+  //   border: "none",
+  //   borderRadius: "4px",
+  //   padding: "10px 16px",
+  //   fontSize: "0.95rem",
+  //   cursor: "pointer",
+  //   // width: "24%",
+  //   display: "flex",
+  //   justifySelf: "center",
+  //   justifyContent: "center"
+  // };
 
-  const [showMenu, setShowMenu] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showLogo, setShowLogo] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
-  const [showEditProfile, setShowEditProfile] = useState(false);
+  // const [showMenu, setShowMenu] = useState(false);
+  // const [showSettings, setShowSettings] = useState(false);
+  // const [showLogo, setShowLogo] = useState(false);
+  // const [profile, setProfile] = useState<any>(null);
+  // const [showEditProfile, setShowEditProfile] = useState(false);
   const [showMenuAddJobForm, setShowMenuAddJobForm] = useState(false);
   const [headerVisible, setHeaderVisible] = useState(true);
   const lastScrollY = useRef(0);
@@ -130,7 +130,7 @@ export default function JobBoard() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setShowLogo(window.scrollY > 500);
+      // setShowLogo(window.scrollY > 500);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -164,7 +164,7 @@ export default function JobBoard() {
       .single()
       .then(({ data, error }) => {
         console.log('Fetched profile:', data, 'Error:', error);
-        setProfile(data);
+        // setProfile(data);
       });
   }, [user]);
 
@@ -237,22 +237,22 @@ export default function JobBoard() {
   }, []);
 
   // Function to refresh jobs list
-  const refreshJobs = async () => {
-    if (!user) return;
-    setLoading(true);
-    setPage(0); // Reset to first page
-    const { data, error } = await supabase
-      .from("Allgigs_All_vacancies_NEW")
-      .select("*")
-      .range(0, PAGE_SIZE - 1);
-    if (error) {
-      console.error(error);
-    } else {
-      setJobs(data || []);
-      setHasMore((data?.length || 0) === PAGE_SIZE);
-    }
-    setLoading(false);
-  };
+  // const refreshJobs = async () => {
+  //   if (!user) return;
+  //   setLoading(true);
+  //   setPage(0); // Reset to first page
+  //   const { data, error } = await supabase
+  //     .from("Allgigs_All_vacancies_NEW")
+  //     .select("*")
+  //     .range(0, PAGE_SIZE - 1);
+  //   if (error) {
+  //     console.error(error);
+  //   } else {
+  //     setJobs(data || []);
+  //     setHasMore((data?.length || 0) === PAGE_SIZE);
+  //   }
+  //   setLoading(false);
+  // };
 
   useEffect(() => {
     if (!user) return;
@@ -296,112 +296,112 @@ export default function JobBoard() {
   }, [user]);
 
   // Function to fetch recently clicked jobs
-  const fetchRecentlyClickedJobs = async () => {
-    if (!user || !user.id) {
-      console.log("[FetchRecentlyClicked] User not available.");
-      return;
-    }
-    console.log("[FetchRecentlyClicked] Starting for user:", user.id);
-    setLoadingRecentlyClicked(true);
-    try {
-      const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
-      const { data: clicks, error: clicksError } = await supabase
-        .from('job_clicks')
-        .select('job_id, clicked_at')
-        .eq('user_id', user.id)
-        .order('clicked_at', { ascending: false });
+  // const fetchRecentlyClickedJobs = async () => {
+  //   if (!user || !user.id) {
+  //     console.log("[FetchRecentlyClicked] User not available.");
+  //     return;
+  //   }
+  //   console.log("[FetchRecentlyClicked] Starting for user:", user.id);
+  //   // setLoadingRecentlyClicked(true);
+  //   try {
+  //     const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+  //     const { data: clicks, error: clicksError } = await supabase
+  //       .from('job_clicks')
+  //       .select('job_id, clicked_at')
+  //       .eq('user_id', user.id)
+  //       .order('clicked_at', { ascending: false });
 
-      console.log("[FetchRecentlyClicked] Clicks data raw:", clicks);
-      console.log("[FetchRecentlyClicked] Clicks error:", clicksError);
+  //     console.log("[FetchRecentlyClicked] Clicks data raw:", clicks);
+  //     console.log("[FetchRecentlyClicked] Clicks error:", clicksError);
 
-      if (clicksError) {
-        console.error('[FetchRecentlyClicked] Error fetching job clicks:', clicksError);
-        setRecentlyClickedJobs([]);
-        return;
-      }
+  //     if (clicksError) {
+  //       console.error('[FetchRecentlyClicked] Error fetching job clicks:', clicksError);
+  //       // setRecentlyClickedJobs([]);
+  //       return;
+  //     }
 
-      // Filter clicks to only those within the last 10 days
-      const recentClicks = (clicks || []).filter(click => {
-        if (!click.clicked_at) return false;
-        return new Date(click.clicked_at) >= tenDaysAgo;
-      });
+  //     // Filter clicks to only those within the last 10 days
+  //     const recentClicks = (clicks || []).filter(click => {
+  //       if (!click.clicked_at) return false;
+  //       return new Date(click.clicked_at) >= tenDaysAgo;
+  //     });
 
-      if (recentClicks.length === 0) {
-        console.log("[FetchRecentlyClicked] No clicks found in the last 10 days for user:", user.id);
-        setRecentlyClickedJobs([]);
-        return;
-      }
-      console.log(`[FetchRecentlyClicked] Found ${recentClicks.length} recent clicks.`);
+  //     if (recentClicks.length === 0) {
+  //       console.log("[FetchRecentlyClicked] No clicks found in the last 10 days for user:", user.id);
+  //       // setRecentlyClickedJobs([]);
+  //       return;
+  //     }
+  //     console.log(`[FetchRecentlyClicked] Found ${recentClicks.length} recent clicks.`);
 
-      const jobIds = recentClicks.map(click => click.job_id).filter(id => id != null); // Ensure no null/undefined ids
-      const uniqueJobIds = [...new Set(jobIds)];
-      console.log("[FetchRecentlyClicked] Unique Job IDs to fetch:", uniqueJobIds);
+  //     const jobIds = recentClicks.map(click => click.job_id).filter(id => id != null); // Ensure no null/undefined ids
+  //     const uniqueJobIds = [...new Set(jobIds)];
+  //     console.log("[FetchRecentlyClicked] Unique Job IDs to fetch:", uniqueJobIds);
 
-      if (uniqueJobIds.length === 0) {
-        console.log("[FetchRecentlyClicked] No valid unique job IDs to fetch details for.");
-        setRecentlyClickedJobs([]);
-        return;
-      }
+  //     if (uniqueJobIds.length === 0) {
+  //       console.log("[FetchRecentlyClicked] No valid unique job IDs to fetch details for.");
+  //       // setRecentlyClickedJobs([]);
+  //       return;
+  //     }
 
-      const clickTimeMap = new Map<string, string>();
-      recentClicks.forEach(click => {
-        if (click.job_id && click.clicked_at && !clickTimeMap.has(click.job_id)) {
-          clickTimeMap.set(click.job_id, click.clicked_at);
-        }
-      });
-      console.log("[FetchRecentlyClicked] ClickTimeMap:", clickTimeMap);
+  //     const clickTimeMap = new Map<string, string>();
+  //     recentClicks.forEach(click => {
+  //       if (click.job_id && click.clicked_at && !clickTimeMap.has(click.job_id)) {
+  //         clickTimeMap.set(click.job_id, click.clicked_at);
+  //       }
+  //     });
+  //     console.log("[FetchRecentlyClicked] ClickTimeMap:", clickTimeMap);
 
-      // Only fetch jobs that are still present in the main jobs table
-      const { data: jobsData, error: jobsError } = await supabase
-        .from('Allgigs_All_vacancies_NEW')
-        .select('UNIQUE_ID, Title, Company, URL, date, Location, Summary, rate')
-        .in('UNIQUE_ID', uniqueJobIds);
+  //     // Only fetch jobs that are still present in the main jobs table
+  //     const { data: jobsData, error: jobsError } = await supabase
+  //       .from('Allgigs_All_vacancies_NEW')
+  //       .select('UNIQUE_ID, Title, Company, URL, date, Location, Summary, rate')
+  //       .in('UNIQUE_ID', uniqueJobIds);
 
-      console.log("[FetchRecentlyClicked] JobsData from Allgigs_All_vacancies_NEW raw:", jobsData);
-      console.log("[FetchRecentlyClicked] JobsError:", jobsError);
+  //     console.log("[FetchRecentlyClicked] JobsData from Allgigs_All_vacancies_NEW raw:", jobsData);
+  //     console.log("[FetchRecentlyClicked] JobsError:", jobsError);
 
-      if (jobsError) {
-        console.error('[FetchRecentlyClicked] Error fetching job details:', jobsError);
-        setRecentlyClickedJobs([]);
-      } else if (jobsData && jobsData.length > 0) {
-        // Only include jobs that are still present in the main jobs table
-        const jobsWithClickData = jobsData.map(job => ({
-          ...job,
-          clicked_at: clickTimeMap.get(job.UNIQUE_ID),
-        }));
-        console.log("[FetchRecentlyClicked] Jobs with click data (before ordering):", jobsWithClickData);
+  //     if (jobsError) {
+  //       console.error('[FetchRecentlyClicked] Error fetching job details:', jobsError);
+  //       // setRecentlyClickedJobs([]);
+  //     } else if (jobsData && jobsData.length > 0) {
+  //       // Only include jobs that are still present in the main jobs table
+  //       const jobsWithClickData = jobsData.map(job => ({
+  //         ...job,
+  //         clicked_at: clickTimeMap.get(job.UNIQUE_ID),
+  //       }));
+  //       console.log("[FetchRecentlyClicked] Jobs with click data (before ordering):", jobsWithClickData);
 
-        const orderedJobs = uniqueJobIds
-          .map(id => jobsWithClickData.find(job => job.UNIQUE_ID === id))
-          .filter(job => job !== undefined) as Job[];
-        console.log("[FetchRecentlyClicked] Final ordered jobs for state:", orderedJobs);
-        setRecentlyClickedJobs(orderedJobs);
-      } else {
-        console.log("[FetchRecentlyClicked] No job details found for the clicked job IDs or jobsData is empty.");
-        setRecentlyClickedJobs([]);
-      }
-    } catch (error) {
-      console.error('[FetchRecentlyClicked] Exception in fetchRecentlyClickedJobs:', error);
-      setRecentlyClickedJobs([]);
-    } finally {
-      setLoadingRecentlyClicked(false);
-      console.log("[FetchRecentlyClicked] Finished.");
-    }
-  };
+  //       const orderedJobs = uniqueJobIds
+  //         .map(id => jobsWithClickData.find(job => job.UNIQUE_ID === id))
+  //         .filter(job => job !== undefined) as Job[];
+  //       console.log("[FetchRecentlyClicked] Final ordered jobs for state:", orderedJobs);
+  //       // setRecentlyClickedJobs(orderedJobs);
+  //     } else {
+  //       console.log("[FetchRecentlyClicked] No job details found for the clicked job IDs or jobsData is empty.");
+  //       // setRecentlyClickedJobs([]);
+  //     }
+  //   } catch (error) {
+  //     console.error('[FetchRecentlyClicked] Exception in fetchRecentlyClickedJobs:', error);
+  //     // setRecentlyClickedJobs([]);
+  //   } finally {
+  //     // setLoadingRecentlyClicked(false);
+  //     console.log("[FetchRecentlyClicked] Finished.");
+  //   }
+  // };
 
   // useEffect for fetching recently clicked jobs
-  useEffect(() => {
-    console.log("[useEffect RecentlyClicked] Triggered. User:", user ? user.id : 'null', "ShowRecentlyClicked:", showRecentlyClicked);
-    if (user && user.id && showRecentlyClicked) {
-      console.log("[useEffect RecentlyClicked] Conditions met. Calling fetchRecentlyClickedJobs.");
-      fetchRecentlyClickedJobs();
-    } else {
-      console.log("[useEffect RecentlyClicked] Conditions NOT met. Skipping fetchRecentlyClickedJobs.");
-      if (!user || !user.id) console.log("[useEffect RecentlyClicked] Reason: User or user.id is missing.");
-      if (!showRecentlyClicked) console.log("[useEffect RecentlyClicked] Reason: showRecentlyClicked is false.");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, showRecentlyClicked]);
+  // useEffect(() => {
+  //   console.log("[useEffect RecentlyClicked] Triggered. User:", user ? user.id : 'null', "ShowRecentlyClicked:", showRecentlyClicked);
+  //   if (user && user.id && showRecentlyClicked) {
+  //     console.log("[useEffect RecentlyClicked] Conditions met. Calling fetchRecentlyClickedJobs.");
+  //     fetchRecentlyClickedJobs();
+  //   } else {
+  //     console.log("[useEffect RecentlyClicked] Conditions NOT met. Skipping fetchRecentlyClickedJobs.");
+  //     if (!user || !user.id) console.log("[useEffect RecentlyClicked] Reason: User or user.id is missing.");
+  //     if (!showRecentlyClicked) console.log("[useEffect RecentlyClicked] Reason: showRecentlyClicked is false.");
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [user, showRecentlyClicked]);
 
   // Memoize the Fuse.js instance to avoid recreating it on every render
   const fuse = useMemo(() => new Fuse(allJobs, {
@@ -478,13 +478,13 @@ export default function JobBoard() {
     return jobTime > threeHoursAgo;
   };
 
-  const handleLogout = async () => {
-    const confirmed = window.confirm("Weet je zeker dat je wilt uitloggen?");
-    if (!confirmed) return;
+  // const handleLogout = async () => {
+  //   const confirmed = window.confirm("Weet je zeker dat je wilt uitloggen?");
+  //   if (!confirmed) return;
 
-    await supabase.auth.signOut();
-    setUser(null);
-  };
+  //   await supabase.auth.signOut();
+  //   setUser(null);
+  // };
   const totalPages = Math.ceil(sortedJobs.length / PAGE_SIZE);
 
   const getPageNumbers = () => {
@@ -501,7 +501,7 @@ export default function JobBoard() {
     return Array.from({ length: end - start }, (_, i) => start + i);
   };
 
-  const pageNumbers = getPageNumbers();
+  // const pageNumbers = getPageNumbers();
 
   // Function to normalize text and remove weird spacing/characters
   const normalizeText = (text: string): string => {
@@ -592,22 +592,22 @@ export default function JobBoard() {
     return normalizedText.replace(regex, '<span class="highlight">$1</span>');
   };
 
-  useEffect(() => {
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+  // useEffect(() => {
+  //   const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
 
-    if (showMenu) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.paddingRight = `${scrollbarWidth}px`; // Compenseer verschuiving
-    } else {
-      document.body.style.overflow = 'auto';
-      document.body.style.paddingRight = '0px';
-    }
+  //   if (showMenu) {
+  //     document.body.style.overflow = 'hidden';
+  //     document.body.style.paddingRight = `${scrollbarWidth}px`; // Compenseer verschuiving
+  //   } else {
+  //     document.body.style.overflow = 'auto';
+  //     document.body.style.paddingRight = '0px';
+  //   }
 
-    return () => {
-      document.body.style.overflow = 'auto';
-      document.body.style.paddingRight = '0px';
-    };
-  }, [showMenu]);
+  //   return () => {
+  //     document.body.style.overflow = 'auto';
+  //     document.body.style.paddingRight = '0px';
+  //   };
+  // }, [showMenu]);
 
   // Real-time highlighting as user types (mobile-friendly)
   useEffect(() => {
@@ -711,43 +711,43 @@ export default function JobBoard() {
   }
 
   // Log job click to Supabase
-  const logJobClick = async (job: Job) => {
-    if (!user || !user.id) {
-      console.error("[LogJobClick] User not available for logging job click. Aborting.");
-      return;
-    }
-    console.log("[LogJobClick] Logging for user:", user.id, "Job ID:", job.UNIQUE_ID, "Title:", job.Title);
-    try {
-      const { error } = await supabase.from("job_clicks").insert([
-        {
-          user_id: user.id,
-          job_id: job.UNIQUE_ID,
-          job_title: job.Title,
-          company: job.Company,
-          location: job.Location,
-          rate: job.rate,
-          date_posted: job.date,
-          summary: job.Summary,
-          url: job.URL,
-          // clicked_at should be handled by DB default
-        },
-      ]);
-      if (error) {
-        console.error("[LogJobClick] Error logging job click:", error);
-      } else {
-        console.log("[LogJobClick] Job click logged successfully for job:", job.UNIQUE_ID);
-        // Refresh recently clicked jobs if the section is visible
-        if (showRecentlyClicked) {
-          console.log("[LogJobClick] Refreshing recently clicked jobs as section is visible.");
-          fetchRecentlyClickedJobs();
-        } else {
-          console.log("[LogJobClick] Recently clicked jobs section not visible, not refreshing immediately. Will refresh when opened.");
-        }
-      }
-    } catch (error) {
-      console.error("[LogJobClick] Exception when logging job click:", error);
-    }
-  };
+  // const logJobClick = async (job: Job) => {
+  //   if (!user || !user.id) {
+  //     console.error("[LogJobClick] User not available for logging job click. Aborting.");
+  //     return;
+  //   }
+  //   console.log("[LogJobClick] Logging for user:", user.id, "Job ID:", job.UNIQUE_ID, "Title:", job.Title);
+  //   try {
+  //     const { error } = await supabase.from("job_clicks").insert([
+  //       {
+  //         user_id: user.id,
+  //         job_id: job.UNIQUE_ID,
+  //         job_title: job.Title,
+  //         company: job.Company,
+  //         location: job.Location,
+  //         rate: job.rate,
+  //         date_posted: job.date,
+  //         summary: job.Summary,
+  //         url: job.URL,
+  //         // clicked_at should be handled by DB default
+  //       },
+  //     ]);
+  //     if (error) {
+  //       console.error("[LogJobClick] Error logging job click:", error);
+  //     } else {
+  //       console.log("[LogJobClick] Job click logged successfully for job:", job.UNIQUE_ID);
+  //       // Refresh recently clicked jobs if the section is visible
+  //       if (showRecentlyClicked) {
+  //         console.log("[LogJobClick] Refreshing recently clicked jobs as section is visible.");
+  //         fetchRecentlyClickedJobs();
+  //       } else {
+  //         console.log("[LogJobClick] Recently clicked jobs section not visible, not refreshing immediately. Will refresh when opened.");
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error("[LogJobClick] Exception when logging job click:", error);
+  //   }
+  // };
 
   const menuButtonSharedStyle: React.CSSProperties = {
     background: "#0ccf83",
@@ -1129,7 +1129,7 @@ export default function JobBoard() {
                   <div
                     key={job.UNIQUE_ID}
                     onClick={() => {
-                      logJobClick(job);
+                      // logJobClick(job);
                       window.open(job.URL, '_blank', 'noopener,noreferrer');
                     }}
                     style={{
@@ -1304,7 +1304,7 @@ export default function JobBoard() {
                 <div
                   key={job.UNIQUE_ID}
                   onClick={() => {
-                    logJobClick(job);
+                    // logJobClick(job);
                     window.open(job.URL, '_blank', 'noopener,noreferrer');
                   }}
                   style={{
@@ -1587,44 +1587,44 @@ export default function JobBoard() {
   );
 }
 
-function AvailableToRecruitersToggle() {
-  const [available, setAvailable] = useState(true);
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12, marginTop: 8 }}>
-      <label style={{ minWidth: 140, fontWeight: 600, color: '#374151', fontSize: '0.98rem', marginRight: 12 }}>
-        Available to Recruiters
-      </label>
-      <span style={{ marginRight: 8, color: available ? '#0ccf83' : '#aaa', fontWeight: available ? 700 : 400 }}>Yes</span>
-      <div
-        onClick={() => setAvailable(a => !a)}
-        style={{
-          width: 44,
-          height: 24,
-          borderRadius: 12,
-          background: available ? '#0ccf83' : '#ccc',
-          cursor: 'pointer',
-          position: 'relative',
-          margin: '0 8px',
-          transition: 'background 0.2s',
-          display: 'inline-block',
-        }}
-        aria-label="Toggle Available to Recruiters"
-      >
-        <div
-          style={{
-            width: 20,
-            height: 20,
-            borderRadius: '50%',
-            background: '#fff',
-            position: 'absolute',
-            top: 2,
-            left: available ? 22 : 2,
-            boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
-            transition: 'left 0.2s',
-          }}
-        />
-      </div>
-      <span style={{ marginLeft: 8, color: !available ? '#0ccf83' : '#aaa', fontWeight: !available ? 700 : 400 }}>No</span>
-    </div>
-  );
-}
+// function AvailableToRecruitersToggle() {
+//   const [available, setAvailable] = useState(true);
+//   return (
+//     <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12, marginTop: 8 }}>
+//       <label style={{ minWidth: 140, fontWeight: 600, color: '#374151', fontSize: '0.98rem', marginRight: 12 }}>
+//         Available to Recruiters
+//       </label>
+//       <span style={{ marginRight: 8, color: available ? '#0ccf83' : '#aaa', fontWeight: available ? 700 : 400 }}>Yes</span>
+//       <div
+//         onClick={() => setAvailable(a => !a)}
+//         style={{
+//           width: 44,
+//           height: 24,
+//           borderRadius: 12,
+//           background: available ? '#0ccf83' : '#ccc',
+//           cursor: 'pointer',
+//           position: 'relative',
+//           margin: '0 8px',
+//           transition: 'background 0.2s',
+//           display: 'inline-block',
+//         }}
+//         aria-label="Toggle Available to Recruiters"
+//       >
+//         <div
+//           style={{
+//             width: 20,
+//             height: 20,
+//             borderRadius: '50%',
+//             background: '#fff',
+//             position: 'absolute',
+//             top: 2,
+//             left: available ? 22 : 2,
+//             boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
+//             transition: 'left 0.2s',
+//           }}
+//         />
+//       </div>
+//       <span style={{ marginLeft: 8, color: !available ? '#0ccf83' : '#aaa', fontWeight: !available ? 700 : 400 }}>No</span>
+//     </div>
+//   );
+// }
