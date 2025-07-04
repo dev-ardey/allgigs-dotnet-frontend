@@ -994,26 +994,7 @@ export default function JobBoard() {
               </div>
             </div>
 
-            {/* Search Field */}
-            <div style={{ marginBottom: '1rem' }}>
-              <input
-                placeholder="Search leads and opportunities..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  fontSize: '1rem',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(8px)',
-                  color: '#fff',
-                  boxSizing: 'border-box'
-                }}
-                className="search-input-placeholder"
-              />
-            </div>
+
 
             {/* Quick Search Section */}
             <div style={{
@@ -1294,6 +1275,27 @@ export default function JobBoard() {
                   From <span style={{ fontWeight: '600', color: '#10b981' }}>{sortedJobs.length}</span> curated positions
                 </p>
               </div>
+            </div>
+
+            {/* Search Field */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <input
+                placeholder="Search leads and opportunities..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  fontSize: '1rem',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(8px)',
+                  color: '#fff',
+                  boxSizing: 'border-box'
+                }}
+                className="search-input-placeholder"
+              />
             </div>
 
             {/* Job Cards */}
