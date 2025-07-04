@@ -65,6 +65,10 @@ export default function JobBoard() {
   const [keywords, setKeywords] = useState(["Frontend", "Backend", "React", "Node.js", "TypeScript"]);
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
 
+  // State to track if sticky header should be visible
+  const [showStickyHeader, setShowStickyHeader] = useState(false);
+  const leadSearchSectionRef = useRef<HTMLDivElement>(null);
+
   // const paginatedJobs = filteredJobs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const paginationButtonStyle: React.CSSProperties = {
     padding: "10px 16px",
@@ -634,6 +638,17 @@ export default function JobBoard() {
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
           if (currentScrollY < 0) return;
+
+          // Check if Lead Search section is out of view
+          if (leadSearchSectionRef.current) {
+            const rect = leadSearchSectionRef.current.getBoundingClientRect();
+            const isLeadSearchVisible = rect.bottom > 0; // Section is visible if bottom is above viewport top
+
+            // Show sticky header when Lead Search section is completely out of view
+            setShowStickyHeader(!isLeadSearchVisible);
+          }
+
+          // Keep original header visibility logic for the sticky header
           if (currentScrollY < 50) {
             setHeaderVisible(true);
           } else if (currentScrollY > lastScrollY.current) {
@@ -822,62 +837,70 @@ export default function JobBoard() {
         }} />
 
         {/* Header */}
-        <header style={{
-          background: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(16px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-          padding: '1.5rem 2rem',
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 1000,
-          transform: headerVisible ? 'translateY(0)' : 'translateY(-100%)',
-          transition: 'transform 0.3s ease-in-out'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', maxWidth: '1100px', margin: '0 auto' }}>
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '1rem'
-            }}>
-              <img
-                src="/images/allGigs-logo-white.svg"
-                alt="AllGigs Logo"
-                style={{ height: "40px", transition: "opacity 0.3s" }}
-              />
-              Lead Search
-            </h1>
+        {showStickyHeader && (
+          <header style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(16px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+            padding: '1.5rem 2rem',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1000,
+            transform: headerVisible ? 'translateY(0)' : 'translateY(-100%)',
+            transition: 'transform 0.3s ease-in-out'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', maxWidth: '1100px', margin: '0 auto' }}>
+              <h1 style={{
+                fontSize: '2rem',
+                fontWeight: 'bold',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem'
+              }}>
+                <img
+                  src="/images/allGigs-logo-white.svg"
+                  alt="AllGigs Logo"
+                  style={{ height: "40px", transition: "opacity 0.3s" }}
+                />
+                Lead Search
+              </h1>
 
-            {/* Search Bar */}
-            <div style={{ flex: 1, maxWidth: '500px', marginLeft: '2rem' }}>
-              <input
-                placeholder="Search jobs and opportunities..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  fontSize: '1rem',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(8px)',
-                  color: '#fff',
-                  boxSizing: 'border-box'
-                }}
-              />
+              {/* Search Bar */}
+              <div style={{ flex: 1, maxWidth: '500px', marginLeft: '2rem' }}>
+                <input
+                  placeholder="Search jobs and opportunities..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    fontSize: '1rem',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(8px)',
+                    color: '#fff',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+
             </div>
-
-
-          </div>
-        </header>
+          </header>
+        )}
 
         {/* Main Content */}
-        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '8rem 2rem 2rem 2rem', position: 'relative', zIndex: 5 }}>
+        <div style={{
+          maxWidth: '1100px',
+          margin: '0 auto',
+          padding: showStickyHeader ? '8rem 2rem 2rem 2rem' : '2rem',
+          position: 'relative',
+          zIndex: 5
+        }}>
 
 
 
@@ -919,16 +942,18 @@ export default function JobBoard() {
 
 
           {/* Lead Search Section */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.15)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '24px',
-            padding: '2rem',
-            marginBottom: '2rem',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s ease'
-          }}>
+          <div
+            ref={leadSearchSectionRef}
+            style={{
+              background: 'rgba(255, 255, 255, 0.15)',
+              backdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '24px',
+              padding: '2rem',
+              marginBottom: '2rem',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+              transition: 'all 0.3s ease'
+            }}>
             {/* Header */}
             <div style={{
               display: 'flex',
@@ -958,25 +983,25 @@ export default function JobBoard() {
               </div>
             </div>
 
-            {/* Search entire database button */}
-            <button style={{
-              width: '100%',
-              padding: '0.75rem',
-              background: 'rgba(16, 185, 129, 0.3)',
-              color: '#fff',
-              border: '1px solid rgba(16, 185, 129, 0.4)',
-              borderRadius: '12px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-              transition: 'all 0.3s ease',
-              backdropFilter: 'blur(8px)',
-              marginBottom: '1rem'
-            }}
-              onClick={() => router.push('/leadSearch')}
-            >
-              Search entire database on allGigs
-            </button>
+            {/* Search Field */}
+            <div style={{ marginBottom: '1rem' }}>
+              <input
+                placeholder="Search jobs and opportunities..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  fontSize: '1rem',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(8px)',
+                  color: '#fff',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
 
             {/* Quick Search Section */}
             <div style={{
