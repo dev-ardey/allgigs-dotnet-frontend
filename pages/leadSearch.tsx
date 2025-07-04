@@ -1011,6 +1011,7 @@ export default function JobBoard() {
                   color: '#fff',
                   boxSizing: 'border-box'
                 }}
+                className="search-input-placeholder"
               />
             </div>
 
@@ -1557,6 +1558,12 @@ export default function JobBoard() {
           color: #fff;
           border-radius: 4px;
           font-weight: 600;
+        }
+        
+        /* Search input placeholder styling */
+        .search-input-placeholder::placeholder {
+          color: rgba(255, 255, 255, 0.6);
+          opacity: 1;
         }
         
         /* Hide scrollbar for better aesthetics */
