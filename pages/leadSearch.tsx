@@ -642,20 +642,28 @@ export default function JobBoard() {
           // Check if Lead Search section is out of view
           if (leadSearchSectionRef.current) {
             const rect = leadSearchSectionRef.current.getBoundingClientRect();
-            const isLeadSearchVisible = rect.bottom > 0; // Section is visible if bottom is above viewport top
+            // Add a small buffer to prevent rapid toggling
+            const isLeadSearchVisible = rect.bottom > -50; // Section is visible if bottom is 50px above viewport top
 
             // Show sticky header when Lead Search section is completely out of view
-            setShowStickyHeader(!isLeadSearchVisible);
+            const shouldShowHeader = !isLeadSearchVisible;
+            setShowStickyHeader(shouldShowHeader);
+
+            // Only apply header visibility logic when sticky header is shown
+            if (shouldShowHeader) {
+              if (currentScrollY < 50) {
+                setHeaderVisible(true);
+              } else if (currentScrollY > lastScrollY.current) {
+                setHeaderVisible(false); // scrolling down
+              } else {
+                setHeaderVisible(true); // scrolling up
+              }
+            } else {
+              // Always show header when it should be visible (prevents flashing)
+              setHeaderVisible(true);
+            }
           }
 
-          // Keep original header visibility logic for the sticky header
-          if (currentScrollY < 50) {
-            setHeaderVisible(true);
-          } else if (currentScrollY > lastScrollY.current) {
-            setHeaderVisible(false); // scrolling down
-          } else {
-            setHeaderVisible(true); // scrolling up
-          }
           lastScrollY.current = currentScrollY;
           ticking = false;
         });
@@ -849,7 +857,7 @@ export default function JobBoard() {
             right: 0,
             zIndex: 1000,
             transform: headerVisible ? 'translateY(0)' : 'translateY(-100%)',
-            transition: 'transform 0.3s ease-in-out'
+            transition: 'transform 0.2s ease-out'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', maxWidth: '1100px', margin: '0 auto' }}>
               <h1 style={{
@@ -893,16 +901,19 @@ export default function JobBoard() {
           </header>
         )}
 
+        {/* Spacer for sticky header */}
+        {showStickyHeader && (
+          <div style={{ height: '100px' }}></div>
+        )}
+
         {/* Main Content */}
         <div style={{
           maxWidth: '1100px',
           margin: '0 auto',
-          padding: showStickyHeader ? '8rem 2rem 2rem 2rem' : '2rem',
+          padding: '2rem',
           position: 'relative',
           zIndex: 5
         }}>
-
-
 
           {/* Active Search Pills */}
           {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" && (
@@ -986,7 +997,7 @@ export default function JobBoard() {
             {/* Search Field */}
             <div style={{ marginBottom: '1rem' }}>
               <input
-                placeholder="Search jobs and opportunities..."
+                placeholder="Search leads and opportunities..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{

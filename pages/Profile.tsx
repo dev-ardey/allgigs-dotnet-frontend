@@ -241,7 +241,7 @@ export default function Profile() {
           transition: 'all 0.3s ease'
         }}>
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <h2 style={{
                 fontSize: '2rem',
