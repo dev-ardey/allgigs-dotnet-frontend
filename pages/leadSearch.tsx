@@ -873,7 +873,7 @@ export default function JobBoard() {
                   alt="AllGigs Logo"
                   style={{ height: "40px", transition: "opacity 0.3s" }}
                 />
-                Lead Search
+                Search Leads
               </h1>
 
               {/* Search Bar */}
@@ -893,6 +893,7 @@ export default function JobBoard() {
                     color: '#fff',
                     boxSizing: 'border-box'
                   }}
+                  className="search-input-placeholder"
                 />
               </div>
 
@@ -1236,7 +1237,7 @@ export default function JobBoard() {
               <Search color="white" size={32} />
               <div>
                 <h3 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#fff', margin: 0 }}>
-                  Discover Your Next Leads
+                  Discover Your Next Opportunity
                 </h3>
                 <p style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.8)', margin: 0 }}>
                   From <span style={{ fontWeight: '600', color: '#10b981' }}>{sortedJobs.length}</span> curated positions

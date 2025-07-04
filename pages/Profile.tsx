@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Save, X, Users, DollarSign, Bell, FileText, Upload, Trash2, User } from 'lucide-react';
+import { Edit2, Save, X, Users, DollarSign, Bell, FileText, Upload, Trash2 } from 'lucide-react';
 import { supabase } from '../SupabaseClient';
 import GlobalNav from '../components/ui/GlobalNav';
 
@@ -33,6 +33,7 @@ interface Document {
 export default function Profile() {
   // State variables (from dashboard)
   const [user, setUser] = useState<any>(null);
+  console.log(user)
   const [isAvailable, setIsAvailable] = useState(true);
   const emptyProfile: Profile = {
     firstName: '',
@@ -414,7 +415,7 @@ export default function Profile() {
           {/* Personal Information Section */}
           <div style={{ marginBottom: '2rem' }}>
             <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Users style={{ width: '18px', height: '18px', color: '#10b981' }} />
+              <Users style={{ width: '18px', height: '18px', color: 'white' }} />
               Personal Information
             </h3>
 
@@ -838,7 +839,7 @@ export default function Profile() {
           {/* Mail Notifications Section */}
           <div style={{ marginBottom: '2rem' }}>
             <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Bell style={{ width: '18px', height: '18px', color: '#3b82f6' }} />
+              <Bell style={{ width: '18px', height: '18px', color: 'white' }} />
               Mail Notifications
             </h3>
 
