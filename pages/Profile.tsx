@@ -352,44 +352,39 @@ export default function Profile() {
 
           {/* Available to Recruiters Toggle - Always Visible */}
           <div style={{
-            background: 'rgba(255, 255, 255, 0.15)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '16px',
-            padding: '1.5rem',
             marginTop: '1.5rem'
           }}>
-            <label onClick={toggleAvailable} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <label onClick={toggleAvailable} style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}>
+              <div style={{
+                width: '52px',
+                height: '28px',
+                borderRadius: '14px',
+                background: isAvailable
+                  ? 'rgba(16, 185, 129, 0.3)'
+                  : 'rgba(255, 255, 255, 0.15)',
+                border: isAvailable
+                  ? '1px solid rgba(16, 185, 129, 0.4)'
+                  : '1px solid rgba(255, 255, 255, 0.3)',
+                backdropFilter: 'blur(8px)',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+              }}>
                 <div style={{
-                  width: '52px',
-                  height: '28px',
-                  borderRadius: '14px',
+                  width: '22px',
+                  height: '22px',
                   background: isAvailable
-                    ? 'rgba(16, 185, 129, 0.3)'
-                    : 'rgba(255, 255, 255, 0.15)',
-                  border: isAvailable
-                    ? '1px solid rgba(16, 185, 129, 0.4)'
-                    : '1px solid rgba(255, 255, 255, 0.3)',
-                  backdropFilter: 'blur(8px)',
+                    ? 'rgba(255, 255, 255, 0.95)'
+                    : 'rgba(255, 255, 255, 0.8)',
+                  borderRadius: '50%',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                  transform: isAvailable ? 'translateX(26px)' : 'translateX(2px)',
                   transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                }}>
-                  <div style={{
-                    width: '22px',
-                    height: '22px',
-                    background: isAvailable
-                      ? 'rgba(255, 255, 255, 0.95)'
-                      : 'rgba(255, 255, 255, 0.8)',
-                    borderRadius: '50%',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-                    transform: isAvailable ? 'translateX(26px)' : 'translateX(2px)',
-                    transition: 'all 0.3s ease',
-                    marginTop: '2px',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    backdropFilter: 'blur(4px)'
-                  }} />
-                </div>
+                  marginTop: '2px',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  backdropFilter: 'blur(4px)'
+                }} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div>
                   <span style={{ fontSize: '1rem', fontWeight: '600', color: '#fff', display: 'block' }}>
                     Available to recruiters
@@ -398,23 +393,23 @@ export default function Profile() {
                     Make your profile visible to recruiters
                   </span>
                 </div>
+                <span style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '999px',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  background: isAvailable ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                  color: isAvailable ? '#10b981' : 'rgba(255, 255, 255, 0.8)',
+                  border: isAvailable ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.2)',
+                  backdropFilter: 'blur(8px)'
+                }}>
+                  {isAvailable ? 'Active' : 'Hidden'}
+                </span>
               </div>
-              <span style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '999px',
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                background: isAvailable ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                color: isAvailable ? '#10b981' : 'rgba(255, 255, 255, 0.8)',
-                border: isAvailable ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.2)',
-                backdropFilter: 'blur(8px)'
-              }}>
-                {isAvailable ? 'Active' : 'Hidden'}
-              </span>
             </label>
           </div>
 
-         
+
 
           {/* Personal Information Section */}
           <div style={{ marginBottom: '2rem' }}>
@@ -972,8 +967,8 @@ export default function Profile() {
               </div>
             </div>
           </div>
- {/* Documents Section */}
- <div style={{ marginBottom: '2rem' }}>
+          {/* Documents Section */}
+          <div style={{ marginBottom: '2rem' }}>
             <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <FileText style={{ width: '18px', height: '18px' }} />
               Documents
