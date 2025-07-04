@@ -815,45 +815,7 @@ export default function JobBoard() {
               />
             </div>
 
-            {/* Header Buttons */}
-            <div style={{ display: 'flex', gap: '0.75rem', marginLeft: 'auto' }}>
-              <button
-                onClick={() => setShowAddJobForm(true)}
-                style={{
-                  padding: '0.75rem 1rem',
-                  background: 'rgba(16, 185, 129, 0.2)',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
-                  borderRadius: '12px',
-                  color: '#fff',
-                  fontSize: '0.95rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  backdropFilter: 'blur(16px)',
-                  boxShadow: '0 4px 16px rgba(16, 185, 129, 0.1)'
-                }}
-              >
-                Post a Job
-              </button>
-              <button
-                onClick={handleLogout}
-                style={{
-                  padding: '0.75rem 1rem',
-                  background: 'rgba(239, 68, 68, 0.2)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  borderRadius: '12px',
-                  color: '#fff',
-                  fontSize: '0.95rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  backdropFilter: 'blur(16px)',
-                  boxShadow: '0 4px 16px rgba(239, 68, 68, 0.1)'
-                }}
-              >
-                Logout
-              </button>
-            </div>
+
           </div>
         </header>
 
