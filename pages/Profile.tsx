@@ -85,7 +85,7 @@ export default function Profile() {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('first_name, last_name, linkedin_URL, industry, job_title, location')
         .eq('id', user.id)
         .single();
 
@@ -100,13 +100,14 @@ export default function Profile() {
           job_title: data.job_title || '',
           linkedin_URL: data.linkedin_URL || '',
           linkedIn: data.linkedin_URL || '',
-          isAvailableForWork: data.isAvailableForWork || true,
-          hourlyRate: data.hourlyRate || 75,
-          age: data.age || 30,
-          lastYearEarnings: data.lastYearEarnings || 75000,
-          gender: data.gender || 'Prefer not to say',
-          interests: data.interests || 'Technology, Innovation, Problem Solving',
-          mainProblem: data.mainProblem || 'Finding the right opportunities'
+          // Set default values for fields not in DB yet
+          isAvailableForWork: true,
+          hourlyRate: 75,
+          age: 30,
+          lastYearEarnings: 75000,
+          gender: 'Prefer not to say',
+          interests: 'Technology, Innovation, Problem Solving',
+          mainProblem: 'Finding the right opportunities'
         };
         setProfile(fetchedProfile);
         setEditedProfile(fetchedProfile);
@@ -116,42 +117,64 @@ export default function Profile() {
     fetchProfile();
   }, []);
 
-  // Save profile function (from dashboard)
+  // Save profile function (fixed to use upsert like CompleteProfileForm)
   const saveProfile = async () => {
-    if (!editedProfile) return;
+    console.log('Save profile clicked');
+    if (!editedProfile) {
+      console.error('No edited profile data');
+      return;
+    }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    const updates = {
-      first_name: editedProfile.firstName,
-      last_name: editedProfile.lastName,
-      linkedin_URL: editedProfile.linkedin_URL,
-      industry: editedProfile.industry,
-      location: editedProfile.location,
-      job_title: editedProfile.job_title,
-      isAvailableForWork: editedProfile.isAvailableForWork,
-      hourlyRate: editedProfile.hourlyRate,
-      age: editedProfile.age,
-      lastYearEarnings: editedProfile.lastYearEarnings,
-      gender: editedProfile.gender,
-      interests: editedProfile.interests,
-      mainProblem: editedProfile.mainProblem,
-      updated_at: new Date().toISOString(),
-    };
+    if (authError) {
+      console.error('Authentication error:', authError);
+      alert(`Authentication error: ${authError.message}`);
+      return;
+    }
 
-    const { error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', user.id);
+    if (!user) {
+      console.error('No authenticated user found');
+      alert('No authenticated user found. Please log in again.');
+      return;
+    }
 
-    if (error) {
-      console.error('Fout bij opslaan profiel:', error);
-    } else {
-      setProfile(editedProfile);
-      setEditMode(false);
+    console.log('User found:', user.id);
+    console.log('Edited profile data:', editedProfile);
+
+    try {
+      // Use upsert like CompleteProfileForm does - only save fields that exist in DB
+      const profileData = {
+        id: user.id,
+        first_name: editedProfile.firstName,
+        last_name: editedProfile.lastName,
+        linkedin_URL: editedProfile.linkedin_URL,
+        industry: editedProfile.industry,
+        location: editedProfile.location,
+        job_title: editedProfile.job_title,
+        // Only include fields that exist in the current profiles table schema
+        // Remove: isAvailableForWork, hourlyRate, age, lastYearEarnings, gender, interests, mainProblem
+        // until these columns are added to the Supabase profiles table
+      };
+
+      console.log('Profile data to be upserted:', profileData);
+
+      const { error: upsertError } = await supabase
+        .from('profiles')
+        .upsert(profileData);
+
+      if (upsertError) {
+        console.error('Error saving profile:', upsertError);
+        alert(`Profile update failed: ${upsertError.message}`);
+      } else {
+        console.log('Profile saved successfully');
+        setProfile(editedProfile);
+        setEditMode(false);
+        alert('Profile saved successfully!');
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      alert(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
 
@@ -304,70 +327,6 @@ export default function Profile() {
                 </button>
               </div>
             )}
-          </div>
-
-          {/* Available to Recruiters Toggle - Always Visible */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.15)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '16px',
-            padding: '1.5rem',
-            marginTop: '1.5rem'
-          }}>
-            <label onClick={toggleAvailable} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{
-                  width: '52px',
-                  height: '28px',
-                  borderRadius: '14px',
-                  background: isAvailable
-                    ? 'rgba(16, 185, 129, 0.3)'
-                    : 'rgba(255, 255, 255, 0.15)',
-                  border: isAvailable
-                    ? '1px solid rgba(16, 185, 129, 0.4)'
-                    : '1px solid rgba(255, 255, 255, 0.3)',
-                  backdropFilter: 'blur(8px)',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                }}>
-                  <div style={{
-                    width: '22px',
-                    height: '22px',
-                    background: isAvailable
-                      ? 'rgba(255, 255, 255, 0.95)'
-                      : 'rgba(255, 255, 255, 0.8)',
-                    borderRadius: '50%',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-                    transform: isAvailable ? 'translateX(26px)' : 'translateX(2px)',
-                    transition: 'all 0.3s ease',
-                    marginTop: '2px',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    backdropFilter: 'blur(4px)'
-                  }} />
-                </div>
-                <div>
-                  <span style={{ fontSize: '1rem', fontWeight: '600', color: '#fff', display: 'block' }}>
-                    Available to recruiters
-                  </span>
-                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.7)' }}>
-                    Make your profile visible to recruiters
-                  </span>
-                </div>
-              </div>
-              <span style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '999px',
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                background: isAvailable ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                color: isAvailable ? '#10b981' : 'rgba(255, 255, 255, 0.8)',
-                border: isAvailable ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.2)',
-                backdropFilter: 'blur(8px)'
-              }}>
-                {isAvailable ? 'Active' : 'Hidden'}
-              </span>
-            </label>
           </div>
 
           {/* Personal Information Section */}
@@ -927,7 +886,69 @@ export default function Profile() {
             </div>
           </div>
 
-          
+          {/* Available to Recruiters Toggle - Always Visible */}
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '16px',
+            padding: '1.5rem',
+            marginTop: '1.5rem'
+          }}>
+            <label onClick={toggleAvailable} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{
+                  width: '52px',
+                  height: '28px',
+                  borderRadius: '14px',
+                  background: isAvailable
+                    ? 'rgba(16, 185, 129, 0.3)'
+                    : 'rgba(255, 255, 255, 0.15)',
+                  border: isAvailable
+                    ? '1px solid rgba(16, 185, 129, 0.4)'
+                    : '1px solid rgba(255, 255, 255, 0.3)',
+                  backdropFilter: 'blur(8px)',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                }}>
+                  <div style={{
+                    width: '22px',
+                    height: '22px',
+                    background: isAvailable
+                      ? 'rgba(255, 255, 255, 0.95)'
+                      : 'rgba(255, 255, 255, 0.8)',
+                    borderRadius: '50%',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                    transform: isAvailable ? 'translateX(26px)' : 'translateX(2px)',
+                    transition: 'all 0.3s ease',
+                    marginTop: '2px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    backdropFilter: 'blur(4px)'
+                  }} />
+                </div>
+                <div>
+                  <span style={{ fontSize: '1rem', fontWeight: '600', color: '#fff', display: 'block' }}>
+                    Available to recruiters
+                  </span>
+                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+                    Make your profile visible to recruiters
+                  </span>
+                </div>
+              </div>
+              <span style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '999px',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                background: isAvailable ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                color: isAvailable ? '#10b981' : 'rgba(255, 255, 255, 0.8)',
+                border: isAvailable ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(8px)'
+              }}>
+                {isAvailable ? 'Active' : 'Hidden'}
+              </span>
+            </label>
+          </div>
         </div>
       </div>
     </div>
