@@ -1082,6 +1082,7 @@ export default function JobBoard() {
                       color: '#fff',
                       backdropFilter: 'blur(8px)'
                     }}
+                    className="search-input-placeholder"
                   />
                   <button
                     onClick={handleKeywordAdd}
