@@ -100,7 +100,7 @@ export default function Profile() {
           job_title: data.job_title || '',
           linkedin_URL: data.linkedin_URL || '',
           linkedIn: data.linkedin_URL || '',
-          // Set default values for fields not in DB yet
+          // Set default values for fields that don't exist in DB yet
           isAvailableForWork: true,
           hourlyRate: 75,
           age: 30,
@@ -152,9 +152,9 @@ export default function Profile() {
         industry: editedProfile.industry,
         location: editedProfile.location,
         job_title: editedProfile.job_title,
-        // Only include fields that exist in the current profiles table schema
+        // Only include fields that exist in the profiles table
         // Remove: isAvailableForWork, hourlyRate, age, lastYearEarnings, gender, interests, mainProblem
-        // until these columns are added to the Supabase profiles table
+        // until these columns are added to the Supabase table
       };
 
       console.log('Profile data to be upserted:', profileData);
