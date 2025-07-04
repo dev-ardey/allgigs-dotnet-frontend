@@ -1129,7 +1129,6 @@ export default function JobBoard() {
                           cursor: 'pointer',
                           padding: '0.25rem 0',
                           marginTop: '0.5rem',
-                          textDecoration: 'underline',
                           transition: 'color 0.2s ease'
                         }}
                         onMouseEnter={(e) => {
