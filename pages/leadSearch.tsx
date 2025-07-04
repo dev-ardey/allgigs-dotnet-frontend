@@ -915,40 +915,7 @@ export default function JobBoard() {
           zIndex: 5
         }}>
 
-          {/* Active Search Pills */}
-          {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" && (
-            <div style={{
-              marginBottom: '2rem',
-              background: 'rgba(255, 255, 255, 0.05)',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '16px',
-              padding: '1rem'
-            }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.8)', marginRight: '0.5rem' }}>
-                  Active search:
-                </span>
-                {debouncedSearchTerm.trim().toLowerCase().split(/\s+/).filter(word => word.length > 0).map((word, index) => (
-                  <span
-                    key={index}
-                    style={{
-                      background: 'rgba(16, 185, 129, 0.3)',
-                      color: '#10b981',
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '12px',
-                      fontSize: '0.85rem',
-                      fontWeight: '600',
-                      border: '1px solid rgba(16, 185, 129, 0.4)',
-                      backdropFilter: 'blur(4px)'
-                    }}
-                  >
-                    {word}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+
 
 
 
@@ -1278,7 +1245,7 @@ export default function JobBoard() {
             </div>
 
             {/* Search Field */}
-            <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ marginBottom: '1rem' }}>
               <input
                 placeholder="Search leads and opportunities..."
                 value={searchTerm}
@@ -1297,6 +1264,41 @@ export default function JobBoard() {
                 className="search-input-placeholder"
               />
             </div>
+
+            {/* Active Search Pills */}
+            {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" && (
+              <div style={{
+                marginBottom: '1.5rem',
+                background: 'rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '16px',
+                padding: '1rem'
+              }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.8)', marginRight: '0.5rem' }}>
+                    Active search:
+                  </span>
+                  {debouncedSearchTerm.trim().toLowerCase().split(/\s+/).filter(word => word.length > 0).map((word, index) => (
+                    <span
+                      key={index}
+                      style={{
+                        background: 'rgba(16, 185, 129, 0.3)',
+                        color: '#10b981',
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '12px',
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        border: '1px solid rgba(16, 185, 129, 0.4)',
+                        backdropFilter: 'blur(4px)'
+                      }}
+                    >
+                      {word}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Job Cards */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
