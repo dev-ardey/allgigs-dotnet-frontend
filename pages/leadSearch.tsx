@@ -1233,7 +1233,7 @@ export default function JobBoard() {
               gap: '0.75rem',
               marginBottom: '1.5rem'
             }}>
-              <Search color="#10b981" size={32} />
+              <Search color="white" size={32} />
               <div>
                 <h3 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#fff', margin: 0 }}>
                   Discover Your Next Opportunity
@@ -1268,11 +1268,7 @@ export default function JobBoard() {
             {/* Active Search Pills */}
             {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" && (
               <div style={{
-                marginBottom: '1.5rem',
-                background: 'rgba(255, 255, 255, 0.05)',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '16px',
+                marginBottom: '1rem',
                 padding: '1rem'
               }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem' }}>
