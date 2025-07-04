@@ -1236,7 +1236,7 @@ export default function JobBoard() {
               <Search color="white" size={32} />
               <div>
                 <h3 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#fff', margin: 0 }}>
-                  Discover Your Next Opportunity
+                  Discover Your Next Leads
                 </h3>
                 <p style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.8)', margin: 0 }}>
                   From <span style={{ fontWeight: '600', color: '#10b981' }}>{sortedJobs.length}</span> curated positions

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Save, X, Users, DollarSign, Bell } from 'lucide-react';
+import { Edit2, Save, X, Users, DollarSign, Bell, FileText, Upload, Trash2, User } from 'lucide-react';
 import { supabase } from '../SupabaseClient';
 import GlobalNav from '../components/ui/GlobalNav';
 
@@ -19,6 +19,15 @@ interface Profile {
   gender?: string;
   interests?: string;
   mainProblem?: string;
+}
+
+// Document Interface (from dashboard)
+interface Document {
+  id: string;
+  name: string;
+  type: string;
+  size: string;
+  uploadedAt: string;
 }
 
 export default function Profile() {
@@ -57,8 +66,20 @@ export default function Profile() {
   });
   const [followUpDays, setFollowUpDays] = useState(3);
 
+  // Documents state (from dashboard)
+  const [documents, setDocuments] = useState<Document[]>([
+    { id: "1", name: "Resume.pdf", type: "PDF", size: "2.3 MB", uploadedAt: "2025-06-20" },
+    { id: "2", name: "Motivation.docx", type: "DOCX", size: "1.1 MB", uploadedAt: "2025-06-18" },
+    { id: "3", name: "Portfolio.pdf", type: "PDF", size: "4.7 MB", uploadedAt: "2025-06-15" },
+  ]);
+
   // Toggle available to recruiters function (from dashboard)
   const toggleAvailable = () => setIsAvailable(prev => !prev);
+
+  // Remove document function (from dashboard)
+  const removeDocument = (id: string) => {
+    setDocuments(documents.filter(doc => doc.id !== id));
+  };
 
   // Auth check (from dashboard)
   useEffect(() => {
@@ -392,6 +413,8 @@ export default function Profile() {
               </span>
             </label>
           </div>
+
+         
 
           {/* Personal Information Section */}
           <div style={{ marginBottom: '2rem' }}>
@@ -949,7 +972,97 @@ export default function Profile() {
               </div>
             </div>
           </div>
+ {/* Documents Section */}
+ <div style={{ marginBottom: '2rem' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FileText style={{ width: '18px', height: '18px' }} />
+              Documents
+            </h3>
 
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              {/* Documents List */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                padding: '1rem',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#fff', marginBottom: '1rem' }}>Your Documents</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {documents.map((doc) => (
+                    <div key={doc.id} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '1rem',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '12px',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      backdropFilter: 'blur(8px)'
+                    }}>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontWeight: '600', color: '#fff', margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>{doc.name}</p>
+                        <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)', margin: 0 }}>{doc.type} • {doc.size}</p>
+                      </div>
+                      <button
+                        onClick={() => removeDocument(doc.id)}
+                        style={{
+                          color: '#dc2626',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: '0.25rem'
+                        }}
+                      >
+                        <Trash2 style={{ width: '16px', height: '16px' }} />
+                      </button>
+                    </div>
+                  ))}
+                  {documents.length === 0 && (
+                    <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center', padding: '1rem' }}>
+                      No documents uploaded yet
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Drag & Drop Upload */}
+              <div
+                style={{
+                  border: '2px dashed rgba(255, 255, 255, 0.3)',
+                  borderRadius: '12px',
+                  padding: '1.5rem',
+                  textAlign: 'center',
+                  transition: 'border-color 0.3s',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(8px)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: '200px'
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.6)';
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  alert('Files uploaded (mock)');
+                }}
+              >
+                <Upload style={{ width: '32px', height: '32px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '0.5rem' }} />
+                <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.25rem 0' }}>
+                  Drag your files or <span style={{ color: '#fff', fontWeight: '600', cursor: 'pointer' }}>browse files</span>
+                </p>
+                <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>Max 10MB per file</p>
+              </div>
+            </div>
+          </div>
 
         </div>
       </div>
