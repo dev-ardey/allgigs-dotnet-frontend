@@ -12,6 +12,7 @@ import CompleteProfileForm from "../components/ui/CompleteProfileForm";
 import { useProfileCheck } from "../components/ui/useProfileCheck";
 import { useRouter } from "next/router";
 import GlobalNav from "../components/ui/GlobalNav";
+import { Search } from "lucide-react";
 
 
 interface Job {
@@ -859,23 +860,7 @@ export default function JobBoard() {
         {/* Main Content */}
         <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '8rem 2rem 2rem 2rem', position: 'relative', zIndex: 5 }}>
 
-          {/* Stats Header */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '24px',
-            padding: '1.5rem',
-            marginBottom: '2rem',
-            textAlign: 'center'
-          }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#fff', margin: '0 0 0.5rem 0' }}>
-              Discover Your Next Opportunity
-            </h2>
-            <p style={{ fontSize: '1.1rem', color: 'rgba(255, 255, 255, 0.8)', margin: 0 }}>
-              From <span style={{ fontWeight: '600', color: '#10b981' }}>{sortedJobs.length}</span> curated positions
-            </p>
-          </div>
+
 
           {/* Active Search Pills */}
           {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" && (
@@ -912,54 +897,7 @@ export default function JobBoard() {
             </div>
           )}
 
-          {/* Manage Jobs Section */}
-          {showRecentlyClicked && (
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(16px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '24px',
-              padding: '1.5rem',
-              marginBottom: '2rem'
-            }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', marginBottom: '1rem' }}>
-                Recently Clicked Jobs
-              </h3>
-              <RecentlyClickedJobs
-                jobs={recentlyClickedJobs}
-                isLoading={loadingRecentlyClicked}
-                onJobClick={logJobClick}
-                isJobNew={isJobNew}
-              />
-            </div>
-          )}
 
-          {/* Toggle Manage Jobs Button */}
-          <div style={{ marginBottom: '2rem' }}>
-            <button
-              onClick={() => {
-                const newShowState = !showRecentlyClicked;
-                setShowRecentlyClicked(newShowState);
-                if (newShowState && recentlyClickedJobs.length === 0) {
-                  // fetchRecentlyClickedJobs();
-                }
-              }}
-              style={{
-                padding: '0.75rem 1.5rem',
-                background: showRecentlyClicked ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
-                border: showRecentlyClicked ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
-                borderRadius: '12px',
-                color: '#fff',
-                fontSize: '1rem',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                backdropFilter: 'blur(8px)'
-              }}
-            >
-              {showRecentlyClicked ? 'Hide Manage Jobs' : 'Show Manage Jobs'}
-            </button>
-          </div>
 
           {/* Job List Container */}
           <div style={{
@@ -969,9 +907,22 @@ export default function JobBoard() {
             borderRadius: '24px',
             padding: '1.5rem'
           }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', marginBottom: '1.5rem' }}>
-              Available Opportunities
-            </h3>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              marginBottom: '1.5rem'
+            }}>
+              <Search color="#10b981" size={32} />
+              <div>
+                <h3 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#fff', margin: 0 }}>
+                  Discover Your Next Opportunity
+                </h3>
+                <p style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.8)', margin: 0 }}>
+                  From <span style={{ fontWeight: '600', color: '#10b981' }}>{sortedJobs.length}</span> curated positions
+                </p>
+              </div>
+            </div>
 
             {/* Job Cards */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
