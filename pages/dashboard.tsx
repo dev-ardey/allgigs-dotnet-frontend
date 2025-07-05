@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Sparkles, TrendingUp, Target, Mail, Zap, Lock } from 'lucide-react';
+import { X, Sparkles, TrendingUp, Target, Mail, Zap, Lock, BarChart3 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '../SupabaseClient';
 // import { useRouter } from 'next/router';
@@ -453,243 +453,9 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
           </div>
         </div>
 
-        {/* Sales KPIs Row */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-          gap: '1rem',
-          marginBottom: '2rem'
-        }}>
-          {[
-            { label: 'Total Leads', value: salesKPIs.total_leads, suffix: '' },
-            { label: 'Conversion Rate', value: salesKPIs.conversion_rate, suffix: '%' },
-            { label: 'Potential Revenue', value: `€${(salesKPIs.potential_revenue / 1000).toFixed(0)}K`, suffix: '' },
-            { label: 'Pipeline Health', value: salesKPIs.pipeline_health, suffix: '%' },
-            { label: 'Active Appl', value: salesKPIs.active_applications, suffix: '' },
-            { label: 'Interviews', value: salesKPIs.interviews_scheduled, suffix: '' }
-          ].map((kpi, index) => (
-            <div
-              key={index}
-              style={{
-                background: 'rgba(255, 255, 255, 0.15)',
-                borderRadius: '16px',
-                padding: '1.25rem',
-                textAlign: 'center',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
-              }}
-            >
-              <div style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '0.25rem' }}>
-                {kpi.value}{kpi.suffix}
-              </div>
-              <div style={{ fontSize: '0.875rem', opacity: 0.8 }}>
-                {kpi.label}
-              </div>
-            </div>
-          ))}
-        </div>
+
 
         {/* Leads Table */}
-        <hr style={{
-          border: 'none',
-          height: '1px',
-          background: 'rgba(255, 255, 255, 0.2)',
-          margin: '1.5rem 0'
-        }} />
-
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.15)',
-          borderRadius: '20px',
-          padding: '1.5rem',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(8px)'
-        }}>
-          <h3 style={{
-            fontSize: '1.25rem',
-            fontWeight: '600',
-            color: '#fff',
-            margin: 0,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <TrendingUp style={{ width: '20px', height: '20px' }} />
-            Lead Pipeline
-          </h3>
-
-          <div style={{
-            overflowX: 'auto',
-            maxHeight: leads.length > 10 ? '400px' : 'auto',
-            overflowY: leads.length > 10 ? 'auto' : 'visible'
-          }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead style={{
-                position: 'sticky',
-                top: 0,
-                background: 'rgba(255, 255, 255, 0.15)',
-                backdropFilter: 'blur(16px)',
-                zIndex: 10
-              }}>
-                <tr style={{ background: 'transparent' }}>
-                  <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Lead</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Status</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Progress</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Value</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Timer</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leads.map((lead) => {
-                  const daysSince = calculateDaysSinceAction(lead);
-                  const status = lead.status || LeadStatus.NEW;
-                  const config = STATUS_CONFIG[status];
-                  const urgencyColor = getUrgencyColor(daysSince, status);
-
-                  return (
-                    <tr
-                      key={lead.UNIQUE_ID}
-                      style={{
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                        cursor: 'pointer',
-                        transition: 'background 0.2s'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                      onClick={() => onLogClick(lead)}
-                    >
-                      <td style={{ padding: '1rem' }}>
-                        <div>
-                          <div style={{ fontWeight: '600', color: '#fff', fontSize: '0.95rem' }}>
-                            {lead.Title}
-                          </div>
-                          <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.875rem' }}>
-                            {lead.Company} • {lead.Location}
-                          </div>
-                        </div>
-                      </td>
-
-                      <td style={{ padding: '1rem' }}>
-                        <span style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '20px',
-                          fontSize: '0.875rem',
-                          fontWeight: '600',
-                          background: config.bgColor,
-                          color: config.color
-                        }}>
-                          <config.icon style={{ width: '14px', height: '14px' }} />
-                          {config.label}
-                        </span>
-                      </td>
-
-                      <td style={{ padding: '1rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <div style={{
-                            width: '100px',
-                            height: '6px',
-                            background: '#e5e7eb',
-                            borderRadius: '3px',
-                            overflow: 'hidden'
-                          }}>
-                            <div style={{
-                              width: `${(Object.keys(LeadStatus).indexOf(status) + 1) * 14.28}%`,
-                              height: '100%',
-                              background: `linear-gradient(90deg, ${config.color}, ${config.color}cc)`,
-                              borderRadius: '3px'
-                            }} />
-                          </div>
-                          <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)' }}>
-                            {Math.round((Object.keys(LeadStatus).indexOf(status) + 1) * 14.28)}%
-                          </span>
-                        </div>
-                      </td>
-
-                      <td style={{ padding: '1rem' }}>
-                        <div style={{ color: '#10b981', fontWeight: '600', fontSize: '0.95rem' }}>
-                          €{(lead.potential_value || 0).toLocaleString()}
-                        </div>
-                        <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem' }}>
-                          Quality: {lead.quality_score || 0}%
-                        </div>
-                      </td>
-
-                      <td style={{ padding: '1rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <div style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            background: urgencyColor
-                          }} />
-                          <span style={{
-                            fontSize: '0.875rem',
-                            fontWeight: '600',
-                            color: urgencyColor
-                          }}>
-                            {daysSince}d
-                          </span>
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)' }}>
-                          {config.nextAction}
-                        </div>
-                      </td>
-
-                      <td style={{ padding: '1rem' }}>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          {Object.values(LeadStatus).map((statusOption) => {
-                            const isActive = statusOption === status;
-                            const optionConfig = STATUS_CONFIG[statusOption];
-
-                            return (
-                              <button
-                                key={statusOption}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleStatusChange(lead.UNIQUE_ID!, statusOption);
-                                }}
-                                style={{
-                                  padding: '0.5rem',
-                                  borderRadius: '8px',
-                                  border: 'none',
-                                  cursor: 'pointer',
-                                  background: isActive ? optionConfig.color : 'rgba(255, 255, 255, 0.1)',
-                                  color: isActive ? 'white' : 'rgba(255, 255, 255, 0.7)',
-                                  transition: 'all 0.1s ease',
-                                  opacity: isActive ? 1 : 0.7,
-                                  backdropFilter: 'blur(8px)',
-                                  transform: 'scale(1)'
-                                }}
-                                onMouseEnter={(e) => {
-                                  if (!isActive) {
-                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                                    e.currentTarget.style.color = '#fff';
-                                  }
-                                }}
-                                onMouseLeave={(e) => {
-                                  if (!isActive) {
-                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
-                                  }
-                                }}
-                              >
-                                <optionConfig.icon style={{ width: '16px', height: '16px' }} />
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Statistics Section */}
         <hr style={{
           border: 'none',
           height: '1px',
@@ -701,62 +467,286 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
           fontSize: '1.25rem',
           fontWeight: '600',
           color: '#fff',
+          margin: 0,
           marginBottom: '1rem',
           display: 'flex',
           alignItems: 'center',
           gap: '0.5rem'
         }}>
-          <TrendingUp style={{ width: '20px', height: '20px' }} />
-          Lead Click Statistics
+          <BarChart3 style={{ width: '20px', height: '20px' }} />
+          Lead Pipeline
         </h3>
 
         <div style={{
-          height: '192px',
-          background: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: '12px',
-          padding: '1rem',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)'
+          overflowX: 'auto',
+          maxHeight: leads.length > 10 ? '400px' : 'auto',
+          overflowY: leads.length > 10 ? 'auto' : 'visible'
         }}>
-          {/* @ts-ignore */}
-          <ResponsiveContainer width="100%" height="100%">
-            {/* @ts-ignore */}
-            <LineChart data={statsData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.2)" />
-              {/* @ts-ignore */}
-              <XAxis dataKey="name" stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
-              {/* @ts-ignore */}
-              <YAxis stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                  backdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  color: '#fff'
-                }}
-              />
-              {/* @ts-ignore */}
-              <Line
-                type="monotone"
-                dataKey="views"
-                stroke="#9333ea"
-                strokeWidth={3}
-                dot={{ fill: '#9333ea', strokeWidth: 2, r: 4 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead style={{
+              position: 'sticky',
+              top: 0,
+              zIndex: 10
+            }}>
+              <tr style={{
+                background: 'transparent',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.2)'
+              }}>
+                <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Lead</th>
+                <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Status</th>
+                <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Progress</th>
+                <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Value</th>
+                <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Timer</th>
+                <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leads.map((lead) => {
+                const daysSince = calculateDaysSinceAction(lead);
+                const status = lead.status || LeadStatus.NEW;
+                const config = STATUS_CONFIG[status];
+                const urgencyColor = getUrgencyColor(daysSince, status);
 
-        <p style={{
-          fontSize: '0.875rem',
-          color: 'rgba(255, 255, 255, 0.8)',
-          marginTop: '0.5rem'
-        }}>
-          Total this week: {statsData.reduce((acc, day) => acc + day.views, 0)} clicked leads
-        </p>
+                return (
+                  <tr
+                    key={lead.UNIQUE_ID}
+                    style={{
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                      cursor: 'pointer',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    onClick={() => onLogClick(lead)}
+                  >
+                    <td style={{ padding: '1rem' }}>
+                      <div>
+                        <div style={{ fontWeight: '600', color: '#fff', fontSize: '0.95rem' }}>
+                          {lead.Title}
+                        </div>
+                        <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.875rem' }}>
+                          {lead.Company} • {lead.Location}
+                        </div>
+                      </div>
+                    </td>
+
+                    <td style={{ padding: '1rem' }}>
+                      <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.5rem 1rem',
+                        borderRadius: '20px',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        background: config.bgColor,
+                        color: config.color
+                      }}>
+                        <config.icon style={{ width: '14px', height: '14px' }} />
+                        {config.label}
+                      </span>
+                    </td>
+
+                    <td style={{ padding: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{
+                          width: '100px',
+                          height: '6px',
+                          background: '#e5e7eb',
+                          borderRadius: '3px',
+                          overflow: 'hidden'
+                        }}>
+                          <div style={{
+                            width: `${(Object.keys(LeadStatus).indexOf(status) + 1) * 14.28}%`,
+                            height: '100%',
+                            background: `linear-gradient(90deg, ${config.color}, ${config.color}cc)`,
+                            borderRadius: '3px'
+                          }} />
+                        </div>
+                        <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+                          {Math.round((Object.keys(LeadStatus).indexOf(status) + 1) * 14.28)}%
+                        </span>
+                      </div>
+                    </td>
+
+                    <td style={{ padding: '1rem' }}>
+                      <div style={{ color: '#10b981', fontWeight: '600', fontSize: '0.95rem' }}>
+                        €{(lead.potential_value || 0).toLocaleString()}
+                      </div>
+                      <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem' }}>
+                        Quality: {lead.quality_score || 0}%
+                      </div>
+                    </td>
+
+                    <td style={{ padding: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          background: urgencyColor
+                        }} />
+                        <span style={{
+                          fontSize: '0.875rem',
+                          fontWeight: '600',
+                          color: urgencyColor
+                        }}>
+                          {daysSince}d
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+                        {config.nextAction}
+                      </div>
+                    </td>
+
+                    <td style={{ padding: '1rem' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        {Object.values(LeadStatus).map((statusOption) => {
+                          const isActive = statusOption === status;
+                          const optionConfig = STATUS_CONFIG[statusOption];
+
+                          return (
+                            <button
+                              key={statusOption}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStatusChange(lead.UNIQUE_ID!, statusOption);
+                              }}
+                              style={{
+                                padding: '0.5rem',
+                                borderRadius: '8px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                background: isActive ? optionConfig.color : 'rgba(255, 255, 255, 0.1)',
+                                color: isActive ? 'white' : 'rgba(255, 255, 255, 0.7)',
+                                transition: 'all 0.1s ease',
+                                opacity: isActive ? 1 : 0.7,
+                                backdropFilter: 'blur(8px)',
+                                transform: 'scale(1)'
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isActive) {
+                                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                                  e.currentTarget.style.color = '#fff';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isActive) {
+                                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+                                }
+                              }}
+                            >
+                              <optionConfig.icon style={{ width: '16px', height: '16px' }} />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {/* Statistics Section */}
+      <hr style={{
+        border: 'none',
+        height: '1px',
+        background: 'rgba(255, 255, 255, 0.2)',
+        margin: '1.5rem 0'
+      }} />
+
+      <h3 style={{
+        fontSize: '1.25rem',
+        fontWeight: '600',
+        color: '#fff',
+        marginBottom: '1rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem'
+      }}>
+        <TrendingUp style={{ width: '20px', height: '20px' }} />
+        Lead Statistics
+      </h3>
+
+      <div style={{
+        height: '192px',
+        background: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: '12px',
+        padding: '1rem',
+        backdropFilter: 'blur(8px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)'
+      }}>
+        {/* @ts-ignore */}
+        <ResponsiveContainer width="100%" height="100%">
+          {/* @ts-ignore */}
+          <LineChart data={statsData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.2)" />
+            {/* @ts-ignore */}
+            <XAxis dataKey="name" stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
+            {/* @ts-ignore */}
+            <YAxis stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(16px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '8px',
+                fontSize: '12px',
+                color: '#fff'
+              }}
+            />
+            {/* @ts-ignore */}
+            <Line
+              type="monotone"
+              dataKey="views"
+              stroke="#9333ea"
+              strokeWidth={3}
+              dot={{ fill: '#9333ea', strokeWidth: 2, r: 4 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Sales KPIs Row */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        gap: '1rem',
+        marginTop: '1.5rem'
+      }}>
+        {[
+          { label: 'Total Weekly Leads', value: statsData.reduce((acc, day) => acc + day.views, 0), suffix: '' },
+          { label: 'Conversion Rate', value: salesKPIs.conversion_rate, suffix: '%' },
+          { label: 'Potential Revenue', value: `€${(salesKPIs.potential_revenue / 1000).toFixed(0)}K`, suffix: '' },
+          { label: 'Pipeline Health', value: salesKPIs.pipeline_health, suffix: '%' },
+          { label: 'Active Appl', value: salesKPIs.active_applications, suffix: '' },
+          { label: 'Interviews', value: salesKPIs.interviews_scheduled, suffix: '' }
+        ].map((kpi, index) => (
+          <div
+            key={index}
+            style={{
+              background: 'rgba(255, 255, 255, 0.15)',
+              borderRadius: '16px',
+              padding: '1.25rem',
+              textAlign: 'center',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}
+          >
+            <div style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '0.25rem' }}>
+              {kpi.value}{kpi.suffix}
+            </div>
+            <div style={{ fontSize: '0.875rem', opacity: 0.8 }}>
+              {kpi.label}
+            </div>
+          </div>
+        ))}
+      </div>
+
+
     </div>
   );
 };
