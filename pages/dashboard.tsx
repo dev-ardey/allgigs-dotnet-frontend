@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { X, Sparkles, TrendingUp, Target, Mail, Zap, Lock, BarChart3 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '../SupabaseClient';
@@ -207,14 +207,39 @@ interface QualifiedLeadsSectionProps {
   statsData: StatsDay[];
 }
 
-// mock qualifiedLeads met mockdata
+// QualifiedLeadsSection using real leads data
 const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
-  leads = MOCK_LEADS,
+  leads,
   onStatusChange,
   onLogClick,
   statsData
 }) => {
-  const [salesKPIs] = useState<SalesKPIs>(MOCK_SALES_KPI);
+  // Calculate dynamic KPIs based on actual leads
+  const salesKPIs = useMemo(() => {
+    const totalLeads = leads.length;
+    const interviewedLeads = leads.filter(lead => lead.status === LeadStatus.INTERVIEWED).length;
+    const succeededLeads = leads.filter(lead => lead.status === LeadStatus.SUCCEEDED).length;
+    const activeLeads = leads.filter(lead =>
+      [LeadStatus.APPLIED, LeadStatus.FOLLOW_UP, LeadStatus.SPOKEN, LeadStatus.INTERVIEWED].includes(lead.status || LeadStatus.NEW)
+    ).length;
+
+    const conversionRate = totalLeads > 0 ? (succeededLeads / totalLeads) * 100 : 0;
+    const potentialRevenue = leads.reduce((sum, lead) => sum + (lead.potential_value || 0), 0);
+    const avgQualityScore = totalLeads > 0 ?
+      leads.reduce((sum, lead) => sum + (lead.quality_score || 0), 0) / totalLeads : 0;
+
+    return {
+      total_leads: totalLeads,
+      conversion_rate: Math.round(conversionRate * 10) / 10,
+      potential_revenue: potentialRevenue,
+      lead_quality_score: Math.round(avgQualityScore),
+      cost_per_application: 25, // Static for now
+      pipeline_health: Math.round(avgQualityScore * 0.9), // Based on quality score
+      active_applications: activeLeads,
+      interviews_scheduled: interviewedLeads,
+      average_response_time: 4.2 // Static for now
+    };
+  }, [leads]);
   // Popup state for locked features
   const [showFeatureModal, setShowFeatureModal] = useState<null | string>(null);
   const [notifyMe, setNotifyMe] = useState<{ [key: string]: boolean }>({});
@@ -468,7 +493,7 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
           fontWeight: '600',
           color: '#fff',
           margin: 0,
-          marginBottom: '1rem',
+          marginBottom: '0.5rem',
           display: 'flex',
           alignItems: 'center',
           gap: '0.5rem'
@@ -476,6 +501,13 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
           <BarChart3 style={{ width: '20px', height: '20px' }} />
           Lead Pipeline
         </h3>
+        <p style={{
+          fontSize: '0.9rem',
+          color: 'rgba(255, 255, 255, 0.7)',
+          margin: '0 0 1rem 0'
+        }}>
+          Track your job applications through each stage to maximize your success rate
+        </p>
 
         <div style={{
           overflowX: 'auto',
@@ -493,7 +525,7 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
                 borderBottom: '1px solid rgba(255, 255, 255, 0.2)'
               }}>
                 <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Lead</th>
-                <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Status</th>
+                <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600', minWidth: '160px' }}>Status</th>
                 <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Progress</th>
                 <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Value</th>
                 <th style={{ padding: '1rem', textAlign: 'left', color: '#fff', fontWeight: '600' }}>Timer</th>
@@ -1246,7 +1278,7 @@ export default function Dashboard() {
 
   const [qualifiedLeads, setQualifiedLeads] = useState<Lead[]>([]);
 
-  // Map recentlyClickedJobs to Lead objects with status
+  // Map recentlyClickedJobs to Lead objects with status and CRM fields
   useEffect(() => {
     setQualifiedLeads(
       recentlyClickedJobs
@@ -1263,6 +1295,15 @@ export default function Dashboard() {
           URL: job.URL || '',
           clicked_at: job.clicked_at || '',
           status: job.status as LeadStatus || LeadStatus.NEW,
+          // Add default CRM values
+          potential_value: job.potential_value || Math.floor(Math.random() * 20000) + 5000, // Random value between 5K-25K
+          quality_score: job.quality_score || Math.floor(Math.random() * 40) + 60, // Random score between 60-100
+          days_since_action: job.days_since_action || 0,
+          notes: job.notes || '',
+          applied_at: job.applied_at || null,
+          follow_up_date: job.follow_up_date || null,
+          last_contact: job.last_contact || null,
+          next_action_due: job.next_action_due || null
         }))
     );
   }, [recentlyClickedJobs]);
