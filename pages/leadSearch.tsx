@@ -962,16 +962,18 @@ export default function JobBoard() {
               </div>
             </div>
 
-
+            {/* Horizontal Rule */}
+            <hr style={{
+              border: 'none',
+              height: '1px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              margin: '1rem 0'
+            }} />
 
             {/* Quick Search Section */}
             <div style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '16px',
-              padding: '1rem',
-              marginBottom: '1rem'
+              padding: '0.5rem 1rem',
+              marginBottom: '0'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                 <h3 style={{
@@ -1103,13 +1105,17 @@ export default function JobBoard() {
               )}
             </div>
 
+            {/* Horizontal Rule */}
+            <hr style={{
+              border: 'none',
+              height: '1px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              margin: '1rem 0'
+            }} />
+
             {/* Recommended Leads Section */}
             <div style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '16px',
-              padding: '1rem'
+              padding: '0 1rem 1rem 1rem'
             }}>
               <h3 style={{
                 fontSize: '1rem',
@@ -1624,7 +1630,6 @@ export default function JobBoard() {
 //           }}
 //         />
 //       </div>
-//       <span style={{ marginLeft: 8, color: !available ? '#0ccf83' : '#aaa', fontWeight: !available ? 700 : 400 }}>No</span>
 //     </div>
 //   );
 // }
