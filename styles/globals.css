@@ -522,3 +522,22 @@ body {
     transform: translateY(12px) translateX(-10px); 
   }
 }
+
+/* Login form placeholder styling */
+.login-input-placeholder::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+  opacity: 1;
+}
+
+.login-input-placeholder::-webkit-input-placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.login-input-placeholder::-moz-placeholder {
+  color: rgba(255, 255, 255, 0.6);
+  opacity: 1;
+}
+
+.login-input-placeholder:-ms-input-placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}

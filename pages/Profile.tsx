@@ -51,7 +51,7 @@ export default function Profile() {
     hourlyRate: 75,
     age: 30,
     lastYearEarnings: 75000,
-    gender: 'Prefer not to say',
+    gender: 'Male',
     interests: 'Technology, Innovation, Problem Solving',
     mainProblem: 'Finding the right opportunities',
   };
@@ -132,8 +132,8 @@ export default function Profile() {
           isAvailableForWork: true,
           hourlyRate: 75,
           age: 30,
-          lastYearEarnings: 75000,
-          gender: 'Prefer not to say',
+          lastYearEarnings: 100000,
+          gender: 'Male',
           interests: 'Technology, Innovation, Problem Solving',
           mainProblem: 'Finding the right opportunities'
         };
