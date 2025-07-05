@@ -1273,6 +1273,14 @@ export default function JobBoard() {
               />
             </div>
 
+            {/* Horizontal Rule */}
+            <hr style={{
+              border: 'none',
+              height: '1px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              margin: '1rem 0'
+            }} />
+
             {/* Active Search Pills */}
             {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" && (
               <div style={{
