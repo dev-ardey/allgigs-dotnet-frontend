@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Edit2, Save, X, Users, DollarSign, Bell, FileText, Upload, Trash2, LogOut } from 'lucide-react';
 import { supabase } from '../SupabaseClient';
 import GlobalNav from '../components/ui/GlobalNav';
+import LoginForm from '../components/ui/login';
+import CompleteProfileForm from '../components/ui/CompleteProfileForm';
+import { useProfileCheck } from '../components/ui/useProfileCheck';
 
 // Profile Interface (from dashboard)
 interface Profile {
@@ -33,6 +36,7 @@ interface Document {
 export default function Profile() {
   // State variables (from dashboard)
   const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   console.log(user)
   const [isAvailable, setIsAvailable] = useState(true);
   const emptyProfile: Profile = {
@@ -82,16 +86,21 @@ export default function Profile() {
     setDocuments(documents.filter(doc => doc.id !== id));
   };
 
-  // Auth check (from dashboard)
+  // Add profile check
+  const { needsProfile, loading: profileLoading } = useProfileCheck(user);
+
+  // Auth check (from dashboard) - Updated to match leadSearch/dashboard
   useEffect(() => {
     // Check auth state on mount
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user);
+      setLoading(false);
     });
     // Listen for login/logout
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       const user = session?.user ?? null;
       setUser(user);
+      setLoading(false);
     });
     return () => { listener?.subscription.unsubscribe(); };
   }, []);
@@ -99,11 +108,8 @@ export default function Profile() {
   // Fetch profile function (from dashboard)
   useEffect(() => {
     const fetchProfile = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
       if (!user) return;
+      setLoading(true);
 
       const { data, error } = await supabase
         .from('profiles')
@@ -134,10 +140,11 @@ export default function Profile() {
         setProfile(fetchedProfile);
         setEditedProfile(fetchedProfile);
       }
+      setLoading(false);
     };
 
     fetchProfile();
-  }, []);
+  }, [user]);
 
   // Save profile function (fixed to use upsert like CompleteProfileForm)
   const saveProfile = async () => {
@@ -214,6 +221,43 @@ export default function Profile() {
     await supabase.auth.signOut();
     setUser(null);
   };
+
+  // Authentication checks - exactly like leadSearch.tsx and dashboard.tsx
+  if (!user) {
+    return (
+      <div>
+        <LoginForm />
+      </div>
+    );
+  }
+
+  if (profileLoading || loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `
+          radial-gradient(ellipse at top left, rgba(139, 69, 189, 0.15) 0%, transparent 50%), 
+          radial-gradient(ellipse at bottom right, rgba(59, 130, 246, 0.15) 0%, transparent 50%), 
+          linear-gradient(135deg, #1a0b2e 0%, #16213e 25%, #0f3460 50%, #16213e 75%, #1a0b2e 100%)
+        `,
+        fontFamily: "'Montserrat', Arial, sans-serif",
+        color: '#fff',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          textAlign: 'center',
+          paddingTop: '20vh'
+        }}>
+          {/* Loading indicator can be added here if needed */}
+        </div>
+      </div>
+    );
+  }
+
+  if (needsProfile) {
+    return <CompleteProfileForm onComplete={() => window.location.reload()} />;
+  }
 
   return (
     <div style={{
