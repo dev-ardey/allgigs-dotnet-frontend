@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Save, X, Users, DollarSign, Bell, FileText, Upload, Trash2 } from 'lucide-react';
+import { Edit2, Save, X, Users, DollarSign, Bell, FileText, Upload, Trash2, LogOut } from 'lucide-react';
 import { supabase } from '../SupabaseClient';
 import GlobalNav from '../components/ui/GlobalNav';
 
@@ -206,6 +206,15 @@ export default function Profile() {
     setEditMode(false);
   };
 
+  // Logout function
+  const handleLogout = async () => {
+    const confirmed = window.confirm("Are you sure you want to logout?");
+    if (!confirmed) return;
+
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -284,35 +293,45 @@ export default function Profile() {
                 Manage your professional profile and preferences
               </p>
             </div>
-            {!editMode ? (
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              {/* Logout Button */}
               <button
-                onClick={() => setEditMode(true)}
+                onClick={handleLogout}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
                   padding: '0.75rem 1.25rem',
                   fontSize: '0.875rem',
-                  background: 'rgba(255, 255, 255, 0.2)',
+                  background: 'rgba(220, 38, 38, 0.2)',
                   color: '#fff',
                   borderRadius: '12px',
-                  border: 'none',
+                  border: '1px solid rgba(220, 38, 38, 0.3)',
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease'
                 }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(220, 38, 38, 0.3)';
+                  e.currentTarget.style.borderColor = 'rgba(220, 38, 38, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(220, 38, 38, 0.2)';
+                  e.currentTarget.style.borderColor = 'rgba(220, 38, 38, 0.3)';
+                }}
               >
-                <Edit2 style={{ width: '16px', height: '16px' }} />
-                Edit Profile
+                <LogOut style={{ width: '16px', height: '16px' }} />
+                Logout
               </button>
-            ) : (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+
+              {/* Edit Profile Buttons */}
+              {!editMode ? (
                 <button
-                  onClick={saveProfile}
+                  onClick={() => setEditMode(true)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.25rem',
+                    gap: '0.5rem',
                     padding: '0.75rem 1.25rem',
                     fontSize: '0.875rem',
                     background: 'rgba(255, 255, 255, 0.2)',
@@ -324,31 +343,54 @@ export default function Profile() {
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  <Save style={{ width: '16px', height: '16px' }} />
-                  Save
+                  <Edit2 style={{ width: '16px', height: '16px' }} />
+                  Edit Profile
                 </button>
-                <button
-                  onClick={cancelEdit}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.25rem',
-                    padding: '0.75rem 1.25rem',
-                    fontSize: '0.875rem',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    borderRadius: '12px',
-                    border: 'none',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  <X style={{ width: '16px', height: '16px' }} />
-                  Cancel
-                </button>
-              </div>
-            )}
+              ) : (
+                <>
+                  <button
+                    onClick={saveProfile}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.75rem 1.25rem',
+                      fontSize: '0.875rem',
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      color: '#fff',
+                      borderRadius: '12px',
+                      border: 'none',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <Save style={{ width: '16px', height: '16px' }} />
+                    Save
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.75rem 1.25rem',
+                      fontSize: '0.875rem',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      borderRadius: '12px',
+                      border: 'none',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <X style={{ width: '16px', height: '16px' }} />
+                    Cancel
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Available to Recruiters Toggle - Always Visible */}
