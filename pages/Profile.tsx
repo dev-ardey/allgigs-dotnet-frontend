@@ -696,6 +696,14 @@ export default function Profile() {
             </div>
           </div>
 
+          {/* Horizontal Rule */}
+          <hr style={{
+            border: 'none',
+            height: '1px',
+            background: 'rgba(255, 255, 255, 0.2)',
+            margin: '1.5rem 0'
+          }} />
+
           {/* Personal Information Section */}
           <div style={{ marginBottom: '2rem' }}>
             <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1120,6 +1128,14 @@ export default function Profile() {
             )}
           </div>
 
+          {/* Horizontal Rule */}
+          <hr style={{
+            border: 'none',
+            height: '1px',
+            background: 'rgba(255, 255, 255, 0.2)',
+            margin: '1.5rem 0'
+          }} />
+
           {/* Mail Notifications Section */}
           <div style={{ marginBottom: '2rem' }}>
             <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1252,6 +1268,15 @@ export default function Profile() {
               </div>
             </div>
           </div>
+
+          {/* Horizontal Rule */}
+          <hr style={{
+            border: 'none',
+            height: '1px',
+            background: 'rgba(255, 255, 255, 0.2)',
+            margin: '1.5rem 0'
+          }} />
+
           {/* Documents Section */}
           <div style={{ marginBottom: '2rem' }}>
             <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
