@@ -5,6 +5,9 @@ import { supabase } from '../SupabaseClient';
 // import { useRouter } from 'next/router';
 import AddJobForm from '../components/ui/add-job-form';
 import GlobalNav from '../components/ui/GlobalNav';
+import LoginForm from '../components/ui/login';
+import CompleteProfileForm from '../components/ui/CompleteProfileForm';
+import { useProfileCheck } from '../components/ui/useProfileCheck';
 
 // Qualified Leads Interfaces en Types
 import {
@@ -817,6 +820,7 @@ export default function Dashboard() {
   const [loadingRecentlyClicked, setLoadingRecentlyClicked] = useState(false);
   console.log(loadingRecentlyClicked, "loadingRecentlyClicked");
   const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   // const router = useRouter();
   // const searchJobs = (keyword: string) => {
   //   router.push(`/leadSearch?search=${encodeURIComponent(keyword)}`);
@@ -1000,6 +1004,8 @@ export default function Dashboard() {
 
   console.log(logJobClick, "logJobClick");
 
+  // Add profile check
+  const { needsProfile, loading: profileLoading } = useProfileCheck(user);
 
   // useEffect(() => {
   //   const fetchProfile = async () => {
@@ -1126,19 +1132,23 @@ export default function Dashboard() {
 
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (data?.user) {
-        console.log("[User] OK:", data.user);
-        setUser(data.user);
-      } else {
-        console.error("[User] error:", error);
-      }
-    };
-    getUser();
+    // Check auth state on mount
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+      setLoading(false);
+    });
+    // Listen for login/logout
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user ?? null;
+      setUser(user);
+      setLoading(false);
+    });
+    return () => { listener?.subscription.unsubscribe(); };
   }, []);
 
   useEffect(() => {
+    if (!user) return;
+    setLoading(true);
     if (user && user.id) {
       console.log("[Effect] Fetching recently clicked jobs...");
       fetchRecentlyClickedJobs();
@@ -1178,6 +1188,7 @@ export default function Dashboard() {
       setRecentlyClickedJobs([]);
     } finally {
       setLoadingRecentlyClicked(false);
+      setLoading(false);
     }
   };
 
@@ -1287,6 +1298,43 @@ export default function Dashboard() {
     // hier jouw logica bij click
     console.log('Lead aangeklikt:', lead);
   };
+
+  // Authentication checks - exactly like leadSearch.tsx
+  if (!user) {
+    return (
+      <div>
+        <LoginForm />
+      </div>
+    );
+  }
+
+  if (profileLoading || loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `
+          radial-gradient(ellipse at top left, rgba(139, 69, 189, 0.15) 0%, transparent 50%), 
+          radial-gradient(ellipse at bottom right, rgba(59, 130, 246, 0.15) 0%, transparent 50%), 
+          linear-gradient(135deg, #1a0b2e 0%, #16213e 25%, #0f3460 50%, #16213e 75%, #1a0b2e 100%)
+        `,
+        fontFamily: "'Montserrat', Arial, sans-serif",
+        color: '#fff',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          textAlign: 'center',
+          paddingTop: '20vh'
+        }}>
+          {/* Loading indicator can be added here if needed */}
+        </div>
+      </div>
+    );
+  }
+
+  if (needsProfile) {
+    return <CompleteProfileForm onComplete={() => window.location.reload()} />;
+  }
 
   return (
     <div style={{
