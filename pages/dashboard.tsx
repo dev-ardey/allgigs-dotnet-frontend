@@ -1406,7 +1406,7 @@ export default function Dashboard() {
 
       {/* Main dashboard content */}
       <div style={{ filter: 'none', transition: 'filter 0.2s' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '2rem', position: 'relative', zIndex: 5 }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '6rem 2rem 2rem 2rem', position: 'relative', zIndex: 5 }}>
 
 
           {/* Link to allGigs */}

@@ -911,7 +911,7 @@ export default function JobBoard() {
         <div style={{
           maxWidth: '1100px',
           margin: '0 auto',
-          padding: '2rem',
+          padding: '6rem 2rem 2rem 2rem',
           position: 'relative',
           zIndex: 5
         }}>
