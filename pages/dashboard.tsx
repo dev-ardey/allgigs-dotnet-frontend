@@ -133,72 +133,72 @@ const STATUS_CONFIG = {
 };
 
 // Mock data voor demo
-const MOCK_LEADS: Lead[] = [
-  {
-    UNIQUE_ID: '1',
-    Title: 'Senior Frontend Developer',
-    Company: 'TechCorp Amsterdam',
-    Location: 'Amsterdam, NL',
-    rate: '€75/hour',
-    date: '2025-06-28',
-    Summary: 'React, TypeScript, 5+ years experience',
-    URL: 'https://example.com/job1',
-    status: LeadStatus.APPLIED,
-    applied_at: '2025-06-29T10:00:00Z',
-    follow_up_date: '2025-07-02T10:00:00Z',
-    potential_value: 15000,
-    quality_score: 85,
-    days_since_action: 1,
-    notes: 'Interesting company, good culture fit'
-  },
-  {
-    UNIQUE_ID: '2',
-    Title: 'React Developer',
-    Company: 'StartupHub',
-    Location: 'Rotterdam, NL',
-    rate: '€65/hour',
-    date: '2025-06-27',
-    Summary: 'React, Node.js, startup environment',
-    URL: 'https://example.com/job2',
-    status: LeadStatus.FOLLOW_UP,
-    applied_at: '2025-06-26T14:00:00Z',
-    follow_up_date: '2025-06-30T14:00:00Z',
-    potential_value: 12000,
-    quality_score: 78,
-    days_since_action: 3,
-    notes: 'Quick response needed, competitive role'
-  },
-  {
-    UNIQUE_ID: '3',
-    Title: 'Full Stack Engineer',
-    Company: 'InnovateLabs',
-    Location: 'Utrecht, NL',
-    rate: '€80/hour',
-    date: '2025-06-25',
-    Summary: 'React, Node.js, PostgreSQL, 3+ years',
-    URL: 'https://example.com/job3',
-    status: LeadStatus.INTERVIEWED,
-    applied_at: '2025-06-20T09:00:00Z',
-    follow_up_date: '2025-06-25T16:00:00Z',
-    potential_value: 18000,
-    quality_score: 92,
-    days_since_action: 5,
-    notes: 'Great interview, waiting for final decision'
-  }
-];
+// const MOCK_LEADS: Lead[] = [
+//   {
+//     UNIQUE_ID: '1',
+//     Title: 'Senior Frontend Developer',
+//     Company: 'TechCorp Amsterdam',
+//     Location: 'Amsterdam, NL',
+//     rate: '€75/hour',
+//     date: '2025-06-28',
+//     Summary: 'React, TypeScript, 5+ years experience',
+//     URL: 'https://example.com/job1',
+//     status: LeadStatus.APPLIED,
+//     applied_at: '2025-06-29T10:00:00Z',
+//     follow_up_date: '2025-07-02T10:00:00Z',
+//     potential_value: 15000,
+//     quality_score: 85,
+//     days_since_action: 1,
+//     notes: 'Interesting company, good culture fit'
+//   },
+//   {
+//     UNIQUE_ID: '2',
+//     Title: 'React Developer',
+//     Company: 'StartupHub',
+//     Location: 'Rotterdam, NL',
+//     rate: '€65/hour',
+//     date: '2025-06-27',
+//     Summary: 'React, Node.js, startup environment',
+//     URL: 'https://example.com/job2',
+//     status: LeadStatus.FOLLOW_UP,
+//     applied_at: '2025-06-26T14:00:00Z',
+//     follow_up_date: '2025-06-30T14:00:00Z',
+//     potential_value: 12000,
+//     quality_score: 78,
+//     days_since_action: 3,
+//     notes: 'Quick response needed, competitive role'
+//   },
+//   {
+//     UNIQUE_ID: '3',
+//     Title: 'Full Stack Engineer',
+//     Company: 'InnovateLabs',
+//     Location: 'Utrecht, NL',
+//     rate: '€80/hour',
+//     date: '2025-06-25',
+//     Summary: 'React, Node.js, PostgreSQL, 3+ years',
+//     URL: 'https://example.com/job3',
+//     status: LeadStatus.INTERVIEWED,
+//     applied_at: '2025-06-20T09:00:00Z',
+//     follow_up_date: '2025-06-25T16:00:00Z',
+//     potential_value: 18000,
+//     quality_score: 92,
+//     days_since_action: 5,
+//     notes: 'Great interview, waiting for final decision'
+//   }
+// ];
 
 // Sales KPI Mock Data
-const MOCK_SALES_KPI: SalesKPIs = {
-  total_leads: 24,
-  conversion_rate: 12.5, // percentage
-  potential_revenue: 45000,
-  lead_quality_score: 82,
-  cost_per_application: 25,
-  pipeline_health: 78,
-  active_applications: 8,
-  interviews_scheduled: 3,
-  average_response_time: 4.2
-};
+// const MOCK_SALES_KPI: SalesKPIs = {
+//   total_leads: 24,
+//   conversion_rate: 12.5, // percentage
+//   potential_revenue: 45000,
+//   lead_quality_score: 82,
+//   cost_per_application: 25,
+//   pipeline_health: 78,
+//   active_applications: 8,
+//   interviews_scheduled: 3,
+//   average_response_time: 4.2
+// };
 
 interface QualifiedLeadsSectionProps {
   leads: Lead[];
