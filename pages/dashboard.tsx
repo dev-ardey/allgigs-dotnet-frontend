@@ -295,6 +295,14 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
             </p>
           </div>
 
+          {/* Horizontal Rule */}
+          <hr style={{
+            border: 'none',
+            height: '1px',
+            background: 'rgba(255, 255, 255, 0.2)',
+            margin: '1.5rem 0'
+          }} />
+
           {/* CRM Features (Locked) */}
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             {[
@@ -481,33 +489,32 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
         </div>
 
         {/* Leads Table */}
+        <hr style={{
+          border: 'none',
+          height: '1px',
+          background: 'rgba(255, 255, 255, 0.2)',
+          margin: '1.5rem 0'
+        }} />
+
         <div style={{
-          background: 'transparent',
-          backdropFilter: 'blur(16px)',
+          background: 'rgba(255, 255, 255, 0.15)',
           borderRadius: '20px',
-          overflow: 'hidden',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+          padding: '1.5rem',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(8px)'
         }}>
-          <div style={{
-            padding: '1.5rem',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-            background: 'rgba(255, 255, 255, 0.05)',
-            backdropFilter: 'blur(8px)'
+          <h3 style={{
+            fontSize: '1.25rem',
+            fontWeight: '600',
+            color: '#fff',
+            margin: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
           }}>
-            <h3 style={{
-              fontSize: '1.25rem',
-              fontWeight: '600',
-              color: '#fff',
-              margin: 0,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <TrendingUp style={{ width: '20px', height: '20px' }} />
-              Lead Pipeline
-            </h3>
-          </div>
+            <TrendingUp style={{ width: '20px', height: '20px' }} />
+            Lead Pipeline
+          </h3>
 
           <div style={{
             overflowX: 'auto',
@@ -683,74 +690,72 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
         </div>
 
         {/* Statistics Section */}
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: '20px',
-          padding: '1.5rem',
-          marginTop: '1.5rem',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          backdropFilter: 'blur(8px)'
+        <hr style={{
+          border: 'none',
+          height: '1px',
+          background: 'rgba(255, 255, 255, 0.2)',
+          margin: '1.5rem 0'
+        }} />
+
+        <h3 style={{
+          fontSize: '1.25rem',
+          fontWeight: '600',
+          color: '#fff',
+          marginBottom: '1rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
         }}>
-          <h3 style={{
-            fontSize: '1.25rem',
-            fontWeight: '600',
-            color: '#fff',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <TrendingUp style={{ width: '20px', height: '20px' }} />
-            Lead Click Statistics
-          </h3>
+          <TrendingUp style={{ width: '20px', height: '20px' }} />
+          Lead Click Statistics
+        </h3>
 
-          <div style={{
-            height: '192px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '12px',
-            padding: '1rem',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
-          }}>
+        <div style={{
+          height: '192px',
+          background: 'rgba(255, 255, 255, 0.1)',
+          borderRadius: '12px',
+          padding: '1rem',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)'
+        }}>
+          {/* @ts-ignore */}
+          <ResponsiveContainer width="100%" height="100%">
             {/* @ts-ignore */}
-            <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={statsData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.2)" />
               {/* @ts-ignore */}
-              <LineChart data={statsData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.2)" />
-                {/* @ts-ignore */}
-                <XAxis dataKey="name" stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
-                {/* @ts-ignore */}
-                <YAxis stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                    backdropFilter: 'blur(16px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    color: '#fff'
-                  }}
-                />
-                {/* @ts-ignore */}
-                <Line
-                  type="monotone"
-                  dataKey="views"
-                  stroke="#9333ea"
-                  strokeWidth={3}
-                  dot={{ fill: '#9333ea', strokeWidth: 2, r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          <p style={{
-            fontSize: '0.875rem',
-            color: 'rgba(255, 255, 255, 0.8)',
-            marginTop: '0.5rem'
-          }}>
-            Total this week: {statsData.reduce((acc, day) => acc + day.views, 0)} clicked leads
-          </p>
+              <XAxis dataKey="name" stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
+              {/* @ts-ignore */}
+              <YAxis stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  color: '#fff'
+                }}
+              />
+              {/* @ts-ignore */}
+              <Line
+                type="monotone"
+                dataKey="views"
+                stroke="#9333ea"
+                strokeWidth={3}
+                dot={{ fill: '#9333ea', strokeWidth: 2, r: 4 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
+
+        <p style={{
+          fontSize: '0.875rem',
+          color: 'rgba(255, 255, 255, 0.8)',
+          marginTop: '0.5rem'
+        }}>
+          Total this week: {statsData.reduce((acc, day) => acc + day.views, 0)} clicked leads
+        </p>
       </div>
     </div>
   );
