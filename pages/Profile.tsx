@@ -78,12 +78,68 @@ export default function Profile() {
     { id: "3", name: "Portfolio.pdf", type: "PDF", size: "4.7 MB", uploadedAt: "2025-06-15" },
   ]);
 
+  // Testimonial state
+  const [testimonial, setTestimonial] = useState('');
+  const [testimonialSending, setTestimonialSending] = useState(false);
+
+  // Feedback state
+  const [feedback, setFeedback] = useState('');
+  const [feedbackSending, setFeedbackSending] = useState(false);
+
   // Toggle available to recruiters function (from dashboard)
   const toggleAvailable = () => setIsAvailable(prev => !prev);
 
   // Remove document function (from dashboard)
   const removeDocument = (id: string) => {
     setDocuments(documents.filter(doc => doc.id !== id));
+  };
+
+  // Send testimonial function (placeholder for future Supabase integration)
+  const sendTestimonial = async () => {
+    if (!testimonial.trim()) {
+      alert('Please enter a testimonial before sending.');
+      return;
+    }
+
+    setTestimonialSending(true);
+
+    try {
+      // TODO: Send testimonial to Supabase when ready
+      // For now, just simulate sending
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      alert('Testimonial sent successfully!');
+      setTestimonial(''); // Clear the textarea after sending
+    } catch (error) {
+      console.error('Error sending testimonial:', error);
+      alert('Failed to send testimonial. Please try again.');
+    } finally {
+      setTestimonialSending(false);
+    }
+  };
+
+  // Send feedback function (placeholder for future Supabase integration)
+  const sendFeedback = async () => {
+    if (!feedback.trim()) {
+      alert('Please enter feedback before sending.');
+      return;
+    }
+
+    setFeedbackSending(true);
+
+    try {
+      // TODO: Send feedback to Supabase when ready
+      // For now, just simulate sending
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      alert('Feedback sent successfully!');
+      setFeedback(''); // Clear the textarea after sending
+    } catch (error) {
+      console.error('Error sending feedback:', error);
+      alert('Failed to send feedback. Please try again.');
+    } finally {
+      setFeedbackSending(false);
+    }
   };
 
   // Add profile check
@@ -496,7 +552,125 @@ export default function Profile() {
             </label>
           </div>
 
+          {/* Testimonial Section */}
+          <div style={{ marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Users style={{ width: '18px', height: '18px', color: 'white' }} />
+                Testimonial
+              </h3>
+              <button
+                onClick={sendTestimonial}
+                disabled={testimonialSending || !testimonial.trim()}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  fontSize: '0.875rem',
+                  background: testimonialSending || !testimonial.trim()
+                    ? 'rgba(255, 255, 255, 0.1)'
+                    : 'rgba(16, 185, 129, 0.2)',
+                  color: testimonialSending || !testimonial.trim()
+                    ? 'rgba(255, 255, 255, 0.5)'
+                    : '#fff',
+                  borderRadius: '8px',
+                  border: testimonialSending || !testimonial.trim()
+                    ? '1px solid rgba(255, 255, 255, 0.2)'
+                    : '1px solid rgba(16, 185, 129, 0.3)',
+                  fontWeight: '600',
+                  cursor: testimonialSending || !testimonial.trim()
+                    ? 'not-allowed'
+                    : 'pointer',
+                  transition: 'all 0.3s ease',
+                  backdropFilter: 'blur(8px)'
+                }}
+              >
+                {testimonialSending ? 'Sending...' : 'Send'}
+              </button>
+            </div>
 
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+              <div>
+                <textarea
+                  value={testimonial}
+                  onChange={(e) => setTestimonial(e.target.value)}
+                  className="testimonial-textarea"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    boxSizing: 'border-box',
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    color: '#fff',
+                    backdropFilter: 'blur(8px)',
+                    minHeight: '80px',
+                    resize: 'vertical'
+                  }}
+                  placeholder="Enter your testimonial"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Feedback Section */}
+          <div style={{ marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Users style={{ width: '18px', height: '18px', color: 'white' }} />
+                Feedback
+              </h3>
+              <button
+                onClick={sendFeedback}
+                disabled={feedbackSending || !feedback.trim()}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  fontSize: '0.875rem',
+                  background: feedbackSending || !feedback.trim()
+                    ? 'rgba(255, 255, 255, 0.1)'
+                    : 'rgba(16, 185, 129, 0.2)',
+                  color: feedbackSending || !feedback.trim()
+                    ? 'rgba(255, 255, 255, 0.5)'
+                    : '#fff',
+                  borderRadius: '8px',
+                  border: feedbackSending || !feedback.trim()
+                    ? '1px solid rgba(255, 255, 255, 0.2)'
+                    : '1px solid rgba(16, 185, 129, 0.3)',
+                  fontWeight: '600',
+                  cursor: feedbackSending || !feedback.trim()
+                    ? 'not-allowed'
+                    : 'pointer',
+                  transition: 'all 0.3s ease',
+                  backdropFilter: 'blur(8px)'
+                }}
+              >
+                {feedbackSending ? 'Sending...' : 'Send'}
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+              <div>
+                <textarea
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  className="feedback-textarea"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    boxSizing: 'border-box',
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    color: '#fff',
+                    backdropFilter: 'blur(8px)',
+                    minHeight: '80px',
+                    resize: 'vertical'
+                  }}
+                  placeholder="Enter your feedback"
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Personal Information Section */}
           <div style={{ marginBottom: '2rem' }}>
@@ -1148,6 +1322,31 @@ export default function Profile() {
 
         </div>
       </div>
+
+      {/* CSS Styles for white placeholder text */}
+      <style jsx>{`
+        .testimonial-textarea::placeholder,
+        .feedback-textarea::placeholder {
+          color: rgba(255, 255, 255, 0.7) !important;
+          opacity: 1;
+        }
+        
+        .testimonial-textarea::-webkit-input-placeholder,
+        .feedback-textarea::-webkit-input-placeholder {
+          color: rgba(255, 255, 255, 0.7) !important;
+        }
+        
+        .testimonial-textarea::-moz-placeholder,
+        .feedback-textarea::-moz-placeholder {
+          color: rgba(255, 255, 255, 0.7) !important;
+          opacity: 1;
+        }
+        
+        .testimonial-textarea:-ms-input-placeholder,
+        .feedback-textarea:-ms-input-placeholder {
+          color: rgba(255, 255, 255, 0.7) !important;
+        }
+      `}</style>
     </div>
   );
 } 
