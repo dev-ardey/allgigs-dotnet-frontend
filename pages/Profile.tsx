@@ -493,6 +493,14 @@ export default function Profile() {
             </div>
           </div>
 
+          {/* Horizontal Rule */}
+          <hr style={{
+            border: 'none',
+            height: '1px',
+            background: 'rgba(255, 255, 255, 0.2)',
+            margin: '1.5rem 0'
+          }} />
+
           {/* Available to Recruiters Toggle - Always Visible */}
           <div style={{
             marginTop: '1.5rem'
@@ -551,6 +559,14 @@ export default function Profile() {
               </div>
             </label>
           </div>
+
+          {/* Horizontal Rule */}
+          <hr style={{
+            border: 'none',
+            height: '1px',
+            background: 'rgba(255, 255, 255, 0.2)',
+            margin: '1.5rem 0'
+          }} />
 
           {/* Testimonial Section */}
           <div style={{ marginBottom: '2rem' }}>
@@ -611,6 +627,14 @@ export default function Profile() {
               </div>
             </div>
           </div>
+
+          {/* Horizontal Rule */}
+          <hr style={{
+            border: 'none',
+            height: '1px',
+            background: 'rgba(255, 255, 255, 0.2)',
+            margin: '1.5rem 0'
+          }} />
 
           {/* Feedback Section */}
           <div style={{ marginBottom: '2rem' }}>
