@@ -506,7 +506,7 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
           color: 'rgba(255, 255, 255, 0.7)',
           margin: '0 0 1rem 0'
         }}>
-          Track your job applications through each stage to maximize your success rate
+          Detailed overview with tools to maximise your opportunities
         </p>
 
         <div style={{
