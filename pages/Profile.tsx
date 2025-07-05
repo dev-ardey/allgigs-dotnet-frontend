@@ -424,72 +424,7 @@ export default function Profile() {
                 Logout
               </button>
 
-              {/* Edit Profile Buttons */}
-              {!editMode ? (
-                <button
-                  onClick={() => setEditMode(true)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.75rem 1.25rem',
-                    fontSize: '0.875rem',
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    color: '#fff',
-                    borderRadius: '12px',
-                    border: 'none',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  <Edit2 style={{ width: '16px', height: '16px' }} />
-                  Edit Profile
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={saveProfile}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.25rem',
-                      padding: '0.75rem 1.25rem',
-                      fontSize: '0.875rem',
-                      background: 'rgba(255, 255, 255, 0.2)',
-                      color: '#fff',
-                      borderRadius: '12px',
-                      border: 'none',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    <Save style={{ width: '16px', height: '16px' }} />
-                    Save
-                  </button>
-                  <button
-                    onClick={cancelEdit}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.25rem',
-                      padding: '0.75rem 1.25rem',
-                      fontSize: '0.875rem',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      borderRadius: '12px',
-                      border: 'none',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    <X style={{ width: '16px', height: '16px' }} />
-                    Cancel
-                  </button>
-                </>
-              )}
+
             </div>
           </div>
 
@@ -706,10 +641,79 @@ export default function Profile() {
 
           {/* Personal Information Section */}
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Users style={{ width: '18px', height: '18px', color: 'white' }} />
-              Personal Information
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Users style={{ width: '18px', height: '18px', color: 'white' }} />
+                Personal Information
+              </h3>
+
+              {/* Edit Profile Buttons */}
+              {!editMode ? (
+                <button
+                  onClick={() => setEditMode(true)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.75rem 1.25rem',
+                    fontSize: '0.875rem',
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    color: '#fff',
+                    borderRadius: '12px',
+                    border: 'none',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <Edit2 style={{ width: '16px', height: '16px' }} />
+                  Edit Profile
+                </button>
+              ) : (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={saveProfile}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.75rem 1.25rem',
+                      fontSize: '0.875rem',
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      color: '#fff',
+                      borderRadius: '12px',
+                      border: 'none',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <Save style={{ width: '16px', height: '16px' }} />
+                    Save
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.75rem 1.25rem',
+                      fontSize: '0.875rem',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      borderRadius: '12px',
+                      border: 'none',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <X style={{ width: '16px', height: '16px' }} />
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
 
             {editMode ? (
               <>
