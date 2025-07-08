@@ -390,7 +390,7 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
                       height: 0,
                       borderLeft: '8px solid transparent',
                       borderRight: '8px solid transparent',
-                      borderBottom: `8px solid ${feature.borderColor}`
+                      borderBottom: `8px solid ${feature.borderColor}`,
                     }} />
 
                     <h3 style={{
@@ -1447,46 +1447,46 @@ export default function Dashboard() {
 
           {/* Link to allGigs */}
           {/* <div style={{
-            background: '#fff',
-            borderRadius: '16px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-            border: '1px solid #e5e7eb',
-            padding: '1.5rem',
-            marginBottom: '2rem'
+          background: '#fff',
+          borderRadius: '16px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+          border: '1px solid #e5e7eb',
+          padding: '1.5rem',
+          marginBottom: '2rem'
 
+        }}>
+          <h2 style={{
+            fontSize: '1.25rem',
+            fontWeight: '600',
+            color: '#000',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
           }}>
-            <h2 style={{
-              fontSize: '1.25rem',
-              fontWeight: '600',
-              color: '#000',
-              marginBottom: '1rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <Search style={{ width: '20px', height: '20px' }} />
-              Search entire database for all Jobs
-            </h2>
+            <Search style={{ width: '20px', height: '20px' }} />
+            Search entire database for all Jobs
+          </h2>
 
 
 
-            <button style={{
-              width: '100%',
-              marginTop: '1rem',
-              padding: '0.75rem',
-              background: '#0ccf83',
-              color: '#000',
-              border: 'none',
-              borderRadius: '999px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              fontSize: '0.875rem'
-            }}
-              onClick={() => window.location.href = '/'}
-            >
-              allGigs
-            </button>
-          </div> */}
+          <button style={{
+            width: '100%',
+            marginTop: '1rem',
+            padding: '0.75rem',
+            background: '#0ccf83',
+            color: '#000',
+            border: 'none',
+            borderRadius: '999px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            fontSize: '0.875rem'
+          }}
+            onClick={() => window.location.href = '/'}
+          >
+            allGigs
+          </button>
+        </div> */}
 
           <QualifiedLeadsSection
             leads={qualifiedLeads}
@@ -1507,7 +1507,7 @@ export default function Dashboard() {
 
             {/* Keywords Card - COMMENTED OUT (moved to Recommended Leads section) */}
             {/*
-            <div style={{
+          <div style={{
               background: 'rgba(255, 255, 255, 0.15)',
               backdropFilter: 'blur(16px)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -1515,110 +1515,110 @@ export default function Dashboard() {
               padding: '1.5rem',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
               transition: 'all 0.3s ease'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
                 <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <SearchCheck style={{ width: '20px', height: '20px' }} />
-                  Quicksearch
+                <SearchCheck style={{ width: '20px', height: '20px' }} />
+                Quicksearch
               </h2>
-                <button
-                  onClick={() => setEditKeywords(!editKeywords)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 1rem',
-                    fontSize: '0.875rem',
+              <button
+                onClick={() => setEditKeywords(!editKeywords)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.5rem 1rem',
+                  fontSize: '0.875rem',
                     background: 'rgba(255, 255, 255, 0.2)',
                     color: '#fff',
                 borderRadius: '12px',
-                    border: 'none',
-                fontWeight: '600',
+                  border: 'none',
+                  fontWeight: '600',
                 cursor: 'pointer',
                     transition: 'all 0.3s ease'
-                  }}
-                >
-                  <Edit2 style={{ width: '16px', height: '16px' }} />
-                  {editKeywords ? 'Done' : 'Edit'}
+                }}
+              >
+                <Edit2 style={{ width: '16px', height: '16px' }} />
+                {editKeywords ? 'Done' : 'Edit'}
               </button>
-                  </div>
+            </div>
                 <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.5rem 0 0.5rem 0' }}>
-                  Click to quicksearch jobs
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-                  {keywords.map((keyword, index) => (
-                    <span
-                      key={index}
-                      onClick={() => !editKeywords && searchJobs(keyword)}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        padding: '0.5rem 1rem',
-                        borderRadius: '999px',
-                  fontSize: '0.875rem',
-                        fontWeight: '600',
+              Click to quicksearch jobs
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+              {keywords.map((keyword, index) => (
+                <span
+                  key={index}
+                  onClick={() => !editKeywords && searchJobs(keyword)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '999px',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
                         background: editKeywords ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.2)',
                         color: '#fff',
                         border: '1px solid rgba(245, 158, 11, 0.4)',
-                        cursor: editKeywords ? 'default' : 'pointer',
+                    cursor: editKeywords ? 'default' : 'pointer',
                         transition: 'all 0.2s',
                         backdropFilter: 'blur(8px)'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!editKeywords) {
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!editKeywords) {
                           e.currentTarget.style.background = 'rgba(245, 158, 11, 0.4)';
                           e.currentTarget.style.color = '#fff';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!editKeywords) {
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!editKeywords) {
                           e.currentTarget.style.background = 'rgba(245, 158, 11, 0.2)';
                           e.currentTarget.style.color = '#fff';
-                        }
-                      }}
-                    >
-                      {keyword}
-                      {editKeywords && (
+                    }
+                  }}
+                >
+                  {keyword}
+                  {editKeywords && (
                     <button
-                        onClick={() => removeKeyword(index)}
+                      onClick={() => removeKeyword(index)}
                       style={{
-                          marginLeft: '0.25rem',
+                        marginLeft: '0.25rem',
                         background: 'none',
                         border: 'none',
                           color: '#fff',
                         cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center'
+                        display: 'flex',
+                        alignItems: 'center'
                       }}
                     >
-                        <X style={{ width: '12px', height: '12px' }} />
+                      <X style={{ width: '12px', height: '12px' }} />
                     </button>
-                    )}
-                  </span>
-                ))}
-                </div>
+                  )}
+                </span>
+              ))}
+            </div>
 
-                {editKeywords && (
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input
-                      type="text"
-                      value={newKeyword}
-                      onChange={(e) => setNewKeyword(e.target.value)}
-                      onKeyDown={handleKeywordKeyDown}
-                      placeholder="Nieuwe zoekterm..."
-                      style={{
-                        flex: 1,
-                        padding: '0.75rem',
-                        border: '1px solid #ccc',
-                        borderRadius: '8px',
-                        fontSize: '0.875rem'
-                      }}
-                    />
-                    <button
-                      onClick={handleKeywordAdd}
-                      style={{
-                        padding: '0.75rem',
+            {editKeywords && (
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input
+                  type="text"
+                  value={newKeyword}
+                  onChange={(e) => setNewKeyword(e.target.value)}
+                  onKeyDown={handleKeywordKeyDown}
+                  placeholder="Nieuwe zoekterm..."
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem'
+                  }}
+                />
+                <button
+                  onClick={handleKeywordAdd}
+                  style={{
+                    padding: '0.75rem',
                         background: 'rgba(245, 158, 11, 0.2)',
                         color: '#fff',
                         borderRadius: '12px',
@@ -1626,66 +1626,66 @@ export default function Dashboard() {
                         cursor: 'pointer',
                         backdropFilter: 'blur(8px)',
                         transition: 'all 0.3s ease'
-                      }}
-                    >
-                      <Plus style={{ width: '16px', height: '16px' }} />
-                    </button>
+                  }}
+                >
+                  <Plus style={{ width: '16px', height: '16px' }} />
+                </button>
               </div>
-                )}
-              </div>
+            )}
+          </div>
               */}
 
             {/* Stats Card - REMOVED (moved to Qualified Leads section) */}
 
             {/* Post a Job Card - COMMENTED OUT */}
             {/*
-            <div style={{
+          <div style={{
               background: 'rgba(255, 255, 255, 0.15)',
               backdropFilter: 'blur(16px)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
               borderRadius: '24px',
-              padding: '2rem',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
+            padding: '2rem',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
               justifyContent: 'center',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
               transition: 'all 0.3s ease'
-            }}>
-              <div style={{
-                width: '48px',
-                height: '48px',
+          }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
                 background: 'rgba(255, 255, 255, 0.2)',
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '1rem'
-              }}>
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '1rem'
+            }}>
                 <Plus style={{ width: '24px', height: '24px', color: '#fff' }} />
-              </div>
+            </div>
               <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#fff', marginBottom: '0.5rem' }}>Post a Job</h2>
               <p style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
-                Add an interesting job that you found
-              </p>
-              <button
-                onClick={() => setShowAddJobForm(true)}
-                style={{
-                  padding: '0.75rem 1.5rem',
+              Add an interesting job that you found
+            </p>
+            <button
+              onClick={() => setShowAddJobForm(true)}
+              style={{
+                padding: '0.75rem 1.5rem',
                   background: 'rgba(255, 255, 255, 0.2)',
                   color: '#fff',
                   borderRadius: '12px',
-                  border: 'none',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
+                border: 'none',
+                fontWeight: '600',
+                fontSize: '0.875rem',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease'
-                }}
-              >
-                Submit new job
-              </button>
-            </div>
+              }}
+            >
+              Submit new job
+            </button>
+          </div>
             */}
 
           </div>
