@@ -1391,158 +1391,6 @@ export default function JobBoard() {
                   key={job.UNIQUE_ID}
                   style={{ position: 'relative', marginBottom: stackedJobs.length > 0 ? `${stackedJobs.length * 8 + 160}px` : '0' }}
                 >
-                  {/* Stacked Jobs - Behind Main Card */}
-                  {stackedJobs.length > 0 && stackedJobs.map((stackedJob, index) => (
-                    <div
-                      key={stackedJob.UNIQUE_ID}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(stackedJob.URL, '_blank', 'noopener,noreferrer');
-                      }}
-                      style={{
-                        position: 'absolute',
-                        top: '100%',
-                        // marginTop: `${(index + 1) * 8}px`,
-                        left: '4px',
-                        right: '4px',
-                        zIndex: -(index + 1),
-                        background: `linear-gradient(to bottom, 
-                          transparent 0%, 
-                          transparent 5%, 
-                          rgba(255, 255, 255, 0.1) 50%, 
-                          rgba(255, 255, 255, 0.15) 100%)`,
-                        // border: '1px solid rgba(255, 255, 255, 0.15)',
-                        // borderTop: '1px solid transparent',
-                        borderLeft: '1px solid transparent',
-                        borderRight: '1px solid transparent',
-                        borderRadius: '0 0 16px 16px',
-                        padding: '1rem 1.25rem 1rem 1.25rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        minHeight: 'auto',
-                        overflow: 'visible'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = `linear-gradient(to bottom, 
-                          rgba(255, 255, 255, 0.02) 0%, 
-                          rgba(255, 255, 255, 0.05) 10%, 
-                          rgba(255, 255, 255, 0.1) 30%, 
-                          rgba(255, 255, 255, 0.15) 100%)`;
-                        e.currentTarget.style.zIndex = '10';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = `linear-gradient(to bottom, 
-                          transparent 0%, 
-                          transparent 10%, 
-                          rgba(255, 255, 255, 0.04) 30%, 
-                          rgba(255, 255, 255, 0.08) 100%)`;
-                        e.currentTarget.style.zIndex = `${-(index + 1)}`;
-                      }}
-                    >
-                      {/* Duplicate indicator */}
-                      <div style={{
-                        position: 'absolute',
-                        top: '1rem',
-                        right: '1rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        color: 'rgba(255, 255, 255, 0.6)',
-                        fontSize: '0.75rem',
-                        fontWeight: '500'
-                      }}>
-                        <Layers2 style={{ width: '14px', height: '14px' }} />
-                        Possibly a duplicate
-                      </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                        <h4 style={{
-                          fontSize: '0.9rem',
-                          fontWeight: '600',
-                          color: '#fff',
-                          margin: 0,
-                          flex: 1,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
-                        }}
-                          dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Title, debouncedSearchTerm.split(' ')) }}
-                        />
-                        {isJobNew(stackedJob) && (
-                          <span style={{
-                            backgroundColor: "#10b981",
-                            color: "white",
-                            fontSize: "0.6rem",
-                            fontWeight: "bold",
-                            padding: "1px 4px",
-                            borderRadius: "6px",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.5px",
-                            marginLeft: '0.5rem'
-                          }}>
-                            New
-                          </span>
-                        )}
-                      </div>
-
-                      <p style={{
-                        fontSize: '0.8rem',
-                        color: 'rgba(255, 255, 255, 0.8)',
-                        margin: '0 0 0.5rem 0',
-                        fontWeight: '500',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
-                      }}
-                        dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Company, debouncedSearchTerm.split(' ')) }}
-                      />
-
-                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                        {stackedJob.rate && stackedJob.rate.trim() !== '' && isDifferentFromPrimary(job.rate, stackedJob.rate) && (
-                          <span style={{
-                            background: 'rgba(16, 185, 129, 0.2)',
-                            color: '#fff',
-                            padding: '0.15rem 0.4rem',
-                            borderRadius: '6px',
-                            fontSize: '0.7rem',
-                            fontWeight: '600',
-                            border: '1px solid rgba(16, 185, 129, 0.3)'
-                          }}>
-                            {stackedJob.rate}
-                          </span>
-                        )}
-
-                        {stackedJob.Location && stackedJob.Location.trim() !== '' && isDifferentFromPrimary(job.Location, stackedJob.Location) && (
-                          <span style={{
-                            background: 'rgba(236, 72, 153, 0.2)',
-                            color: '#fff',
-                            padding: '0.15rem 0.4rem',
-                            borderRadius: '6px',
-                            fontSize: '0.7rem',
-                            fontWeight: '600',
-                            border: '1px solid rgba(236, 72, 153, 0.3)'
-                          }}
-                            dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Location, debouncedSearchTerm.split(' ')) }}
-                          />
-                        )}
-
-                        {stackedJob.date && stackedJob.date.trim() !== '' && (
-                          <span style={{
-                            background: 'rgba(59, 130, 246, 0.2)',
-                            color: '#fff',
-                            padding: '0.15rem 0.4rem',
-                            borderRadius: '6px',
-                            fontSize: '0.7rem',
-                            fontWeight: '600',
-                            border: '1px solid rgba(59, 130, 246, 0.3)'
-                          }}>
-                            {stackedJob.date}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-
                   {/* Main Job Card */}
                   <div
                     onClick={() => {
@@ -1749,6 +1597,163 @@ export default function JobBoard() {
                       </div>
                     )}
                   </div>
+
+                  {/* Stacked Jobs - After Main Card */}
+                  {stackedJobs.length > 0 && stackedJobs.map((stackedJob, index) => (
+                    <div
+                      key={stackedJob.UNIQUE_ID}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(stackedJob.URL, '_blank', 'noopener,noreferrer');
+                      }}
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
+                        marginTop: `${(index + 1) * 8}px`,
+                        left: '4px',
+                        right: '4px',
+                        zIndex: 1,
+                        background: `linear-gradient(to bottom, 
+                          transparent 0%, 
+                          transparent 5%, 
+                          rgba(255, 255, 255, 0.1) 50%, 
+                          rgba(255, 255, 255, 0.15) 100%)`,
+                        borderLeft: '1px solid transparent',
+                        borderRight: '1px solid transparent',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '0 0 16px 16px',
+                        padding: '1rem 1.25rem 1rem 1.25rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        minHeight: 'auto',
+                        overflow: 'visible'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = `linear-gradient(to bottom, 
+                          rgba(255, 255, 255, 0.05) 0%, 
+                          rgba(255, 255, 255, 0.08) 10%, 
+                          rgba(255, 255, 255, 0.15) 30%, 
+                          rgba(255, 255, 255, 0.2) 100%)`;
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.2)';
+                        e.currentTarget.style.zIndex = '10';
+                        e.currentTarget.style.borderBottom = '1px solid rgba(255, 255, 255, 0.3)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = `linear-gradient(to bottom, 
+                          transparent 0%, 
+                          transparent 5%, 
+                          rgba(255, 255, 255, 0.1) 50%, 
+                          rgba(255, 255, 255, 0.15) 100%)`;
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                        e.currentTarget.style.zIndex = '1';
+                        e.currentTarget.style.borderBottom = '1px solid rgba(255, 255, 255, 0.2)';
+                      }}
+                    >
+                      {/* Duplicate indicator */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '1rem',
+                        right: '1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        fontSize: '0.75rem',
+                        fontWeight: '500'
+                      }}>
+                        <Layers2 style={{ width: '14px', height: '14px' }} />
+                        Possibly a duplicate
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <h4 style={{
+                          fontSize: '0.9rem',
+                          fontWeight: '600',
+                          color: '#fff',
+                          margin: 0,
+                          flex: 1,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}
+                          dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Title, debouncedSearchTerm.split(' ')) }}
+                        />
+                        {isJobNew(stackedJob) && (
+                          <span style={{
+                            backgroundColor: "#10b981",
+                            color: "white",
+                            fontSize: "0.6rem",
+                            fontWeight: "bold",
+                            padding: "1px 4px",
+                            borderRadius: "6px",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px",
+                            marginLeft: '0.5rem'
+                          }}>
+                            New
+                          </span>
+                        )}
+                      </div>
+
+                      <p style={{
+                        fontSize: '0.8rem',
+                        color: 'rgba(255, 255, 255, 0.8)',
+                        margin: '0 0 0.5rem 0',
+                        fontWeight: '500',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                        dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Company, debouncedSearchTerm.split(' ')) }}
+                      />
+
+                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                        {stackedJob.rate && stackedJob.rate.trim() !== '' && isDifferentFromPrimary(job.rate, stackedJob.rate) && (
+                          <span style={{
+                            background: 'rgba(16, 185, 129, 0.2)',
+                            color: '#fff',
+                            padding: '0.15rem 0.4rem',
+                            borderRadius: '6px',
+                            fontSize: '0.7rem',
+                            fontWeight: '600',
+                            border: '1px solid rgba(16, 185, 129, 0.3)'
+                          }}>
+                            {stackedJob.rate}
+                          </span>
+                        )}
+
+                        {stackedJob.Location && stackedJob.Location.trim() !== '' && isDifferentFromPrimary(job.Location, stackedJob.Location) && (
+                          <span style={{
+                            background: 'rgba(236, 72, 153, 0.2)',
+                            color: '#fff',
+                            padding: '0.15rem 0.4rem',
+                            borderRadius: '6px',
+                            fontSize: '0.7rem',
+                            fontWeight: '600',
+                            border: '1px solid rgba(236, 72, 153, 0.3)'
+                          }}
+                            dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Location, debouncedSearchTerm.split(' ')) }}
+                          />
+                        )}
+
+                        {stackedJob.date && stackedJob.date.trim() !== '' && (
+                          <span style={{
+                            background: 'rgba(59, 130, 246, 0.2)',
+                            color: '#fff',
+                            padding: '0.15rem 0.4rem',
+                            borderRadius: '6px',
+                            fontSize: '0.7rem',
+                            fontWeight: '600',
+                            border: '1px solid rgba(59, 130, 246, 0.3)'
+                          }}>
+                            {stackedJob.date}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
