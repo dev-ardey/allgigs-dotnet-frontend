@@ -1439,6 +1439,22 @@ export default function JobBoard() {
                         e.currentTarget.style.zIndex = `${-(index + 1)}`;
                       }}
                     >
+                      {/* Duplicate indicator */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '1rem',
+                        right: '1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        fontSize: '0.75rem',
+                        fontWeight: '500'
+                      }}>
+                        <Layers2 style={{ width: '14px', height: '14px' }} />
+                        Possibly a duplicate
+                      </div>
+
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                         <h4 style={{
                           fontSize: '0.9rem',
@@ -1568,22 +1584,20 @@ export default function JobBoard() {
                             dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.Title, debouncedSearchTerm.split(' ')) }}
                           />
                           {stackedJobs.length > 0 && (
-                            <span style={{
-                              backgroundColor: "rgba(245, 158, 11, 0.8)",
-                              color: "white",
-                              fontSize: "0.7rem",
-                              fontWeight: "bold",
-                              padding: "2px 6px",
-                              borderRadius: "8px",
-                              textTransform: "uppercase",
-                              letterSpacing: "0.5px",
+                            <div style={{
+                              position: 'absolute',
+                              top: '1rem',
+                              right: '1rem',
                               display: 'flex',
                               alignItems: 'center',
-                              gap: '4px'
+                              gap: '4px',
+                              color: 'rgba(255, 255, 255, 0.7)',
+                              fontSize: '0.875rem',
+                              fontWeight: '500'
                             }}>
-                              <Layers2 style={{ width: '12px', height: '12px' }} />
+                              <Layers2 style={{ width: '16px', height: '16px' }} />
                               +{stackedJobs.length}
-                            </span>
+                            </div>
                           )}
                           {isJobNew(job) && (
                             <span style={{
