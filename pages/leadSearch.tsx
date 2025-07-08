@@ -1616,7 +1616,7 @@ export default function JobBoard() {
                         background: `linear-gradient(to bottom, 
                           transparent 0%, 
                           transparent 5%, 
-                          rgba(255, 255, 255, 0.1) 50%, 
+                          rgba(255, 255, 255, 0.1) 60%, 
                           rgba(255, 255, 255, 0.15) 100%)`,
                         borderLeft: '1px solid transparent',
                         borderRight: '1px solid transparent',
