@@ -1455,7 +1455,7 @@ export default function JobBoard() {
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Building2 style={{ width: '16px', height: '16px' }} />
-                    Companies ({selectedCompanies.size}/{getUniqueCompanies.length})
+                    Companies ( {selectedCompanies.size} / {getUniqueCompanies.length} )
                   </span>
                   <ChevronDown style={{
                     width: '16px',
@@ -1629,7 +1629,7 @@ export default function JobBoard() {
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <MapPin style={{ width: '16px', height: '16px' }} />
-                    Locations ({selectedLocations.size}/{getUniqueLocations.length})
+                    Locations ( {selectedLocations.size} / {getUniqueLocations.length} )
                   </span>
                   <ChevronDown style={{
                     width: '16px',
