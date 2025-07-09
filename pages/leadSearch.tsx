@@ -1389,7 +1389,7 @@ export default function JobBoard() {
               {groupedJobs.map(({ primaryJob: job, stackedJobs }) => (
                 <div
                   key={job.UNIQUE_ID}
-                  style={{ position: 'relative', marginBottom: stackedJobs.length > 0 ? `${stackedJobs.length * 8 + 102}px` : '0' }}
+                  style={{ position: 'relative', marginBottom: stackedJobs.length > 0 ? `${stackedJobs.length * 8 + 80}px` : '0' }}
                 >
                   {/* Main Job Card */}
                   <div
@@ -1622,7 +1622,7 @@ export default function JobBoard() {
                         borderRight: '1px solid transparent',
                         borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
                         borderRadius: '0 0 16px 16px',
-                        padding: '1rem 1.25rem 1rem 1.25rem',
+                        padding: '1rem 1.25rem 0rem 1.25rem',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         minHeight: 'auto',
@@ -1697,60 +1697,63 @@ export default function JobBoard() {
                         )}
                       </div>
 
-                      <p style={{
-                        fontSize: '0.8rem',
-                        color: 'rgba(255, 255, 255, 0.8)',
-                        margin: '0 0 0.5rem 0',
-                        fontWeight: '500',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
-                      }}
-                        dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Company, debouncedSearchTerm.split(' ')) }}
-                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+                        <p style={{
+                          fontSize: '0.8rem',
+                          color: 'rgba(255, 255, 255, 0.8)',
+                          margin: '0',
+                          fontWeight: '500',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          minWidth: 'fit-content'
+                        }}
+                          dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Company, debouncedSearchTerm.split(' ')) }}
+                        />
 
-                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                        {stackedJob.rate && stackedJob.rate.trim() !== '' && isDifferentFromPrimary(job.rate, stackedJob.rate) && (
-                          <span style={{
-                            background: 'rgba(16, 185, 129, 0.2)',
-                            color: '#fff',
-                            padding: '0.15rem 0.4rem',
-                            borderRadius: '6px',
-                            fontSize: '0.7rem',
-                            fontWeight: '600',
-                            border: '1px solid rgba(16, 185, 129, 0.3)'
-                          }}>
-                            {stackedJob.rate}
-                          </span>
-                        )}
+                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                          {stackedJob.rate && stackedJob.rate.trim() !== '' && isDifferentFromPrimary(job.rate, stackedJob.rate) && (
+                            <span style={{
+                              background: 'rgba(16, 185, 129, 0.2)',
+                              color: '#fff',
+                              padding: '0.15rem 0.4rem',
+                              borderRadius: '6px',
+                              fontSize: '0.7rem',
+                              fontWeight: '600',
+                              border: '1px solid rgba(16, 185, 129, 0.3)'
+                            }}>
+                              {stackedJob.rate}
+                            </span>
+                          )}
 
-                        {stackedJob.Location && stackedJob.Location.trim() !== '' && isDifferentFromPrimary(job.Location, stackedJob.Location) && (
-                          <span style={{
-                            background: 'rgba(236, 72, 153, 0.2)',
-                            color: '#fff',
-                            padding: '0.15rem 0.4rem',
-                            borderRadius: '6px',
-                            fontSize: '0.7rem',
-                            fontWeight: '600',
-                            border: '1px solid rgba(236, 72, 153, 0.3)'
-                          }}
-                            dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Location, debouncedSearchTerm.split(' ')) }}
-                          />
-                        )}
+                          {stackedJob.Location && stackedJob.Location.trim() !== '' && isDifferentFromPrimary(job.Location, stackedJob.Location) && (
+                            <span style={{
+                              background: 'rgba(236, 72, 153, 0.2)',
+                              color: '#fff',
+                              padding: '0.15rem 0.4rem',
+                              borderRadius: '6px',
+                              fontSize: '0.7rem',
+                              fontWeight: '600',
+                              border: '1px solid rgba(236, 72, 153, 0.3)'
+                            }}
+                              dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Location, debouncedSearchTerm.split(' ')) }}
+                            />
+                          )}
 
-                        {stackedJob.date && stackedJob.date.trim() !== '' && (
-                          <span style={{
-                            background: 'rgba(59, 130, 246, 0.2)',
-                            color: '#fff',
-                            padding: '0.15rem 0.4rem',
-                            borderRadius: '6px',
-                            fontSize: '0.7rem',
-                            fontWeight: '600',
-                            border: '1px solid rgba(59, 130, 246, 0.3)'
-                          }}>
-                            {stackedJob.date}
-                          </span>
-                        )}
+                          {stackedJob.date && stackedJob.date.trim() !== '' && (
+                            <span style={{
+                              background: 'rgba(59, 130, 246, 0.2)',
+                              color: '#fff',
+                              padding: '0.15rem 0.4rem',
+                              borderRadius: '6px',
+                              fontSize: '0.7rem',
+                              fontWeight: '600',
+                              border: '1px solid rgba(59, 130, 246, 0.3)'
+                            }}>
+                              {stackedJob.date}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1759,35 +1762,37 @@ export default function JobBoard() {
             </div>
 
             {/* Pagination */}
-            {getPageNumbers().length > 1 && (
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                marginTop: '2rem',
-                flexWrap: 'wrap'
-              }}>
-                {getPageNumbers().map((pageNum) => (
-                  <button
-                    key={pageNum}
-                    onClick={() => setPage(pageNum)}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      background: page === pageNum ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)',
-                      border: page === pageNum ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)',
-                      borderRadius: '8px',
-                      color: '#fff',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      backdropFilter: 'blur(8px)',
-                      fontWeight: page === pageNum ? '600' : '400'
-                    }}
-                  >
-                    {pageNum + 1}
-                  </button>
-                ))}
-              </div>
-            )}
+            {
+              getPageNumbers().length > 1 && (
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  marginTop: '2rem',
+                  flexWrap: 'wrap'
+                }}>
+                  {getPageNumbers().map((pageNum) => (
+                    <button
+                      key={pageNum}
+                      onClick={() => setPage(pageNum)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        background: page === pageNum ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+                        border: page === pageNum ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '8px',
+                        color: '#fff',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        backdropFilter: 'blur(8px)',
+                        fontWeight: page === pageNum ? '600' : '400'
+                      }}
+                    >
+                      {pageNum + 1}
+                    </button>
+                  ))}
+                </div>
+              )
+            }
           </div>
         </div>
 
