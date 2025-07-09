@@ -12,7 +12,7 @@ import CompleteProfileForm from "../components/ui/CompleteProfileForm";
 import { useProfileCheck } from "../components/ui/useProfileCheck";
 import { useRouter } from "next/router";
 import GlobalNav from "../components/ui/GlobalNav";
-import { Search, Sparkles, SearchCheck, Edit2, Plus, X, Building2, MapPin, Coins, Layers2 } from "lucide-react";
+import { Search, Sparkles, SearchCheck, Edit2, Plus, X, Building2, MapPin, Coins, Layers2, ChevronDown } from "lucide-react";
 
 
 interface Job {
@@ -69,6 +69,14 @@ export default function JobBoard() {
   // State to track if sticky header should be visible
   const [showStickyHeader, setShowStickyHeader] = useState(false);
   const leadSearchSectionRef = useRef<HTMLDivElement>(null);
+
+  // Filter states
+  const [selectedCompanies, setSelectedCompanies] = useState<Set<string>>(new Set());
+  const [selectedLocations, setSelectedLocations] = useState<Set<string>>(new Set());
+  const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [companySearchTerm, setCompanySearchTerm] = useState('');
+  const [locationSearchTerm, setLocationSearchTerm] = useState('');
 
   // const paginatedJobs = filteredJobs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   // const paginationButtonStyle: React.CSSProperties = {
@@ -296,6 +304,80 @@ export default function JobBoard() {
     fetchJobs();
   }, [user]);
 
+  // Initialize filters when allJobs change
+  useEffect(() => {
+    if (allJobs.length > 0) {
+      // Extract unique companies and locations
+      const companies = new Set(allJobs.map(job => job.Company).filter(company => company && company.trim() !== ''));
+      const locations = new Set(allJobs.map(job => job.Location).filter(location => location && location.trim() !== ''));
+
+      // Initialize with all companies and locations selected
+      setSelectedCompanies(companies);
+      setSelectedLocations(locations);
+    }
+  }, [allJobs]);
+
+  // Filter functions
+  const getUniqueCompanies = useMemo(() => {
+    return Array.from(new Set(allJobs.map(job => job.Company).filter(company => company && company.trim() !== ''))).sort();
+  }, [allJobs]);
+
+  const getUniqueLocations = useMemo(() => {
+    return Array.from(new Set(allJobs.map(job => job.Location).filter(location => location && location.trim() !== ''))).sort();
+  }, [allJobs]);
+
+  const toggleCompany = (company: string) => {
+    const newSelected = new Set(selectedCompanies);
+    if (newSelected.has(company)) {
+      newSelected.delete(company);
+    } else {
+      newSelected.add(company);
+    }
+    setSelectedCompanies(newSelected);
+  };
+
+  const toggleLocation = (location: string) => {
+    const newSelected = new Set(selectedLocations);
+    if (newSelected.has(location)) {
+      newSelected.delete(location);
+    } else {
+      newSelected.add(location);
+    }
+    setSelectedLocations(newSelected);
+  };
+
+  const selectAllCompanies = () => {
+    setSelectedCompanies(new Set(getUniqueCompanies));
+  };
+
+  const deselectAllCompanies = () => {
+    setSelectedCompanies(new Set());
+  };
+
+  const selectAllLocations = () => {
+    setSelectedLocations(new Set(getUniqueLocations));
+  };
+
+  const deselectAllLocations = () => {
+    setSelectedLocations(new Set());
+  };
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('[data-filter-dropdown]')) {
+        setShowCompanyDropdown(false);
+        setShowLocationDropdown(false);
+      }
+    };
+
+    if (showCompanyDropdown || showLocationDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showCompanyDropdown, showLocationDropdown]);
+
   // Function to fetch recently clicked jobs
   // const fetchRecentlyClickedJobs = async () => {
   //   if (!user || !user.id) {
@@ -432,10 +514,18 @@ export default function JobBoard() {
       // no filtering by search term happens here, filtered remains allJobs.
     }
 
-    // Removed filtering by selectedIndustry and excludedTerms
+    // 2. Filter by selected companies
+    if (selectedCompanies.size > 0) {
+      filtered = filtered.filter(job => selectedCompanies.has(job.Company));
+    }
+
+    // 3. Filter by selected locations
+    if (selectedLocations.size > 0) {
+      filtered = filtered.filter(job => selectedLocations.has(job.Location));
+    }
 
     return filtered;
-  }, [allJobs, debouncedSearchTerm]); // Removed selectedIndustry, excludedTerms, categorizeJob
+  }, [allJobs, debouncedSearchTerm, selectedCompanies, selectedLocations]);
 
   // Sort filtered jobs by Fuse.js search results or by newest first
   const sortedJobs = useMemo(() => {
@@ -1321,6 +1411,362 @@ export default function JobBoard() {
                 <p style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.8)', margin: 0 }}>
                   From <span style={{ fontWeight: '600', color: '#10b981' }}>{sortedJobs.length}</span> curated positions
                 </p>
+              </div>
+            </div>
+
+            {/* Filters Section */}
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              marginBottom: '1.5rem',
+              flexWrap: 'wrap'
+            }}>
+              {/* Company Filter */}
+              <div style={{ position: 'relative', minWidth: '300px' }} data-filter-dropdown>
+                <button
+                  onClick={() => {
+                    setShowCompanyDropdown(!showCompanyDropdown);
+                    setShowLocationDropdown(false);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '12px',
+                    color: '#fff',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Building2 style={{ width: '16px', height: '16px' }} />
+                    Companies ({selectedCompanies.size}/{getUniqueCompanies.length})
+                  </span>
+                  <ChevronDown style={{
+                    width: '16px',
+                    height: '16px',
+                    transform: showCompanyDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease'
+                  }} />
+                </button>
+
+                {showCompanyDropdown && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    marginTop: '0.5rem',
+                    background: 'rgba(114, 111, 135, 1)',
+                    backdropFilter: 'blur(16px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    zIndex: 1000,
+                    maxHeight: '300px',
+                    overflowY: 'auto',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+                  }}>
+                    {/* Search within companies */}
+                    <input
+                      type="text"
+                      placeholder="Search companies..."
+                      value={companySearchTerm}
+                      onChange={(e) => setCompanySearchTerm(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem',
+                        marginBottom: '0.75rem',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '8px',
+                        color: '#fff',
+                        fontSize: '0.875rem',
+                        boxSizing: 'border-box'
+                      }}
+                      className="search-input-placeholder"
+                    />
+
+                    {/* Select All / Deselect All */}
+                    <div style={{
+                      display: 'flex',
+                      gap: '0.5rem',
+                      marginBottom: '0.75rem',
+                      paddingBottom: '0.75rem',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}>
+                      <button
+                        onClick={selectAllCompanies}
+                        style={{
+                          flex: 1,
+                          padding: '0.5rem',
+                          background: 'rgba(16, 185, 129, 0.2)',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          borderRadius: '6px',
+                          color: '#fff',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        Select All
+                      </button>
+                      <button
+                        onClick={deselectAllCompanies}
+                        style={{
+                          flex: 1,
+                          padding: '0.5rem',
+                          background: 'rgba(239, 68, 68, 0.2)',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          borderRadius: '6px',
+                          color: '#fff',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        Deselect All
+                      </button>
+                    </div>
+
+                    {/* Company List */}
+                    {getUniqueCompanies
+                      .filter(company =>
+                        company.toLowerCase().includes(companySearchTerm.toLowerCase())
+                      )
+                      .map(company => (
+                        <label
+                          key={company}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.5rem',
+                            cursor: 'pointer',
+                            borderRadius: '6px',
+                            transition: 'background 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedCompanies.has(company)}
+                            onChange={() => toggleCompany(company)}
+                            style={{
+                              width: '16px',
+                              height: '16px',
+                              accentColor: '#10b981'
+                            }}
+                          />
+                          <span style={{
+                            color: '#fff',
+                            fontSize: '0.875rem',
+                            flex: 1,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {company}
+                          </span>
+                        </label>
+                      ))
+                    }
+                  </div>
+                )}
+              </div>
+
+              {/* Location Filter */}
+              <div style={{ position: 'relative', minWidth: '300px' }} data-filter-dropdown>
+                <button
+                  onClick={() => {
+                    setShowLocationDropdown(!showLocationDropdown);
+                    setShowCompanyDropdown(false);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '12px',
+                    color: '#fff',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <MapPin style={{ width: '16px', height: '16px' }} />
+                    Locations ({selectedLocations.size}/{getUniqueLocations.length})
+                  </span>
+                  <ChevronDown style={{
+                    width: '16px',
+                    height: '16px',
+                    transform: showLocationDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease'
+                  }} />
+                </button>
+
+                {showLocationDropdown && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    marginTop: '0.5rem',
+                    background: 'rgba(114, 111, 135, 1)',
+                    backdropFilter: 'blur(16px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    zIndex: 1000,
+                    maxHeight: '300px',
+                    overflowY: 'auto',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+                  }}>
+                    {/* Search within locations */}
+                    <input
+                      type="text"
+                      placeholder="Search locations..."
+                      value={locationSearchTerm}
+                      onChange={(e) => setLocationSearchTerm(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem',
+                        marginBottom: '0.75rem',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '8px',
+                        color: '#fff',
+                        fontSize: '0.875rem',
+                        boxSizing: 'border-box'
+                      }}
+                      className="search-input-placeholder"
+                    />
+
+                    {/* Select All / Deselect All */}
+                    <div style={{
+                      display: 'flex',
+                      gap: '0.5rem',
+                      marginBottom: '0.75rem',
+                      paddingBottom: '0.75rem',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}>
+                      <button
+                        onClick={selectAllLocations}
+                        style={{
+                          flex: 1,
+                          padding: '0.5rem',
+                          background: 'rgba(16, 185, 129, 0.2)',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          borderRadius: '6px',
+                          color: '#fff',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        Select All
+                      </button>
+                      <button
+                        onClick={deselectAllLocations}
+                        style={{
+                          flex: 1,
+                          padding: '0.5rem',
+                          background: 'rgba(239, 68, 68, 0.2)',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          borderRadius: '6px',
+                          color: '#fff',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        Deselect All
+                      </button>
+                    </div>
+
+                    {/* Location List */}
+                    {getUniqueLocations
+                      .filter(location =>
+                        location.toLowerCase().includes(locationSearchTerm.toLowerCase())
+                      )
+                      .map(location => (
+                        <label
+                          key={location}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.5rem',
+                            cursor: 'pointer',
+                            borderRadius: '6px',
+                            transition: 'background 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedLocations.has(location)}
+                            onChange={() => toggleLocation(location)}
+                            style={{
+                              width: '16px',
+                              height: '16px',
+                              accentColor: '#10b981'
+                            }}
+                          />
+                          <span style={{
+                            color: '#fff',
+                            fontSize: '0.875rem',
+                            flex: 1,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {location}
+                          </span>
+                        </label>
+                      ))
+                    }
+                  </div>
+                )}
               </div>
             </div>
 
