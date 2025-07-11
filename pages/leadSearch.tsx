@@ -12,7 +12,7 @@ import CompleteProfileForm from "../components/ui/CompleteProfileForm";
 import { useProfileCheck } from "../components/ui/useProfileCheck";
 import { useRouter } from "next/router";
 import GlobalNav from "../components/ui/GlobalNav";
-import { Search, Sparkles, SearchCheck, Edit2, Plus, X, Building2, MapPin, Coins, Layers2, ChevronDown } from "lucide-react";
+import { Search, Sparkles, SearchCheck, Edit2, Plus, X, Building2, MapPin, Coins, Layers2, ChevronDown, Globe, Lock } from "lucide-react";
 
 
 interface Job {
@@ -33,6 +33,9 @@ interface Job {
   source?: string // Source of the job (e.g., 'allGigs')
   tags?: string // Tags for the job
   clicked_at?: string; // Added to store when the job was clicked by the user
+  Dutch?: boolean; // Regional filter: Dutch jobs
+  EU?: boolean; // Regional filter: EU jobs
+  Rest_of_World?: boolean; // Regional filter: Rest of World jobs
 }
 
 export default function JobBoard() {
@@ -73,10 +76,13 @@ export default function JobBoard() {
   // Filter states
   const [selectedCompanies, setSelectedCompanies] = useState<Set<string>>(new Set());
   const [selectedLocations, setSelectedLocations] = useState<Set<string>>(new Set());
+  const [selectedRegions, setSelectedRegions] = useState<Set<string>>(new Set());
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [showRegionDropdown, setShowRegionDropdown] = useState(false);
   const [companySearchTerm, setCompanySearchTerm] = useState('');
   const [locationSearchTerm, setLocationSearchTerm] = useState('');
+  const [linkedinFeedEnabled, setLinkedinFeedEnabled] = useState(false);
 
   // const paginatedJobs = filteredJobs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   // const paginationButtonStyle: React.CSSProperties = {
@@ -297,6 +303,8 @@ export default function JobBoard() {
       if (error) {
         console.error(error);
       } else {
+        console.log('First job sample for debugging:', data?.[0]);
+        console.log('Total jobs fetched:', data?.length);
         setAllJobs(data || []);
       }
       setLoading(false);
@@ -314,6 +322,9 @@ export default function JobBoard() {
       // Initialize with all companies and locations selected
       setSelectedCompanies(companies);
       setSelectedLocations(locations);
+
+      // Initialize regions with Dutch and EU selected, Rest_of_World deselected
+      setSelectedRegions(new Set(['Dutch', 'EU']));
     }
   }, [allJobs]);
 
@@ -346,6 +357,18 @@ export default function JobBoard() {
     setSelectedLocations(newSelected);
   };
 
+  const toggleRegion = (region: string) => {
+    const newSelected = new Set(selectedRegions);
+    if (newSelected.has(region)) {
+      newSelected.delete(region);
+      console.log(`Removed ${region} from selection. New selection:`, Array.from(newSelected));
+    } else {
+      newSelected.add(region);
+      console.log(`Added ${region} to selection. New selection:`, Array.from(newSelected));
+    }
+    setSelectedRegions(newSelected);
+  };
+
   const selectAllCompanies = () => {
     setSelectedCompanies(new Set(getUniqueCompanies));
   };
@@ -369,14 +392,15 @@ export default function JobBoard() {
       if (!target.closest('[data-filter-dropdown]')) {
         setShowCompanyDropdown(false);
         setShowLocationDropdown(false);
+        setShowRegionDropdown(false);
       }
     };
 
-    if (showCompanyDropdown || showLocationDropdown) {
+    if (showCompanyDropdown || showLocationDropdown || showRegionDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [showCompanyDropdown, showLocationDropdown]);
+  }, [showCompanyDropdown, showLocationDropdown, showRegionDropdown]);
 
   // Function to fetch recently clicked jobs
   // const fetchRecentlyClickedJobs = async () => {
@@ -524,8 +548,26 @@ export default function JobBoard() {
       filtered = filtered.filter(job => selectedLocations.has(job.Location));
     }
 
+    // 4. Filter by selected regions (using boolean fields from Supabase)
+    if (selectedRegions.size > 0 && selectedRegions.size < 3) {
+      console.log('Region filtering active. Selected regions:', Array.from(selectedRegions));
+      console.log('Sample job for region debugging:', filtered[0]);
+      const beforeCount = filtered.length;
+      filtered = filtered.filter(job => {
+        let matchesRegion = false;
+        if (selectedRegions.has('Dutch') && job.Dutch) matchesRegion = true;
+        if (selectedRegions.has('EU') && job.EU) matchesRegion = true;
+        if (selectedRegions.has('Rest_of_World') && job.Rest_of_World) matchesRegion = true;
+        return matchesRegion;
+      });
+      console.log(`Region filter: ${beforeCount} -> ${filtered.length} jobs`);
+    } else {
+      console.log('No region filtering applied (all regions selected or none)');
+    }
+    // If all 3 regions are selected or selectedRegions is empty, show all jobs
+
     return filtered;
-  }, [allJobs, debouncedSearchTerm, selectedCompanies, selectedLocations]);
+  }, [allJobs, debouncedSearchTerm, selectedCompanies, selectedLocations, selectedRegions]);
 
   // Sort filtered jobs by Fuse.js search results or by newest first
   const sortedJobs = useMemo(() => {
@@ -1427,6 +1469,7 @@ export default function JobBoard() {
                   onClick={() => {
                     setShowCompanyDropdown(!showCompanyDropdown);
                     setShowLocationDropdown(false);
+                    setShowRegionDropdown(false);
                   }}
                   style={{
                     display: 'flex',
@@ -1601,6 +1644,7 @@ export default function JobBoard() {
                   onClick={() => {
                     setShowLocationDropdown(!showLocationDropdown);
                     setShowCompanyDropdown(false);
+                    setShowRegionDropdown(false);
                   }}
                   style={{
                     display: 'flex',
@@ -1767,6 +1811,167 @@ export default function JobBoard() {
                     }
                   </div>
                 )}
+              </div>
+
+              {/* Region Filter */}
+              <div style={{ position: 'relative', minWidth: '300px' }} data-filter-dropdown>
+                <button
+                  onClick={() => {
+                    setShowRegionDropdown(!showRegionDropdown);
+                    setShowCompanyDropdown(false);
+                    setShowLocationDropdown(false);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '12px',
+                    color: '#fff',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Globe style={{ width: '16px', height: '16px' }} />
+                    Regions ( {selectedRegions.size} / 3 )
+                  </span>
+                  <ChevronDown style={{
+                    width: '16px',
+                    height: '16px',
+                    transform: showRegionDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease'
+                  }} />
+                </button>
+
+                {showRegionDropdown && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    marginTop: '0.5rem',
+                    background: 'rgba(114, 111, 135, 1)',
+                    backdropFilter: 'blur(16px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    zIndex: 1000,
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+                  }}>
+                    {/* Region List */}
+                    {['Dutch', 'EU', 'Rest_of_World'].map(region => (
+                      <label
+                        key={region}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          padding: '0.5rem',
+                          cursor: 'pointer',
+                          borderRadius: '6px',
+                          transition: 'background 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedRegions.has(region)}
+                          onChange={() => toggleRegion(region)}
+                          style={{
+                            width: '16px',
+                            height: '16px',
+                            accentColor: '#10b981'
+                          }}
+                        />
+                        <span style={{
+                          color: '#fff',
+                          fontSize: '0.875rem',
+                          flex: 1
+                        }}>
+                          {region === 'Rest_of_World' ? 'Rest of World' : region}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* LinkedIn Feed Filter */}
+              <div style={{ position: 'relative', minWidth: '200px' }}>
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '0.75rem 1rem',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '12px',
+                    color: '#fff',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    opacity: 0.7
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // Premium feature - show tooltip or modal in future
+                    console.log('LinkedIn Feed is a premium feature');
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={linkedinFeedEnabled}
+                    onChange={() => { }} // Disabled for now
+                    disabled
+                    style={{
+                      width: '16px',
+                      height: '16px',
+                      accentColor: '#0077b5',
+                      opacity: 0.5
+                    }}
+                  />
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                    LinkedIn Feed
+                    <Lock
+                      style={{
+                        width: '14px',
+                        height: '14px',
+                        color: 'rgba(255, 255, 255, 0.6)'
+                      }}
+                    />
+                  </span>
+                </label>
               </div>
             </div>
 
