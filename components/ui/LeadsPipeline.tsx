@@ -972,7 +972,18 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
             {showArchiveModal && (
                 <ArchiveModal
                     onClose={() => setShowArchiveModal(false)}
-                    onUpdate={checkDatabaseAndFetchLeads}
+                    user={user}
+                    archivedLeads={[]} // Currently no archived leads - will show "0 leads archived"
+                    onRestoreLead={(leadId) => {
+                        // TODO: Implement restore functionality
+                        console.log('Restore lead:', leadId);
+                        setShowArchiveModal(false);
+                    }}
+                    onDeleteLead={(leadId) => {
+                        // TODO: Implement delete functionality
+                        console.log('Delete lead:', leadId);
+                        setShowArchiveModal(false);
+                    }}
                 />
             )}
         </div>
