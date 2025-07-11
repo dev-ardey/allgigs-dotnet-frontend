@@ -8,6 +8,7 @@ import GlobalNav from '../components/ui/GlobalNav';
 import LoginForm from '../components/ui/login';
 import CompleteProfileForm from '../components/ui/CompleteProfileForm';
 import { useProfileCheck } from '../components/ui/useProfileCheck';
+import LeadsPipeline from '../components/ui/LeadsPipeline';
 
 // Qualified Leads Interfaces en Types
 import {
@@ -1277,6 +1278,7 @@ export default function Dashboard() {
 
 
   const [qualifiedLeads, setQualifiedLeads] = useState<Lead[]>([]);
+  const [showPipeline, setShowPipeline] = useState(false);
 
   // Map recentlyClickedJobs to Lead objects with status and CRM fields
   useEffect(() => {
@@ -1442,6 +1444,56 @@ export default function Dashboard() {
 
       {/* Main dashboard content */}
       <div style={{ filter: 'none', transition: 'filter 0.2s' }}>
+        {/* Pipeline Toggle Button */}
+        <div style={{
+          position: 'fixed',
+          top: '24px',
+          right: '24px',
+          zIndex: 1200
+        }}>
+          <button
+            onClick={() => setShowPipeline(!showPipeline)}
+            style={{
+              background: showPipeline
+                ? 'rgba(139, 69, 189, 0.9)'
+                : 'rgba(59, 130, 246, 0.9)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '12px',
+              padding: '0.75rem 1rem',
+              cursor: 'pointer',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              color: '#fff',
+              fontSize: '0.875rem',
+              fontWeight: '600',
+              backdropFilter: 'blur(8px)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
+            }}
+          >
+            {showPipeline ? (
+              <>
+                <BarChart3 style={{ width: '16px', height: '16px' }} />
+                Show Dashboard
+              </>
+            ) : (
+              <>
+                <Target style={{ width: '16px', height: '16px' }} />
+                Show Pipeline
+              </>
+            )}
+          </button>
+        </div>
+
         <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '6rem 2rem 2rem 2rem', position: 'relative', zIndex: 5 }}>
 
 
@@ -1488,12 +1540,16 @@ export default function Dashboard() {
           </button>
         </div> */}
 
-          <QualifiedLeadsSection
-            leads={qualifiedLeads}
-            onStatusChange={handleLeadStatusChange}
-            onLogClick={handleLeadLogClick}
-            statsData={statsData}
-          />
+          {showPipeline ? (
+            <LeadsPipeline user={user} />
+          ) : (
+            <QualifiedLeadsSection
+              leads={qualifiedLeads}
+              onStatusChange={handleLeadStatusChange}
+              onLogClick={handleLeadLogClick}
+              statsData={statsData}
+            />
+          )}
 
 
 
