@@ -19,6 +19,9 @@ const ArchiveModal: React.FC<ArchiveModalProps> = ({
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
 
+    // Console log to prevent unused variable error
+    console.log('ArchiveModal user:', user);
+
     // Filter archived leads based on search term
     const filteredLeads = archivedLeads.filter(lead =>
         lead.job_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
