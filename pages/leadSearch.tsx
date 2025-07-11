@@ -399,6 +399,9 @@ export default function JobBoard() {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
+
+    // Always return a cleanup function, even if empty
+    return () => { };
   }, [showCompanyDropdown, showLocationDropdown, showRegionDropdown]);
 
   // Function to fetch recently clicked jobs
