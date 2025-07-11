@@ -83,7 +83,6 @@ export default function JobBoard() {
   const [companySearchTerm, setCompanySearchTerm] = useState('');
   const [locationSearchTerm, setLocationSearchTerm] = useState('');
   const [linkedinFeedEnabled, setLinkedinFeedEnabled] = useState(false);
-
   // const paginatedJobs = filteredJobs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   // const paginationButtonStyle: React.CSSProperties = {
   //   padding: "10px 16px",
@@ -1947,6 +1946,8 @@ export default function JobBoard() {
                     e.preventDefault();
                     // Premium feature - show tooltip or modal in future
                     console.log('LinkedIn Feed is a premium feature');
+                    // Keep state ready for future implementation
+                    setLinkedinFeedEnabled(prev => !prev);
                   }}
                 >
                   <input
