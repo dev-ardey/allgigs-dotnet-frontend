@@ -668,7 +668,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
     // ==========================================
     return (
         <div style={{
-            padding: '2rem',
+            padding: '0',
             minHeight: '100vh',
             color: '#fff'
         }}>

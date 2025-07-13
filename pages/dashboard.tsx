@@ -208,8 +208,8 @@ interface QualifiedLeadsSectionProps {
   statsData: StatsDay[];
 }
 
-// QualifiedLeadsSection using real leads data
-const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
+// Original QualifiedLeadsSection (kept for reference but not used)
+const QualifiedLeadsSectionOriginal: React.FC<QualifiedLeadsSectionProps> = ({
   leads,
   onStatusChange,
   onLogClick,
@@ -275,21 +275,8 @@ const QualifiedLeadsSection: React.FC<QualifiedLeadsSectionProps> = ({
   }, []);
 
   return (
-    <div style={{
-      background: 'rgba(255, 255, 255, 0.15)',
-      backdropFilter: 'blur(16px)',
-      border: '1px solid rgba(255, 255, 255, 0.2)',
-      borderRadius: '24px',
-      padding: '2rem',
-      marginBottom: '2rem',
-      color: 'white',
-      position: 'relative',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-      transition: 'all 0.3s ease'
-    }}>
-
+    <div style={{ color: 'white', marginBottom: '2rem' }}>
       {/* Feature Modal Popup */}
-
 
       {/* Content */}
       <div style={{ position: 'relative' }}>
@@ -1278,7 +1265,7 @@ export default function Dashboard() {
 
 
   const [qualifiedLeads, setQualifiedLeads] = useState<Lead[]>([]);
-  const [showPipeline, setShowPipeline] = useState(false);
+  // Removed showPipeline state - always show pipeline now
 
   // Map recentlyClickedJobs to Lead objects with status and CRM fields
   useEffect(() => {
@@ -1444,125 +1431,185 @@ export default function Dashboard() {
 
       {/* Main dashboard content */}
       <div style={{ filter: 'none', transition: 'filter 0.2s' }}>
-        {/* Pipeline Toggle Button */}
-        <div style={{
-          position: 'fixed',
-          top: '24px',
-          right: '24px',
-          zIndex: 1200
-        }}>
-          <button
-            onClick={() => setShowPipeline(!showPipeline)}
-            style={{
-              background: showPipeline
-                ? 'rgba(139, 69, 189, 0.9)'
-                : 'rgba(59, 130, 246, 0.9)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '12px',
-              padding: '0.75rem 1rem',
-              cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+        {/* Removed toggle button - always show pipeline now */}
+
+        <div style={{ padding: '2rem', position: 'relative', zIndex: 5 }}>
+          {/* Qualified Leads Section - Statistics, Graph, and Buttons (no box) */}
+          <div style={{ color: 'white', marginBottom: '2rem' }}>
+            {/* Header */}
+            <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              color: '#fff',
-              fontSize: '0.875rem',
+              justifyContent: 'space-between',
+              marginBottom: '2rem'
+            }}>
+              <div>
+                <h2 style={{
+                  fontSize: '2rem',
+                  fontWeight: '700',
+                  margin: '0 0 0.5rem 0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem'
+                }}>
+                  <Target style={{ width: '32px', height: '32px' }} />
+                  Qualified Leads
+                </h2>
+                <p style={{
+                  fontSize: '1.1rem',
+                  opacity: 0.9,
+                  margin: 0
+                }}>
+                  Track your sales pipeline and manage lead progression
+                </p>
+              </div>
+
+              {/* CRM Features (Locked) */}
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                {[
+                  { icon: Mail, label: 'Marketing', color: 'rgba(16, 185, 129, 0.3)', borderColor: 'rgba(16, 185, 129, 0.4)' },
+                  { icon: Zap, label: 'Tooling', color: 'rgba(59, 130, 246, 0.3)', borderColor: 'rgba(59, 130, 246, 0.4)' },
+                  { icon: Sparkles, label: 'AI Agent', color: 'rgba(147, 51, 234, 0.3)', borderColor: 'rgba(147, 51, 234, 0.4)' }
+                ].map((feature, index) => (
+                  <div key={index} style={{ position: 'relative' }}>
+                    <button
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.75rem 1rem',
+                        background: feature.color,
+                        border: `1px solid ${feature.borderColor}`,
+                        borderRadius: '12px',
+                        color: '#fff',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        opacity: 1,
+                        backdropFilter: 'blur(8px)',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                      }}
+                      onClick={() => console.log(`${feature.label} clicked`)}
+                    >
+                      <feature.icon style={{ width: '16px', height: '16px' }} />
+                      {feature.label}
+                      <Lock style={{ width: '14px', height: '14px' }} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Statistics Grid - Removed from header, will be placed below kanban */}
+          </div>
+
+          {/* Replace old pipeline with new kanban board */}
+          <LeadsPipeline user={user} />
+
+          {/* Complete Statistics Section with Chart and KPIs */}
+          <div style={{ marginTop: '2rem' }}>
+            <h3 style={{
+              fontSize: '1.25rem',
               fontWeight: '600',
+              color: '#fff',
+              marginBottom: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <TrendingUp style={{ width: '20px', height: '20px' }} />
+              Lead Statistics
+            </h3>
+
+            <div style={{
+              height: '192px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '12px',
+              padding: '1rem',
               backdropFilter: 'blur(8px)',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.3)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
-            }}
-          >
-            {showPipeline ? (
-              <>
-                <BarChart3 style={{ width: '16px', height: '16px' }} />
-                Show Dashboard
-              </>
-            ) : (
-              <>
-                <Target style={{ width: '16px', height: '16px' }} />
-                Show Pipeline
-              </>
-            )}
-          </button>
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              marginBottom: '1.5rem'
+            }}>
+              {/* @ts-ignore */}
+              <ResponsiveContainer width="100%" height="100%">
+                {/* @ts-ignore */}
+                <LineChart data={statsData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.2)" />
+                  {/* @ts-ignore */}
+                  <XAxis dataKey="name" stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
+                  {/* @ts-ignore */}
+                  <YAxis stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                      backdropFilter: 'blur(16px)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      color: '#fff'
+                    }}
+                  />
+                  {/* @ts-ignore */}
+                  <Line
+                    type="monotone"
+                    dataKey="views"
+                    stroke="#9333ea"
+                    strokeWidth={3}
+                    dot={{ fill: '#9333ea', strokeWidth: 2, r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Sales KPIs Row */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+              gap: '1rem'
+            }}>
+              {[
+                { label: 'Total Weekly Leads', value: statsData.reduce((acc, day) => acc + day.views, 0), suffix: '' },
+                { label: 'Conversion Rate', value: 0, suffix: '%' },
+                { label: 'Potential Revenue', value: '€162K', suffix: '' },
+                { label: 'Pipeline Health', value: 71, suffix: '%' },
+                { label: 'Active Appl', value: 0, suffix: '' },
+                { label: 'Interviews', value: 0, suffix: '' }
+              ].map((kpi, index) => (
+                <div
+                  key={index}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.15)',
+                    borderRadius: '16px',
+                    padding: '1.25rem',
+                    textAlign: 'center',
+                    border: '1px solid rgba(255, 255, 255, 0.1)'
+                  }}
+                >
+                  <div style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '0.25rem' }}>
+                    {kpi.value}{kpi.suffix}
+                  </div>
+                  <div style={{ fontSize: '0.875rem', opacity: 0.8 }}>
+                    {kpi.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '6rem 2rem 2rem 2rem', position: 'relative', zIndex: 5 }}>
 
 
-          {/* Link to allGigs */}
-          {/* <div style={{
-          background: '#fff',
-          borderRadius: '16px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-          border: '1px solid #e5e7eb',
-          padding: '1.5rem',
+        {/* Main Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+          gap: '2rem',
           marginBottom: '2rem'
-
         }}>
-          <h2 style={{
-            fontSize: '1.25rem',
-            fontWeight: '600',
-            color: '#000',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <Search style={{ width: '20px', height: '20px' }} />
-            Search entire database for all Jobs
-          </h2>
 
-
-
-          <button style={{
-            width: '100%',
-            marginTop: '1rem',
-            padding: '0.75rem',
-            background: '#0ccf83',
-            color: '#000',
-            border: 'none',
-            borderRadius: '999px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            fontSize: '0.875rem'
-          }}
-            onClick={() => window.location.href = '/'}
-          >
-            allGigs
-          </button>
-        </div> */}
-
-          {showPipeline ? (
-            <LeadsPipeline user={user} />
-          ) : (
-            <QualifiedLeadsSection
-              leads={qualifiedLeads}
-              onStatusChange={handleLeadStatusChange}
-              onLogClick={handleLeadLogClick}
-              statsData={statsData}
-            />
-          )}
-
-
-
-          {/* Main Grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-            gap: '2rem',
-            marginBottom: '2rem'
-          }}>
-
-            {/* Keywords Card - COMMENTED OUT (moved to Recommended Leads section) */}
-            {/*
+          {/* Keywords Card - COMMENTED OUT (moved to Recommended Leads section) */}
+          {/*
           <div style={{
               background: 'rgba(255, 255, 255, 0.15)',
               backdropFilter: 'blur(16px)',
@@ -1691,10 +1738,10 @@ export default function Dashboard() {
           </div>
               */}
 
-            {/* Stats Card - REMOVED (moved to Qualified Leads section) */}
+          {/* Stats Card - REMOVED (moved to Qualified Leads section) */}
 
-            {/* Post a Job Card - COMMENTED OUT */}
-            {/*
+          {/* Post a Job Card - COMMENTED OUT */}
+          {/*
           <div style={{
               background: 'rgba(255, 255, 255, 0.15)',
               backdropFilter: 'blur(16px)',
@@ -1744,24 +1791,22 @@ export default function Dashboard() {
           </div>
             */}
 
-          </div>
-
-
-          {/* Profile Dashboard */}
-
         </div>
 
-        {showAddJobForm && user && (
-          <AddJobForm
-            onClose={() => setShowAddJobForm(false)}
-            onJobAdded={() => {
-              // Optioneel: herlaad jobs
-              console.log("Job toegevoegd");
-            }}
-            user={user}
-          />
-        )}
+        {/* Profile Dashboard */}
+
       </div>
+
+      {showAddJobForm && user && (
+        <AddJobForm
+          onClose={() => setShowAddJobForm(false)}
+          onJobAdded={() => {
+            // Optioneel: herlaad jobs
+            console.log("Job toegevoegd");
+          }}
+          user={user}
+        />
+      )}
 
       {/* Global styles for placeholders */}
       <style jsx global>{`
