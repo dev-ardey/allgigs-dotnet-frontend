@@ -383,30 +383,3 @@ export interface LeadAnalytics {
     follow_ups_needed: number;
 }
 
-// ==========================================
-// EXPORT ALL TYPES
-// ==========================================
-
-export type {
-    Lead,
-    LeadContact,
-    LeadActivity,
-    KanbanColumn,
-    DragItem,
-    DropResult,
-    NewLeadForm,
-    AppliedForm,
-    SpokenForm,
-    InterviewForm,
-    InterviewSummaryForm,
-    DeniedForm,
-    SuccessForm,
-    LeadsResponse,
-    LeadResponse,
-    ArchiveResponse,
-    LeadFilters,
-    FollowUpNotification,
-    CalendarEvent,
-    CalendarProvider,
-    LeadAnalytics
-}; 

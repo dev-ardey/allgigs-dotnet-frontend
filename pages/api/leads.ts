@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
-import {  LeadStage, LeadsResponse } from '../../types/leads';
+import { LeadStage, LeadsResponse } from '../../types/leads';
 
 // Initialize Supabase client
 const supabase = createClient(
