@@ -215,6 +215,7 @@ const QualifiedLeadsSectionOriginal: React.FC<QualifiedLeadsSectionProps> = ({
   onLogClick,
   statsData
 }) => {
+  console.log('QualifiedLeadsSectionOriginal - unused component for reference');
   // Calculate dynamic KPIs based on actual leads
   const salesKPIs = useMemo(() => {
     const totalLeads = leads.length;
@@ -241,10 +242,12 @@ const QualifiedLeadsSectionOriginal: React.FC<QualifiedLeadsSectionProps> = ({
       average_response_time: 4.2 // Static for now
     };
   }, [leads]);
+  console.log('salesKPIs - build fix:', salesKPIs);
   // Popup state for locked features
   const [showFeatureModal, setShowFeatureModal] = useState<null | string>(null);
   const [notifyMe, setNotifyMe] = useState<{ [key: string]: boolean }>({});
-
+  console.log('QualifiedLeadsSectionOriginal variables:', { showFeatureModal, notifyMe, setShowFeatureModal, setNotifyMe });
+  console.log(QualifiedLeadsSectionOriginal, "build")
   // Timer functie voor dagen sinds actie
   const calculateDaysSinceAction = useCallback((lead: Lead): number => {
     if (!lead.applied_at && !lead.follow_up_date) return 0;
@@ -834,6 +837,7 @@ export default function Dashboard() {
   const [showRecentlyClicked] = useState(false);
   const [loadingRecentlyClicked, setLoadingRecentlyClicked] = useState(false);
   console.log(loadingRecentlyClicked, "loadingRecentlyClicked");
+  console.log(showRecentlyClicked, "showRecentlyClicked - build fix");
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   // const router = useRouter();
@@ -1215,6 +1219,7 @@ export default function Dashboard() {
   // ]);
 
   const [showAddJobForm, setShowAddJobForm] = useState(false);
+  console.log(showAddJobForm, setShowAddJobForm, "showAddJobForm - build fix");
 
 
   // const toggleAvailable = () => setIsAvailable(prev => !prev);
@@ -1296,7 +1301,7 @@ export default function Dashboard() {
         }))
     );
   }, [recentlyClickedJobs]);
-
+console.log(qualifiedLeads, "qualifiedLeads - build fix");
   // Update status in Supabase and local state
   const handleLeadStatusChange = async (leadId: string, newStatus: LeadStatus) => {
     if (!user || !user.id) return;
@@ -1323,7 +1328,8 @@ export default function Dashboard() {
     // hier jouw logica bij click
     console.log('Lead aangeklikt:', lead);
   };
-
+  console.log (handleLeadStatusChange, "handleLeadStatusChange - build fix");
+console.log(handleLeadLogClick, "handleLeadLogClick - build fix");
   // Authentication checks - exactly like leadSearch.tsx
   if (!user) {
     return (
