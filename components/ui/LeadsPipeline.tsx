@@ -2,13 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import {
     Search,
-    Users,
-    Calendar,
-    Trophy,
     Archive,
     Bell,
-    Filter,
-    MoreVertical,
     Target,
     MessageCircle,
     CheckCircle
@@ -151,35 +146,28 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
             follow_up_completed: false,
 
             // Stage-specific data
-            found_data: job.stage === 'found' ? {
+            found_data: {
                 match_percentage: job.match_percentage,
                 possible_earnings: job.possible_earnings,
                 above_normal_rate: job.possible_earnings > job.normal_rate,
                 normal_rate: job.normal_rate,
-                applied: Math.random() > 0.7,
+                applied: job.stage === 'found' ? Math.random() > 0.7 : false,
                 follow_up_days: 3,
-                follow_up_timer_started: Math.random() > 0.5 ? new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000).toISOString() : undefined,
-                follow_up_overdue: Math.random() > 0.8,
+                follow_up_timer_started: (job.stage === 'found' && Math.random() > 0.5) ? new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000).toISOString() : '',
+                follow_up_overdue: job.stage === 'found' ? Math.random() > 0.8 : false,
                 priority: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)] as 'low' | 'medium' | 'high',
                 source: 'job_board',
                 initial_notes: 'Looks promising, good match for skills'
-            } : {
-                match_percentage: job.match_percentage,
-                possible_earnings: job.possible_earnings,
-                above_normal_rate: job.possible_earnings > job.normal_rate,
-                normal_rate: job.normal_rate,
-                applied: false,
-                priority: 'medium' as 'low' | 'medium' | 'high'
             },
 
-            connect_data: job.stage === 'connect' ? {
-                interview_date: new Date(Date.now() + Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                interview_time: '14:00',
-                interview_with: 'Sarah Johnson, Lead Developer',
-                interview_notes: 'Technical interview focusing on React and TypeScript',
-                interview_rating: Math.random() > 0.5 ? 'thumbs_up' : 'thumbs_down',
-                prepped: Math.random() > 0.6,
-                prep_data: {
+            connect_data: {
+                interview_date: job.stage === 'connect' ? new Date(Date.now() + Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : '',
+                interview_time: job.stage === 'connect' ? '14:00' : '',
+                interview_with: job.stage === 'connect' ? 'Sarah Johnson, Lead Developer' : '',
+                interview_notes: job.stage === 'connect' ? 'Technical interview focusing on React and TypeScript' : '',
+                interview_rating: job.stage === 'connect' ? (Math.random() > 0.5 ? 'thumbs_up' : 'thumbs_down') : null,
+                prepped: job.stage === 'connect' ? Math.random() > 0.6 : false,
+                prep_data: job.stage === 'connect' ? {
                     introduction: 'I am a passionate frontend developer with 5 years of experience...',
                     company_fit: 'I align with your mission to create innovative web solutions...',
                     role_description: 'As a senior frontend developer, I would focus on...',
@@ -194,26 +182,24 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                     ],
                     company_mission: 'To revolutionize web development through innovative solutions',
                     completed: Math.random() > 0.5
-                }
-            } : {
-                prepped: false
+                } : undefined
             },
 
-            close_data: job.stage === 'close' ? {
-                got_job: undefined, // Will be set when user clicks YES/NO
-                possible_revenue: job.possible_earnings,
-                negotiation_tips: [
+            close_data: {
+                got_job: job.stage === 'close' ? undefined : undefined,
+                possible_revenue: job.stage === 'close' ? job.possible_earnings : 0,
+                negotiation_tips: job.stage === 'close' ? [
                     'Highlight your unique React expertise',
                     'Mention your successful project portfolio',
                     'Discuss long-term collaboration potential'
-                ],
-                contract_template: 'Standard freelance contract template with your details',
+                ] : [],
+                contract_template: job.stage === 'close' ? 'Standard freelance contract template with your details' : '',
                 archived_reason: undefined
-            } : {},
+            },
 
             contacts: [],
             activities: []
-        }));
+        })) as unknown as Lead[];
     }, [user?.id]);
 
     // ==========================================
@@ -291,7 +277,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                 setDatabaseAvailable(false);
                 const recentJobs = await fetchRecentlyClickedJobs();
 
-                // Convert recently clicked jobs to leads (new_lead stage)
+                // Convert recently clicked jobs to leads (found stage)
                 const recentlyClickedLeads: Lead[] = recentJobs.map((job: any) => {
                     const clickedDate = new Date(job.clicked_at || new Date());
                     const followUpDate = new Date(clickedDate);
@@ -307,27 +293,46 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                         rate: job.rate || '',
                         job_url: job.URL || '',
                         job_summary: job.Summary || '',
-                        stage: 'new_lead' as LeadStage,
+                        stage: 'found' as LeadStage,
                         is_archived: false,
                         created_at: job.clicked_at || new Date().toISOString(),
                         updated_at: new Date().toISOString(),
                         stage_updated_at: job.clicked_at || new Date().toISOString(),
                         notes: `Clicked on ${new Date(job.clicked_at || new Date()).toLocaleDateString()}`,
-                        new_lead_data: {
-                            follow_up_days: 3,
-                            priority: 'medium',
-                            source: 'job_board'
-                        },
-                        applied_data: {},
-                        spoken_data: { conversations: [] },
-                        interview_data: { interviews: [] },
-                        denied_data: {},
-                        success_data: {},
                         follow_up_date: followUpDate.toISOString(),
                         follow_up_completed: false,
+                        found_data: {
+                            match_percentage: 85,
+                            possible_earnings: 75000,
+                            above_normal_rate: true,
+                            normal_rate: 70000,
+                            applied: false,
+                            follow_up_days: 3,
+                            follow_up_timer_started: '',
+                            follow_up_overdue: false,
+                            priority: 'medium',
+                            source: 'job_board',
+                            initial_notes: 'Clicked from job search'
+                        },
+                        connect_data: {
+                            interview_date: '',
+                            interview_time: '',
+                            interview_with: '',
+                            interview_notes: '',
+                            interview_rating: null,
+                            prepped: false,
+                            prep_data: undefined
+                        },
+                        close_data: {
+                            got_job: undefined,
+                            possible_revenue: 0,
+                            negotiation_tips: [],
+                            contract_template: '',
+                            archived_reason: undefined
+                        },
                         contacts: [],
                         activities: []
-                    };
+                    } as unknown as Lead;
                 });
 
                 // Add mock data for other stages
@@ -385,7 +390,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
             leads: filteredLeads.filter(lead => lead.stage === stage),
             color: config.color,
             borderColor: config.borderColor,
-            icon: config.icon,
+            icon: stage, // Use stage name as string instead of JSX element
             description: config.description
         }));
 
@@ -587,16 +592,20 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
 
             case 'prep_toggle':
                 // Toggle prep status - if false, show prep questionnaire
-                lead.connect_data = {
-                    ...lead.connect_data,
-                    prepped: !lead.connect_data.prepped
-                };
+                if (lead.connect_data) {
+                    lead.connect_data = {
+                        ...lead.connect_data,
+                        prepped: !lead.connect_data.prepped
+                    };
+                }
                 break;
 
             case 'open_prep_modal':
                 // Open prep modal for the selected lead
-                setSelectedLead(lead);
-                setShowPrepModal(true);
+                if (lead.id) {
+                    setSelectedLead(lead as Lead);
+                    setShowPrepModal(true);
+                }
                 return;
 
             case 'got_job':
@@ -609,7 +618,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                     // Show success content
                     lead.close_data = {
                         ...lead.close_data,
-                        possible_revenue: lead.found_data.possible_earnings,
+                        possible_revenue: lead.found_data?.possible_earnings || 0,
                         negotiation_tips: [
                             'Highlight your unique expertise',
                             'Mention your successful project portfolio',
@@ -621,13 +630,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                     // Show missed opportunity content
                     lead.close_data = {
                         ...lead.close_data,
-                        possible_revenue: lead.found_data.possible_earnings,
-                        missed_revenue: lead.found_data.possible_earnings,
-                        analysis_tips: [
-                            'Review your interview performance',
-                            'Strengthen your portfolio presentation',
-                            'Practice common interview questions'
-                        ]
+                        possible_revenue: lead.found_data?.possible_earnings || 0
                     };
                 }
                 break;
@@ -655,7 +658,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                 return;
         }
 
-        updatedLeads[leadIndex] = lead;
+        updatedLeads[leadIndex] = lead as Lead;
         setLeads(updatedLeads);
     };
 

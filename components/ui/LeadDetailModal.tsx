@@ -10,18 +10,14 @@ import {
     Mail,
     MessageSquare,
     FileText,
-    Star,
     Edit,
     Save,
     Plus,
     Trash2,
     ExternalLink,
     Building,
-    Globe,
     Activity,
     TrendingUp,
-    AlertCircle,
-    CheckCircle2
 } from 'lucide-react';
 import { Lead, LeadStage } from '../../types/leads';
 
@@ -60,7 +56,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
     const [notes, setNotes] = useState(lead.notes || '');
     const [newContact, setNewContact] = useState({ name: '', role: '', email: '', phone: '', notes: '' });
     const [showAddContact, setShowAddContact] = useState(false);
-    const [newActivity, setNewActivity] = useState({ type: 'note' as const, title: '', description: '' });
+    const [newActivity, setNewActivity] = useState<{ type: Activity['type'], title: string, description: string }>({ type: 'note', title: '', description: '' });
     const [showAddActivity, setShowAddActivity] = useState(false);
 
     // Mock data for demonstration
@@ -91,7 +87,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
             description: 'Submitted application through LinkedIn with custom cover letter',
             date: '2025-01-13T14:30:00Z',
             contact_id: '1',
-            stage: 'applied'
+            stage: 'found'
         },
         {
             id: '2',
@@ -100,7 +96,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
             description: 'Sent follow-up email expressing continued interest',
             date: '2025-01-15T09:15:00Z',
             contact_id: '1',
-            stage: 'applied'
+            stage: 'found'
         },
         {
             id: '3',
@@ -109,7 +105,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
             description: 'Had positive 30-minute phone conversation about role and company culture',
             date: '2025-01-16T16:00:00Z',
             contact_id: '1',
-            stage: 'spoken'
+            stage: 'connect'
         },
         {
             id: '4',
@@ -117,7 +113,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
             title: 'Research Notes',
             description: 'Company recently raised Series B funding, expanding development team',
             date: '2025-01-17T10:00:00Z',
-            stage: 'new_lead'
+            stage: 'found'
         },
         {
             id: '5',
@@ -126,7 +122,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
             description: 'Scheduled technical interview for next Tuesday at 2 PM',
             date: '2025-01-18T11:30:00Z',
             contact_id: '2',
-            stage: 'interview'
+            stage: 'connect'
         },
         {
             id: '6',
@@ -135,7 +131,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
             description: 'Sent thank you email after technical interview',
             date: '2025-01-19T15:45:00Z',
             contact_id: '1',
-            stage: 'interview'
+            stage: 'close'
         }
     ]);
 
@@ -185,12 +181,9 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
 
     const getStageColor = (stage: LeadStage) => {
         switch (stage) {
-            case 'new_lead': return '#3b82f6';
-            case 'applied': return '#f59e0b';
-            case 'spoken': return '#8b5cf6';
-            case 'interview': return '#10b981';
-            case 'denied': return '#ef4444';
-            case 'success': return '#22c55e';
+            case 'found': return '#3b82f6';
+            case 'connect': return '#f59e0b';
+            case 'close': return '#10b981';
             default: return '#6b7280';
         }
     };
@@ -207,12 +200,9 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
 
     const formatStageName = (stage: LeadStage) => {
         switch (stage) {
-            case 'new_lead': return 'New Lead';
-            case 'applied': return 'Applied';
-            case 'spoken': return 'Spoken';
-            case 'interview': return 'Interview';
-            case 'denied': return 'Denied';
-            case 'success': return 'Success';
+            case 'found': return 'Found';
+            case 'connect': return 'Connect';
+            case 'close': return 'Close';
             default: return stage;
         }
     };
@@ -276,17 +266,17 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                             }}>
                                 {lead.stage.replace('_', ' ')}
                             </div>
-                            {lead.new_lead_data?.priority && (
+                            {lead.found_data?.priority && (
                                 <div style={{
                                     padding: '0.25rem 0.75rem',
-                                    background: lead.new_lead_data.priority === 'high' ? '#ef4444' :
-                                        lead.new_lead_data.priority === 'medium' ? '#f59e0b' : '#10b981',
+                                    background: lead.found_data.priority === 'high' ? '#ef4444' :
+                                        lead.found_data.priority === 'medium' ? '#f59e0b' : '#10b981',
                                     borderRadius: '12px',
                                     fontSize: '0.75rem',
                                     fontWeight: '600',
                                     textTransform: 'uppercase'
                                 }}>
-                                    {lead.new_lead_data.priority} priority
+                                    {lead.found_data.priority} priority
                                 </div>
                             )}
                         </div>
