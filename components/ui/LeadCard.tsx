@@ -71,6 +71,8 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
             return () => clearInterval(interval);
         }
+
+        return undefined;
     }, [lead.stage, lead.found_data.follow_up_timer_started, lead.found_data.follow_up_days]);
 
     // Get priority color
