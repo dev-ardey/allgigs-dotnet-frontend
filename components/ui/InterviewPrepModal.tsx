@@ -9,11 +9,9 @@ import {
     Lightbulb,
     Plus,
     Trash2,
-    Edit,
     Save,
     ExternalLink,
-    Mail,
-    Phone
+    Mail
 } from 'lucide-react';
 import { Lead, Colleague, InterviewPrepData } from '../../types/leads';
 
@@ -55,7 +53,7 @@ const InterviewPrepModal: React.FC<InterviewPrepModalProps> = ({
             prepData.company_fit &&
             prepData.role_description &&
             prepData.company_mission &&
-            prepData.colleagues.length > 0
+            (prepData.colleagues?.length || 0) > 0
         );
 
         const updatedPrepData = {
@@ -85,7 +83,7 @@ const InterviewPrepModal: React.FC<InterviewPrepModalProps> = ({
 
             setPrepData(prev => ({
                 ...prev,
-                colleagues: [...prev.colleagues, colleague]
+                colleagues: [...(prev.colleagues || []), colleague]
             }));
 
             setNewColleague({ name: '', email: '', linkedin: '', role: '' });
@@ -96,7 +94,7 @@ const InterviewPrepModal: React.FC<InterviewPrepModalProps> = ({
     const handleRemoveColleague = (colleagueId: string) => {
         setPrepData(prev => ({
             ...prev,
-            colleagues: prev.colleagues.filter(c => c.id !== colleagueId)
+            colleagues: (prev.colleagues || []).filter(c => c.id !== colleagueId)
         }));
     };
 
@@ -106,7 +104,7 @@ const InterviewPrepModal: React.FC<InterviewPrepModalProps> = ({
             prepData.company_fit,
             prepData.role_description,
             prepData.company_mission,
-            prepData.colleagues.length > 0
+            (prepData.colleagues?.length || 0) > 0
         ];
 
         const completed = fields.filter(Boolean).length;
@@ -330,7 +328,7 @@ const InterviewPrepModal: React.FC<InterviewPrepModalProps> = ({
 
                             {/* Existing colleagues */}
                             <div style={{ marginBottom: '16px' }}>
-                                {prepData.colleagues.map(colleague => (
+                                {(prepData.colleagues || []).map(colleague => (
                                     <div key={colleague.id} style={{
                                         display: 'flex',
                                         justifyContent: 'space-between',
