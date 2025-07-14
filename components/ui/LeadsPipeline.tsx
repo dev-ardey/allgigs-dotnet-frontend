@@ -1,24 +1,24 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import {
-    Kanban,
-    FileText,
-    Phone,
+    Search,
+    Users,
     Calendar,
-    XCircle,
     Trophy,
     Archive,
-    Plus,
     Bell,
-    Search,
     Filter,
-    MoreVertical
+    MoreVertical,
+    Target,
+    MessageCircle,
+    CheckCircle
 } from 'lucide-react';
 import { Lead, LeadStage, KanbanColumn, LeadsResponse } from '../../types/leads';
 import { supabase } from '../../SupabaseClient';
 import LeadCard from './LeadCard';
 import LeadDetailModal from './LeadDetailModal';
 import ArchiveModal from './ArchiveModal';
+import InterviewPrepModal from './InterviewPrepModal';
 
 interface LeadsPipelineProps {
     user?: any;
@@ -37,6 +37,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [showArchiveModal, setShowArchiveModal] = useState(false);
+    const [showPrepModal, setShowPrepModal] = useState(false);
 
     // Filter states
     const [searchTerm, setSearchTerm] = useState('');
@@ -52,256 +53,167 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
     // STAGE CONFIGURATION
     // ==========================================
     const stageConfig = useMemo(() => ({
-        new_lead: {
-            title: 'New Leads',
-            icon: <Plus style={{ width: '16px', height: '16px' }} />,
+        found: {
+            title: 'Found',
+            icon: <Target style={{ width: '16px', height: '16px' }} />,
             color: 'rgba(59, 130, 246, 0.2)',
             borderColor: 'rgba(59, 130, 246, 0.4)',
             description: 'Recently clicked jobs to pursue'
         },
-        applied: {
-            title: 'Applied',
-            icon: <FileText style={{ width: '16px', height: '16px' }} />,
+        connect: {
+            title: 'Connect',
+            icon: <MessageCircle style={{ width: '16px', height: '16px' }} />,
             color: 'rgba(245, 158, 11, 0.2)',
             borderColor: 'rgba(245, 158, 11, 0.4)',
-            description: 'Applications sent'
+            description: 'Interview and preparation phase'
         },
-        spoken: {
-            title: 'Spoken',
-            icon: <Phone style={{ width: '16px', height: '16px' }} />,
-            color: 'rgba(139, 69, 189, 0.2)',
-            borderColor: 'rgba(139, 69, 189, 0.4)',
-            description: 'Initial conversations'
-        },
-        interview: {
-            title: 'Interview',
-            icon: <Calendar style={{ width: '16px', height: '16px' }} />,
-            color: 'rgba(16, 185, 129, 0.2)',
-            borderColor: 'rgba(16, 185, 129, 0.4)',
-            description: 'Interview scheduled'
-        },
-        denied: {
-            title: 'Denied',
-            icon: <XCircle style={{ width: '16px', height: '16px' }} />,
-            color: 'rgba(239, 68, 68, 0.2)',
-            borderColor: 'rgba(239, 68, 68, 0.4)',
-            description: 'Rejected applications'
-        },
-        success: {
-            title: 'Success',
-            icon: <Trophy style={{ width: '16px', height: '16px' }} />,
+        close: {
+            title: 'Close',
+            icon: <CheckCircle style={{ width: '16px', height: '16px' }} />,
             color: 'rgba(34, 197, 94, 0.2)',
             borderColor: 'rgba(34, 197, 94, 0.4)',
-            description: 'Successful hires'
+            description: 'Final decision and outcomes'
         }
     }), []);
 
     // ==========================================
     // MOCK DATA GENERATOR
     // ==========================================
-    const generateMockLeadsForOtherStages = useCallback(() => {
-        const mockLeads: Lead[] = [
-            // Applied stage
+    const generateMockLeads = useCallback((): Lead[] => {
+        const mockJobs = [
             {
-                id: 'mock-applied-1',
-                user_id: user?.id || 'demo-user',
-                job_unique_id: 'mock-job-applied-1',
-                job_title: 'Senior React Developer',
-                company: 'TechFlow Amsterdam',
-                location: 'Amsterdam, NL',
-                rate: '€75/hour',
+                id: 'lead-1',
+                job_title: 'Senior Frontend Developer',
+                company: 'TechCorp Amsterdam',
+                location: 'Amsterdam, Netherlands',
+                rate: '€65-85/hour',
                 job_url: 'https://example.com/job1',
-                job_summary: 'We are looking for an experienced React developer to join our team. Must have 5+ years of experience with React, TypeScript, and modern web technologies.',
-                stage: 'applied' as LeadStage,
-                is_archived: false,
-                created_at: '2025-01-12T09:00:00Z',
-                updated_at: new Date().toISOString(),
-                stage_updated_at: '2025-01-13T14:30:00Z',
-                notes: 'Applied via LinkedIn, sent custom cover letter',
-                new_lead_data: { follow_up_days: 3, priority: 'high', source: 'job_board' },
-                applied_data: { application_date: '2025-01-13T14:30:00Z', platform: 'linkedin' },
-                spoken_data: { conversations: [] },
-                interview_data: { interviews: [] },
-                denied_data: {},
-                success_data: {},
-                follow_up_date: '2025-01-16T14:30:00Z',
-                follow_up_completed: false,
-                contacts: [],
-                activities: []
+                stage: 'found' as LeadStage,
+                possible_earnings: 85000,
+                match_percentage: 92,
+                normal_rate: 75000
             },
             {
-                id: 'mock-applied-2',
-                user_id: user?.id || 'demo-user',
-                job_unique_id: 'mock-job-applied-2',
-                job_title: 'Frontend Developer',
-                company: 'StartupHub Rotterdam',
-                location: 'Rotterdam, NL',
-                rate: '€65/hour',
-                job_url: 'https://example.com/job2',
-                job_summary: 'Join our growing startup! We need a frontend developer who loves working in a fast-paced environment.',
-                stage: 'applied' as LeadStage,
-                is_archived: false,
-                created_at: '2025-01-11T16:00:00Z',
-                updated_at: new Date().toISOString(),
-                stage_updated_at: '2025-01-12T10:15:00Z',
-                notes: 'Submitted application through company website',
-                new_lead_data: { follow_up_days: 5, priority: 'medium', source: 'job_board' },
-                applied_data: { application_date: '2025-01-12T10:15:00Z', platform: 'company_website' },
-                spoken_data: { conversations: [] },
-                interview_data: { interviews: [] },
-                denied_data: {},
-                success_data: {},
-                follow_up_date: '2025-01-17T10:15:00Z',
-                follow_up_completed: false,
-                contacts: [],
-                activities: []
-            },
-            // Spoken stage
-            {
-                id: 'mock-spoken-1',
-                user_id: user?.id || 'demo-user',
-                job_unique_id: 'mock-job-spoken-1',
-                job_title: 'Full Stack Engineer',
-                company: 'InnovateLabs Utrecht',
-                location: 'Utrecht, NL',
-                rate: '€80/hour',
-                job_url: 'https://example.com/job3',
-                job_summary: 'We are looking for a full-stack engineer with React, Node.js, and PostgreSQL experience.',
-                stage: 'spoken' as LeadStage,
-                is_archived: false,
-                created_at: '2025-01-10T11:00:00Z',
-                updated_at: new Date().toISOString(),
-                stage_updated_at: '2025-01-14T16:45:00Z',
-                notes: 'Had a great phone call with the hiring manager Sarah. Very positive conversation!',
-                new_lead_data: { follow_up_days: 3, priority: 'high', source: 'job_board' },
-                applied_data: { application_date: '2025-01-11T11:00:00Z', platform: 'linkedin' },
-                spoken_data: {
-                    conversations: [
-                        {
-                            date: '2025-01-14T16:45:00Z',
-                            contact_id: 'contact-1',
-                            notes: 'Initial phone screening went very well',
-                            sentiment: 'positive',
-                            next_steps: 'Technical interview scheduled for next week'
-                        }
-                    ]
-                },
-                interview_data: { interviews: [] },
-                denied_data: {},
-                success_data: {},
-                follow_up_date: '2025-01-18T16:45:00Z',
-                follow_up_completed: false,
-                contacts: [],
-                activities: []
-            },
-            // Interview stage
-            {
-                id: 'mock-interview-1',
-                user_id: user?.id || 'demo-user',
-                job_unique_id: 'mock-job-interview-1',
-                job_title: 'Vue.js Developer',
-                company: 'WebAgency Pro',
-                location: 'Amsterdam, NL',
-                rate: '€70/hour',
-                job_url: 'https://example.com/job4',
-                job_summary: 'Looking for a Vue.js specialist to join our agency team. Experience with Nuxt.js is a plus.',
-                stage: 'interview' as LeadStage,
-                is_archived: false,
-                created_at: '2025-01-09T13:00:00Z',
-                updated_at: new Date().toISOString(),
-                stage_updated_at: '2025-01-15T09:00:00Z',
-                notes: 'Technical interview scheduled for tomorrow at 2 PM!',
-                new_lead_data: { follow_up_days: 3, priority: 'high', source: 'job_board' },
-                applied_data: { application_date: '2025-01-10T13:00:00Z', platform: 'company_website' },
-                spoken_data: { conversations: [] },
-                interview_data: {
-                    interviews: [
-                        {
-                            date: '2025-01-16T14:00:00Z',
-                            time: '14:00',
-                            location: 'Office Amsterdam',
-                            contact_id: 'contact-2',
-                            type: 'technical',
-                            summary: 'Technical interview with the development team',
-                            rating: 0,
-                            calendar_event_id: 'cal-123'
-                        }
-                    ]
-                },
-                denied_data: {},
-                success_data: {},
-                follow_up_date: '2025-01-16T14:00:00Z',
-                follow_up_completed: false,
-                contacts: [],
-                activities: []
-            },
-            // Denied stage
-            {
-                id: 'mock-denied-1',
-                user_id: user?.id || 'demo-user',
-                job_unique_id: 'mock-job-denied-1',
-                job_title: 'Junior Developer',
-                company: 'LearningTech',
+                id: 'lead-2',
+                job_title: 'React Developer',
+                company: 'StartupXYZ',
                 location: 'Remote',
-                rate: '€45/hour',
-                job_url: 'https://example.com/job5',
-                job_summary: 'Great opportunity for a junior developer to grow. We provide mentorship and training.',
-                stage: 'denied' as LeadStage,
-                is_archived: false,
-                created_at: '2025-01-08T15:00:00Z',
-                updated_at: new Date().toISOString(),
-                stage_updated_at: '2025-01-12T10:00:00Z',
-                notes: 'They were looking for someone with more experience. Good feedback though!',
-                new_lead_data: { follow_up_days: 3, priority: 'low', source: 'job_board' },
-                applied_data: { application_date: '2025-01-09T15:00:00Z', platform: 'indeed' },
-                spoken_data: { conversations: [] },
-                interview_data: { interviews: [] },
-                denied_data: {
-                    reason: 'Not enough experience',
-                    feedback: 'Great candidate but looking for more senior developer',
-                    date: '2025-01-12T10:00:00Z',
-                    lessons_learned: 'Need to highlight senior projects more in portfolio'
-                },
-                success_data: {},
-                follow_up_completed: true,
-                contacts: [],
-                activities: []
+                rate: '€55-70/hour',
+                job_url: 'https://example.com/job2',
+                stage: 'found' as LeadStage,
+                possible_earnings: 68000,
+                match_percentage: 78,
+                normal_rate: 75000
             },
-            // Success stage
             {
-                id: 'mock-success-1',
-                user_id: user?.id || 'demo-user',
-                job_unique_id: 'mock-job-success-1',
-                job_title: 'Senior React Developer',
-                company: 'DreamJob Inc',
-                location: 'Amsterdam, NL',
-                rate: '€85/hour',
-                job_url: 'https://example.com/job6',
-                job_summary: 'Amazing opportunity to work with cutting-edge technology in a great team environment.',
-                stage: 'success' as LeadStage,
-                is_archived: false,
-                created_at: '2025-01-06T12:00:00Z',
-                updated_at: new Date().toISOString(),
-                stage_updated_at: '2025-01-14T16:00:00Z',
-                notes: 'Got the job! Starting next month 🎉',
-                new_lead_data: { follow_up_days: 3, priority: 'high', source: 'job_board' },
-                applied_data: { application_date: '2025-01-07T12:00:00Z', platform: 'linkedin' },
-                spoken_data: { conversations: [] },
-                interview_data: { interviews: [] },
-                denied_data: {},
-                success_data: {
-                    offer_amount: 85000,
-                    start_date: '2025-02-01',
-                    contract_type: 'freelance',
-                    celebration_notes: 'Dream job achieved! 🚀'
-                },
-                follow_up_completed: true,
-                contacts: [],
-                activities: []
+                id: 'lead-3',
+                job_title: 'Full Stack Developer',
+                company: 'InnovateTech',
+                location: 'Utrecht, Netherlands',
+                rate: '€70-90/hour',
+                job_url: 'https://example.com/job3',
+                stage: 'connect' as LeadStage,
+                possible_earnings: 88000,
+                match_percentage: 85,
+                normal_rate: 75000
+            },
+            {
+                id: 'lead-4',
+                job_title: 'Vue.js Developer',
+                company: 'WebSolutions',
+                location: 'Rotterdam, Netherlands',
+                rate: '€60-80/hour',
+                job_url: 'https://example.com/job4',
+                stage: 'close' as LeadStage,
+                possible_earnings: 78000,
+                match_percentage: 88,
+                normal_rate: 75000
             }
         ];
 
-        return mockLeads;
+        return mockJobs.map(job => ({
+            id: job.id,
+            user_id: user?.id || 'mock-user',
+            job_unique_id: `job-${job.id}`,
+            job_title: job.job_title,
+            company: job.company,
+            location: job.location,
+            rate: job.rate,
+            job_url: job.job_url,
+            job_summary: `Exciting opportunity at ${job.company} for a ${job.job_title} position.`,
+            stage: job.stage,
+            is_archived: false,
+            created_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+            updated_at: new Date().toISOString(),
+            stage_updated_at: new Date(Date.now() - Math.random() * 3 * 24 * 60 * 60 * 1000).toISOString(),
+            notes: '',
+            follow_up_date: null,
+            follow_up_completed: false,
+
+            // Stage-specific data
+            found_data: job.stage === 'found' ? {
+                match_percentage: job.match_percentage,
+                possible_earnings: job.possible_earnings,
+                above_normal_rate: job.possible_earnings > job.normal_rate,
+                normal_rate: job.normal_rate,
+                applied: Math.random() > 0.7,
+                follow_up_days: 3,
+                follow_up_timer_started: Math.random() > 0.5 ? new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000).toISOString() : undefined,
+                follow_up_overdue: Math.random() > 0.8,
+                priority: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)] as 'low' | 'medium' | 'high',
+                source: 'job_board',
+                initial_notes: 'Looks promising, good match for skills'
+            } : {
+                match_percentage: job.match_percentage,
+                possible_earnings: job.possible_earnings,
+                above_normal_rate: job.possible_earnings > job.normal_rate,
+                normal_rate: job.normal_rate,
+                applied: false,
+                priority: 'medium' as 'low' | 'medium' | 'high'
+            },
+
+            connect_data: job.stage === 'connect' ? {
+                interview_date: new Date(Date.now() + Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                interview_time: '14:00',
+                interview_with: 'Sarah Johnson, Lead Developer',
+                interview_notes: 'Technical interview focusing on React and TypeScript',
+                interview_rating: Math.random() > 0.5 ? 'thumbs_up' : 'thumbs_down',
+                prepped: Math.random() > 0.6,
+                prep_data: {
+                    introduction: 'I am a passionate frontend developer with 5 years of experience...',
+                    company_fit: 'I align with your mission to create innovative web solutions...',
+                    role_description: 'As a senior frontend developer, I would focus on...',
+                    colleagues: [
+                        {
+                            id: 'colleague-1',
+                            name: 'Sarah Johnson',
+                            email: 'sarah.johnson@company.com',
+                            linkedin: 'https://linkedin.com/in/sarahjohnson',
+                            role: 'Lead Developer'
+                        }
+                    ],
+                    company_mission: 'To revolutionize web development through innovative solutions',
+                    completed: Math.random() > 0.5
+                }
+            } : {
+                prepped: false
+            },
+
+            close_data: job.stage === 'close' ? {
+                got_job: undefined, // Will be set when user clicks YES/NO
+                possible_revenue: job.possible_earnings,
+                negotiation_tips: [
+                    'Highlight your unique React expertise',
+                    'Mention your successful project portfolio',
+                    'Discuss long-term collaboration potential'
+                ],
+                contract_template: 'Standard freelance contract template with your details',
+                archived_reason: undefined
+            } : {},
+
+            contacts: [],
+            activities: []
+        }));
     }, [user?.id]);
 
     // ==========================================
@@ -419,7 +331,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                 });
 
                 // Add mock data for other stages
-                const mockLeads = generateMockLeadsForOtherStages();
+                const mockLeads = generateMockLeads();
 
                 // Combine recently clicked jobs with mock data
                 const allLeads = [...recentlyClickedLeads, ...mockLeads];
@@ -443,7 +355,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
         } finally {
             setLoading(false);
         }
-    }, [user?.id, searchTerm, stageFilter, fetchRecentlyClickedJobs, generateMockLeadsForOtherStages]);
+    }, [user?.id, searchTerm, stageFilter, fetchRecentlyClickedJobs, generateMockLeads]);
 
     // ==========================================
     // EFFECTS
@@ -613,6 +525,141 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
     };
 
     // ==========================================
+    // STAGE ACTION HANDLERS
+    // ==========================================
+    const handleStageAction = async (leadId: string, action: string, data?: any) => {
+        const leadIndex = leads.findIndex(lead => lead.id === leadId);
+        if (leadIndex === -1) return;
+
+        const updatedLeads = [...leads];
+        const lead = { ...updatedLeads[leadIndex] };
+
+        switch (action) {
+            case 'applied':
+                if (data.applied) {
+                    // User clicked YES - start follow-up timer
+                    lead.found_data = {
+                        ...lead.found_data,
+                        applied: true,
+                        follow_up_timer_started: new Date().toISOString(),
+                        follow_up_days: 3
+                    };
+                } else {
+                    // User clicked NO - remove lead from pipeline
+                    updatedLeads.splice(leadIndex, 1);
+                    setLeads(updatedLeads);
+                    return;
+                }
+                break;
+
+            case 'follow_up_complete':
+                if (data.completed) {
+                    // Start next follow-up timer
+                    lead.found_data = {
+                        ...lead.found_data,
+                        follow_up_timer_started: new Date().toISOString(),
+                        follow_up_days: 3,
+                        follow_up_overdue: false
+                    };
+                } else {
+                    // Mark as losing opportunity
+                    lead.found_data = {
+                        ...lead.found_data,
+                        follow_up_overdue: true
+                    };
+                }
+                break;
+
+            case 'invited_to_interview':
+                // Move to connect stage
+                lead.stage = 'connect';
+                lead.stage_updated_at = new Date().toISOString();
+                lead.connect_data = {
+                    ...lead.connect_data,
+                    interview_date: '',
+                    interview_time: '',
+                    interview_with: '',
+                    interview_notes: '',
+                    interview_rating: null,
+                    prepped: false
+                };
+                break;
+
+            case 'prep_toggle':
+                // Toggle prep status - if false, show prep questionnaire
+                lead.connect_data = {
+                    ...lead.connect_data,
+                    prepped: !lead.connect_data.prepped
+                };
+                break;
+
+            case 'open_prep_modal':
+                // Open prep modal for the selected lead
+                setSelectedLead(lead);
+                setShowPrepModal(true);
+                return;
+
+            case 'got_job':
+                lead.close_data = {
+                    ...lead.close_data,
+                    got_job: data.gotJob
+                };
+
+                if (data.gotJob) {
+                    // Show success content
+                    lead.close_data = {
+                        ...lead.close_data,
+                        possible_revenue: lead.found_data.possible_earnings,
+                        negotiation_tips: [
+                            'Highlight your unique expertise',
+                            'Mention your successful project portfolio',
+                            'Discuss long-term collaboration potential'
+                        ],
+                        contract_template: 'Standard freelance contract template with your details'
+                    };
+                } else {
+                    // Show missed opportunity content
+                    lead.close_data = {
+                        ...lead.close_data,
+                        possible_revenue: lead.found_data.possible_earnings,
+                        missed_revenue: lead.found_data.possible_earnings,
+                        analysis_tips: [
+                            'Review your interview performance',
+                            'Strengthen your portfolio presentation',
+                            'Practice common interview questions'
+                        ]
+                    };
+                }
+                break;
+
+            case 'update_lead':
+                // Direct lead update from prep modal
+                updatedLeads[leadIndex] = data.lead;
+                setLeads(updatedLeads);
+                return;
+
+            case 'interview_rating':
+                // Update interview rating
+                lead.connect_data = {
+                    ...lead.connect_data,
+                    interview_rating: data.rating
+                };
+                break;
+
+            case 'update_notes':
+                // Update notes
+                lead.notes = data.notes;
+                break;
+
+            default:
+                return;
+        }
+
+        updatedLeads[leadIndex] = lead;
+        setLeads(updatedLeads);
+    };
+
+    // ==========================================
     // RENDER LOADING STATE
     // ==========================================
     if (loading) {
@@ -689,7 +736,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                         alignItems: 'center',
                         gap: '0.75rem'
                     }}>
-                        <Kanban style={{ width: '32px', height: '32px' }} />
+                        <Target style={{ width: '32px', height: '32px' }} />
                         Leads Pipeline
                     </h1>
                     <p style={{ margin: 0, color: 'rgba(255, 255, 255, 0.7)' }}>
@@ -942,6 +989,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                                                                 onClick={() => handleLeadClick(lead)}
                                                                 isDragging={snapshot.isDragging}
                                                                 hasFollowUp={followUpNotifications.some(n => n.id === lead.id)}
+                                                                onStageAction={(action, data) => handleStageAction(lead.id, action, data)}
                                                             />
                                                         </div>
                                                     )}
@@ -983,6 +1031,21 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                         // TODO: Implement delete functionality
                         console.log('Delete lead:', leadId);
                         setShowArchiveModal(false);
+                    }}
+                />
+            )}
+
+            {showPrepModal && selectedLead && (
+                <InterviewPrepModal
+                    lead={selectedLead}
+                    onClose={() => {
+                        setShowPrepModal(false);
+                        setSelectedLead(null);
+                    }}
+                    onUpdate={(updatedLead) => {
+                        handleStageAction(updatedLead.id, 'update_lead', { lead: updatedLead });
+                        setShowPrepModal(false);
+                        setSelectedLead(null);
                     }}
                 />
             )}

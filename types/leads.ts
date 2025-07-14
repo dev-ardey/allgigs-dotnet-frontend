@@ -2,7 +2,7 @@
 // LEADS KANBAN BOARD - TypeScript Interfaces
 // ==========================================
 
-export type LeadStage = 'new_lead' | 'applied' | 'spoken' | 'interview' | 'denied' | 'success';
+export type LeadStage = 'found' | 'connect' | 'close';
 
 export type ActivityType =
     | 'note'
@@ -12,7 +12,12 @@ export type ActivityType =
     | 'interview_scheduled'
     | 'application_sent'
     | 'follow_up_sent'
-    | 'stage_moved';
+    | 'stage_moved'
+    | 'applied'
+    | 'interview_prep'
+    | 'interview_completed'
+    | 'job_secured'
+    | 'job_declined';
 
 // ==========================================
 // MAIN LEAD INTERFACE
@@ -43,12 +48,9 @@ export interface Lead {
     notes?: string;
 
     // Stage-specific data
-    new_lead_data: NewLeadData;
-    applied_data: AppliedData;
-    spoken_data: SpokenData;
-    interview_data: InterviewData;
-    denied_data: DeniedData;
-    success_data: SuccessData;
+    found_data: FoundData;
+    connect_data: ConnectData;
+    close_data: CloseData;
 
     // Follow-up tracking
     follow_up_date?: string;
@@ -61,6 +63,59 @@ export interface Lead {
 
 // ==========================================
 // STAGE-SPECIFIC DATA INTERFACES
+// ==========================================
+
+export interface FoundData {
+    match_percentage?: number;
+    possible_earnings?: number;
+    above_normal_rate?: boolean;
+    normal_rate?: number;
+    applied?: boolean;
+    follow_up_days?: number;
+    follow_up_timer_started?: string; // ISO date string
+    follow_up_overdue?: boolean;
+    priority?: 'low' | 'medium' | 'high';
+    source?: string;
+    initial_notes?: string;
+}
+
+export interface ConnectData {
+    interview_date?: string;
+    interview_time?: string;
+    interview_with?: string;
+    interview_notes?: string;
+    interview_rating?: 'thumbs_up' | 'thumbs_down' | null;
+    prepped?: boolean;
+    prep_data?: InterviewPrepData;
+}
+
+export interface InterviewPrepData {
+    introduction?: string;
+    company_fit?: string;
+    role_description?: string;
+    colleagues?: Colleague[];
+    company_mission?: string;
+    completed?: boolean;
+}
+
+export interface Colleague {
+    id: string;
+    name: string;
+    email?: string;
+    linkedin?: string;
+    role?: string;
+}
+
+export interface CloseData {
+    got_job?: boolean;
+    possible_revenue?: number;
+    negotiation_tips?: string[];
+    contract_template?: string;
+    archived_reason?: string;
+}
+
+// ==========================================
+// LEGACY INTERFACES (for backward compatibility)
 // ==========================================
 
 export interface NewLeadData {
