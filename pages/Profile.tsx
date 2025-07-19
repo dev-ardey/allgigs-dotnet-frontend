@@ -22,6 +22,12 @@ interface Profile {
   gender?: string;
   interests?: string;
   mainProblem?: string;
+  // New fields from Supabase profiles table
+  dateAvailableToRecruiters?: string;
+  testimonials?: string;
+  links?: string;
+  postponedInfo?: number;
+  postponedTime?: string;
 }
 
 // Document Interface (from dashboard)
@@ -78,7 +84,7 @@ export default function Profile() {
     { id: "3", name: "Portfolio.pdf", type: "PDF", size: "4.7 MB", uploadedAt: "2025-06-15" },
   ]);
 
-  // Testimonial state
+  // Testimonial state - now connected to profile data
   const [testimonial, setTestimonial] = useState('');
   const [testimonialSending, setTestimonialSending] = useState(false);
 
@@ -86,15 +92,41 @@ export default function Profile() {
   const [feedback, setFeedback] = useState('');
   const [feedbackSending, setFeedbackSending] = useState(false);
 
-  // Toggle available to recruiters function (from dashboard)
-  const toggleAvailable = () => setIsAvailable(prev => !prev);
+  // Toggle available to recruiters function - now connected to profile data
+  const toggleAvailable = async () => {
+    const newValue = !isAvailable;
+    setIsAvailable(newValue);
+
+    // Update profile data
+    const updatedProfile = { ...editedProfile, isAvailableForWork: newValue };
+    setEditedProfile(updatedProfile);
+
+    // Save to Supabase
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('No authenticated user found');
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ available_to_recruiters: newValue })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error updating availability:', error);
+      }
+    } catch (error) {
+      console.error('Error updating availability:', error);
+    }
+  };
 
   // Remove document function (from dashboard)
   const removeDocument = (id: string) => {
     setDocuments(documents.filter(doc => doc.id !== id));
   };
 
-  // Send testimonial function (placeholder for future Supabase integration)
+  // Send testimonial function - now saves to profile
   const sendTestimonial = async () => {
     if (!testimonial.trim()) {
       alert('Please enter a testimonial before sending.');
@@ -104,15 +136,30 @@ export default function Profile() {
     setTestimonialSending(true);
 
     try {
-      // TODO: Send testimonial to Supabase when ready
-      // For now, just simulate sending
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Save testimonial to profile
+      const updatedProfile = { ...editedProfile, testimonials: testimonial };
+      setEditedProfile(updatedProfile);
 
-      alert('Testimonial sent successfully!');
-      setTestimonial(''); // Clear the textarea after sending
+      // Save to Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('No authenticated user found');
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ testimonials: testimonial })
+        .eq('id', user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      alert('Testimonial saved successfully!');
+      // Don't clear the textarea - keep it for editing
     } catch (error) {
-      console.error('Error sending testimonial:', error);
-      alert('Failed to send testimonial. Please try again.');
+      console.error('Error saving testimonial:', error);
+      alert('Failed to save testimonial. Please try again.');
     } finally {
       setTestimonialSending(false);
     }
@@ -169,7 +216,7 @@ export default function Profile() {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('first_name, last_name, linkedin_URL, industry, job_title, location')
+        .select('first_name, last_name, linkedin_URL, industry, job_title, location, available_to_recruiters, date_available_to_recruiters, rate, age, last_years_earnings, gender, testimonials, main_problem, interests, links, postponed_info, postponed_time')
         .eq('id', user.id)
         .single();
 
@@ -184,17 +231,27 @@ export default function Profile() {
           job_title: data.job_title || '',
           linkedin_URL: data.linkedin_URL || '',
           linkedIn: data.linkedin_URL || '',
-          // Set default values for fields that don't exist in DB yet
-          isAvailableForWork: true,
-          hourlyRate: 75,
-          age: 30,
-          lastYearEarnings: 100000,
-          gender: 'Male',
-          interests: 'Technology, Innovation, Problem Solving',
-          mainProblem: 'Finding the right opportunities'
+          // Map all available fields from Supabase
+          isAvailableForWork: data.available_to_recruiters ?? true,
+          hourlyRate: data.rate ? parseInt(data.rate) : 75,
+          age: data.age ? new Date().getFullYear() - new Date(data.age).getFullYear() : 30,
+          lastYearEarnings: data.last_years_earnings || 100000,
+          gender: data.gender || 'Male',
+          interests: data.interests || 'Technology, Innovation, Problem Solving',
+          mainProblem: data.main_problem || 'Finding the right opportunities',
+          // All new fields from Supabase
+          dateAvailableToRecruiters: data.date_available_to_recruiters,
+          testimonials: data.testimonials,
+          links: data.links,
+          postponedInfo: data.postponed_info,
+          postponedTime: data.postponed_time
         };
         setProfile(fetchedProfile);
         setEditedProfile(fetchedProfile);
+        // Sync testimonial state with profile data
+        setTestimonial(fetchedProfile.testimonials || '');
+        // Sync availability state with profile data
+        setIsAvailable(fetchedProfile.isAvailableForWork ?? true);
       }
       setLoading(false);
     };
@@ -228,7 +285,7 @@ export default function Profile() {
     console.log('Edited profile data:', editedProfile);
 
     try {
-      // Use upsert like CompleteProfileForm does - only save fields that exist in DB
+      // Use upsert like CompleteProfileForm does - save all available fields
       const profileData = {
         id: user.id,
         first_name: editedProfile.firstName,
@@ -237,9 +294,19 @@ export default function Profile() {
         industry: editedProfile.industry,
         location: editedProfile.location,
         job_title: editedProfile.job_title,
-        // Only include fields that exist in the profiles table
-        // Remove: isAvailableForWork, hourlyRate, age, lastYearEarnings, gender, interests, mainProblem
-        // until these columns are added to the Supabase table
+        // Map all available fields to Supabase columns
+        available_to_recruiters: editedProfile.isAvailableForWork,
+        date_available_to_recruiters: editedProfile.dateAvailableToRecruiters,
+        rate: editedProfile.hourlyRate?.toString(),
+        age: editedProfile.age ? new Date(new Date().getFullYear() - editedProfile.age, 0, 1).toISOString().split('T')[0] : null,
+        last_years_earnings: editedProfile.lastYearEarnings,
+        gender: editedProfile.gender,
+        testimonials: editedProfile.testimonials,
+        main_problem: editedProfile.mainProblem,
+        interests: editedProfile.interests,
+        links: editedProfile.links,
+        postponed_info: editedProfile.postponedInfo,
+        postponed_time: editedProfile.postponedTime
       };
 
       console.log('Profile data to be upserted:', profileData);
@@ -534,7 +601,7 @@ export default function Profile() {
                   backdropFilter: 'blur(8px)'
                 }}
               >
-                {testimonialSending ? 'Sending...' : 'Send'}
+                {testimonialSending ? 'Saving...' : 'Save'}
               </button>
             </div>
 
@@ -842,11 +909,15 @@ export default function Profile() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Age</label>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Birth Date</label>
                     <input
-                      type="number"
-                      value={editedProfile.age || ''}
-                      onChange={(e) => setEditedProfile({ ...editedProfile, age: parseInt(e.target.value) || 0 })}
+                      type="date"
+                      value={editedProfile.age ? new Date(new Date().getFullYear() - editedProfile.age, 0, 1).toISOString().split('T')[0] : ''}
+                      onChange={(e) => {
+                        const birthDate = new Date(e.target.value);
+                        const age = new Date().getFullYear() - birthDate.getFullYear();
+                        setEditedProfile({ ...editedProfile, age: age });
+                      }}
                       style={{
                         width: '100%',
                         padding: '0.75rem',
@@ -858,7 +929,6 @@ export default function Profile() {
                         color: '#fff',
                         backdropFilter: 'blur(8px)'
                       }}
-                      placeholder="For example 30"
                     />
                   </div>
                   <div>
@@ -972,6 +1042,48 @@ export default function Profile() {
                   </div>
                 </div>
 
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Available to Recruiters Date</label>
+                    <input
+                      type="date"
+                      value={editedProfile.dateAvailableToRecruiters || ''}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, dateAvailableToRecruiters: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        boxSizing: 'border-box',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        color: '#fff',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Links</label>
+                    <input
+                      type="text"
+                      value={editedProfile.links || ''}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, links: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        boxSizing: 'border-box',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        color: '#fff',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                      placeholder="Portfolio, website, etc."
+                    />
+                  </div>
+                </div>
+
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.75rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)', backdropFilter: 'blur(8px)', marginTop: '1.5rem' }}>
@@ -1053,8 +1165,8 @@ export default function Profile() {
                   border: '1px solid rgba(16, 185, 129, 0.3)'
                 }}>
                   <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>LinkedIn</span>
-                  <a href={profile.linkedIn} style={{ fontWeight: '600', color: '#fff', textDecoration: 'none', display: 'block', marginTop: '0.25rem' }} target="_blank" rel="noopener noreferrer">
-                    LinkedIn profile
+                  <a href={profile.linkedin_URL} style={{ fontWeight: '600', color: '#fff', textDecoration: 'none', display: 'block', marginTop: '0.25rem' }} target="_blank" rel="noopener noreferrer">
+                    {profile.linkedin_URL || 'Not specified'}
                   </a>
                 </div>
                 <div style={{
@@ -1127,6 +1239,24 @@ export default function Profile() {
                 }}>
                   <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Main Problem</span>
                   <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.mainProblem || 'Not specified'}</p>
+                </div>
+                <div style={{
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  border: '1px solid rgba(16, 185, 129, 0.3)'
+                }}>
+                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Available to Recruiters Date</span>
+                  <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.dateAvailableToRecruiters ? new Date(profile.dateAvailableToRecruiters).toLocaleDateString() : 'Not specified'}</p>
+                </div>
+                <div style={{
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  border: '1px solid rgba(16, 185, 129, 0.3)'
+                }}>
+                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Links</span>
+                  <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.links || 'Not specified'}</p>
                 </div>
               </div>
             )}
