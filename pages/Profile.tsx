@@ -65,15 +65,13 @@ export default function Profile() {
   const [editedProfile, setEditedProfile] = useState<Profile>(emptyProfile);
   const [editMode, setEditMode] = useState(false);
 
-  // Mail notification settings (from dashboard)
+  // Mail notification settings - connected to email_notifications table
   const [mailNotifications, setMailNotifications] = useState({
-    leadNotifications: true,
+    newLeadNotifications: true,
     followUpReminders: true,
-    weeklyDigest: true,
-    applicationStatusUpdates: true,
+    weeklySummary: true,
     interviewReminders: true,
-    marketInsights: false,
-    systemUpdates: true
+    marketInsights: false
   });
   const [followUpDays, setFollowUpDays] = useState(3);
 
@@ -165,6 +163,41 @@ export default function Profile() {
     }
   };
 
+
+
+  // Save email notification settings to Supabase
+  const saveEmailNotifications = async (newSettings: typeof mailNotifications) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('No authenticated user found');
+      }
+
+      const notificationData = {
+        user_id: user.id,
+        new_lead_notifications: newSettings.newLeadNotifications,
+        follow_up_reminders: newSettings.followUpReminders,
+        weekly_summary: newSettings.weeklySummary,
+        interview_reminders: newSettings.interviewReminders,
+        market_insights: newSettings.marketInsights
+      };
+
+      console.log('Saving email notifications:', notificationData);
+
+      const { error } = await supabase
+        .from('email_notifications')
+        .upsert(notificationData);
+
+      if (error) {
+        console.error('Error saving email notifications:', error);
+      } else {
+        console.log('Email notifications saved successfully');
+      }
+    } catch (error) {
+      console.error('Error saving email notifications:', error);
+    }
+  };
+
   // Send feedback function (placeholder for future Supabase integration)
   const sendFeedback = async () => {
     if (!feedback.trim()) {
@@ -252,11 +285,57 @@ export default function Profile() {
         setTestimonial(fetchedProfile.testimonials || '');
         // Sync availability state with profile data
         setIsAvailable(fetchedProfile.isAvailableForWork ?? true);
+
       }
       setLoading(false);
     };
 
     fetchProfile();
+  }, [user]);
+
+  // Fetch email notification settings from Supabase
+  useEffect(() => {
+    const fetchEmailNotifications = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('email_notifications')
+          .select('new_lead_notifications, follow_up_reminders, weekly_summary, interview_reminders, market_insights')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+          console.error('Error fetching email notifications:', error);
+        } else if (data) {
+          // Data found, use it
+          console.log('Found email notifications data:', data);
+          setMailNotifications({
+            newLeadNotifications: data.new_lead_notifications ?? true,
+            followUpReminders: data.follow_up_reminders ?? true,
+            weeklySummary: data.weekly_summary ?? true,
+            interviewReminders: data.interview_reminders ?? true,
+            marketInsights: data.market_insights ?? false
+          });
+        } else {
+          // No data found, create default record
+          console.log('No email notifications found, creating default record');
+          const defaultSettings = {
+            newLeadNotifications: true,
+            followUpReminders: true,
+            weeklySummary: true,
+            interviewReminders: true,
+            marketInsights: false
+          };
+          setMailNotifications(defaultSettings);
+          await saveEmailNotifications(defaultSettings);
+        }
+      } catch (error) {
+        console.error('Error fetching email notifications:', error);
+      }
+    };
+
+    fetchEmailNotifications();
   }, [user]);
 
   // Save profile function (fixed to use upsert like CompleteProfileForm)
@@ -1291,7 +1370,11 @@ export default function Profile() {
                     <input
                       type="checkbox"
                       checked={mailNotifications.followUpReminders}
-                      onChange={(e) => setMailNotifications(prev => ({ ...prev, followUpReminders: e.target.checked }))}
+                      onChange={async (e) => {
+                        const newSettings = { ...mailNotifications, followUpReminders: e.target.checked };
+                        setMailNotifications(newSettings);
+                        await saveEmailNotifications(newSettings);
+                      }}
                       style={{ display: 'none' }}
                     />
                     <div style={{
@@ -1340,12 +1423,11 @@ export default function Profile() {
               {/* Notification Toggles */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
                 {[
-                  { key: 'leadNotifications', label: 'New Lead Notifications', desc: 'Get notified when new leads are added' },
-                  { key: 'applicationStatusUpdates', label: 'Application Updates', desc: 'Status changes on your applications' },
+                  { key: 'newLeadNotifications', label: 'New Lead Notifications', desc: 'Get notified when new leads are added' },
+                  { key: 'followUpReminders', label: 'Follow-up Reminders', desc: 'Reminders to follow up on leads after a few days' },
+                  { key: 'weeklySummary', label: 'Weekly Summary', desc: 'Weekly overview of your activity' },
                   { key: 'interviewReminders', label: 'Interview Reminders', desc: 'Reminders for upcoming interviews' },
-                  { key: 'weeklyDigest', label: 'Weekly Summary', desc: 'Weekly overview of your activity' },
-                  { key: 'marketInsights', label: 'Market Insights', desc: 'Industry trends and salary updates' },
-                  { key: 'systemUpdates', label: 'System Updates', desc: 'Platform updates and announcements' }
+                  { key: 'marketInsights', label: 'Market Insights', desc: 'Industry trends and salary updates' }
                 ].map((notification) => (
                   <div key={notification.key} style={{
                     background: 'rgba(59, 130, 246, 0.1)',
@@ -1368,10 +1450,14 @@ export default function Profile() {
                       <input
                         type="checkbox"
                         checked={mailNotifications[notification.key as keyof typeof mailNotifications]}
-                        onChange={(e) => setMailNotifications(prev => ({
-                          ...prev,
-                          [notification.key]: e.target.checked
-                        }))}
+                        onChange={async (e) => {
+                          const newSettings = {
+                            ...mailNotifications,
+                            [notification.key]: e.target.checked
+                          };
+                          setMailNotifications(newSettings);
+                          await saveEmailNotifications(newSettings);
+                        }}
                         style={{ display: 'none' }}
                       />
                       <div style={{
