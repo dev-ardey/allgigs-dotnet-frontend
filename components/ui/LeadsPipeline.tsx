@@ -6,7 +6,9 @@ import {
     Bell,
     Target,
     MessageCircle,
-    CheckCircle
+    CheckCircle,
+    Users,
+    CircleCheckBig
 } from 'lucide-react';
 import { Lead, LeadStage, KanbanColumn, LeadsResponse } from '../../types/leads';
 import { supabase } from '../../SupabaseClient';
@@ -69,6 +71,74 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
     // Filter states
     const [searchTerm, setSearchTerm] = useState('');
     const [stageFilter, setStageFilter] = useState<LeadStage | 'all'>('all');
+    const [allCollapsed, setAllCollapsed] = useState(false);
+
+    // Collapse/Expand all handlers
+    const handleCollapseAll = async () => {
+        try {
+            // Update all leads in applying table
+            const { error: applyingError } = await supabase
+                .from('applying')
+                .update({ collapsed_card: true })
+                .eq('user_id', user?.id);
+
+            if (applyingError) throw applyingError;
+
+            // Update all leads in job_clicks table (Found jobs)
+            const { error: jobClicksError } = await supabase
+                .from('job_clicks')
+                .update({ collapsed_job_click_card: true })
+                .eq('user_id', user?.id);
+
+            if (jobClicksError) throw jobClicksError;
+
+            // Update local state
+            setLeads(prevLeads =>
+                prevLeads.map(lead => ({
+                    ...lead,
+                    collapsed_job_click_card: true, // Update job_clicks collapsed_job_click_card
+                    applying: lead.applying ? { ...lead.applying, collapsed_card: true } : null
+                }))
+            );
+
+            setAllCollapsed(true);
+        } catch (err: any) {
+            console.error('Error collapsing all:', err);
+        }
+    };
+
+    const handleExpandAll = async () => {
+        try {
+            // Update all leads in applying table
+            const { error: applyingError } = await supabase
+                .from('applying')
+                .update({ collapsed_card: false })
+                .eq('user_id', user?.id);
+
+            if (applyingError) throw applyingError;
+
+            // Update all leads in job_clicks table (Found jobs)
+            const { error: jobClicksError } = await supabase
+                .from('job_clicks')
+                .update({ collapsed_job_click_card: false })
+                .eq('user_id', user?.id);
+
+            if (jobClicksError) throw jobClicksError;
+
+            // Update local state
+            setLeads(prevLeads =>
+                prevLeads.map(lead => ({
+                    ...lead,
+                    collapsed_job_click_card: false, // Update job_clicks collapsed_job_click_card
+                    applying: lead.applying ? { ...lead.applying, collapsed_card: false } : null
+                }))
+            );
+
+            setAllCollapsed(false);
+        } catch (err: any) {
+            console.error('Error expanding all:', err);
+        }
+    };
 
     // Follow-up notifications
     const [followUpNotifications, setFollowUpNotifications] = useState<JobClickWithApplying[]>([]);
@@ -87,12 +157,19 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
             borderColor: 'rgba(59, 130, 246, 0.4)',
             description: 'Recently clicked jobs to pursue'
         },
-        applied: {
-            title: 'Applied',
-            icon: <MessageCircle style={{ width: '16px', height: '16px' }} />,
+        connect: {
+            title: 'Connect',
+            icon: <Users style={{ width: '16px', height: '16px' }} />,
             color: 'rgba(245, 158, 11, 0.2)',
             borderColor: 'rgba(245, 158, 11, 0.4)',
-            description: 'Jobs you have applied to'
+            description: 'Jobs you have applied to and are in process'
+        },
+        close: {
+            title: 'Closed',
+            icon: <CircleCheckBig style={{ width: '16px', height: '16px' }} />,
+            color: 'rgba(16, 185, 129, 0.2)',
+            borderColor: 'rgba(16, 185, 129, 0.4)',
+            description: 'Jobs with completed interviews'
         }
     }), []);
 
@@ -114,8 +191,23 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
         // Found column: job_clicks without applying record (or applied = false)
         const foundLeads = filteredLeads.filter(lead => !lead.applying || !lead.applying.applied);
 
-        // Applied column: job_clicks with applying record and applied = true
-        const appliedLeads = filteredLeads.filter(lead => lead.applying && lead.applying.applied);
+        // Connect column: job_clicks with applying record and applied = true, but no interviews yet
+        const connectLeads = filteredLeads.filter(lead =>
+            lead.applying &&
+            lead.applying.applied &&
+            !lead.applying.recruiter_interview &&
+            !lead.applying.technical_interview &&
+            !lead.applying.hiringmanager_interview
+        );
+
+        // Close column: jobs with at least one completed interview
+        const closeLeads = filteredLeads.filter(lead =>
+            lead.applying &&
+            lead.applying.applied &&
+            (lead.applying.recruiter_interview ||
+                lead.applying.technical_interview ||
+                lead.applying.hiringmanager_interview)
+        );
 
         return [
             {
@@ -126,11 +218,18 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                 icon: stageConfig.found.icon
             },
             {
-                id: 'applied' as LeadStage,
-                title: 'Applied',
-                leads: appliedLeads,
-                color: stageConfig.applied.color,
-                icon: stageConfig.applied.icon
+                id: 'connect' as LeadStage,
+                title: 'Connect',
+                leads: connectLeads,
+                color: stageConfig.connect.color,
+                icon: stageConfig.connect.icon
+            },
+            {
+                id: 'close' as LeadStage,
+                title: 'Closed',
+                leads: closeLeads,
+                color: stageConfig.close.color,
+                icon: stageConfig.close.icon
             }
         ];
     }, [leads, searchTerm, stageFilter, stageConfig]);
@@ -433,16 +532,12 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
         }
     };
 
-    const handleGotJob = async (applyingId: string, gotJob: boolean) => {
+    const handleGotJob = async (applyingId: string, gotJob: boolean, startingDate?: string) => {
         try {
             const updateData: any = { got_the_job: gotJob };
 
-            if (gotJob) {
-                // Als ze de baan hebben gekregen, vraag om startdatum
-                const startDate = prompt('When do you start? (YYYY-MM-DD)');
-                if (startDate) {
-                    updateData.starting_date = startDate;
-                }
+            if (gotJob && startingDate) {
+                updateData.starting_date = startingDate;
             }
 
             const { error } = await supabase
@@ -688,6 +783,39 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                         <option key={stage} value={stage}>{config.title}</option>
                     ))}
                 </select>
+
+                <div style={{ display: 'flex', gap: 8, marginLeft: '20px' }}>
+                    <button
+                        onClick={handleCollapseAll}
+                        style={{
+                            padding: '0.75rem 1rem',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            color: '#3b82f6',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            borderRadius: '8px',
+                            fontSize: '0.875rem',
+                            cursor: 'pointer',
+                            fontWeight: '600'
+                        }}
+                    >
+                        Collapse All
+                    </button>
+                    <button
+                        onClick={handleExpandAll}
+                        style={{
+                            padding: '0.75rem 1rem',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            color: '#10b981',
+                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                            borderRadius: '8px',
+                            fontSize: '0.875rem',
+                            cursor: 'pointer',
+                            fontWeight: '600'
+                        }}
+                    >
+                        Expand All
+                    </button>
+                </div>
             </div>
 
             {/* Empty State */}
@@ -731,6 +859,8 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                                             borderRadius: '12px',
                                             padding: '1rem',
                                             minHeight: '200px',
+                                            maxHeight: '1500px',
+                                            overflowY: 'auto',
                                             transition: 'all 0.2s ease',
                                             backdropFilter: 'blur(8px)',
                                             transform: snapshot.isDraggingOver ? 'scale(1.02)' : 'scale(1)'
@@ -787,6 +917,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                                                         >
                                                             <LeadCard
                                                                 lead={lead}
+                                                                index={index}
                                                                 isDragging={snapshot.isDragging}
                                                                 hasFollowUp={followUpNotifications.some(fu => fu.id === lead.id)}
                                                                 onStageAction={(action, data) => {
@@ -801,7 +932,20 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                                                                     } else if (action === 'follow_up_complete') {
                                                                         handleFollowUpComplete(lead.applying?.applying_id || '');
                                                                     } else if (action === 'got_job') {
-                                                                        handleGotJob(lead.applying?.applying_id || '', data.gotJob);
+                                                                        handleGotJob(lead.applying?.applying_id || '', data.gotJob, data.startingDate);
+                                                                    } else if (action === 'toggle_collapse') {
+                                                                        // Update local state for immediate UI feedback
+                                                                        setLeads(prevLeads =>
+                                                                            prevLeads.map(l =>
+                                                                                l.id === lead.id
+                                                                                    ? {
+                                                                                        ...l,
+                                                                                        collapsed_job_click_card: data.collapsed, // Update job_clicks collapsed_job_click_card
+                                                                                        applying: l.applying ? { ...l.applying, collapsed_card: data.collapsed } : null
+                                                                                    }
+                                                                                    : l
+                                                                            )
+                                                                        );
                                                                     }
                                                                 }}
                                                             />
