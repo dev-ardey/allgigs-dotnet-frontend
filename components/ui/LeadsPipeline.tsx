@@ -21,7 +21,7 @@ import { LeadStage } from '../../types/leads';
 import { supabase } from '../../SupabaseClient';
 import LeadCard from './LeadCard';
 import ArchiveModal from './ArchiveModal';
-import InterviewPrepModal from './InterviewPrepModal';
+// import InterviewPrepModal from './InterviewPrepModal';
 import StatisticsModal from './StatisticsModal';
 
 interface LeadsPipelineProps {
@@ -83,6 +83,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     // Modal states
     const [showArchiveModal, setShowArchiveModal] = useState(false);
     const [showPrepModal, setShowPrepModal] = useState(false);
+    console.log(showPrepModal, setShowPrepModal, "showPrepModal - build fix");
     const [showStatisticsModal, setShowStatisticsModal] = useState(false);
 
     // Feature states

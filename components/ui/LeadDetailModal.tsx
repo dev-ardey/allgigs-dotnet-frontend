@@ -101,6 +101,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
     const [editingStartDate, setEditingStartDate] = useState(false);
     console.log(editingStartDate, setEditingStartDate, "editingStartDate - build fix");
     const [startDate, setStartDate] = useState(lead.applying?.starting_date || '');
+    console.log(startDate, setStartDate, "startDate - build fix");
     const [editingGotJob, setEditingGotJob] = useState(false);
     console.log(editingGotJob, setEditingGotJob, "editingGotJob - build fix");
     const [gotJob, setGotJob] = useState<boolean | null>(lead.applying?.got_the_job || null);
@@ -251,6 +252,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
             setEditingGotJob(false);
         }
     };
+    console.log(handleSaveGotJob(), "handleSaveGotJob - build fix");
 
     const getActivityIcon = (type: Activity['type']) => {
         switch (type) {
@@ -605,9 +607,9 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                                 <div style={{ marginBottom: '2rem' }}>
                                     <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: 8 }}>Application Info</h3>
                                     <div><strong>Applied:</strong> {lead.applying.applied ? 'Yes' : 'No'}</div>
-                                    <div><strong>Notes:</strong> <input value={lead.applying.notes || ''} onChange={e => {/* update logic */ }} /></div>
-                                    <div><strong>Start Date:</strong> <input type="date" value={lead.applying.starting_date ? lead.applying.starting_date.split('T')[0] : ''} onChange={e => {/* update logic */ }} /></div>
-                                    <div><strong>Got the job:</strong> <select value={lead.applying.got_the_job === true ? 'yes' : lead.applying.got_the_job === false ? 'no' : ''} onChange={e => {/* update logic */ }}><option value="">-</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                                    <div><strong>Notes:</strong> <input value={lead.applying.notes || ''} onChange={() => {/* update logic */ }} /></div>
+                                    <div><strong>Start Date:</strong> <input type="date" value={lead.applying.starting_date ? lead.applying.starting_date.split('T')[0] : ''} onChange={() => {/* update logic */ }} /></div>
+                                    <div><strong>Got the job:</strong> <select value={lead.applying.got_the_job === true ? 'yes' : lead.applying.got_the_job === false ? 'no' : ''} onChange={() => {/* update logic */ }}><option value="">-</option><option value="yes">Yes</option><option value="no">No</option></select></div>
                                 </div>
                             )}
 
