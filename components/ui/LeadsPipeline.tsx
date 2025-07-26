@@ -34,6 +34,7 @@ interface JobClickWithApplying {
     date_posted: string;
     summary: string;
     url: string;
+    collapsed_job_click_card?: boolean;
     applying?: {
         applying_id: string;
         created_at: string;
@@ -191,20 +192,22 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
         // Found column: job_clicks without applying record (or applied = false)
         const foundLeads = filteredLeads.filter(lead => !lead.applying || !lead.applying.applied);
 
-        // Connect column: job_clicks with applying record and applied = true, but no interviews yet
+        // Connect column: job_clicks with applying record and applied = true, but no interviews yet and not got the job
         const connectLeads = filteredLeads.filter(lead =>
             lead.applying &&
             lead.applying.applied &&
+            lead.applying.got_the_job !== true &&
             !lead.applying.recruiter_interview &&
             !lead.applying.technical_interview &&
             !lead.applying.hiringmanager_interview
         );
 
-        // Close column: jobs with at least one completed interview
+        // Close column: jobs with at least one completed interview OR got the job
         const closeLeads = filteredLeads.filter(lead =>
             lead.applying &&
             lead.applying.applied &&
-            (lead.applying.recruiter_interview ||
+            (lead.applying.got_the_job === true ||
+                lead.applying.recruiter_interview ||
                 lead.applying.technical_interview ||
                 lead.applying.hiringmanager_interview)
         );
@@ -261,10 +264,22 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
             // Map: unique_id_job (applying) <-> id (job_clicks) - niet job_id!
             const leadsData = clicks.map(job => {
                 const apply = applying.find(a => a.unique_id_job === job.id);
-                return {
+                const leadData = {
                     ...job,
-                    applying: apply || null
+                    applying: apply || null,
+                    // Ensure collapsed_job_click_card is available at the top level
+                    collapsed_job_click_card: job.collapsed_job_click_card || false
                 };
+
+                // Debug log for collapse state
+                console.log('Loaded lead data:', {
+                    leadId: job.id,
+                    collapsed_job_click_card: job.collapsed_job_click_card,
+                    applyingCollapsed: apply?.collapsed_card,
+                    finalCollapsed: leadData.collapsed_job_click_card
+                });
+
+                return leadData;
             });
             setLeads(leadsData);
             setDatabaseAvailable(true);
@@ -613,7 +628,8 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
         <div style={{
             padding: '0',
             minHeight: '100vh',
-            color: '#fff'
+            color: '#fff',
+            overflow: 'hidden' // Hide scrollbars
         }}>
             {/* Header */}
             <div style={{
@@ -834,6 +850,12 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
             )}
 
             {/* Kanban Board */}
+            <style jsx>{`
+                /* Hide scrollbars for WebKit browsers */
+                ::-webkit-scrollbar {
+                    display: none;
+                }
+            `}</style>
             <DragDropContext onDragEnd={onDragEnd}>
                 <div style={{
                     display: 'grid',
@@ -859,8 +881,10 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                                             borderRadius: '12px',
                                             padding: '1rem',
                                             minHeight: '200px',
-                                            maxHeight: '1500px',
+                                            maxHeight: '1000px',
                                             overflowY: 'auto',
+                                            scrollbarWidth: 'none', // Firefox
+                                            msOverflowStyle: 'none', // IE/Edge
                                             transition: 'all 0.2s ease',
                                             backdropFilter: 'blur(8px)',
                                             transform: snapshot.isDraggingOver ? 'scale(1.02)' : 'scale(1)'
@@ -934,9 +958,15 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                                                                     } else if (action === 'got_job') {
                                                                         handleGotJob(lead.applying?.applying_id || '', data.gotJob, data.startingDate);
                                                                     } else if (action === 'toggle_collapse') {
+                                                                        console.log('toggle_collapse action received:', {
+                                                                            leadId: lead.id,
+                                                                            collapsed: data.collapsed,
+                                                                            currentCollapsed: lead.collapsed_job_click_card
+                                                                        });
+
                                                                         // Update local state for immediate UI feedback
-                                                                        setLeads(prevLeads =>
-                                                                            prevLeads.map(l =>
+                                                                        setLeads(prevLeads => {
+                                                                            const updatedLeads = prevLeads.map(l =>
                                                                                 l.id === lead.id
                                                                                     ? {
                                                                                         ...l,
@@ -944,8 +974,11 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                                                                                         applying: l.applying ? { ...l.applying, collapsed_card: data.collapsed } : null
                                                                                     }
                                                                                     : l
-                                                                            )
-                                                                        );
+                                                                            );
+
+                                                                            console.log('Updated leads state:', updatedLeads.find(l => l.id === lead.id));
+                                                                            return updatedLeads;
+                                                                        });
                                                                     }
                                                                 }}
                                                             />

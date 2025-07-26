@@ -35,6 +35,7 @@ interface JobClickWithApplying {
     date_posted: string;
     summary: string;
     url: string;
+    collapsed_job_click_card?: boolean;
     applying?: {
         applying_id: string;
         created_at: string;
@@ -207,7 +208,33 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     // Check if card should be collapsed
     // Check collapse state from applying record or job_clicks record
-    const isCollapsed = lead.applying?.collapsed_card || (lead as any).collapsed_job_click_card || false;
+    const [localCollapsed, setLocalCollapsed] = useState(
+        lead.collapsed_job_click_card !== undefined ? lead.collapsed_job_click_card : (lead.applying?.collapsed_card || false)
+    );
+
+    // Update local state when props change
+    useEffect(() => {
+        // Prioritize job_clicks.collapsed_job_click_card since it's always updated
+        const newCollapsed = lead.collapsed_job_click_card !== undefined ? lead.collapsed_job_click_card : (lead.applying?.collapsed_card || false);
+        console.log('LeadCard useEffect - updating local state:', {
+            leadId: lead.id,
+            applyingCollapsed: lead.applying?.collapsed_card,
+            jobClicksCollapsed: lead.collapsed_job_click_card,
+            newCollapsed,
+            currentLocalCollapsed: localCollapsed
+        });
+        setLocalCollapsed(newCollapsed);
+    }, [lead.applying?.collapsed_card, lead.collapsed_job_click_card]);
+
+    const isCollapsed = localCollapsed;
+
+    // Debug log for collapse state
+    console.log('LeadCard collapse state:', {
+        leadId: lead.id,
+        applyingCollapsed: lead.applying?.collapsed_card,
+        jobClicksCollapsed: lead.collapsed_job_click_card,
+        finalCollapsed: isCollapsed
+    });
 
     // Handle button actions
     const handleAppliedClick = (applied: boolean) => {
@@ -308,28 +335,44 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     // Collapse/Expand handler
     const handleToggleCollapse = async (collapsed: boolean) => {
+        console.log('handleToggleCollapse called:', {
+            leadId: lead.id,
+            collapsed,
+            hasApplying: !!lead.applying?.applying_id,
+            currentCollapsed: isCollapsed
+        });
+
         try {
+            // Always update both tables to ensure consistency
             if (lead.applying?.applying_id) {
-                // Job is in applying table - update there
-                const { error } = await supabase
+                // Update applying table
+                console.log('Updating applying table for lead:', lead.id);
+                const { error: applyingError } = await supabase
                     .from('applying')
                     .update({ collapsed_card: collapsed })
                     .eq('applying_id', lead.applying.applying_id);
 
-                if (error) throw error;
-            } else {
-                // Job is only in job_clicks - update collapsed_job_click_card in job_clicks table
-                const { error } = await supabase
-                    .from('job_clicks')
-                    .update({ collapsed_job_click_card: collapsed })
-                    .eq('id', lead.id)
-                    .eq('user_id', lead.user_id);
-
-                if (error) throw error;
+                if (applyingError) throw applyingError;
+                console.log('Successfully updated applying table');
             }
 
-            // Update local state
+            // Always update job_clicks table
+            console.log('Updating job_clicks table for lead:', lead.id);
+            const { error: jobClicksError } = await supabase
+                .from('job_clicks')
+                .update({ collapsed_job_click_card: collapsed })
+                .eq('id', lead.id)
+                .eq('user_id', lead.user_id);
+
+            if (jobClicksError) throw jobClicksError;
+            console.log('Successfully updated job_clicks table');
+
+            // Update local state immediately
+            setLocalCollapsed(collapsed);
+
+            // Update parent state
             if (onStageAction) {
+                console.log('Calling onStageAction with collapsed:', collapsed);
                 onStageAction('toggle_collapse', { collapsed });
             }
         } catch (err: any) {
