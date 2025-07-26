@@ -8,16 +8,26 @@ import {
     MessageCircle,
     CheckCircle,
     Users,
-    CircleCheckBig
+    CircleCheckBig,
+    BarChart3,
+    Mail,
+    Zap,
+    Sparkles,
+    Brain,
+    Lock,
+    Minimize2,
+    Maximize2
 } from 'lucide-react';
 import { Lead, LeadStage, KanbanColumn, LeadsResponse } from '../../types/leads';
 import { supabase } from '../../SupabaseClient';
 import LeadCard from './LeadCard';
 import ArchiveModal from './ArchiveModal';
 import InterviewPrepModal from './InterviewPrepModal';
+import StatisticsModal from './StatisticsModal';
 
 interface LeadsPipelineProps {
     user?: any;
+    statsData?: any[];
 }
 
 // Extended interface for our combined data
@@ -56,7 +66,7 @@ interface JobClickWithApplying {
     } | null;
 }
 
-const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
+const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) => {
     // ==========================================
     // STATE MANAGEMENT
     // ==========================================
@@ -68,6 +78,16 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
     // Modal states
     const [showArchiveModal, setShowArchiveModal] = useState(false);
     const [showPrepModal, setShowPrepModal] = useState(false);
+    const [showStatisticsModal, setShowStatisticsModal] = useState(false);
+
+    // Feature states
+    const [futureFeatures, setFutureFeatures] = useState({
+        marketing: false,
+        tooling: false,
+        agent: false,
+        interview_optimisation: false,
+        value_proposition: false
+    });
 
     // Filter states
     const [searchTerm, setSearchTerm] = useState('');
@@ -649,7 +669,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                         gap: '0.75rem'
                     }}>
                         <Target style={{ width: '32px', height: '32px' }} />
-                        Leads Pipeline
+                        Leads Board
                     </h1>
                     <p style={{ margin: 0, color: 'rgba(255, 255, 255, 0.7)' }}>
                         Manage your job applications through each stage
@@ -662,31 +682,163 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                     alignItems: 'center',
                     flexWrap: 'wrap'
                 }}>
+                    {/* Feature Buttons */}
                     <button
-                        onClick={handleArchiveClick}
+                        onClick={() => setFutureFeatures(prev => ({ ...prev, marketing: !prev.marketing }))}
                         style={{
                             display: 'flex',
                             alignItems: 'center',
                             gap: '0.5rem',
                             padding: '0.75rem 1rem',
-                            background: 'rgba(255, 255, 255, 0.1)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            background: futureFeatures.marketing ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.1)',
+                            border: '1px solid rgba(16, 185, 129, 0.3)',
                             borderRadius: '8px',
-                            color: '#fff',
+                            color: '#10b981',
                             cursor: 'pointer',
                             fontSize: '0.875rem',
                             transition: 'all 0.2s ease'
                         }}
                         onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                            if (!futureFeatures.marketing) {
+                                e.currentTarget.style.background = 'rgba(16, 185, 129, 0.2)';
+                            }
                         }}
                         onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                            if (!futureFeatures.marketing) {
+                                e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)';
+                            }
                         }}
                     >
-                        <Archive style={{ width: '16px', height: '16px' }} />
-                        Archive ({archivedCount})
+                        <Mail style={{ width: '16px', height: '16px' }} />
+                        Marketing
+                        <Lock style={{ width: '14px', height: '14px' }} />
+                        {futureFeatures.marketing && <CheckCircle style={{ width: '14px', height: '14px' }} />}
                     </button>
+                    <button
+                        onClick={() => setFutureFeatures(prev => ({ ...prev, tooling: !prev.tooling }))}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: futureFeatures.tooling ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            borderRadius: '8px',
+                            color: '#3b82f6',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!futureFeatures.tooling) {
+                                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!futureFeatures.tooling) {
+                                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)';
+                            }
+                        }}
+                    >
+                        <Zap style={{ width: '16px', height: '16px' }} />
+                        Tooling
+                        <Lock style={{ width: '14px', height: '14px' }} />
+                        {futureFeatures.tooling && <CheckCircle style={{ width: '14px', height: '14px' }} />}
+                    </button>
+                    <button
+                        onClick={() => setFutureFeatures(prev => ({ ...prev, agent: !prev.agent }))}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: futureFeatures.agent ? 'rgba(147, 51, 234, 0.2)' : 'rgba(147, 51, 234, 0.1)',
+                            border: '1px solid rgba(147, 51, 234, 0.3)',
+                            borderRadius: '8px',
+                            color: '#9333ea',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!futureFeatures.agent) {
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.2)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!futureFeatures.agent) {
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.1)';
+                            }
+                        }}
+                    >
+                        <Sparkles style={{ width: '16px', height: '16px' }} />
+                        AI Agent
+                        <Lock style={{ width: '14px', height: '14px' }} />
+                        {futureFeatures.agent && <CheckCircle style={{ width: '14px', height: '14px' }} />}
+                    </button>
+                    <button
+                        onClick={() => setFutureFeatures(prev => ({ ...prev, interview_optimisation: !prev.interview_optimisation }))}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: futureFeatures.interview_optimisation ? 'rgba(236, 72, 153, 0.2)' : 'rgba(236, 72, 153, 0.1)',
+                            border: '1px solid rgba(236, 72, 153, 0.3)',
+                            borderRadius: '8px',
+                            color: '#ec4899',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!futureFeatures.interview_optimisation) {
+                                e.currentTarget.style.background = 'rgba(236, 72, 153, 0.2)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!futureFeatures.interview_optimisation) {
+                                e.currentTarget.style.background = 'rgba(236, 72, 153, 0.1)';
+                            }
+                        }}
+                    >
+                        <Brain style={{ width: '16px', height: '16px' }} />
+                        Interview Prep
+                        <Lock style={{ width: '14px', height: '14px' }} />
+                        {futureFeatures.interview_optimisation && <CheckCircle style={{ width: '14px', height: '14px' }} />}
+                    </button>
+                    <button
+                        onClick={() => setFutureFeatures(prev => ({ ...prev, value_proposition: !prev.value_proposition }))}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: futureFeatures.value_proposition ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.1)',
+                            border: '1px solid rgba(245, 158, 11, 0.3)',
+                            borderRadius: '8px',
+                            color: '#f59e0b',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!futureFeatures.value_proposition) {
+                                e.currentTarget.style.background = 'rgba(245, 158, 11, 0.2)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!futureFeatures.value_proposition) {
+                                e.currentTarget.style.background = 'rgba(245, 158, 11, 0.1)';
+                            }
+                        }}
+                    >
+                        <Users style={{ width: '16px', height: '16px' }} />
+                        Value Prop
+                        <Lock style={{ width: '14px', height: '14px' }} />
+                        {futureFeatures.value_proposition && <CheckCircle style={{ width: '14px', height: '14px' }} />}
+                    </button>
+
                 </div>
             </div>
 
@@ -802,33 +954,103 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
 
                 <div style={{ display: 'flex', gap: 8, marginLeft: '20px' }}>
                     <button
-                        onClick={handleCollapseAll}
+                        onClick={handleArchiveClick}
                         style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
                             padding: '0.75rem 1rem',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            color: '#3b82f6',
-                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
                             borderRadius: '8px',
-                            fontSize: '0.875rem',
+                            color: '#fff',
                             cursor: 'pointer',
-                            fontWeight: '600'
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
                         }}
                     >
+                        <Archive style={{ width: '16px', height: '16px' }} />
+                        Archive ({archivedCount})
+                    </button>
+                    <button
+                        onClick={() => setShowStatisticsModal(true)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            borderRadius: '8px',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                        }}
+                    >
+                        <BarChart3 style={{ width: '16px', height: '16px' }} />
+                        Statistics
+                    </button>
+                    <button
+                        onClick={handleCollapseAll}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            borderRadius: '8px',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                        }}
+                    >
+                        <Minimize2 style={{ width: '16px', height: '16px' }} />
                         Collapse All
                     </button>
                     <button
                         onClick={handleExpandAll}
                         style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
                             padding: '0.75rem 1rem',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            color: '#10b981',
-                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
                             borderRadius: '8px',
-                            fontSize: '0.875rem',
+                            color: '#fff',
                             cursor: 'pointer',
-                            fontWeight: '600'
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
                         }}
                     >
+                        <Maximize2 style={{ width: '16px', height: '16px' }} />
                         Expand All
                     </button>
                 </div>
@@ -880,8 +1102,8 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                                                 : 'rgba(255, 255, 255, 0.1)'}`,
                                             borderRadius: '12px',
                                             padding: '1rem',
-                                            minHeight: '200px',
-                                            maxHeight: '1000px',
+                                            minHeight: '600px',
+                                            height: 'calc(100vh - 250px)',
                                             overflowY: 'auto',
                                             scrollbarWidth: 'none', // Firefox
                                             msOverflowStyle: 'none', // IE/Edge
@@ -1026,6 +1248,14 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                         // For now, we'll just close the modal.
                         setShowPrepModal(false);
                     }}
+                />
+            )}
+
+            {showStatisticsModal && (
+                <StatisticsModal
+                    onClose={() => setShowStatisticsModal(false)}
+                    leads={leads}
+                    statsData={statsData}
                 />
             )}
         </div>

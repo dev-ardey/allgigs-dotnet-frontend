@@ -679,8 +679,8 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 </>
                             ) : (
                                 <>
-                                    <Target style={{ width: '14px', height: '14px' }} />
-                                    Prep for interview
+                                    <Target style={{ width: '14px', height: '14px', color: '#fff' }} />
+                                    <span style={{ color: '#fff' }}>Prep for interview</span>
                                 </>
                             )}
                         </button>
@@ -823,7 +823,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <Users style={{ width: '14px', height: '14px', color: 'rgba(255,255,255,0.8)' }} />
-                                <span style={{ fontWeight: 600, fontSize: '12px' }}>Contacts</span>
+                                <span style={{ fontWeight: 600, fontSize: '12px', color: '#fff' }}>Contacts</span>
                             </div>
                             <button
                                 onClick={(e) => { e.stopPropagation(); setShowContactForm(true); }}
@@ -1270,16 +1270,6 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 marginBottom: '12px'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {/* Priority dot */}
-                    <div
-                        style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            backgroundColor: getPriorityColor(),
-                            flexShrink: 0
-                        }}
-                    />
                     {/* Follow-up bell */}
                     {hasFollowUp && (
                         <Bell
