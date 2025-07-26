@@ -333,6 +333,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         )}
                     </div>
                 )}
+
             </div>
         );
     };
@@ -343,15 +344,6 @@ const LeadCard: React.FC<LeadCardProps> = ({
         if (!lead.applying || !lead.applying.applied) {
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {/* Job title */}
-                    <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '4px', lineHeight: '1.3' }}>{lead.job_title}</h3>
-                    {/* Company */}
-                    <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '12px', fontWeight: '500' }}>{lead.company}</p>
-                    {/* Location and rate */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', fontSize: '13px', color: 'rgba(255, 255, 255, 0.7)' }}>
-                        {lead.location && (<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin style={{ width: '12px', height: '12px' }} /><span>{lead.location}</span></div>)}
-                        {lead.rate && (<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><DollarSign style={{ width: '12px', height: '12px' }} /><span>{lead.rate}</span></div>)}
-                    </div>
                     {/* URL */}
                     {lead.url && (
                         <div style={{ marginBottom: '12px' }}>
@@ -392,8 +384,86 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 </div>
             );
         }
-        // Voor alles met applying.applied = true, render de rest van de pipeline (interview flow etc.)
-        return renderInterviewFlow();
+
+        // Voor alles met applying.applied = true, render interview flow + follow-up + got job
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {/* Interview flow */}
+                {renderInterviewFlow()}
+
+                {/* Follow-up reminder */}
+                {timeLeft && (
+                    <div style={{ padding: 12, background: 'rgba(245, 158, 11, 0.08)', borderRadius: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                            <Timer style={{ width: '14px', height: '14px', color: isOverdue ? '#ef4444' : '#f59e0b' }} />
+                            <span style={{ fontWeight: 600, fontSize: '12px', color: isOverdue ? '#ef4444' : '#f59e0b' }}>Follow-up</span>
+                        </div>
+                        <div style={{
+                            marginBottom: 8
+                        }}>
+                            <span style={{ fontSize: '11px', color: isOverdue ? '#ef4444' : '#f59e0b', fontWeight: 600 }}>
+                                {timeLeft}
+                            </span>
+                        </div>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); handleFollowUpComplete(true); }}
+                            style={{
+                                padding: '6px 12px',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                color: '#10b981',
+                                border: '1px solid rgba(16, 185, 129, 0.3)',
+                                borderRadius: 6,
+                                fontSize: '11px',
+                                cursor: 'pointer',
+                                fontWeight: '600'
+                            }}
+                        >
+                            Mark Complete
+                        </button>
+                    </div>
+                )}
+
+                {/* Got the job */}
+                <div style={{ padding: 12, background: 'rgba(255, 255, 255, 0.05)', borderRadius: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                        <Award style={{ width: '14px', height: '14px', color: 'rgba(255,255,255,0.8)' }} />
+                        <span style={{ fontWeight: 600, fontSize: '12px' }}>Got the job?</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); handleGotJob(true); }}
+                            style={{
+                                padding: '6px 12px',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                color: '#10b981',
+                                border: '1px solid rgba(16, 185, 129, 0.3)',
+                                borderRadius: 6,
+                                fontSize: '11px',
+                                cursor: 'pointer',
+                                fontWeight: '600'
+                            }}
+                        >
+                            YES
+                        </button>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); handleGotJob(false); }}
+                            style={{
+                                padding: '6px 12px',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                color: '#ef4444',
+                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                borderRadius: 6,
+                                fontSize: '11px',
+                                cursor: 'pointer',
+                                fontWeight: '600'
+                            }}
+                        >
+                            NO
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
     };
 
     return (
@@ -462,25 +532,17 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 {lead.job_title}
             </h3>
 
-            {/* Company */}
-            <p style={{
-                fontSize: '14px',
-                color: 'rgba(255, 255, 255, 0.8)',
-                marginBottom: '12px',
-                fontWeight: '500'
-            }}>
-                {lead.company}
-            </p>
-
-            {/* Location and rate */}
+            {/* Company, location and rate */}
             <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
                 marginBottom: '16px',
                 fontSize: '13px',
-                color: 'rgba(255, 255, 255, 0.7)'
+                color: 'rgba(255, 255, 255, 0.7)',
+                flexWrap: 'wrap'
             }}>
+                <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontWeight: '500' }}>{lead.company}</span>
                 {lead.location && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <MapPin style={{ width: '12px', height: '12px' }} />
@@ -528,15 +590,16 @@ const LeadCard: React.FC<LeadCardProps> = ({
                     onClick={(e) => e.stopPropagation()}
                     style={{
                         width: '100%',
-                        minHeight: '60px',
-                        padding: '8px',
+                        minHeight: '30px',
+                        padding: '8px 12px',
                         background: 'rgba(255, 255, 255, 0.1)',
                         border: '1px solid rgba(255, 255, 255, 0.2)',
                         borderRadius: '6px',
                         color: 'white',
                         fontSize: '12px',
                         resize: 'vertical',
-                        fontFamily: 'inherit'
+                        fontFamily: 'inherit',
+                        boxSizing: 'border-box'
                     }}
                 />
                 {notesChanged && (

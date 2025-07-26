@@ -413,6 +413,53 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
         }
     };
 
+    const handleFollowUpComplete = async (applyingId: string) => {
+        try {
+            const { error } = await supabase
+                .from('applying')
+                .update({
+                    follow_up_completed: true,
+                    follow_up_completed_at: new Date().toISOString()
+                })
+                .eq('applying_id', applyingId);
+
+            if (error) throw error;
+
+            // Refresh leads
+            await fetchLeads();
+        } catch (err: any) {
+            console.error('Error marking follow-up complete:', err);
+            setError(err.message || 'Error updating follow-up status');
+        }
+    };
+
+    const handleGotJob = async (applyingId: string, gotJob: boolean) => {
+        try {
+            const updateData: any = { got_the_job: gotJob };
+
+            if (gotJob) {
+                // Als ze de baan hebben gekregen, vraag om startdatum
+                const startDate = prompt('When do you start? (YYYY-MM-DD)');
+                if (startDate) {
+                    updateData.starting_date = startDate;
+                }
+            }
+
+            const { error } = await supabase
+                .from('applying')
+                .update(updateData)
+                .eq('applying_id', applyingId);
+
+            if (error) throw error;
+
+            // Refresh leads
+            await fetchLeads();
+        } catch (err: any) {
+            console.error('Error updating got the job status:', err);
+            setError(err.message || 'Error updating job status');
+        }
+    };
+
     // ==========================================
     // RENDER LOADING STATE
     // ==========================================
@@ -751,6 +798,10 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                                                                         handleInterviewAction(lead.applying?.applying_id || '', data.interviewData);
                                                                     } else if (action === 'update_notes') {
                                                                         handleUpdateApplying(lead.applying?.applying_id || '', { notes: data.notes });
+                                                                    } else if (action === 'follow_up_complete') {
+                                                                        handleFollowUpComplete(lead.applying?.applying_id || '');
+                                                                    } else if (action === 'got_job') {
+                                                                        handleGotJob(lead.applying?.applying_id || '', data.gotJob);
                                                                     }
                                                                 }}
                                                             />
