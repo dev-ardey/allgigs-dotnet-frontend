@@ -169,11 +169,28 @@ const LeadCard: React.FC<LeadCardProps> = ({
         }
     };
 
+    const [notesChanged, setNotesChanged] = React.useState(false);
+    const [originalNotes, setOriginalNotes] = React.useState(notes);
+
     const handleNotesChange = (newNotes: string) => {
         setNotes(newNotes);
-        if (onStageAction) {
-            onStageAction('update_notes', { notes: newNotes });
+        setNotesChanged(newNotes !== originalNotes);
+    };
+
+    const handleNotesSave = () => {
+        if (onStageAction && lead.applying?.applying_id) {
+            onStageAction('update_notes', {
+                applyingId: lead.applying.applying_id,
+                notes
+            });
+            setNotesChanged(false);
+            setOriginalNotes(notes);
         }
+    };
+
+    const handleNotesCancel = () => {
+        setNotes(originalNotes);
+        setNotesChanged(false);
     };
 
     const INTERVIEW_TYPES = [
@@ -199,17 +216,35 @@ const LeadCard: React.FC<LeadCardProps> = ({
         // State voor nieuwe interview
         const [selectedType, setSelectedType] = React.useState<string>(availableTypes[0]?.key || 'recruiter');
         const [date, setDate] = React.useState('');
-        const [rating, setRating] = React.useState<boolean | null>(null);
         const [showNew, setShowNew] = React.useState(true);
+        const [canRate, setCanRate] = React.useState(false);
 
         // Helper om label te krijgen
         const getLabel = (key: string) => INTERVIEW_TYPES.find(t => t.key === key)?.label || key;
 
-        // Handler voor opslaan
-        const handleSave = () => {
-            if (!selectedType || !date || rating === null) return;
-            if (onStageAction && lead.applying?.applying_id) {
-                onStageAction('interview', {
+        // Toon Good/Bad buttons alleen als type en datum zijn ingevuld
+        React.useEffect(() => {
+            if (selectedType && date) {
+                setCanRate(true);
+            } else {
+                setCanRate(false);
+            }
+        }, [selectedType, date]);
+
+        // Sla interview data en rating op na klikken Good/Bad
+        const handleRating = (rating: boolean) => {
+            if (onStageAction && lead.applying?.applying_id && selectedType && date) {
+                // Eerst interview data opslaan
+                onStageAction('interview_date', {
+                    applyingId: lead.applying.applying_id,
+                    interviewData: {
+                        type: selectedType as 'recruiter' | 'technical' | 'hiringmanager',
+                        date
+                    }
+                });
+
+                // Dan rating opslaan
+                onStageAction('interview_rating', {
                     applyingId: lead.applying.applying_id,
                     interviewData: {
                         type: selectedType as 'recruiter' | 'technical' | 'hiringmanager',
@@ -217,15 +252,19 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         rating
                     }
                 });
+                setShowNew(false);
+                setDate('');
             }
-            setShowNew(false);
-            setDate('');
-            setRating(null);
         };
 
-        // Toon reeds ingevulde interviews
-        const renderDone = () => (
-            <div style={{ marginBottom: '12px' }}>
+        return (
+            <div style={{ padding: 12, background: 'rgba(59,130,246,0.15)', borderRadius: 8, marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                    <Users style={{ width: '14px', height: '14px', color: 'rgba(255,255,255,0.8)' }} />
+                    <span style={{ fontWeight: 600, color: 'white' }}>Interviews</span>
+                </div>
+
+                {/* Toon reeds ingevulde interviews */}
                 {INTERVIEW_TYPES.map(t => {
                     let d = null, r = null;
                     if (t.key === 'recruiter') {
@@ -242,92 +281,57 @@ const LeadCard: React.FC<LeadCardProps> = ({
                     }
                     if (!d) return null;
                     return (
-                        <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                            <span style={{ fontWeight: 600 }}>{getLabel(t.key)} interview:</span>
-                            <span>{new Date(d).toLocaleDateString()}</span>
-                            <span style={{ color: r ? '#10b981' : '#ef4444', fontWeight: 600 }}>{r === true ? 'Good' : r === false ? 'Bad' : ''}</span>
+                        <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: 6 }}>
+                            <span style={{ fontWeight: 600, fontSize: '12px' }}>{getLabel(t.key)}:</span>
+                            <span style={{ fontSize: '12px' }}>{new Date(d).toLocaleDateString()}</span>
+                            <span style={{ color: r ? '#10b981' : '#ef4444', fontWeight: 600, fontSize: '12px' }}>{r === true ? 'Good' : r === false ? 'Bad' : ''}</span>
                         </div>
                     );
                 })}
-            </div>
-        );
 
-        return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {renderDone()}
+                {/* Add new interview */}
                 {showNew && availableTypes.length > 0 && (
-                    <div style={{ padding: 12, background: 'rgba(59,130,246,0.08)', borderRadius: 8, marginBottom: 8 }}>
-                        <div style={{ marginBottom: 8, fontWeight: 600 }}>Add interview</div>
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                        <div style={{ marginBottom: 8, fontWeight: 600, fontSize: '12px' }}>Add interview</div>
                         <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                            <select value={selectedType} onChange={e => setSelectedType(e.target.value)} style={{ padding: 6, borderRadius: 4 }}>
+                            <select value={selectedType} onChange={e => setSelectedType(e.target.value)} style={{ padding: 6, borderRadius: 4, fontSize: '11px' }}>
                                 {availableTypes.map(t => (
                                     <option key={t.key} value={t.key}>{t.label}</option>
                                 ))}
                             </select>
-                            <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ padding: 6, borderRadius: 4 }} />
+                            <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ padding: 6, borderRadius: 4, fontSize: '11px' }} />
                         </div>
-                        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                            <button
-                                disabled={!date}
-                                style={{
-                                    padding: '6px 16px',
-                                    background: rating === true ? '#10b981' : 'rgba(16,185,129,0.1)',
-                                    color: rating === true ? 'white' : '#10b981',
-                                    border: '1px solid #10b981',
-                                    borderRadius: 6,
-                                    fontWeight: 600,
-                                    cursor: !date ? 'not-allowed' : 'pointer'
-                                }}
-                                onClick={() => date && setRating(true)}
-                            >Good</button>
-                            <button
-                                disabled={!date}
-                                style={{
-                                    padding: '6px 16px',
-                                    background: rating === false ? '#ef4444' : 'rgba(239,68,68,0.1)',
-                                    color: rating === false ? 'white' : '#ef4444',
-                                    border: '1px solid #ef4444',
-                                    borderRadius: 6,
-                                    fontWeight: 600,
-                                    cursor: !date ? 'not-allowed' : 'pointer'
-                                }}
-                                onClick={() => date && setRating(false)}
-                            >Bad</button>
-                        </div>
-                        <button
-                            disabled={!selectedType || !date || rating === null}
-                            style={{
-                                padding: '6px 16px',
-                                background: '#3b82f6',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: 6,
-                                fontWeight: 600,
-                                cursor: (!selectedType || !date || rating === null) ? 'not-allowed' : 'pointer'
-                            }}
-                            onClick={handleSave}
-                        >Save interview</button>
+                        {canRate && (
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <button
+                                    style={{
+                                        padding: '6px 16px',
+                                        background: '#10b981',
+                                        color: 'white',
+                                        border: '1px solid #10b981',
+                                        borderRadius: 6,
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        fontSize: '11px'
+                                    }}
+                                    onClick={() => handleRating(true)}
+                                >Good</button>
+                                <button
+                                    style={{
+                                        padding: '6px 16px',
+                                        background: '#ef4444',
+                                        color: 'white',
+                                        border: '1px solid #ef4444',
+                                        borderRadius: 6,
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        fontSize: '11px'
+                                    }}
+                                    onClick={() => handleRating(false)}
+                                >Bad</button>
+                            </div>
+                        )}
                     </div>
-                )}
-                {availableTypes.length > 1 && !showNew && (
-                    <button
-                        style={{
-                            padding: '6px 16px',
-                            background: '#3b82f6',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: 6,
-                            fontWeight: 600,
-                            marginTop: 8,
-                            cursor: 'pointer'
-                        }}
-                        onClick={() => {
-                            setShowNew(true);
-                            setSelectedType(availableTypes[0].key);
-                            setDate('');
-                            setRating(null);
-                        }}
-                    >Another interview?</button>
                 )}
             </div>
         );
@@ -349,15 +353,34 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         {lead.rate && (<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><DollarSign style={{ width: '12px', height: '12px' }} /><span>{lead.rate}</span></div>)}
                     </div>
                     {/* URL */}
-                    {lead.url && (<div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '12px' }}><a href={lead.url} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>View Job Posting</a></div>)}
-                    {/* Notes */}
-                    <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                            <StickyNote style={{ width: '14px', height: '14px', color: 'rgba(255, 255, 255, 0.7)' }} />
-                            <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)', fontWeight: '500' }}>Notes</span>
+                    {lead.url && (
+                        <div style={{ marginBottom: '12px' }}>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.open(lead.url, '_blank', 'noopener,noreferrer');
+                                }}
+                                style={{
+                                    padding: '8px 16px',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                                    color: 'white',
+                                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                                    borderRadius: '8px',
+                                    fontSize: '12px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600',
+                                    backdropFilter: 'blur(10px)',
+                                    transition: 'all 0.2s ease',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                }}
+                            >
+                                <Target style={{ width: '12px', height: '12px' }} />
+                                View Job Posting
+                            </button>
                         </div>
-                        <textarea value={notes} onChange={(e) => handleNotesChange(e.target.value)} placeholder="Add your notes..." onClick={(e) => e.stopPropagation()} style={{ width: '100%', minHeight: '60px', padding: '8px', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '6px', color: 'white', fontSize: '12px', resize: 'vertical', fontFamily: 'inherit' }} />
-                    </div>
+                    )}
                     {/* Applied status */}
                     <div>
                         <div style={{ fontSize: '13px', marginBottom: '8px', fontWeight: '500', color: 'rgba(255, 255, 255, 0.7)' }}>Applied?</div>
@@ -516,6 +539,12 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         fontFamily: 'inherit'
                     }}
                 />
+                {notesChanged && (
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                        <button onClick={(e) => { e.stopPropagation(); handleNotesSave(); }} style={{ padding: '6px 12px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '6px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>Save</button>
+                        <button onClick={(e) => { e.stopPropagation(); handleNotesCancel(); }} style={{ padding: '6px 12px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '6px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -11,7 +11,6 @@ import {
 import { Lead, LeadStage, KanbanColumn, LeadsResponse } from '../../types/leads';
 import { supabase } from '../../SupabaseClient';
 import LeadCard from './LeadCard';
-import LeadDetailModal from './LeadDetailModal';
 import ArchiveModal from './ArchiveModal';
 import InterviewPrepModal from './InterviewPrepModal';
 
@@ -64,8 +63,6 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
     const [databaseAvailable, setDatabaseAvailable] = useState(false);
 
     // Modal states
-    const [selectedLead, setSelectedLead] = useState<JobClickWithApplying | null>(null);
-    const [showDetailModal, setShowDetailModal] = useState(false);
     const [showArchiveModal, setShowArchiveModal] = useState(false);
     const [showPrepModal, setShowPrepModal] = useState(false);
 
@@ -265,11 +262,6 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
     // ==========================================
     // EVENT HANDLERS
     // ==========================================
-    const handleLeadClick = (lead: JobClickWithApplying) => {
-        setSelectedLead(lead);
-        setShowDetailModal(true);
-    };
-
     const handleLeadUpdate = async (updatedLead: JobClickWithApplying) => {
         setLeads(prevLeads =>
             prevLeads.map(l => l.id === updatedLead.id ? updatedLead : l)
@@ -748,16 +740,17 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                                                         >
                                                             <LeadCard
                                                                 lead={lead}
-                                                                onClick={() => handleLeadClick(lead)}
                                                                 isDragging={snapshot.isDragging}
-                                                                hasFollowUp={followUpNotifications.some(n => n.id === lead.id)}
+                                                                hasFollowUp={followUpNotifications.some(fu => fu.id === lead.id)}
                                                                 onStageAction={(action, data) => {
                                                                     if (action === 'apply') {
                                                                         handleApplyAction(lead.id, data.applied);
-                                                                    } else if (action === 'interview') {
+                                                                    } else if (action === 'interview_date') {
                                                                         handleInterviewAction(lead.applying?.applying_id || '', data.interviewData);
-                                                                    } else if (action === 'update_applying') {
-                                                                        handleUpdateApplying(lead.applying?.applying_id || '', data.updateData);
+                                                                    } else if (action === 'interview_rating') {
+                                                                        handleInterviewAction(lead.applying?.applying_id || '', data.interviewData);
+                                                                    } else if (action === 'update_notes') {
+                                                                        handleUpdateApplying(lead.applying?.applying_id || '', { notes: data.notes });
                                                                     }
                                                                 }}
                                                             />
@@ -776,17 +769,6 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
             </DragDropContext>
 
             {/* Modals */}
-            {showDetailModal && selectedLead && (
-                <LeadDetailModal
-                    lead={selectedLead}
-                    onClose={() => {
-                        setShowDetailModal(false);
-                        setSelectedLead(null);
-                    }}
-                    onUpdate={handleLeadUpdate}
-                />
-            )}
-
             {showArchiveModal && (
                 <ArchiveModal
                     onClose={() => setShowArchiveModal(false)}
@@ -805,19 +787,16 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                 />
             )}
 
-            {showPrepModal && selectedLead && (
+            {showPrepModal && (
                 <InterviewPrepModal
-                    lead={selectedLead}
                     onClose={() => {
                         setShowPrepModal(false);
-                        setSelectedLead(null);
                     }}
                     onUpdate={(updatedLead) => {
                         // This handler is now primarily for updating the main lead details,
                         // not the applying record. The applying record update is handled by handleInterviewAction.
                         // For now, we'll just close the modal.
                         setShowPrepModal(false);
-                        setSelectedLead(null);
                     }}
                 />
             )}
