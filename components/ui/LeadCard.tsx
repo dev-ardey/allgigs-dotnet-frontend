@@ -1243,8 +1243,22 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 flexDirection: 'column'
             }}
         >
-            {/* Collapse button */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+            {/* Header with title and collapse button */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                <div style={{ flex: 1 }}>
+                    {/* Job title */}
+                    <h3 style={{
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        color: 'white',
+                        marginBottom: '4px',
+                        lineHeight: '1.3'
+                    }}>
+                        {lead.job_title}
+                    </h3>
+                </div>
+
+                {/* Collapse button */}
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
@@ -1256,12 +1270,15 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         color: 'rgba(255, 255, 255, 0.7)',
                         border: '1px solid rgba(255, 255, 255, 0.2)',
                         borderRadius: '4px',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        marginLeft: '8px',
+                        flexShrink: 0
                     }}
                 >
                     <Minimize2 style={{ width: '12px', height: '12px' }} />
                 </button>
             </div>
+
             {/* Header with priority and follow-up */}
             <div style={{
                 display: 'flex',
@@ -1283,17 +1300,6 @@ const LeadCard: React.FC<LeadCardProps> = ({
                     )}
                 </div>
             </div>
-
-            {/* Job title */}
-            <h3 style={{
-                fontSize: '16px',
-                fontWeight: '600',
-                color: 'white',
-                marginBottom: '4px',
-                lineHeight: '1.3'
-            }}>
-                {lead.job_title}
-            </h3>
 
             {/* Company, location and rate */}
             <div style={{
