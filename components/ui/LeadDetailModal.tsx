@@ -21,10 +21,44 @@ import {
 } from 'lucide-react';
 import { Lead, LeadStage } from '../../types/leads';
 
+interface JobClickWithApplying {
+    id: string;
+    user_id: string;
+    job_id: string;
+    job_title: string;
+    clicked_at: string;
+    search_pills: string[];
+    company: string;
+    location: string;
+    rate: string;
+    date_posted: string;
+    summary: string;
+    url: string;
+    applying?: {
+        applying_id: string;
+        created_at: string;
+        applied: boolean;
+        receive_confirmation: boolean;
+        recruiter_interview: string | null;
+        interview_rating_recruiter: boolean | null;
+        hiringmanager_interview: string | null;
+        interview_rating_hiringmanager: boolean | null;
+        technical_interview: string | null;
+        interview_rating_technical: boolean | null;
+        got_the_job: boolean | null;
+        starting_date: string | null;
+        notes: string | null;
+        value_rate: number | null;
+        value_hour_per_week: string | null;
+        value_weeks: number | null;
+        unique_id_job: string;
+    } | null;
+}
+
 interface LeadDetailModalProps {
-    lead: Lead;
+    lead: JobClickWithApplying;
     onClose: () => void;
-    onUpdate: (updatedLead: Lead) => void;
+    onUpdate: (updatedLead: JobClickWithApplying) => void;
 }
 
 interface Contact {
@@ -53,11 +87,15 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
 }) => {
     const [activeTab, setActiveTab] = useState<'overview' | 'notes' | 'contacts' | 'activities'>('overview');
     const [editingNotes, setEditingNotes] = useState(false);
-    const [notes, setNotes] = useState(lead.notes || '');
+    const [notes, setNotes] = useState(lead.applying?.notes || '');
     const [newContact, setNewContact] = useState({ name: '', role: '', email: '', phone: '', notes: '' });
     const [showAddContact, setShowAddContact] = useState(false);
     const [newActivity, setNewActivity] = useState<{ type: Activity['type'], title: string, description: string }>({ type: 'note', title: '', description: '' });
     const [showAddActivity, setShowAddActivity] = useState(false);
+    const [editingStartDate, setEditingStartDate] = useState(false);
+    const [startDate, setStartDate] = useState(lead.applying?.starting_date || '');
+    const [editingGotJob, setEditingGotJob] = useState(false);
+    const [gotJob, setGotJob] = useState<boolean | null>(lead.applying?.got_the_job || null);
 
     // Mock data for demonstration
     const [contacts, setContacts] = useState<Contact[]>([
@@ -136,9 +174,17 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
     ]);
 
     const handleSaveNotes = () => {
-        const updatedLead = { ...lead, notes };
-        onUpdate(updatedLead);
-        setEditingNotes(false);
+        if (onUpdate && lead.applying) {
+            const updatedLead = {
+                ...lead,
+                applying: {
+                    ...lead.applying,
+                    notes
+                }
+            };
+            onUpdate(updatedLead);
+            setEditingNotes(false);
+        }
     };
 
     const handleAddContact = () => {
@@ -159,11 +205,39 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                 id: Date.now().toString(),
                 ...newActivity,
                 date: new Date().toISOString(),
-                stage: lead.stage // Automatically assign current lead stage
+                stage: lead.applying?.got_the_job ? 'close' : 'connect' // Automatically assign current lead stage
             };
             setActivities([activity, ...activities]);
             setNewActivity({ type: 'note', title: '', description: '' });
             setShowAddActivity(false);
+        }
+    };
+
+    const handleSaveStartDate = () => {
+        if (onUpdate && lead.applying) {
+            const updatedLead = {
+                ...lead,
+                applying: {
+                    ...lead.applying,
+                    starting_date: startDate
+                }
+            };
+            onUpdate(updatedLead);
+            setEditingStartDate(false);
+        }
+    };
+
+    const handleSaveGotJob = () => {
+        if (onUpdate && lead.applying) {
+            const updatedLead = {
+                ...lead,
+                applying: {
+                    ...lead.applying,
+                    got_the_job: gotJob
+                }
+            };
+            onUpdate(updatedLead);
+            setEditingGotJob(false);
         }
     };
 
@@ -209,6 +283,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
 
     const tabs = [
         { id: 'overview', label: 'Overview', icon: <TrendingUp style={{ width: '16px', height: '16px' }} /> },
+        { id: 'interviews', label: 'Interview Details', icon: <Calendar style={{ width: '16px', height: '16px' }} /> },
         { id: 'notes', label: 'Notes', icon: <FileText style={{ width: '16px', height: '16px' }} /> },
         { id: 'contacts', label: 'Contacts', icon: <User style={{ width: '16px', height: '16px' }} /> },
         { id: 'activities', label: 'Activities', icon: <Activity style={{ width: '16px', height: '16px' }} /> }
@@ -258,13 +333,13 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                         }}>
                             <div style={{
                                 padding: '0.25rem 0.75rem',
-                                background: getStageColor(lead.stage),
+                                background: getStageColor(lead.applying?.got_the_job ? 'close' : 'connect'),
                                 borderRadius: '12px',
                                 fontSize: '0.75rem',
                                 fontWeight: '600',
                                 textTransform: 'uppercase'
                             }}>
-                                {lead.stage.replace('_', ' ')}
+                                {lead.applying?.got_the_job ? 'Closed' : 'Open'}
                             </div>
                             {lead.found_data?.priority && (
                                 <div style={{
@@ -439,14 +514,14 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                                             width: '8px',
                                             height: '8px',
                                             borderRadius: '50%',
-                                            background: getStageColor(lead.stage)
+                                            background: lead.applying ? '#f59e0b' : '#3b82f6'
                                         }} />
                                         <div style={{ flex: 1 }}>
                                             <div style={{ fontSize: '0.875rem', fontWeight: '500' }}>
-                                                Moved to {lead.stage.replace('_', ' ')}
+                                                Moved to {lead.applying ? 'Applied' : 'Found'}
                                             </div>
                                             <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>
-                                                {formatDate(lead.stage_updated_at)}
+                                                {formatDate(lead.applying?.created_at || lead.clicked_at)}
                                             </div>
                                         </div>
                                     </div>
@@ -470,7 +545,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                                         textAlign: 'center'
                                     }}>
                                         <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#3b82f6' }}>
-                                            {Math.floor((Date.now() - new Date(lead.created_at).getTime()) / (1000 * 60 * 60 * 24))}
+                                            {Math.floor((Date.now() - new Date(lead.clicked_at).getTime()) / (1000 * 60 * 60 * 24))}
                                         </div>
                                         <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>
                                             Days Active
@@ -504,6 +579,35 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Job Info */}
+                            <div style={{ marginBottom: '2rem' }}>
+                                <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: 8 }}>Job Info</h3>
+                                <div><strong>Title:</strong> {lead.job_title}</div>
+                                <div><strong>Company:</strong> {lead.company}</div>
+                                {lead.location && <div><strong>Location:</strong> {lead.location}</div>}
+                                {lead.rate && <div><strong>Rate:</strong> {lead.rate}</div>}
+                                {lead.job_url && <div><a href={lead.job_url} target="_blank" rel="noopener noreferrer">View Job Posting</a></div>}
+                            </div>
+
+                            {lead.applying && (
+                                <div style={{ marginBottom: '2rem' }}>
+                                    <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: 8 }}>Application Info</h3>
+                                    <div><strong>Applied:</strong> {lead.applying.applied ? 'Yes' : 'No'}</div>
+                                    <div><strong>Notes:</strong> <input value={lead.applying.notes || ''} onChange={e => {/* update logic */ }} /></div>
+                                    <div><strong>Start Date:</strong> <input type="date" value={lead.applying.starting_date ? lead.applying.starting_date.split('T')[0] : ''} onChange={e => {/* update logic */ }} /></div>
+                                    <div><strong>Got the job:</strong> <select value={lead.applying.got_the_job === true ? 'yes' : lead.applying.got_the_job === false ? 'no' : ''} onChange={e => {/* update logic */ }}><option value="">-</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                                </div>
+                            )}
+
+                            {lead.applying && (
+                                <div style={{ marginBottom: '2rem' }}>
+                                    <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: 8 }}>Interviews</h3>
+                                    {lead.applying.recruiter_interview && <div><strong>Recruiter interview:</strong> {lead.applying.recruiter_interview} ({lead.applying.interview_rating_recruiter === true ? 'Good' : lead.applying.interview_rating_recruiter === false ? 'Bad' : ''})</div>}
+                                    {lead.applying.technical_interview && <div><strong>Technical interview:</strong> {lead.applying.technical_interview} ({lead.applying.interview_rating_technical === true ? 'Good' : lead.applying.interview_rating_technical === false ? 'Bad' : ''})</div>}
+                                    {lead.applying.hiringmanager_interview && <div><strong>Hiring Manager interview:</strong> {lead.applying.hiringmanager_interview} ({lead.applying.interview_rating_hiringmanager === true ? 'Good' : lead.applying.interview_rating_hiringmanager === false ? 'Bad' : ''})</div>}
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -584,7 +688,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                                         <button
                                             onClick={() => {
                                                 setEditingNotes(false);
-                                                setNotes(lead.notes || '');
+                                                setNotes(lead.applying?.notes || '');
                                             }}
                                             style={{
                                                 padding: '0.5rem 1rem',

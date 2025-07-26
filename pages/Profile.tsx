@@ -73,7 +73,7 @@ export default function Profile() {
     interviewReminders: true,
     marketInsights: false
   });
-  const [followUpDays, setFollowUpDays] = useState(3);
+
 
   // Documents state (from dashboard)
   const [documents, setDocuments] = useState<Document[]>([
@@ -172,29 +172,29 @@ export default function Profile() {
       if (!user) {
         throw new Error('No authenticated user found');
       }
-
       const notificationData = {
         user_id: user.id,
+        email_id: user.id, // <-- fix: gebruik user.id als email_id (uuid)
         new_lead_notifications: newSettings.newLeadNotifications,
         follow_up_reminders: newSettings.followUpReminders,
         weekly_summary: newSettings.weeklySummary,
         interview_reminders: newSettings.interviewReminders,
         market_insights: newSettings.marketInsights
       };
-
-      console.log('Saving email notifications:', notificationData);
-
-      const { error } = await supabase
+      console.log('[DEBUG] Saving email notifications:', notificationData);
+      const { data, error } = await supabase
         .from('email_notifications')
         .upsert(notificationData);
-
+      console.log('[DEBUG] Upsert response:', data, error);
       if (error) {
-        console.error('Error saving email notifications:', error);
+        console.error('[DEBUG] Error saving email notifications:', error);
       } else {
-        console.log('Email notifications saved successfully');
+        console.log('[DEBUG] Email notifications saved successfully');
       }
+      // Log de state na opslaan
+      console.log('[DEBUG] mailNotifications state after save:', newSettings);
     } catch (error) {
-      console.error('Error saving email notifications:', error);
+      console.error('[DEBUG] Error saving email notifications:', error);
     }
   };
 
@@ -297,19 +297,18 @@ export default function Profile() {
   useEffect(() => {
     const fetchEmailNotifications = async () => {
       if (!user) return;
-
       try {
         const { data, error } = await supabase
           .from('email_notifications')
           .select('new_lead_notifications, follow_up_reminders, weekly_summary, interview_reminders, market_insights')
           .eq('user_id', user.id)
           .single();
-
-        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-          console.error('Error fetching email notifications:', error);
+        console.log('[DEBUG] Fetch email_notifications for user_id:', user.id);
+        console.log('[DEBUG] Fetch response:', data, error);
+        if (error && error.code !== 'PGRST116') {
+          console.error('[DEBUG] Error fetching email notifications:', error);
         } else if (data) {
-          // Data found, use it
-          console.log('Found email notifications data:', data);
+          console.log('[DEBUG] Found email notifications data:', data);
           setMailNotifications({
             newLeadNotifications: data.new_lead_notifications ?? true,
             followUpReminders: data.follow_up_reminders ?? true,
@@ -317,9 +316,16 @@ export default function Profile() {
             interviewReminders: data.interview_reminders ?? true,
             marketInsights: data.market_insights ?? false
           });
+          // Log de state na laden
+          console.log('[DEBUG] mailNotifications state after fetch:', {
+            newLeadNotifications: data.new_lead_notifications ?? true,
+            followUpReminders: data.follow_up_reminders ?? true,
+            weeklySummary: data.weekly_summary ?? true,
+            interviewReminders: data.interview_reminders ?? true,
+            marketInsights: data.market_insights ?? false
+          });
         } else {
-          // No data found, create default record
-          console.log('No email notifications found, creating default record');
+          console.log('[DEBUG] No email notifications found, creating default record');
           const defaultSettings = {
             newLeadNotifications: true,
             followUpReminders: true,
@@ -331,10 +337,9 @@ export default function Profile() {
           await saveEmailNotifications(defaultSettings);
         }
       } catch (error) {
-        console.error('Error fetching email notifications:', error);
+        console.error('[DEBUG] Error fetching email notifications:', error);
       }
     };
-
     fetchEmailNotifications();
   }, [user]);
 
@@ -1357,69 +1362,6 @@ export default function Profile() {
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {/* Follow-up Reminder Settings */}
-              <div style={{
-                background: 'rgba(59, 130, 246, 0.1)',
-                borderRadius: '12px',
-                padding: '1rem',
-                border: '1px solid rgba(59, 130, 246, 0.3)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                  <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#fff' }}>Follow-up Reminders</span>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={mailNotifications.followUpReminders}
-                      onChange={async (e) => {
-                        const newSettings = { ...mailNotifications, followUpReminders: e.target.checked };
-                        setMailNotifications(newSettings);
-                        await saveEmailNotifications(newSettings);
-                      }}
-                      style={{ display: 'none' }}
-                    />
-                    <div style={{
-                      width: '40px',
-                      height: '20px',
-                      borderRadius: '10px',
-                      background: mailNotifications.followUpReminders ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255, 255, 255, 0.15)',
-                      border: mailNotifications.followUpReminders ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid rgba(255, 255, 255, 0.3)',
-                      transition: 'all 0.3s ease'
-                    }}>
-                      <div style={{
-                        width: '16px',
-                        height: '16px',
-                        background: 'rgba(255, 255, 255, 0.9)',
-                        borderRadius: '50%',
-                        transform: mailNotifications.followUpReminders ? 'translateX(20px)' : 'translateX(2px)',
-                        transition: 'all 0.3s ease',
-                        marginTop: '1px'
-                      }} />
-                    </div>
-                  </label>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Remind me after:</span>
-                  <select
-                    value={followUpDays}
-                    onChange={(e) => setFollowUpDays(parseInt(e.target.value))}
-                    style={{
-                      padding: '0.5rem',
-                      background: 'rgba(59, 130, 246, 0.1)',
-                      border: '1px solid rgba(59, 130, 246, 0.3)',
-                      borderRadius: '6px',
-                      color: '#fff',
-                      fontSize: '0.875rem'
-                    }}
-                  >
-                    <option value={1}>1 day</option>
-                    <option value={2}>2 days</option>
-                    <option value={3}>3 days</option>
-                    <option value={5}>5 days</option>
-                    <option value={7}>1 week</option>
-                  </select>
-                </div>
-              </div>
-
               {/* Notification Toggles */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
                 {[

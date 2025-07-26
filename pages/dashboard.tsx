@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { X, Sparkles, TrendingUp, Target, Mail, Zap, Lock, BarChart3 } from 'lucide-react';
+import { X, Sparkles, TrendingUp, Target, Mail, Zap, Lock, BarChart3, Brain, Users, CheckCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '../SupabaseClient';
 // import { useRouter } from 'next/router';
@@ -12,7 +12,7 @@ import LeadsPipeline from '../components/ui/LeadsPipeline';
 
 // Qualified Leads Interfaces en Types
 import {
-  Clock, CheckCircle, Phone, Video, XCircle, Trophy,
+  Clock, Phone, Video, XCircle, Trophy,
   // AlertCircle,
   // ChevronRight,
   // Brain,
@@ -993,6 +993,90 @@ export default function Dashboard() {
     }
   }, [user]);
 
+  // Fetch future features from Supabase
+  useEffect(() => {
+    const fetchFutureFeatures = async () => {
+      if (!user) {
+        console.log('No user found, skipping future features fetch');
+        return;
+      }
+
+      console.log('Fetching future features for user:', user.id);
+
+      try {
+        const { data, error } = await supabase
+          .from('future_features')
+          .select('marketing, agent, tooling, interview_optimisation, value_proposition')
+          .eq('user_id', user.id)
+          .single();
+
+        console.log('Future features query result:', { data, error });
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+          console.error('Error fetching future features:', error);
+        } else if (data) {
+          console.log('Found future features data:', data);
+          setFutureFeatures({
+            marketing: data.marketing ?? false,
+            agent: data.agent ?? false,
+            tooling: data.tooling ?? false,
+            interview_optimisation: data.interview_optimisation ?? false,
+            value_proposition: data.value_proposition ?? false
+          });
+        } else {
+          // No data found, create default record
+          console.log('No future features found, creating default record');
+          const defaultFeatures = {
+            marketing: false,
+            agent: false,
+            tooling: false,
+            interview_optimisation: false,
+            value_proposition: false
+          };
+          setFutureFeatures(defaultFeatures);
+          await saveFutureFeatures(defaultFeatures);
+        }
+      } catch (error) {
+        console.error('Error fetching future features:', error);
+      }
+    };
+
+    fetchFutureFeatures();
+  }, [user]);
+
+  // Save future features to Supabase
+  const saveFutureFeatures = async (newFeatures: typeof futureFeatures) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('No authenticated user found');
+      }
+
+      const featureData = {
+        user_id: user.id,
+        marketing: newFeatures.marketing,
+        agent: newFeatures.agent,
+        tooling: newFeatures.tooling,
+        interview_optimisation: newFeatures.interview_optimisation,
+        value_proposition: newFeatures.value_proposition
+      };
+
+      console.log('Saving future features:', featureData);
+
+      const { error } = await supabase
+        .from('future_features')
+        .upsert(featureData);
+
+      if (error) {
+        console.error('Error saving future features:', error);
+      } else {
+        console.log('Future features saved successfully');
+      }
+    } catch (error) {
+      console.error('Error saving future features:', error);
+    }
+  };
+
   // Optioneel: refresh stats wanneer er een nieuwe job click is
   // Voeg dit toe aan je logJobClick functie:
   const logJobClick = async (job: Job) => {
@@ -1221,6 +1305,19 @@ export default function Dashboard() {
   const [showAddJobForm, setShowAddJobForm] = useState(false);
   console.log(showAddJobForm, setShowAddJobForm, "showAddJobForm - build fix");
 
+  // Future features state
+  const [futureFeatures, setFutureFeatures] = useState({
+    marketing: false,
+    agent: false,
+    tooling: false,
+    interview_optimisation: false,
+    value_proposition: false
+  });
+
+  // Feature modal state
+  const [showFeatureModal, setShowFeatureModal] = useState<null | string>(null);
+  const [notifyMe, setNotifyMe] = useState<{ [key: string]: boolean }>({});
+
 
   // const toggleAvailable = () => setIsAvailable(prev => !prev);
 
@@ -1301,7 +1398,7 @@ export default function Dashboard() {
         }))
     );
   }, [recentlyClickedJobs]);
-console.log(qualifiedLeads, "qualifiedLeads - build fix");
+  console.log(qualifiedLeads, "qualifiedLeads - build fix");
   // Update status in Supabase and local state
   const handleLeadStatusChange = async (leadId: string, newStatus: LeadStatus) => {
     if (!user || !user.id) return;
@@ -1328,8 +1425,8 @@ console.log(qualifiedLeads, "qualifiedLeads - build fix");
     // hier jouw logica bij click
     console.log('Lead aangeklikt:', lead);
   };
-  console.log (handleLeadStatusChange, "handleLeadStatusChange - build fix");
-console.log(handleLeadLogClick, "handleLeadLogClick - build fix");
+  console.log(handleLeadStatusChange, "handleLeadStatusChange - build fix");
+  console.log(handleLeadLogClick, "handleLeadLogClick - build fix");
   // Authentication checks - exactly like leadSearch.tsx
   if (!user) {
     return (
@@ -1379,7 +1476,9 @@ console.log(handleLeadLogClick, "handleLeadLogClick - build fix");
       color: '#fff',
       position: 'relative',
       overflow: 'hidden'
-    }}>
+    }}
+      onClick={() => setShowFeatureModal(null)}
+    >
       <GlobalNav currentPage="dashboard" />
       {/* Floating Orbs */}
       <div style={{
@@ -1471,11 +1570,48 @@ console.log(handleLeadLogClick, "handleLeadLogClick - build fix");
               </div>
 
               {/* CRM Features (Locked) */}
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                 {[
-                  { icon: Mail, label: 'Marketing', color: 'rgba(16, 185, 129, 0.3)', borderColor: 'rgba(16, 185, 129, 0.4)' },
-                  { icon: Zap, label: 'Tooling', color: 'rgba(59, 130, 246, 0.3)', borderColor: 'rgba(59, 130, 246, 0.4)' },
-                  { icon: Sparkles, label: 'AI Agent', color: 'rgba(147, 51, 234, 0.3)', borderColor: 'rgba(147, 51, 234, 0.4)' }
+                  {
+                    icon: Mail,
+                    label: 'Marketing',
+                    key: 'marketing',
+                    color: 'rgba(16, 185, 129, 0.3)',
+                    borderColor: 'rgba(16, 185, 129, 0.4)',
+                    description: 'Access checklists, extra information, and tips for higher success rates in your applications.'
+                  },
+                  {
+                    icon: Zap,
+                    label: 'Tooling',
+                    key: 'tooling',
+                    color: 'rgba(59, 130, 246, 0.3)',
+                    borderColor: 'rgba(59, 130, 246, 0.4)',
+                    description: 'Get access to tools that help you get better results and streamline your job search process.'
+                  },
+                  {
+                    icon: Sparkles,
+                    label: 'AI Agent',
+                    key: 'agent',
+                    color: 'rgba(147, 51, 234, 0.3)',
+                    borderColor: 'rgba(147, 51, 234, 0.4)',
+                    description: 'This AI agent will search for jobs, apply with your profile, contact the lead, make calendar appointments with recruiters, and more.'
+                  },
+                  {
+                    icon: Brain,
+                    label: 'Interview Optimisation',
+                    key: 'interview_optimisation',
+                    color: 'rgba(236, 72, 153, 0.3)',
+                    borderColor: 'rgba(236, 72, 153, 0.4)',
+                    description: 'Advanced interview preparation tools, mock interviews, and performance optimization techniques.'
+                  },
+                  {
+                    icon: Users,
+                    label: 'Value Proposition',
+                    key: 'value_proposition',
+                    color: 'rgba(245, 158, 11, 0.3)',
+                    borderColor: 'rgba(245, 158, 11, 0.4)',
+                    description: 'Build compelling value propositions and positioning strategies to stand out from the competition.'
+                  }
                 ].map((feature, index) => (
                   <div key={index} style={{ position: 'relative' }}>
                     <button
@@ -1492,16 +1628,120 @@ console.log(handleLeadLogClick, "handleLeadLogClick - build fix");
                         fontWeight: '600',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
-                        opacity: 1,
+                        opacity: futureFeatures[feature.key as keyof typeof futureFeatures] ? 1 : 0.7,
                         backdropFilter: 'blur(8px)',
                         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
                       }}
-                      onClick={() => console.log(`${feature.label} clicked`)}
+                      onClick={() => {
+                        const newFeatures = {
+                          ...futureFeatures,
+                          [feature.key]: !futureFeatures[feature.key as keyof typeof futureFeatures]
+                        };
+                        setFutureFeatures(newFeatures);
+                        saveFutureFeatures(newFeatures);
+                        setShowFeatureModal(futureFeatures[feature.key as keyof typeof futureFeatures] ? null : feature.label);
+                      }}
                     >
                       <feature.icon style={{ width: '16px', height: '16px' }} />
                       {feature.label}
-                      <Lock style={{ width: '14px', height: '14px' }} />
+                      {futureFeatures[feature.key as keyof typeof futureFeatures] ? (
+                        <CheckCircle style={{ width: '14px', height: '14px' }} />
+                      ) : (
+                        <Lock style={{ width: '14px', height: '14px' }} />
+                      )}
                     </button>
+
+                    {/* Feature Modal */}
+                    {showFeatureModal === feature.label && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        marginTop: '0.5rem',
+                        background: 'rgba(0, 0, 0, 0.95)',
+                        backdropFilter: 'blur(16px)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '12px',
+                        padding: '1rem',
+                        width: '280px',
+                        zIndex: 1000,
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+                      }}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginBottom: '0.75rem'
+                        }}>
+                          <h4 style={{
+                            fontSize: '1rem',
+                            fontWeight: '600',
+                            color: '#fff',
+                            margin: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}>
+                            <feature.icon style={{ width: '16px', height: '16px' }} />
+                            {feature.label}
+                          </h4>
+                          <button
+                            onClick={() => setShowFeatureModal(null)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: 'rgba(255, 255, 255, 0.6)',
+                              cursor: 'pointer',
+                              padding: '0.25rem'
+                            }}
+                          >
+                            <X style={{ width: '16px', height: '16px' }} />
+                          </button>
+                        </div>
+
+                        <p style={{
+                          fontSize: '0.875rem',
+                          marginBottom: '1rem',
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          lineHeight: '1.4'
+                        }}>
+                          {feature.description}
+                        </p>
+
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          padding: '0.75rem',
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(255, 255, 255, 0.2)'
+                        }}>
+                          <input
+                            type="checkbox"
+                            checked={notifyMe[feature.key] || false}
+                            onChange={(e) => setNotifyMe(prev => ({
+                              ...prev,
+                              [feature.key]: e.target.checked
+                            }))}
+                            style={{
+                              width: '16px',
+                              height: '16px',
+                              accentColor: '#6366f1'
+                            }}
+                          />
+                          <label style={{
+                            fontSize: '0.875rem',
+                            color: 'rgba(255, 255, 255, 0.9)',
+                            cursor: 'pointer',
+                            margin: 0
+                          }}>
+                            Notify me when this feature is available
+                          </label>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

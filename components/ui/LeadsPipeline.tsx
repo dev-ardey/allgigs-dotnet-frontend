@@ -19,17 +19,52 @@ interface LeadsPipelineProps {
     user?: any;
 }
 
+// Extended interface for our combined data
+interface JobClickWithApplying {
+    id: string;
+    user_id: string;
+    job_id: string;
+    job_title: string;
+    clicked_at: string;
+    search_pills: string[];
+    company: string;
+    location: string;
+    rate: string;
+    date_posted: string;
+    summary: string;
+    url: string;
+    applying?: {
+        applying_id: string;
+        created_at: string;
+        applied: boolean;
+        receive_confirmation: boolean;
+        recruiter_interview: string | null;
+        interview_rating_recruiter: boolean | null;
+        hiringmanager_interview: string | null;
+        interview_rating_hiringmanager: boolean | null;
+        technical_interview: string | null;
+        interview_rating_technical: boolean | null;
+        got_the_job: boolean | null;
+        starting_date: string | null;
+        notes: string | null;
+        value_rate: number | null;
+        value_hour_per_week: string | null;
+        value_weeks: number | null;
+        unique_id_job: string;
+    } | null;
+}
+
 const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
     // ==========================================
     // STATE MANAGEMENT
     // ==========================================
-    const [leads, setLeads] = useState<Lead[]>([]);
+    const [leads, setLeads] = useState<JobClickWithApplying[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [databaseAvailable, setDatabaseAvailable] = useState(false);
 
     // Modal states
-    const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+    const [selectedLead, setSelectedLead] = useState<JobClickWithApplying | null>(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [showArchiveModal, setShowArchiveModal] = useState(false);
     const [showPrepModal, setShowPrepModal] = useState(false);
@@ -39,13 +74,13 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
     const [stageFilter, setStageFilter] = useState<LeadStage | 'all'>('all');
 
     // Follow-up notifications
-    const [followUpNotifications, setFollowUpNotifications] = useState<Lead[]>([]);
+    const [followUpNotifications, setFollowUpNotifications] = useState<JobClickWithApplying[]>([]);
 
     // Archive stats
     const [archivedCount, setArchivedCount] = useState(0);
 
     // ==========================================
-    // STAGE CONFIGURATION
+    // STAGE CONFIGURATION (AANGEPAST VOOR NIEUWE DATA)
     // ==========================================
     const stageConfig = useMemo(() => ({
         found: {
@@ -55,347 +90,103 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
             borderColor: 'rgba(59, 130, 246, 0.4)',
             description: 'Recently clicked jobs to pursue'
         },
-        connect: {
-            title: 'Connect',
+        applied: {
+            title: 'Applied',
             icon: <MessageCircle style={{ width: '16px', height: '16px' }} />,
             color: 'rgba(245, 158, 11, 0.2)',
             borderColor: 'rgba(245, 158, 11, 0.4)',
-            description: 'Interview and preparation phase'
-        },
-        close: {
-            title: 'Close',
-            icon: <CheckCircle style={{ width: '16px', height: '16px' }} />,
-            color: 'rgba(34, 197, 94, 0.2)',
-            borderColor: 'rgba(34, 197, 94, 0.4)',
-            description: 'Final decision and outcomes'
+            description: 'Jobs you have applied to'
         }
     }), []);
 
     // ==========================================
-    // MOCK DATA GENERATOR
+    // ORGANIZE LEADS INTO COLUMNS (NIEUWE LOGICA)
     // ==========================================
-    const generateMockLeads = useCallback((): Lead[] => {
-        const mockJobs = [
+    const organizedColumns = useMemo(() => {
+        // Filter leads based on search term
+        const filteredLeads = leads.filter(lead => {
+            if (!searchTerm) return true;
+            const searchLower = searchTerm.toLowerCase();
+            return (
+                lead.job_title?.toLowerCase().includes(searchLower) ||
+                lead.company?.toLowerCase().includes(searchLower) ||
+                lead.location?.toLowerCase().includes(searchLower)
+            );
+        });
+
+        // Found column: job_clicks without applying record (or applied = false)
+        const foundLeads = filteredLeads.filter(lead => !lead.applying || !lead.applying.applied);
+
+        // Applied column: job_clicks with applying record and applied = true
+        const appliedLeads = filteredLeads.filter(lead => lead.applying && lead.applying.applied);
+
+        return [
             {
-                id: 'lead-1',
-                job_title: 'Senior Frontend Developer',
-                company: 'TechCorp Amsterdam',
-                location: 'Amsterdam, Netherlands',
-                rate: '€65-85/hour',
-                job_url: 'https://example.com/job1',
-                stage: 'found' as LeadStage,
-                possible_earnings: 85000,
-                match_percentage: 92,
-                normal_rate: 75000
+                id: 'found' as LeadStage,
+                title: 'Found',
+                leads: foundLeads,
+                color: stageConfig.found.color,
+                icon: stageConfig.found.icon
             },
             {
-                id: 'lead-2',
-                job_title: 'React Developer',
-                company: 'StartupXYZ',
-                location: 'Remote',
-                rate: '€55-70/hour',
-                job_url: 'https://example.com/job2',
-                stage: 'found' as LeadStage,
-                possible_earnings: 68000,
-                match_percentage: 78,
-                normal_rate: 75000
-            },
-            {
-                id: 'lead-3',
-                job_title: 'Full Stack Developer',
-                company: 'InnovateTech',
-                location: 'Utrecht, Netherlands',
-                rate: '€70-90/hour',
-                job_url: 'https://example.com/job3',
-                stage: 'connect' as LeadStage,
-                possible_earnings: 88000,
-                match_percentage: 85,
-                normal_rate: 75000
-            },
-            {
-                id: 'lead-4',
-                job_title: 'Vue.js Developer',
-                company: 'WebSolutions',
-                location: 'Rotterdam, Netherlands',
-                rate: '€60-80/hour',
-                job_url: 'https://example.com/job4',
-                stage: 'close' as LeadStage,
-                possible_earnings: 78000,
-                match_percentage: 88,
-                normal_rate: 75000
+                id: 'applied' as LeadStage,
+                title: 'Applied',
+                leads: appliedLeads,
+                color: stageConfig.applied.color,
+                icon: stageConfig.applied.icon
             }
         ];
-
-        return mockJobs.map(job => ({
-            id: job.id,
-            user_id: user?.id || 'mock-user',
-            job_unique_id: `job-${job.id}`,
-            job_title: job.job_title,
-            company: job.company,
-            location: job.location,
-            rate: job.rate,
-            job_url: job.job_url,
-            job_summary: `Exciting opportunity at ${job.company} for a ${job.job_title} position.`,
-            stage: job.stage,
-            is_archived: false,
-            created_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-            updated_at: new Date().toISOString(),
-            stage_updated_at: new Date(Date.now() - Math.random() * 3 * 24 * 60 * 60 * 1000).toISOString(),
-            notes: '',
-            follow_up_date: null,
-            follow_up_completed: false,
-
-            // Stage-specific data
-            found_data: {
-                match_percentage: job.match_percentage,
-                possible_earnings: job.possible_earnings,
-                above_normal_rate: job.possible_earnings > job.normal_rate,
-                normal_rate: job.normal_rate,
-                applied: job.stage === 'found' ? Math.random() > 0.7 : false,
-                follow_up_days: 3,
-                follow_up_timer_started: (job.stage === 'found' && Math.random() > 0.5) ? new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000).toISOString() : '',
-                follow_up_overdue: job.stage === 'found' ? Math.random() > 0.8 : false,
-                priority: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)] as 'low' | 'medium' | 'high',
-                source: 'job_board',
-                initial_notes: 'Looks promising, good match for skills'
-            },
-
-            connect_data: {
-                interview_date: job.stage === 'connect' ? new Date(Date.now() + Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : '',
-                interview_time: job.stage === 'connect' ? '14:00' : '',
-                interview_with: job.stage === 'connect' ? 'Sarah Johnson, Lead Developer' : '',
-                interview_notes: job.stage === 'connect' ? 'Technical interview focusing on React and TypeScript' : '',
-                interview_rating: job.stage === 'connect' ? (Math.random() > 0.5 ? 'thumbs_up' : 'thumbs_down') : null,
-                prepped: job.stage === 'connect' ? Math.random() > 0.6 : false,
-                prep_data: job.stage === 'connect' ? {
-                    introduction: 'I am a passionate frontend developer with 5 years of experience...',
-                    company_fit: 'I align with your mission to create innovative web solutions...',
-                    role_description: 'As a senior frontend developer, I would focus on...',
-                    colleagues: [
-                        {
-                            id: 'colleague-1',
-                            name: 'Sarah Johnson',
-                            email: 'sarah.johnson@company.com',
-                            linkedin: 'https://linkedin.com/in/sarahjohnson',
-                            role: 'Lead Developer'
-                        }
-                    ],
-                    company_mission: 'To revolutionize web development through innovative solutions',
-                    completed: Math.random() > 0.5
-                } : undefined
-            },
-
-            close_data: {
-                got_job: job.stage === 'close' ? undefined : undefined,
-                possible_revenue: job.stage === 'close' ? job.possible_earnings : 0,
-                negotiation_tips: job.stage === 'close' ? [
-                    'Highlight your unique React expertise',
-                    'Mention your successful project portfolio',
-                    'Discuss long-term collaboration potential'
-                ] : [],
-                contract_template: job.stage === 'close' ? 'Standard freelance contract template with your details' : '',
-                archived_reason: undefined
-            },
-
-            contacts: [],
-            activities: []
-        })) as unknown as Lead[];
-    }, [user?.id]);
+    }, [leads, searchTerm, stageFilter, stageConfig]);
 
     // ==========================================
-    // DATA FETCHING
+    // DATA FETCHING (NIEUW: job_clicks + applying)
     // ==========================================
-    const fetchRecentlyClickedJobs = useCallback(async () => {
-        if (!user?.id) return [];
-
-        try {
-            const { data: clicks } = await supabase
-                .from("job_clicks")
-                .select("job_id, clicked_at")
-                .eq("user_id", user.id)
-                .order("clicked_at", { ascending: false });
-
-            const jobIds = clicks?.map(c => c.job_id).filter(Boolean);
-            const uniqueJobIds = [...new Set(jobIds)];
-
-            if (!uniqueJobIds.length) return [];
-
-            const { data: jobsData } = await supabase
-                .from("Allgigs_All_vacancies_NEW")
-                .select("UNIQUE_ID, Title, Company, URL, date, Location, Summary, rate")
-                .in("UNIQUE_ID", uniqueJobIds);
-
-            const finalJobs = jobsData?.map(job => ({
-                ...job,
-                clicked_at: clicks?.find(c => c.job_id === job.UNIQUE_ID)?.clicked_at,
-            })) ?? [];
-
-            return finalJobs;
-        } catch (error) {
-            console.error('Error fetching recently clicked jobs:', error);
-            return [];
-        }
-    }, [user?.id]);
-
-    const checkDatabaseAndFetchLeads = useCallback(async () => {
+    const fetchLeads = useCallback(async () => {
         if (!user?.id) return;
-
         setLoading(true);
         setError(null);
-
         try {
-            // First check if database tables exist
-            const { data: session } = await supabase.auth.getSession();
-            if (!session?.session?.access_token) {
-                throw new Error('No valid session');
-            }
+            // 1. Haal alle job_clicks op voor deze user
+            const { data: clicks, error: clicksError } = await supabase
+                .from('job_clicks')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('clicked_at', { ascending: false });
+            if (clicksError) throw clicksError;
 
-            const response = await fetch(`/api/leads?archived=false&search=${searchTerm}&stage=${stageFilter}`, {
-                headers: {
-                    'Authorization': `Bearer ${session.session.access_token}`,
-                    'Content-Type': 'application/json'
-                }
+            // 2. Haal alle applying records op voor deze user
+            const { data: applying, error: applyingError } = await supabase
+                .from('applying')
+                .select('*')
+                .eq('user_id', user.id);
+            if (applyingError) throw applyingError;
+
+            // 3. Combineer per job_id/unique_id_job
+            // Map: unique_id_job (applying) <-> id (job_clicks) - niet job_id!
+            const leadsData = clicks.map(job => {
+                const apply = applying.find(a => a.unique_id_job === job.id);
+                return {
+                    ...job,
+                    applying: apply || null
+                };
             });
-
-            if (response.ok) {
-                // Database is available
-                setDatabaseAvailable(true);
-                const data: LeadsResponse = await response.json();
-                setLeads(data.leads);
-                setArchivedCount(data.archived_count || 0);
-
-                // Set up follow-up notifications
-                const today = new Date();
-                const notifications = data.leads.filter(lead =>
-                    lead.follow_up_date &&
-                    !lead.follow_up_completed &&
-                    new Date(lead.follow_up_date) <= today
-                );
-                setFollowUpNotifications(notifications);
-            } else {
-                // Database not available, use recently clicked jobs + mock data
-                setDatabaseAvailable(false);
-                const recentJobs = await fetchRecentlyClickedJobs();
-
-                // Convert recently clicked jobs to leads (found stage)
-                const recentlyClickedLeads: Lead[] = recentJobs.map((job: any) => {
-                    const clickedDate = new Date(job.clicked_at || new Date());
-                    const followUpDate = new Date(clickedDate);
-                    followUpDate.setDate(followUpDate.getDate() + 3); // Follow up in 3 days
-
-                    return {
-                        id: job.UNIQUE_ID,
-                        user_id: user.id,
-                        job_unique_id: job.UNIQUE_ID,
-                        job_title: job.Title || 'Untitled Job',
-                        company: job.Company || 'Unknown Company',
-                        location: job.Location || '',
-                        rate: job.rate || '',
-                        job_url: job.URL || '',
-                        job_summary: job.Summary || '',
-                        stage: 'found' as LeadStage,
-                        is_archived: false,
-                        created_at: job.clicked_at || new Date().toISOString(),
-                        updated_at: new Date().toISOString(),
-                        stage_updated_at: job.clicked_at || new Date().toISOString(),
-                        notes: `Clicked on ${new Date(job.clicked_at || new Date()).toLocaleDateString()}`,
-                        follow_up_date: followUpDate.toISOString(),
-                        follow_up_completed: false,
-                        found_data: {
-                            match_percentage: 85,
-                            possible_earnings: 75000,
-                            above_normal_rate: true,
-                            normal_rate: 70000,
-                            applied: false,
-                            follow_up_days: 3,
-                            follow_up_timer_started: '',
-                            follow_up_overdue: false,
-                            priority: 'medium',
-                            source: 'job_board',
-                            initial_notes: 'Clicked from job search'
-                        },
-                        connect_data: {
-                            interview_date: '',
-                            interview_time: '',
-                            interview_with: '',
-                            interview_notes: '',
-                            interview_rating: null,
-                            prepped: false,
-                            prep_data: undefined
-                        },
-                        close_data: {
-                            got_job: undefined,
-                            possible_revenue: 0,
-                            negotiation_tips: [],
-                            contract_template: '',
-                            archived_reason: undefined
-                        },
-                        contacts: [],
-                        activities: []
-                    } as unknown as Lead;
-                });
-
-                // Add mock data for other stages
-                const mockLeads = generateMockLeads();
-
-                // Combine recently clicked jobs with mock data
-                const allLeads = [...recentlyClickedLeads, ...mockLeads];
-
-                setLeads(allLeads);
-                setArchivedCount(0);
-
-                // Set up follow-up notifications for recently clicked jobs
-                const today = new Date();
-                const notifications = recentlyClickedLeads.filter(lead =>
-                    lead.follow_up_date &&
-                    !lead.follow_up_completed &&
-                    new Date(lead.follow_up_date) <= today
-                );
-                setFollowUpNotifications(notifications);
-            }
-
-        } catch (err) {
-            console.error('Error fetching leads:', err);
-            setError(err instanceof Error ? err.message : 'Failed to fetch leads');
+            setLeads(leadsData);
+            setDatabaseAvailable(true);
+        } catch (err: any) {
+            setError(err.message || 'Error fetching leads');
+            setLeads([]);
+            setDatabaseAvailable(false);
         } finally {
             setLoading(false);
         }
-    }, [user?.id, searchTerm, stageFilter, fetchRecentlyClickedJobs, generateMockLeads]);
+    }, [user?.id]);
 
     // ==========================================
-    // EFFECTS
+    // USE EFFECT: FETCH LEADS BIJ LOAD
     // ==========================================
     useEffect(() => {
-        checkDatabaseAndFetchLeads();
-    }, [checkDatabaseAndFetchLeads]);
-
-    // ==========================================
-    // ORGANIZE LEADS BY STAGE
-    // ==========================================
-    const organizedColumns = useMemo(() => {
-        const filteredLeads = leads.filter(lead => {
-            const matchesSearch = searchTerm === '' ||
-                lead.job_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (lead.notes && lead.notes.toLowerCase().includes(searchTerm.toLowerCase()));
-
-            const matchesStage = stageFilter === 'all' || lead.stage === stageFilter;
-
-            return matchesSearch && matchesStage;
-        });
-
-        const columns: KanbanColumn[] = Object.entries(stageConfig).map(([stage, config]) => ({
-            id: stage as LeadStage,
-            title: config.title,
-            leads: filteredLeads.filter(lead => lead.stage === stage),
-            color: config.color,
-            borderColor: config.borderColor,
-            icon: stage, // Use stage name as string instead of JSX element
-            description: config.description
-        }));
-
-        return columns;
-    }, [leads, stageConfig, searchTerm, stageFilter]);
+        fetchLeads();
+    }, [fetchLeads]);
 
     // ==========================================
     // DRAG & DROP HANDLERS
@@ -474,18 +265,18 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
     // ==========================================
     // EVENT HANDLERS
     // ==========================================
-    const handleLeadClick = (lead: Lead) => {
+    const handleLeadClick = (lead: JobClickWithApplying) => {
         setSelectedLead(lead);
         setShowDetailModal(true);
     };
 
-    const handleLeadUpdate = async (updatedLead: Lead) => {
+    const handleLeadUpdate = async (updatedLead: JobClickWithApplying) => {
         setLeads(prevLeads =>
             prevLeads.map(l => l.id === updatedLead.id ? updatedLead : l)
         );
 
         if (databaseAvailable) {
-            await checkDatabaseAndFetchLeads(); // Refresh to get latest data
+            await fetchLeads(); // Refresh to get latest data
         }
     };
 
@@ -513,7 +304,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
 
                 if (response.ok) {
                     setFollowUpNotifications(prev => prev.filter(lead => lead.id !== leadId));
-                    await checkDatabaseAndFetchLeads();
+                    await fetchLeads();
                 }
             } catch (error) {
                 console.error('Error marking follow-up complete:', error);
@@ -530,136 +321,104 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
     };
 
     // ==========================================
-    // STAGE ACTION HANDLERS
+    // APPLY ACTION HANDLER (NIEUWE LOGICA)
     // ==========================================
-    const handleStageAction = async (leadId: string, action: string, data?: any) => {
-        const leadIndex = leads.findIndex(lead => lead.id === leadId);
-        if (leadIndex === -1) return;
+    const handleApplyAction = async (jobId: string, applied: boolean) => {
+        if (!user?.id) return;
 
-        const updatedLeads = [...leads];
-        const lead = { ...updatedLeads[leadIndex] };
-
-        switch (action) {
-            case 'applied':
-                if (data.applied) {
-                    // User clicked YES - start follow-up timer
-                    lead.found_data = {
-                        ...lead.found_data,
+        try {
+            if (applied) {
+                // Create applying record with UUID for applying_id
+                const { error } = await supabase
+                    .from('applying')
+                    .insert([{
+                        applying_id: crypto.randomUUID(), // <-- Fix: Generate UUID for applying_id
+                        user_id: user.id,
+                        unique_id_job: jobId,
                         applied: true,
-                        follow_up_timer_started: new Date().toISOString(),
-                        follow_up_days: 3
-                    };
-                } else {
-                    // User clicked NO - remove lead from pipeline
-                    updatedLeads.splice(leadIndex, 1);
-                    setLeads(updatedLeads);
-                    return;
-                }
-                break;
+                        created_at: new Date().toISOString()
+                    }]);
 
-            case 'follow_up_complete':
-                if (data.completed) {
-                    // Start next follow-up timer
-                    lead.found_data = {
-                        ...lead.found_data,
-                        follow_up_timer_started: new Date().toISOString(),
-                        follow_up_days: 3,
-                        follow_up_overdue: false
-                    };
-                } else {
-                    // Mark as losing opportunity
-                    lead.found_data = {
-                        ...lead.found_data,
-                        follow_up_overdue: true
-                    };
-                }
-                break;
+                if (error) throw error;
+            } else {
+                // If applied = false, remove the job from job_clicks (user doesn't want to pursue it)
+                const { error } = await supabase
+                    .from('job_clicks')
+                    .delete()
+                    .eq('id', jobId)
+                    .eq('user_id', user.id);
 
-            case 'invited_to_interview':
-                // Move to connect stage
-                lead.stage = 'connect';
-                lead.stage_updated_at = new Date().toISOString();
-                lead.connect_data = {
-                    ...lead.connect_data,
-                    interview_date: '',
-                    interview_time: '',
-                    interview_with: '',
-                    interview_notes: '',
-                    interview_rating: null,
-                    prepped: false
-                };
-                break;
+                if (error) throw error;
+            }
 
-            case 'prep_toggle':
-                // Toggle prep status - if false, show prep questionnaire
-                if (lead.connect_data) {
-                    lead.connect_data = {
-                        ...lead.connect_data,
-                        prepped: !lead.connect_data.prepped
-                    };
-                }
-                break;
-
-            case 'open_prep_modal':
-                // Open prep modal for the selected lead
-                if (lead.id) {
-                    setSelectedLead(lead as Lead);
-                    setShowPrepModal(true);
-                }
-                return;
-
-            case 'got_job':
-                lead.close_data = {
-                    ...lead.close_data,
-                    got_job: data.gotJob
-                };
-
-                if (data.gotJob) {
-                    // Show success content
-                    lead.close_data = {
-                        ...lead.close_data,
-                        possible_revenue: lead.found_data?.possible_earnings || 0,
-                        negotiation_tips: [
-                            'Highlight your unique expertise',
-                            'Mention your successful project portfolio',
-                            'Discuss long-term collaboration potential'
-                        ],
-                        contract_template: 'Standard freelance contract template with your details'
-                    };
-                } else {
-                    // Show missed opportunity content
-                    lead.close_data = {
-                        ...lead.close_data,
-                        possible_revenue: lead.found_data?.possible_earnings || 0
-                    };
-                }
-                break;
-
-            case 'update_lead':
-                // Direct lead update from prep modal
-                updatedLeads[leadIndex] = data.lead;
-                setLeads(updatedLeads);
-                return;
-
-            case 'interview_rating':
-                // Update interview rating
-                lead.connect_data = {
-                    ...lead.connect_data,
-                    interview_rating: data.rating
-                };
-                break;
-
-            case 'update_notes':
-                // Update notes
-                lead.notes = data.notes;
-                break;
-
-            default:
-                return;
+            // Refresh leads
+            await fetchLeads();
+        } catch (err: any) {
+            console.error('Error applying to job:', err);
+            setError(err.message || 'Error applying to job');
         }
+    };
 
-        updatedLeads[leadIndex] = lead as Lead;
-        setLeads(updatedLeads);
+    // ==========================================
+    // INTERVIEW ACTION HANDLER (NIEUWE LOGICA)
+    // ==========================================
+    const handleInterviewAction = async (applyingId: string, interviewData: {
+        type: 'recruiter' | 'technical' | 'hiringmanager';
+        date: string;
+        rating: boolean;
+    }) => {
+        try {
+            const updateData: any = {};
+
+            // Set the appropriate fields based on interview type
+            switch (interviewData.type) {
+                case 'recruiter':
+                    updateData.recruiter_interview = interviewData.date;
+                    updateData.interview_rating_recruiter = interviewData.rating;
+                    break;
+                case 'technical':
+                    updateData.technical_interview = interviewData.date;
+                    updateData.interview_rating_technical = interviewData.rating;
+                    break;
+                case 'hiringmanager':
+                    updateData.hiringmanager_interview = interviewData.date;
+                    updateData.interview_rating_hiringmanager = interviewData.rating;
+                    break;
+            }
+
+            const { error } = await supabase
+                .from('applying')
+                .update(updateData)
+                .eq('applying_id', applyingId);
+
+            if (error) throw error;
+
+            // Refresh leads
+            await fetchLeads();
+        } catch (err: any) {
+            console.error('Error updating interview:', err);
+            setError(err.message || 'Error updating interview');
+        }
+    };
+
+    // ==========================================
+    // UPDATE APPLYING RECORD (NIEUWE LOGICA)
+    // ==========================================
+    const handleUpdateApplying = async (applyingId: string, updateData: any) => {
+        try {
+            const { error } = await supabase
+                .from('applying')
+                .update(updateData)
+                .eq('applying_id', applyingId);
+
+            if (error) throw error;
+
+            // Refresh leads
+            await fetchLeads();
+        } catch (err: any) {
+            console.error('Error updating applying record:', err);
+            setError(err.message || 'Error updating record');
+        }
     };
 
     // ==========================================
@@ -697,7 +456,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                     Error loading pipeline: {error}
                 </div>
                 <button
-                    onClick={checkDatabaseAndFetchLeads}
+                    onClick={fetchLeads}
                     style={{
                         padding: '0.5rem 1rem',
                         background: 'rgba(59, 130, 246, 0.2)',
@@ -916,7 +675,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                     alignItems: 'start'
                 }}>
                     {organizedColumns.map(column => {
-                        const config = stageConfig[column.id];
+                        const config = stageConfig[column.id as LeadStage];
                         return (
                             <Droppable key={column.id} droppableId={column.id}>
                                 {(provided, snapshot) => (
@@ -992,7 +751,15 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                                                                 onClick={() => handleLeadClick(lead)}
                                                                 isDragging={snapshot.isDragging}
                                                                 hasFollowUp={followUpNotifications.some(n => n.id === lead.id)}
-                                                                onStageAction={(action, data) => handleStageAction(lead.id, action, data)}
+                                                                onStageAction={(action, data) => {
+                                                                    if (action === 'apply') {
+                                                                        handleApplyAction(lead.id, data.applied);
+                                                                    } else if (action === 'interview') {
+                                                                        handleInterviewAction(lead.applying?.applying_id || '', data.interviewData);
+                                                                    } else if (action === 'update_applying') {
+                                                                        handleUpdateApplying(lead.applying?.applying_id || '', data.updateData);
+                                                                    }
+                                                                }}
                                                             />
                                                         </div>
                                                     )}
@@ -1046,7 +813,9 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user }) => {
                         setSelectedLead(null);
                     }}
                     onUpdate={(updatedLead) => {
-                        handleStageAction(updatedLead.id, 'update_lead', { lead: updatedLead });
+                        // This handler is now primarily for updating the main lead details,
+                        // not the applying record. The applying record update is handled by handleInterviewAction.
+                        // For now, we'll just close the modal.
                         setShowPrepModal(false);
                         setSelectedLead(null);
                     }}
