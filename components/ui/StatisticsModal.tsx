@@ -1,6 +1,5 @@
 import React from 'react';
-import { X, BarChart3, Target, Users, CircleCheckBig, TrendingUp, Calendar, DollarSign } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { X, BarChart3, Target, Users, CircleCheckBig, TrendingUp, DollarSign } from 'lucide-react';
 
 interface StatisticsModalProps {
     onClose: () => void;
@@ -8,7 +7,7 @@ interface StatisticsModalProps {
     statsData?: any[];
 }
 
-const StatisticsModal: React.FC<StatisticsModalProps> = ({ onClose, leads, statsData = [] }) => {
+const StatisticsModal: React.FC<StatisticsModalProps> = ({ onClose, leads = [] }) => {
     // Calculate statistics
     const totalLeads = leads.length;
     const foundLeads = leads.filter(lead => !lead.applying || !lead.applying.applied).length;
@@ -189,55 +188,6 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ onClose, leads, stats
                         </div>
                     </div>
                 </div>
-
-                {/* Chart Section */}
-                {statsData.length > 0 && (
-                    <div style={{
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        borderRadius: '12px',
-                        padding: '1.5rem',
-                        marginBottom: '2rem',
-                        border: '1px solid rgba(255, 255, 255, 0.2)'
-                    }}>
-                        <h3 style={{
-                            fontSize: '1.25rem',
-                            fontWeight: '600',
-                            marginBottom: '1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                        }}>
-                            <TrendingUp style={{ width: '20px', height: '20px' }} />
-                            Lead Activity (Last 7 Days)
-                        </h3>
-                        <div style={{ height: '300px' }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={statsData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.2)" />
-                                    <XAxis dataKey="name" stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
-                                    <YAxis stroke="rgba(255, 255, 255, 0.8)" fontSize={12} />
-                                    <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                                            backdropFilter: 'blur(16px)',
-                                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                                            borderRadius: '8px',
-                                            fontSize: '12px',
-                                            color: '#fff'
-                                        }}
-                                    />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="views"
-                                        stroke="#9333ea"
-                                        strokeWidth={3}
-                                        dot={{ fill: '#9333ea', strokeWidth: 2, r: 4 }}
-                                    />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-                )}
 
                 {/* Performance Metrics */}
                 <div style={{
