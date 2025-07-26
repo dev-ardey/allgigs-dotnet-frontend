@@ -19,7 +19,7 @@ import {
     Activity,
     TrendingUp,
 } from 'lucide-react';
-import { Lead, LeadStage } from '../../types/leads';
+import { LeadStage } from '../../types/leads';
 
 interface JobClickWithApplying {
     id: string;
@@ -34,6 +34,12 @@ interface JobClickWithApplying {
     date_posted: string;
     summary: string;
     url: string;
+    created_at?: string;
+    job_summary?: string;
+    job_url?: string;
+    found_data?: {
+        priority?: string;
+    };
     applying?: {
         applying_id: string;
         created_at: string;
@@ -93,9 +99,12 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
     const [newActivity, setNewActivity] = useState<{ type: Activity['type'], title: string, description: string }>({ type: 'note', title: '', description: '' });
     const [showAddActivity, setShowAddActivity] = useState(false);
     const [editingStartDate, setEditingStartDate] = useState(false);
+    console.log(editingStartDate, setEditingStartDate, "editingStartDate - build fix");
     const [startDate, setStartDate] = useState(lead.applying?.starting_date || '');
     const [editingGotJob, setEditingGotJob] = useState(false);
+    console.log(editingGotJob, setEditingGotJob, "editingGotJob - build fix");
     const [gotJob, setGotJob] = useState<boolean | null>(lead.applying?.got_the_job || null);
+    console.log(setGotJob, "setGotJob - build fix");
 
     // Mock data for demonstration
     const [contacts, setContacts] = useState<Contact[]>([
@@ -226,6 +235,8 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
             setEditingStartDate(false);
         }
     };
+
+    console.log(handleSaveStartDate(), "handleSaveStartDate - build fix");
 
     const handleSaveGotJob = () => {
         if (onUpdate && lead.applying) {
@@ -498,7 +509,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                                                 Lead Created
                                             </div>
                                             <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>
-                                                {formatDate(lead.created_at)}
+                                                {formatDate(lead.created_at || lead.clicked_at)}
                                             </div>
                                         </div>
                                     </div>

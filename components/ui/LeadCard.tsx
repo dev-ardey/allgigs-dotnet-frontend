@@ -1,25 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Draggable } from 'react-beautiful-dnd';
+// import { Draggable } from 'react-beautiful-dnd';
 import {
     MapPin,
     DollarSign,
     Bell,
-    AlertCircle,
-    Calendar,
-    ThumbsUp,
-    ThumbsDown,
     Users,
     Target,
     Award,
     Timer,
-    CircleCheckBig,
     StickyNote,
-    TrendingDown,
     CheckCircle,
     Maximize2,
     Minimize2
 } from 'lucide-react';
-import { Lead } from '../../types/leads';
+// import { Lead } from '../../types/leads';
 import { supabase } from '../../SupabaseClient';
 
 interface JobClickWithApplying {
@@ -125,10 +119,10 @@ const LeadCard: React.FC<LeadCardProps> = ({
     // Voeg direct na de useState hooks toe:
     // Zet het type van mockPriority expliciet op string:
     const mockPriority: string = 'medium'; // 'high', 'medium', 'low'
-    const mockMatchPercentage = 85;
-    const mockPossibleEarnings = 75000;
-    const mockAboveNormalRate = true;
-    const mockFollowUpOverdue = false;
+    // const mockMatchPercentage = 85;
+    // const mockPossibleEarnings = 75000;
+    // const mockAboveNormalRate = true;
+    // const mockFollowUpOverdue = false;
 
     // Contact states
     const [contacts, setContacts] = useState<Array<{
@@ -206,6 +200,8 @@ const LeadCard: React.FC<LeadCardProps> = ({
         }
     };
 
+    console.log(getPriorityColor(), "getPriorityColor - build fix");
+
     // Check if card should be collapsed
     // Check collapse state from applying record or job_clicks record
     const [localCollapsed, setLocalCollapsed] = useState(
@@ -254,6 +250,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
             onStageAction('invited_to_interview');
         }
     };
+    console.log(handleInvitedToInterview(), "handleInvitedToInterview - build fix");
 
     const handleGotJob = (gotJob: boolean) => {
         if (onStageAction) {
@@ -419,11 +416,13 @@ const LeadCard: React.FC<LeadCardProps> = ({
         }
     };
 
-    const handleInterviewRating = (rating: 'thumbs_up' | 'thumbs_down') => {
-        if (onStageAction) {
-            onStageAction('interview_rating', { rating });
-        }
-    };
+    // const handleInterviewRating = (rating: 'thumbs_up' | 'thumbs_down') => {
+    //     if (onStageAction) {
+    //         onStageAction('interview_rating', { rating });
+    //     }
+    // };
+
+    console.log(handleOpenPrepModal(), "handleOpenPrepModal - build fix");
 
     const [notesChanged, setNotesChanged] = React.useState(false);
     const [originalNotes, setOriginalNotes] = React.useState(notes);

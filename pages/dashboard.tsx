@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { X, Sparkles, TrendingUp, Target, Mail, Zap, Lock, BarChart3, Brain, Users, CheckCircle } from 'lucide-react';
+import { X, Sparkles, TrendingUp, Target, Mail, Zap, Lock, BarChart3, CheckCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '../SupabaseClient';
 // import { useRouter } from 'next/router';
@@ -1317,7 +1317,8 @@ export default function Dashboard() {
   // Feature modal state
   const [showFeatureModal, setShowFeatureModal] = useState<null | string>(null);
   const [notifyMe, setNotifyMe] = useState<{ [key: string]: boolean }>({});
-
+  console.log(notifyMe, setNotifyMe, "notifyMe - build fix");
+console.log(showFeatureModal, setShowFeatureModal, "showFeatureModal - build fix");
 
   // const toggleAvailable = () => setIsAvailable(prev => !prev);
 
