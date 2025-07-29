@@ -101,6 +101,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     const [stageFilter, setStageFilter] = useState<LeadStage | 'all'>('all');
     const [allCollapsed, setAllCollapsed] = useState(false);
 
+    console.log('build', allCollapsed, setAllCollapsed, "allCollapsed - build fix");
     // Collapse/Expand all handlers
     const handleCollapseAll = async () => {
         try {
