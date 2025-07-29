@@ -679,13 +679,45 @@ export default function JobBoard() {
     return jobTime > threeHoursAgo;
   };
 
-  // const handleLogout = async () => {
-  //   const confirmed = window.confirm("Weet je zeker dat je wilt uitloggen?");
-  //   if (!confirmed) return;
+  // Log job click to Supabase
+  const logJobClick = async (job: Job) => {
+    if (!user || !user.id) {
+      console.error("[LogJobClick] User not available for logging job click. Aborting.");
+      return;
+    }
+    console.log("[LogJobClick] Logging for user:", user.id, "Job ID:", job.UNIQUE_ID, "Title:", job.Title);
+    try {
+      const { error } = await supabase.from("job_clicks").insert([
+        {
+          user_id: user.id,
+          job_id: job.UNIQUE_ID,
+          job_title: job.Title,
+          company: job.Company,
+          location: job.Location,
+          rate: job.rate,
+          date_posted: job.date,
+          summary: job.Summary,
+          url: job.URL,
+          // clicked_at should be handled by DB default
+        },
+      ]);
+      if (error) {
+        console.error("[LogJobClick] Error logging job click:", error);
+      } else {
+        console.log("[LogJobClick] Job click logged successfully for job:", job.UNIQUE_ID);
+        // Refresh recently clicked jobs if the section is visible
+        // if (showRecentlyClicked) {
+        //   console.log("[LogJobClick] Refreshing recently clicked jobs as section is visible.");
+        //   fetchRecentlyClickedJobs();
+        // } else {
+        //   console.log("[LogJobClick] Recently clicked jobs section not visible, not refreshing immediately. Will refresh when opened.");
+        // }
+      }
+    } catch (error) {
+      console.error("[LogJobClick] Exception when logging job click:", error);
+    }
+  };
 
-  //   await supabase.auth.signOut();
-  //   setUser(null);
-  // };
   const totalPages = Math.ceil(sortedJobs.length / PAGE_SIZE);
 
   const getPageNumbers = () => {
@@ -915,45 +947,6 @@ export default function JobBoard() {
   if (needsProfile) {
     return <CompleteProfileForm onComplete={() => window.location.reload()} />;
   }
-
-  // Log job click to Supabase
-  // const logJobClick = async (job: Job) => {
-  //   if (!user || !user.id) {
-  //     console.error("[LogJobClick] User not available for logging job click. Aborting.");
-  //     return;
-  //   }
-  //   console.log("[LogJobClick] Logging for user:", user.id, "Job ID:", job.UNIQUE_ID, "Title:", job.Title);
-  //   try {
-  //     const { error } = await supabase.from("job_clicks").insert([
-  //       {
-  //         user_id: user.id,
-  //         job_id: job.UNIQUE_ID,
-  //         job_title: job.Title,
-  //         company: job.Company,
-  //         location: job.Location,
-  //         rate: job.rate,
-  //         date_posted: job.date,
-  //         summary: job.Summary,
-  //         url: job.URL,
-  //         // clicked_at should be handled by DB default
-  //       },
-  //     ]);
-  //     if (error) {
-  //       console.error("[LogJobClick] Error logging job click:", error);
-  //     } else {
-  //       console.log("[LogJobClick] Job click logged successfully for job:", job.UNIQUE_ID);
-  //       // Refresh recently clicked jobs if the section is visible
-  //       if (showRecentlyClicked) {
-  //         console.log("[LogJobClick] Refreshing recently clicked jobs as section is visible.");
-  //         fetchRecentlyClickedJobs();
-  //       } else {
-  //         console.log("[LogJobClick] Recently clicked jobs section not visible, not refreshing immediately. Will refresh when opened.");
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error("[LogJobClick] Exception when logging job click:", error);
-  //   }
-  // };
 
   const menuButtonSharedStyle: React.CSSProperties = {
     background: "#0ccf83",
@@ -1341,7 +1334,7 @@ export default function JobBoard() {
                   <div
                     key={job.UNIQUE_ID}
                     onClick={() => {
-                      // logJobClick(job);
+                      logJobClick(job);
                       window.open(job.URL, '_blank', 'noopener,noreferrer');
                     }}
                     style={{
@@ -2049,7 +2042,7 @@ export default function JobBoard() {
                   {/* Main Job Card */}
                   <div
                     onClick={() => {
-                      // logJobClick(job);
+                      logJobClick(job);
                       window.open(job.URL, '_blank', 'noopener,noreferrer');
                     }}
                     style={{

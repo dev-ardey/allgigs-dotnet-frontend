@@ -15,7 +15,8 @@ import {
     Brain,
     Lock,
     Minimize2,
-    Maximize2
+    Maximize2,
+    RefreshCw
 } from 'lucide-react';
 import { LeadStage } from '../../types/leads';
 import { supabase } from '../../SupabaseClient';
@@ -83,7 +84,6 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     // Modal states
     const [showArchiveModal, setShowArchiveModal] = useState(false);
     const [showPrepModal, setShowPrepModal] = useState(false);
-    console.log(showPrepModal, setShowPrepModal, "showPrepModal - build fix");
     const [showStatisticsModal, setShowStatisticsModal] = useState(false);
 
     // Feature states
@@ -99,7 +99,6 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     const [searchTerm, setSearchTerm] = useState('');
     const [stageFilter, setStageFilter] = useState<LeadStage | 'all'>('all');
     const [allCollapsed, setAllCollapsed] = useState(false);
-    console.log(allCollapsed, setAllCollapsed, "allCollapsed - build fix");
 
     // Collapse/Expand all handlers
     const handleCollapseAll = async () => {
@@ -173,7 +172,6 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
     // Archive stats
     const [archivedCount, setArchivedCount] = useState(0);
-    console.log(archivedCount, setArchivedCount, "archivedCount - build fix");
 
     // ==========================================
     // STAGE CONFIGURATION (AANGEPAST VOOR NIEUWE DATA)
@@ -206,6 +204,34 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     // ORGANIZE LEADS INTO COLUMNS (NIEUWE LOGICA)
     // ==========================================
     const organizedColumns = useMemo(() => {
+
+        // Don't organize columns if still loading or no leads
+        if (loading || leads.length === 0) {
+            return [
+                {
+                    id: 'found' as LeadStage,
+                    title: 'Found',
+                    leads: [],
+                    color: stageConfig.found.color,
+                    icon: stageConfig.found.icon
+                },
+                {
+                    id: 'connect' as LeadStage,
+                    title: 'Connect',
+                    leads: [],
+                    color: stageConfig.connect.color,
+                    icon: stageConfig.connect.icon
+                },
+                {
+                    id: 'close' as LeadStage,
+                    title: 'Closed',
+                    leads: [],
+                    color: stageConfig.close.color,
+                    icon: stageConfig.close.icon
+                }
+            ];
+        }
+
         // Filter leads based on search term
         const filteredLeads = leads.filter(lead => {
             if (!searchTerm) return true;
@@ -263,13 +289,15 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 icon: stageConfig.close.icon
             }
         ];
-    }, [leads, searchTerm, stageFilter, stageConfig]);
+    }, [leads, searchTerm, stageFilter, stageConfig, loading]);
 
     // ==========================================
     // DATA FETCHING (NIEUW: job_clicks + applying)
     // ==========================================
     const fetchLeads = useCallback(async () => {
-        if (!user?.id) return;
+        if (!user?.id) {
+            return;
+        }
         setLoading(true);
         setError(null);
         try {
@@ -289,9 +317,9 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             if (applyingError) throw applyingError;
 
             // 3. Combineer per job_id/unique_id_job
-            // Map: unique_id_job (applying) <-> id (job_clicks) - niet job_id!
+            // Map: unique_id_job (applying) <-> job_id (job_clicks)
             const leadsData = clicks.map(job => {
-                const apply = applying.find(a => a.unique_id_job === job.id);
+                const apply = applying.find(a => a.unique_id_job === job.job_id);
                 const leadData = {
                     ...job,
                     applying: apply || null,
@@ -299,16 +327,9 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     collapsed_job_click_card: job.collapsed_job_click_card || false
                 };
 
-                // Debug log for collapse state
-                console.log('Loaded lead data:', {
-                    leadId: job.id,
-                    collapsed_job_click_card: job.collapsed_job_click_card,
-                    applyingCollapsed: apply?.collapsed_card,
-                    finalCollapsed: leadData.collapsed_job_click_card
-                });
-
                 return leadData;
             });
+
             setLeads(leadsData);
             setDatabaseAvailable(true);
         } catch (err: any) {
@@ -386,7 +407,6 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     throw new Error('Failed to update lead stage');
                 }
 
-                console.log(`✅ Moved "${lead.job_title}" to ${newStage} (saved to database)`);
             } catch (error) {
                 console.error('Error updating lead stage:', error);
                 // Revert local state on error
@@ -413,8 +433,6 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             await fetchLeads(); // Refresh to get latest data
         }
     };
-
-    console.log(handleLeadUpdate, "handleLeadUpdate - build fix");
 
     const handleArchiveClick = () => {
         setShowArchiveModal(true);
@@ -613,6 +631,23 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 color: '#fff'
             }}>
                 <div>Loading your pipeline...</div>
+            </div>
+        );
+    }
+
+    // ==========================================
+    // RENDER NO USER STATE
+    // ==========================================
+    if (!user) {
+        return (
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '400px',
+                color: '#fff'
+            }}>
+                <div>No user found. Please log in.</div>
             </div>
         );
     }
@@ -1063,6 +1098,31 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         <Maximize2 style={{ width: '16px', height: '16px' }} />
                         Expand All
                     </button>
+                    <button
+                        onClick={fetchLeads}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: 'rgba(59, 130, 246, 0.2)',
+                            border: '1px solid rgba(59, 130, 246, 0.4)',
+                            borderRadius: '8px',
+                            color: '#3b82f6',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
+                        }}
+                    >
+                        <RefreshCw style={{ width: '16px', height: '16px' }} />
+                        Refresh
+                    </button>
                 </div>
             </div>
 
@@ -1078,6 +1138,9 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     <p>
                         Click on some jobs in the search page to see them here as leads
                     </p>
+                    <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+                        Debug: User ID: {user?.id}, Total leads: {leads.length}
+                    </div>
                 </div>
             )}
 
