@@ -84,6 +84,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     // Modal states
     const [showArchiveModal, setShowArchiveModal] = useState(false);
     const [showPrepModal, setShowPrepModal] = useState(false);
+    console.log(showPrepModal, setShowPrepModal, "showPrepModal - build fix");
     const [showStatisticsModal, setShowStatisticsModal] = useState(false);
 
     // Feature states
@@ -172,6 +173,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
     // Archive stats
     const [archivedCount, setArchivedCount] = useState(0);
+    console.log(archivedCount, setArchivedCount, "archivedCount - build fix");
 
     // ==========================================
     // STAGE CONFIGURATION (AANGEPAST VOOR NIEUWE DATA)
@@ -433,6 +435,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             await fetchLeads(); // Refresh to get latest data
         }
     };
+    console.log(handleLeadUpdate, "handleLeadUpdate - build fix");
 
     const handleArchiveClick = () => {
         setShowArchiveModal(true);
