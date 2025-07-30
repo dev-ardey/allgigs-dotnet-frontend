@@ -10,41 +10,39 @@ interface StatisticsModalProps {
 const StatisticsModal: React.FC<StatisticsModalProps> = ({ onClose, leads = [] }) => {
     // Calculate statistics
     const totalLeads = leads.length;
-    const foundLeads = leads.filter(lead => !lead.applying || !lead.applying.applied).length;
+    const foundLeads = leads.filter(lead => !lead.applied).length;
     const connectLeads = leads.filter(lead =>
-        lead.applying &&
-        lead.applying.applied &&
-        lead.applying.got_the_job !== true &&
-        !lead.applying.recruiter_interview &&
-        !lead.applying.technical_interview &&
-        !lead.applying.hiringmanager_interview
+        lead.applied &&
+        lead.got_the_job !== true &&
+        !lead.recruiter_interview &&
+        !lead.technical_interview &&
+        !lead.hiringmanager_interview
     ).length;
     const closeLeads = leads.filter(lead =>
-        lead.applying &&
-        lead.applying.applied &&
-        (lead.applying.got_the_job === true ||
-            lead.applying.recruiter_interview ||
-            lead.applying.technical_interview ||
-            lead.applying.hiringmanager_interview)
+        lead.applied &&
+        (lead.got_the_job === true ||
+            lead.recruiter_interview ||
+            lead.technical_interview ||
+            lead.hiringmanager_interview)
     ).length;
 
-    const appliedLeads = leads.filter(lead => lead.applying?.applied).length;
-    const gotJobLeads = leads.filter(lead => lead.applying?.got_the_job === true).length;
+    const appliedLeads = leads.filter(lead => lead.applied).length;
+    const gotJobLeads = leads.filter(lead => lead.got_the_job === true).length;
     const successRate = appliedLeads > 0 ? ((gotJobLeads / appliedLeads) * 100).toFixed(1) : '0';
 
     const totalPotentialValue = leads
-        .filter(lead => lead.applying?.value_rate && lead.applying?.value_weeks)
+        .filter(lead => lead.value_rate && lead.value_weeks)
         .reduce((sum, lead) => {
-            const rate = lead.applying?.value_rate || 0;
-            const weeks = lead.applying?.value_weeks || 0;
-            const hoursPerWeek = lead.applying?.value_hour_per_week ? parseInt(lead.applying.value_hour_per_week) : 40;
+            const rate = lead.value_rate || 0;
+            const weeks = lead.value_weeks || 0;
+            const hoursPerWeek = lead.value_hour_per_week ? parseInt(lead.value_hour_per_week) : 40;
             return sum + (rate * hoursPerWeek * weeks);
         }, 0);
 
     const averageRate = leads
-        .filter(lead => lead.applying?.value_rate)
-        .reduce((sum, lead) => sum + (lead.applying?.value_rate || 0), 0) /
-        leads.filter(lead => lead.applying?.value_rate).length || 0;
+        .filter(lead => lead.value_rate)
+        .reduce((sum, lead) => sum + (lead.value_rate || 0), 0) /
+        leads.filter(lead => lead.value_rate).length || 0;
 
     return (
         <div style={{

@@ -22,43 +22,41 @@ import {
 import { LeadStage } from '../../types/leads';
 
 interface JobClickWithApplying {
-    id: string;
+    applying_id: string;
     user_id: string;
-    job_id: string;
-    job_title: string;
-    clicked_at: string;
-    search_pills: string[];
-    company: string;
-    location: string;
-    rate: string;
-    date_posted: string;
-    summary: string;
-    url: string;
-    created_at?: string;
-    job_summary?: string;
-    job_url?: string;
-    found_data?: {
-        priority?: string;
-    };
-    applying?: {
-        applying_id: string;
-        created_at: string;
-        applied: boolean;
-        receive_confirmation: boolean;
-        recruiter_interview: string | null;
-        interview_rating_recruiter: boolean | null;
-        hiringmanager_interview: string | null;
-        interview_rating_hiringmanager: boolean | null;
-        technical_interview: string | null;
-        interview_rating_technical: boolean | null;
-        got_the_job: boolean | null;
-        starting_date: string | null;
-        notes: string | null;
-        value_rate: number | null;
-        value_hour_per_week: string | null;
-        value_weeks: number | null;
-        unique_id_job: string;
-    } | null;
+    unique_id_job: string;
+    applied: boolean;
+    created_at: string;
+    // Job details (now stored in applying table with _clicked suffix)
+    job_title_clicked: string;
+    company_clicked: string;
+    location_clicked: string;
+    rate_clicked: string;
+    date_posted_clicked: string;
+    summary_clicked: string;
+    url_clicked: string;
+    // Interview fields
+    recruiter_interview: string | null;
+    interview_rating_recruiter: boolean | null;
+    hiringmanager_interview: string | null;
+    interview_rating_hiringmanager: boolean | null;
+    technical_interview: string | null;
+    interview_rating_technical: boolean | null;
+    got_the_job: boolean | null;
+    starting_date: string | null;
+    notes: string | null;
+    value_rate: number | null;
+    value_hour_per_week: string | null;
+    value_weeks: number | null;
+    priority: string;
+    match_percentage: number;
+    possible_earnings: number;
+    above_normal_rate: boolean;
+    follow_up_overdue: boolean;
+    collapsed_card?: boolean;
+    // Additional fields
+    receive_confirmation?: boolean;
+    collapsed_job_click_card?: boolean;
 }
 
 interface LeadDetailModalProps {
@@ -93,18 +91,18 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
 }) => {
     const [activeTab, setActiveTab] = useState<'overview' | 'notes' | 'contacts' | 'activities'>('overview');
     const [editingNotes, setEditingNotes] = useState(false);
-    const [notes, setNotes] = useState(lead.applying?.notes || '');
+    const [notes, setNotes] = useState(lead.notes || '');
     const [newContact, setNewContact] = useState({ name: '', role: '', email: '', phone: '', notes: '' });
     const [showAddContact, setShowAddContact] = useState(false);
     const [newActivity, setNewActivity] = useState<{ type: Activity['type'], title: string, description: string }>({ type: 'note', title: '', description: '' });
     const [showAddActivity, setShowAddActivity] = useState(false);
     const [editingStartDate, setEditingStartDate] = useState(false);
     console.log(editingStartDate, setEditingStartDate, "editingStartDate - build fix");
-    const [startDate, setStartDate] = useState(lead.applying?.starting_date || '');
+    const [startDate, setStartDate] = useState(lead.starting_date || '');
     console.log(startDate, setStartDate, "startDate - build fix");
     const [editingGotJob, setEditingGotJob] = useState(false);
     console.log(editingGotJob, setEditingGotJob, "editingGotJob - build fix");
-    const [gotJob, setGotJob] = useState<boolean | null>(lead.applying?.got_the_job || null);
+    const [gotJob, setGotJob] = useState<boolean | null>(lead.got_the_job || null);
     console.log(setGotJob, "setGotJob - build fix");
 
     // Mock data for demonstration
@@ -184,13 +182,10 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
     ]);
 
     const handleSaveNotes = () => {
-        if (onUpdate && lead.applying) {
+        if (onUpdate && lead) {
             const updatedLead = {
                 ...lead,
-                applying: {
-                    ...lead.applying,
-                    notes
-                }
+                notes
             };
             onUpdate(updatedLead);
             setEditingNotes(false);
@@ -215,7 +210,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                 id: Date.now().toString(),
                 ...newActivity,
                 date: new Date().toISOString(),
-                stage: lead.applying?.got_the_job ? 'close' : 'connect' // Automatically assign current lead stage
+                stage: lead.got_the_job ? 'close' : 'connect' // Automatically assign current lead stage
             };
             setActivities([activity, ...activities]);
             setNewActivity({ type: 'note', title: '', description: '' });
@@ -224,13 +219,10 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
     };
 
     const handleSaveStartDate = () => {
-        if (onUpdate && lead.applying) {
+        if (onUpdate && lead) {
             const updatedLead = {
                 ...lead,
-                applying: {
-                    ...lead.applying,
-                    starting_date: startDate
-                }
+                starting_date: startDate
             };
             onUpdate(updatedLead);
             setEditingStartDate(false);
@@ -240,13 +232,10 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
     console.log(handleSaveStartDate(), "handleSaveStartDate - build fix");
 
     const handleSaveGotJob = () => {
-        if (onUpdate && lead.applying) {
+        if (onUpdate && lead) {
             const updatedLead = {
                 ...lead,
-                applying: {
-                    ...lead.applying,
-                    got_the_job: gotJob
-                }
+                got_the_job: gotJob
             };
             onUpdate(updatedLead);
             setEditingGotJob(false);
@@ -346,30 +335,30 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                         }}>
                             <div style={{
                                 padding: '0.25rem 0.75rem',
-                                background: getStageColor(lead.applying?.got_the_job ? 'close' : 'connect'),
+                                background: lead.got_the_job ? '#10b981' : '#f59e0b',
                                 borderRadius: '12px',
                                 fontSize: '0.75rem',
                                 fontWeight: '600',
                                 textTransform: 'uppercase'
                             }}>
-                                {lead.applying?.got_the_job ? 'Closed' : 'Open'}
+                                {lead.got_the_job ? 'Closed' : 'Open'}
                             </div>
-                            {lead.found_data?.priority && (
+                            {lead.priority && (
                                 <div style={{
                                     padding: '0.25rem 0.75rem',
-                                    background: lead.found_data.priority === 'high' ? '#ef4444' :
-                                        lead.found_data.priority === 'medium' ? '#f59e0b' : '#10b981',
+                                    background: lead.priority === 'high' ? '#ef4444' :
+                                        lead.priority === 'medium' ? '#f59e0b' : '#10b981',
                                     borderRadius: '12px',
                                     fontSize: '0.75rem',
                                     fontWeight: '600',
                                     textTransform: 'uppercase'
                                 }}>
-                                    {lead.found_data.priority} priority
+                                    {lead.priority} priority
                                 </div>
                             )}
                         </div>
                         <h2 style={{ margin: '0 0 0.5rem 0', fontSize: '1.5rem', fontWeight: '700' }}>
-                            {lead.job_title}
+                            {lead.job_title_clicked}
                         </h2>
                         <div style={{
                             display: 'flex',
@@ -380,18 +369,18 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                 <Building style={{ width: '16px', height: '16px' }} />
-                                {lead.company}
+                                {lead.company_clicked}
                             </div>
-                            {lead.location && (
+                            {lead.location_clicked && (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                     <MapPin style={{ width: '16px', height: '16px' }} />
-                                    {lead.location}
+                                    {lead.location_clicked}
                                 </div>
                             )}
-                            {lead.rate && (
+                            {lead.rate_clicked && (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                     <DollarSign style={{ width: '16px', height: '16px' }} />
-                                    {lead.rate}
+                                    {lead.rate_clicked}
                                 </div>
                             )}
                         </div>
@@ -463,11 +452,11 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                                     color: 'rgba(255, 255, 255, 0.8)',
                                     lineHeight: '1.6'
                                 }}>
-                                    {lead.job_summary}
+                                    {lead.summary_clicked}
                                 </p>
-                                {lead.job_url && (
+                                {lead.url_clicked && (
                                     <a
-                                        href={lead.job_url}
+                                        href={lead.url_clicked}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         style={{
@@ -511,7 +500,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                                                 Lead Created
                                             </div>
                                             <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>
-                                                {formatDate(lead.created_at || lead.clicked_at)}
+                                                {formatDate(lead.created_at)}
                                             </div>
                                         </div>
                                     </div>
@@ -527,14 +516,14 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                                             width: '8px',
                                             height: '8px',
                                             borderRadius: '50%',
-                                            background: lead.applying ? '#f59e0b' : '#3b82f6'
+                                            background: lead.applied ? '#f59e0b' : '#3b82f6'
                                         }} />
                                         <div style={{ flex: 1 }}>
                                             <div style={{ fontSize: '0.875rem', fontWeight: '500' }}>
-                                                Moved to {lead.applying ? 'Applied' : 'Found'}
+                                                Moved to {lead.applied ? 'Applied' : 'Found'}
                                             </div>
                                             <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>
-                                                {formatDate(lead.applying?.created_at || lead.clicked_at)}
+                                                {formatDate(lead.created_at)}
                                             </div>
                                         </div>
                                     </div>
@@ -558,7 +547,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                                         textAlign: 'center'
                                     }}>
                                         <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#3b82f6' }}>
-                                            {Math.floor((Date.now() - new Date(lead.clicked_at).getTime()) / (1000 * 60 * 60 * 24))}
+                                            {Math.floor((Date.now() - new Date(lead.created_at).getTime()) / (1000 * 60 * 60 * 24))}
                                         </div>
                                         <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>
                                             Days Active
@@ -596,29 +585,29 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                             {/* Job Info */}
                             <div style={{ marginBottom: '2rem' }}>
                                 <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: 8 }}>Job Info</h3>
-                                <div><strong>Title:</strong> {lead.job_title}</div>
-                                <div><strong>Company:</strong> {lead.company}</div>
-                                {lead.location && <div><strong>Location:</strong> {lead.location}</div>}
-                                {lead.rate && <div><strong>Rate:</strong> {lead.rate}</div>}
-                                {lead.job_url && <div><a href={lead.job_url} target="_blank" rel="noopener noreferrer">View Job Posting</a></div>}
+                                <div><strong>Title:</strong> {lead.job_title_clicked}</div>
+                                <div><strong>Company:</strong> {lead.company_clicked}</div>
+                                {lead.location_clicked && <div><strong>Location:</strong> {lead.location_clicked}</div>}
+                                {lead.rate_clicked && <div><strong>Rate:</strong> {lead.rate_clicked}</div>}
+                                {lead.url_clicked && <div><a href={lead.url_clicked} target="_blank" rel="noopener noreferrer">View Job Posting</a></div>}
                             </div>
 
-                            {lead.applying && (
+                            {lead.applied && (
                                 <div style={{ marginBottom: '2rem' }}>
                                     <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: 8 }}>Application Info</h3>
-                                    <div><strong>Applied:</strong> {lead.applying.applied ? 'Yes' : 'No'}</div>
-                                    <div><strong>Notes:</strong> <input value={lead.applying.notes || ''} onChange={() => {/* update logic */ }} /></div>
-                                    <div><strong>Start Date:</strong> <input type="date" value={lead.applying.starting_date ? lead.applying.starting_date.split('T')[0] : ''} onChange={() => {/* update logic */ }} /></div>
-                                    <div><strong>Got the job:</strong> <select value={lead.applying.got_the_job === true ? 'yes' : lead.applying.got_the_job === false ? 'no' : ''} onChange={() => {/* update logic */ }}><option value="">-</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                                    <div><strong>Applied:</strong> {lead.applied ? 'Yes' : 'No'}</div>
+                                    <div><strong>Notes:</strong> <input value={lead.notes || ''} onChange={() => {/* update logic */ }} /></div>
+                                    <div><strong>Start Date:</strong> <input type="date" value={lead.starting_date ? lead.starting_date.split('T')[0] : ''} onChange={() => {/* update logic */ }} /></div>
+                                    <div><strong>Got the job:</strong> <select value={lead.got_the_job === true ? 'yes' : lead.got_the_job === false ? 'no' : ''} onChange={() => {/* update logic */ }}><option value="">-</option><option value="yes">Yes</option><option value="no">No</option></select></div>
                                 </div>
                             )}
 
-                            {lead.applying && (
+                            {lead.applied && (
                                 <div style={{ marginBottom: '2rem' }}>
                                     <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: 8 }}>Interviews</h3>
-                                    {lead.applying.recruiter_interview && <div><strong>Recruiter interview:</strong> {lead.applying.recruiter_interview} ({lead.applying.interview_rating_recruiter === true ? 'Good' : lead.applying.interview_rating_recruiter === false ? 'Bad' : ''})</div>}
-                                    {lead.applying.technical_interview && <div><strong>Technical interview:</strong> {lead.applying.technical_interview} ({lead.applying.interview_rating_technical === true ? 'Good' : lead.applying.interview_rating_technical === false ? 'Bad' : ''})</div>}
-                                    {lead.applying.hiringmanager_interview && <div><strong>Hiring Manager interview:</strong> {lead.applying.hiringmanager_interview} ({lead.applying.interview_rating_hiringmanager === true ? 'Good' : lead.applying.interview_rating_hiringmanager === false ? 'Bad' : ''})</div>}
+                                    {lead.recruiter_interview && <div><strong>Recruiter interview:</strong> {lead.recruiter_interview} ({lead.interview_rating_recruiter === true ? 'Good' : lead.interview_rating_recruiter === false ? 'Bad' : ''})</div>}
+                                    {lead.technical_interview && <div><strong>Technical interview:</strong> {lead.technical_interview} ({lead.interview_rating_technical === true ? 'Good' : lead.interview_rating_technical === false ? 'Bad' : ''})</div>}
+                                    {lead.hiringmanager_interview && <div><strong>Hiring Manager interview:</strong> {lead.hiringmanager_interview} ({lead.interview_rating_hiringmanager === true ? 'Good' : lead.interview_rating_hiringmanager === false ? 'Bad' : ''})</div>}
                                 </div>
                             )}
                         </div>
@@ -701,7 +690,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                                         <button
                                             onClick={() => {
                                                 setEditingNotes(false);
-                                                setNotes(lead.applying?.notes || '');
+                                                setNotes(lead.notes || '');
                                             }}
                                             style={{
                                                 padding: '0.5rem 1rem',

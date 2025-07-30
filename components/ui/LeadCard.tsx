@@ -17,44 +17,41 @@ import {
 import { supabase } from '../../SupabaseClient';
 
 interface JobClickWithApplying {
-    id: string;
+    applying_id: string;
     user_id: string;
-    job_id: string;
-    job_title: string;
-    clicked_at: string;
-    search_pills: string[];
-    company: string;
-    location: string;
-    rate: string;
-    date_posted: string;
-    summary: string;
-    url: string;
+    unique_id_job: string;
+    applied: boolean;
+    created_at: string;
+    // Job details (now stored in applying table with _clicked suffix)
+    job_title_clicked: string;
+    company_clicked: string;
+    location_clicked: string;
+    rate_clicked: string;
+    date_posted_clicked: string;
+    summary_clicked: string;
+    url_clicked: string;
+    // Interview fields
+    recruiter_interview: string | null;
+    interview_rating_recruiter: boolean | null;
+    hiringmanager_interview: string | null;
+    interview_rating_hiringmanager: boolean | null;
+    technical_interview: string | null;
+    interview_rating_technical: boolean | null;
+    got_the_job: boolean | null;
+    starting_date: string | null;
+    notes: string | null;
+    value_rate: number | null;
+    value_hour_per_week: string | null;
+    value_weeks: number | null;
+    priority: string;
+    match_percentage: number;
+    possible_earnings: number;
+    above_normal_rate: boolean;
+    follow_up_overdue: boolean;
+    collapsed_card?: boolean;
+    // Additional fields
+    receive_confirmation?: boolean;
     collapsed_job_click_card?: boolean;
-    applying?: {
-        applying_id: string;
-        created_at: string;
-        applied: boolean;
-        receive_confirmation: boolean;
-        recruiter_interview: string | null;
-        interview_rating_recruiter: boolean | null;
-        hiringmanager_interview: string | null;
-        interview_rating_hiringmanager: boolean | null;
-        technical_interview: string | null;
-        interview_rating_technical: boolean | null;
-        got_the_job: boolean | null;
-        starting_date: string | null;
-        notes: string | null;
-        value_rate: number | null;
-        value_hour_per_week: string | null;
-        value_weeks: number | null;
-        unique_id_job: string;
-        priority: string;
-        match_percentage: number;
-        possible_earnings: number;
-        above_normal_rate: boolean;
-        follow_up_overdue: boolean;
-        collapsed_card?: boolean;
-    } | null;
 }
 
 interface LeadCardProps {
@@ -75,13 +72,13 @@ const LeadCard: React.FC<LeadCardProps> = ({
 }) => {
     const [timeLeft, setTimeLeft] = useState<string>('');
     const [isOverdue, setIsOverdue] = useState(false);
-    const [notes, setNotes] = useState(lead.applying?.notes || '');
+    const [notes, setNotes] = useState(lead.notes || '');
 
     // Calculate follow-up timer
     useEffect(() => {
-        if (lead.applying && lead.applying.applied && lead.applying.created_at) {
-            const startDate = new Date(lead.applying.created_at);
-            const followUpDays = lead.applying.receive_confirmation ? 3 : 7; // Default to 3 days if no confirmation
+        if (lead.applied && lead.created_at) {
+            const startDate = new Date(lead.created_at);
+            const followUpDays = lead.receive_confirmation ? 3 : 7; // Default to 3 days if no confirmation
             const targetDate = new Date(startDate.getTime() + followUpDays * 24 * 60 * 60 * 1000);
 
             const updateTimer = () => {
@@ -114,7 +111,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
         }
 
         return undefined;
-    }, [lead.applying]);
+    }, [lead.applied, lead.created_at, lead.receive_confirmation]);
 
     // Voeg direct na de useState hooks toe:
     // Zet het type van mockPriority expliciet op string:
@@ -157,31 +154,31 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     // Calculate progress percentage
     const calculateProgress = () => {
-        if (!lead.applying) return 0;
+        if (!lead.applied) return 0;
 
         let progress = 0;
 
         // Applied: +30%
-        if (lead.applying.applied) progress += 30;
+        if (lead.applied) progress += 30;
 
         // Notes: +10%
-        if (lead.applying.notes && lead.applying.notes.trim()) progress += 10;
+        if (lead.notes && lead.notes.trim()) progress += 10;
 
         // Follow-up sent: +20% (assuming receive_confirmation means follow-up was sent)
-        if (lead.applying.receive_confirmation) progress += 20;
+        if (lead.receive_confirmation) progress += 20;
 
         // Contacts added: +5% (if contacts array has items)
         if (contacts.length > 0) progress += 5;
 
         // Interviews: +20%
-        if (lead.applying.recruiter_interview ||
-            lead.applying.technical_interview ||
-            lead.applying.hiringmanager_interview) {
+        if (lead.recruiter_interview ||
+            lead.technical_interview ||
+            lead.hiringmanager_interview) {
             progress += 20;
         }
 
         // Got the job: fill to 100%
-        if (lead.applying.got_the_job) {
+        if (lead.got_the_job) {
             progress = 100;
         }
 
@@ -205,29 +202,29 @@ const LeadCard: React.FC<LeadCardProps> = ({
     // Check if card should be collapsed
     // Check collapse state from applying record or job_clicks record
     const [localCollapsed, setLocalCollapsed] = useState(
-        lead.collapsed_job_click_card !== undefined ? lead.collapsed_job_click_card : (lead.applying?.collapsed_card || false)
+        lead.collapsed_card !== undefined ? lead.collapsed_card : false
     );
 
     // Update local state when props change
     useEffect(() => {
         // Prioritize job_clicks.collapsed_job_click_card since it's always updated
-        const newCollapsed = lead.collapsed_job_click_card !== undefined ? lead.collapsed_job_click_card : (lead.applying?.collapsed_card || false);
+        const newCollapsed = lead.collapsed_card !== undefined ? lead.collapsed_card : false;
         console.log('LeadCard useEffect - updating local state:', {
-            leadId: lead.id,
-            applyingCollapsed: lead.applying?.collapsed_card,
+            leadId: lead.applying_id,
+            applyingCollapsed: lead.collapsed_card,
             jobClicksCollapsed: lead.collapsed_job_click_card,
             newCollapsed,
             currentLocalCollapsed: localCollapsed
         });
         setLocalCollapsed(newCollapsed);
-    }, [lead.applying?.collapsed_card, lead.collapsed_job_click_card]);
+    }, [lead.collapsed_card]);
 
     const isCollapsed = localCollapsed;
 
     // Debug log for collapse state
     console.log('LeadCard collapse state:', {
-        leadId: lead.id,
-        applyingCollapsed: lead.applying?.collapsed_card,
+        leadId: lead.applying_id,
+        applyingCollapsed: lead.collapsed_card,
         jobClicksCollapsed: lead.collapsed_job_click_card,
         finalCollapsed: isCollapsed
     });
@@ -260,7 +257,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     // Contact handlers
     const handleSaveContact = async () => {
-        if (!newContact.name.trim() || !lead.applying?.applying_id) return;
+        if (!newContact.name.trim() || !lead.applying_id) return;
 
         try {
             if (editingContact) {
@@ -287,7 +284,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 const { data, error } = await supabase
                     .from('applying_contact_details')
                     .insert([{
-                        applying_id: lead.applying.applying_id,
+                        applying_id: lead.applying_id,
                         name: newContact.name,
                         phone: newContact.phone || null,
                         email: newContact.email || null
@@ -333,32 +330,32 @@ const LeadCard: React.FC<LeadCardProps> = ({
     // Collapse/Expand handler
     const handleToggleCollapse = async (collapsed: boolean) => {
         console.log('handleToggleCollapse called:', {
-            leadId: lead.id,
+            leadId: lead.applying_id,
             collapsed,
-            hasApplying: !!lead.applying?.applying_id,
+            hasApplying: !!lead.applying_id,
             currentCollapsed: isCollapsed
         });
 
         try {
             // Always update both tables to ensure consistency
-            if (lead.applying?.applying_id) {
+            if (lead.applying_id) {
                 // Update applying table
-                console.log('Updating applying table for lead:', lead.id);
+                console.log('Updating applying table for lead:', lead.applying_id);
                 const { error: applyingError } = await supabase
                     .from('applying')
                     .update({ collapsed_card: collapsed })
-                    .eq('applying_id', lead.applying.applying_id);
+                    .eq('applying_id', lead.applying_id);
 
                 if (applyingError) throw applyingError;
                 console.log('Successfully updated applying table');
             }
 
             // Always update job_clicks table
-            console.log('Updating job_clicks table for lead:', lead.id);
+            console.log('Updating job_clicks table for lead:', lead.applying_id);
             const { error: jobClicksError } = await supabase
                 .from('job_clicks')
                 .update({ collapsed_job_click_card: collapsed })
-                .eq('id', lead.id)
+                .eq('id', lead.applying_id)
                 .eq('user_id', lead.user_id);
 
             if (jobClicksError) throw jobClicksError;
@@ -380,13 +377,13 @@ const LeadCard: React.FC<LeadCardProps> = ({
     // Load contacts on component mount
     useEffect(() => {
         const loadContacts = async () => {
-            if (!lead.applying?.applying_id) return;
+            if (!lead.applying_id) return;
 
             try {
                 const { data, error } = await supabase
                     .from('applying_contact_details')
                     .select('*')
-                    .eq('applying_id', lead.applying.applying_id);
+                    .eq('applying_id', lead.applying_id);
 
                 if (error) throw error;
 
@@ -397,7 +394,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
         };
 
         loadContacts();
-    }, [lead.applying?.applying_id]);
+    }, [lead.applying_id]);
 
     // Update canRateInterview when interview type and date change
     useEffect(() => {
@@ -426,7 +423,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     const [notesChanged, setNotesChanged] = React.useState(false);
     const [originalNotes, setOriginalNotes] = React.useState(notes);
-    const [startingDate, setStartingDate] = React.useState(lead.applying?.starting_date || '');
+    const [startingDate, setStartingDate] = React.useState(lead.starting_date || '');
 
     const handleNotesChange = (newNotes: string) => {
         setNotes(newNotes);
@@ -434,9 +431,9 @@ const LeadCard: React.FC<LeadCardProps> = ({
     };
 
     const handleNotesSave = () => {
-        if (onStageAction && lead.applying?.applying_id) {
+        if (onStageAction && lead.applying_id) {
             onStageAction('update_notes', {
-                applyingId: lead.applying.applying_id,
+                applyingId: lead.applying_id,
                 notes
             });
             setNotesChanged(false);
@@ -456,13 +453,13 @@ const LeadCard: React.FC<LeadCardProps> = ({
     ];
 
     const renderInterviewFlow = () => {
-        if (!lead.applying || !lead.applying.applied) return null;
+        if (!lead.applied) return null;
 
         // Verzamel welke interviews al zijn ingevuld
         const doneTypes = INTERVIEW_TYPES.filter(t => {
-            if (t.key === 'recruiter') return lead.applying?.recruiter_interview && lead.applying?.interview_rating_recruiter !== null;
-            if (t.key === 'technical') return lead.applying?.technical_interview && lead.applying?.interview_rating_technical !== null;
-            if (t.key === 'hiringmanager') return lead.applying?.hiringmanager_interview && lead.applying?.interview_rating_hiringmanager !== null;
+            if (t.key === 'recruiter') return lead.interview_rating_recruiter !== null;
+            if (t.key === 'technical') return lead.interview_rating_technical !== null;
+            if (t.key === 'hiringmanager') return lead.interview_rating_hiringmanager !== null;
             return false;
         }).map(t => t.key);
 
@@ -474,10 +471,10 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
         // Sla interview data en rating op na klikken Good/Bad
         const handleRating = (rating: boolean) => {
-            if (onStageAction && lead.applying?.applying_id && selectedInterviewType && interviewDate) {
+            if (onStageAction && lead.applying_id && selectedInterviewType && interviewDate) {
                 // Eerst interview data opslaan
                 onStageAction('interview_date', {
-                    applyingId: lead.applying.applying_id,
+                    applyingId: lead.applying_id,
                     interviewData: {
                         type: selectedInterviewType as 'recruiter' | 'technical' | 'hiringmanager',
                         date: interviewDate
@@ -486,7 +483,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
                 // Dan rating opslaan
                 onStageAction('interview_rating', {
-                    applyingId: lead.applying.applying_id,
+                    applyingId: lead.applying_id,
                     interviewData: {
                         type: selectedInterviewType as 'recruiter' | 'technical' | 'hiringmanager',
                         date: interviewDate,
@@ -509,16 +506,16 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 {INTERVIEW_TYPES.map(t => {
                     let d = null, r = null;
                     if (t.key === 'recruiter') {
-                        d = lead.applying?.recruiter_interview;
-                        r = lead.applying?.interview_rating_recruiter;
+                        d = lead.recruiter_interview;
+                        r = lead.interview_rating_recruiter;
                     }
                     if (t.key === 'technical') {
-                        d = lead.applying?.technical_interview;
-                        r = lead.applying?.interview_rating_technical;
+                        d = lead.technical_interview;
+                        r = lead.interview_rating_technical;
                     }
                     if (t.key === 'hiringmanager') {
-                        d = lead.applying?.hiringmanager_interview;
-                        r = lead.applying?.interview_rating_hiringmanager;
+                        d = lead.hiringmanager_interview;
+                        r = lead.interview_rating_hiringmanager;
                     }
                     if (!d) return null;
                     return (
@@ -598,16 +595,16 @@ const LeadCard: React.FC<LeadCardProps> = ({
     // Render stage-specific content
     const renderStageContent = () => {
         // Found stage: Toon altijd de 'Applied?' knoppen als er geen applying record is of applied = false
-        if (!lead.applying || !lead.applying.applied) {
+        if (!lead.applied) {
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {/* URL */}
-                    {lead.url && (
+                    {lead.url_clicked && (
                         <div style={{ marginBottom: '12px' }}>
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    window.open(lead.url, '_blank', 'noopener,noreferrer');
+                                    window.open(lead.url_clicked, '_blank', 'noopener,noreferrer');
                                 }}
                                 style={{
                                     padding: '8px 16px',
@@ -643,12 +640,12 @@ const LeadCard: React.FC<LeadCardProps> = ({
         }
 
         // Check if job has interviews (for Close stage)
-        const hasInterviews = lead.applying?.recruiter_interview ||
-            lead.applying?.technical_interview ||
-            lead.applying?.hiringmanager_interview;
+        const hasInterviews = lead.recruiter_interview ||
+            lead.technical_interview ||
+            lead.hiringmanager_interview;
 
         // Connect stage: applied but no interviews yet
-        if (lead.applying && lead.applying.applied && !hasInterviews) {
+        if (lead.applied && !hasInterviews) {
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {/* Interview prep */}
@@ -1034,7 +1031,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
         }
 
         // Close stage: has interviews
-        if (lead.applying && lead.applying.applied && hasInterviews) {
+        if (lead.applied && hasInterviews) {
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {/* Interview flow */}
@@ -1078,7 +1075,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 NO
                             </button>
                         </div>
-                        {lead.applying?.got_the_job && (
+                        {lead.got_the_job && (
                             <div style={{ marginTop: 8 }}>
                                 <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>Starting date (optional):</div>
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -1159,7 +1156,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                             marginBottom: '8px',
                             lineHeight: '1.2'
                         }}>
-                            {lead.job_title}
+                            {lead.job_title_clicked}
                         </div>
 
                         {/* Progress bar */}
@@ -1253,7 +1250,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         marginBottom: '4px',
                         lineHeight: '1.3'
                     }}>
-                        {lead.job_title}
+                        {lead.job_title_clicked}
                     </h3>
                 </div>
 
@@ -1310,17 +1307,17 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 color: 'rgba(255, 255, 255, 0.7)',
                 flexWrap: 'wrap'
             }}>
-                <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontWeight: '500' }}>{lead.company}</span>
-                {lead.location && (
+                <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontWeight: '500' }}>{lead.company_clicked}</span>
+                {lead.location_clicked && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <MapPin style={{ width: '12px', height: '12px' }} />
-                        <span>{lead.location}</span>
+                        <span>{lead.location_clicked}</span>
                     </div>
                 )}
-                {lead.rate && (
+                {lead.rate_clicked && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <DollarSign style={{ width: '12px', height: '12px' }} />
-                        <span>{lead.rate}</span>
+                        <span>{lead.rate_clicked}</span>
                     </div>
                 )}
             </div>

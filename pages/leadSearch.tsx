@@ -687,31 +687,27 @@ export default function JobBoard() {
     }
     console.log("[LogJobClick] Logging for user:", user.id, "Job ID:", job.UNIQUE_ID, "Title:", job.Title);
     try {
-      const { error } = await supabase.from("job_clicks").insert([
+      const { error } = await supabase.from("applying").insert([
         {
+          applying_id: crypto.randomUUID(),
           user_id: user.id,
-          job_id: job.UNIQUE_ID,
-          job_title: job.Title,
-          company: job.Company,
-          location: job.Location,
-          rate: job.rate,
-          date_posted: job.date,
-          summary: job.Summary,
-          url: job.URL,
-          // clicked_at should be handled by DB default
+          unique_id_job: job.UNIQUE_ID,
+          applied: false, // This puts it in the Found column
+          created_at: new Date().toISOString(),
+          // Job details for display (using _clicked suffix)
+          job_title_clicked: job.Title,
+          company_clicked: job.Company,
+          location_clicked: job.Location,
+          rate_clicked: job.rate,
+          date_posted_clicked: job.date,
+          summary_clicked: job.Summary,
+          url_clicked: job.URL,
         },
       ]);
       if (error) {
         console.error("[LogJobClick] Error logging job click:", error);
       } else {
         console.log("[LogJobClick] Job click logged successfully for job:", job.UNIQUE_ID);
-        // Refresh recently clicked jobs if the section is visible
-        // if (showRecentlyClicked) {
-        //   console.log("[LogJobClick] Refreshing recently clicked jobs as section is visible.");
-        //   fetchRecentlyClickedJobs();
-        // } else {
-        //   console.log("[LogJobClick] Recently clicked jobs section not visible, not refreshing immediately. Will refresh when opened.");
-        // }
       }
     } catch (error) {
       console.error("[LogJobClick] Exception when logging job click:", error);

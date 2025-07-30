@@ -32,44 +32,41 @@ interface LeadsPipelineProps {
 
 // Extended interface for our combined data
 interface JobClickWithApplying {
-    id: string;
+    applying_id: string;
     user_id: string;
-    job_id: string;
-    job_title: string;
-    clicked_at: string;
-    search_pills: string[];
-    company: string;
-    location: string;
-    rate: string;
-    date_posted: string;
-    summary: string;
-    url: string;
+    unique_id_job: string;
+    applied: boolean;
+    created_at: string;
+    // Job details (now stored in applying table with _clicked suffix)
+    job_title_clicked: string;
+    company_clicked: string;
+    location_clicked: string;
+    rate_clicked: string;
+    date_posted_clicked: string;
+    summary_clicked: string;
+    url_clicked: string;
+    // Interview fields
+    recruiter_interview: string | null;
+    interview_rating_recruiter: boolean | null;
+    hiringmanager_interview: string | null;
+    interview_rating_hiringmanager: boolean | null;
+    technical_interview: string | null;
+    interview_rating_technical: boolean | null;
+    got_the_job: boolean | null;
+    starting_date: string | null;
+    notes: string | null;
+    value_rate: number | null;
+    value_hour_per_week: string | null;
+    value_weeks: number | null;
+    priority: string;
+    match_percentage: number;
+    possible_earnings: number;
+    above_normal_rate: boolean;
+    follow_up_overdue: boolean;
+    collapsed_card?: boolean;
+    // Additional fields
+    receive_confirmation?: boolean;
     collapsed_job_click_card?: boolean;
-    applying?: {
-        applying_id: string;
-        created_at: string;
-        applied: boolean;
-        receive_confirmation: boolean;
-        recruiter_interview: string | null;
-        interview_rating_recruiter: boolean | null;
-        hiringmanager_interview: string | null;
-        interview_rating_hiringmanager: boolean | null;
-        technical_interview: string | null;
-        interview_rating_technical: boolean | null;
-        got_the_job: boolean | null;
-        starting_date: string | null;
-        notes: string | null;
-        value_rate: number | null;
-        value_hour_per_week: string | null;
-        value_weeks: number | null;
-        unique_id_job: string;
-        priority: string;
-        match_percentage: number;
-        possible_earnings: number;
-        above_normal_rate: boolean;
-        follow_up_overdue: boolean;
-        collapsed_card?: boolean;
-    } | null;
 }
 
 const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) => {
@@ -113,20 +110,11 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
             if (applyingError) throw applyingError;
 
-            // Update all leads in job_clicks table (Found jobs)
-            const { error: jobClicksError } = await supabase
-                .from('job_clicks')
-                .update({ collapsed_job_click_card: true })
-                .eq('user_id', user?.id);
-
-            if (jobClicksError) throw jobClicksError;
-
             // Update local state
             setLeads(prevLeads =>
                 prevLeads.map(lead => ({
                     ...lead,
-                    collapsed_job_click_card: true, // Update job_clicks collapsed_job_click_card
-                    applying: lead.applying ? { ...lead.applying, collapsed_card: true } : null
+                    collapsed_card: true
                 }))
             );
 
@@ -146,20 +134,11 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
             if (applyingError) throw applyingError;
 
-            // Update all leads in job_clicks table (Found jobs)
-            const { error: jobClicksError } = await supabase
-                .from('job_clicks')
-                .update({ collapsed_job_click_card: false })
-                .eq('user_id', user?.id);
-
-            if (jobClicksError) throw jobClicksError;
-
             // Update local state
             setLeads(prevLeads =>
                 prevLeads.map(lead => ({
                     ...lead,
-                    collapsed_job_click_card: false, // Update job_clicks collapsed_job_click_card
-                    applying: lead.applying ? { ...lead.applying, collapsed_card: false } : null
+                    collapsed_card: false
                 }))
             );
 
@@ -240,33 +219,31 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             if (!searchTerm) return true;
             const searchLower = searchTerm.toLowerCase();
             return (
-                lead.job_title?.toLowerCase().includes(searchLower) ||
-                lead.company?.toLowerCase().includes(searchLower) ||
-                lead.location?.toLowerCase().includes(searchLower)
+                lead.job_title_clicked?.toLowerCase().includes(searchLower) ||
+                lead.company_clicked?.toLowerCase().includes(searchLower) ||
+                lead.location_clicked?.toLowerCase().includes(searchLower)
             );
         });
 
         // Found column: job_clicks without applying record (or applied = false)
-        const foundLeads = filteredLeads.filter(lead => !lead.applying || !lead.applying.applied);
+        const foundLeads = filteredLeads.filter(lead => !lead.applied);
 
         // Connect column: job_clicks with applying record and applied = true, but no interviews yet and not got the job
         const connectLeads = filteredLeads.filter(lead =>
-            lead.applying &&
-            lead.applying.applied &&
-            lead.applying.got_the_job !== true &&
-            !lead.applying.recruiter_interview &&
-            !lead.applying.technical_interview &&
-            !lead.applying.hiringmanager_interview
+            lead.applied &&
+            lead.got_the_job !== true &&
+            !lead.recruiter_interview &&
+            !lead.technical_interview &&
+            !lead.hiringmanager_interview
         );
 
         // Close column: jobs with at least one completed interview OR got the job
         const closeLeads = filteredLeads.filter(lead =>
-            lead.applying &&
-            lead.applying.applied &&
-            (lead.applying.got_the_job === true ||
-                lead.applying.recruiter_interview ||
-                lead.applying.technical_interview ||
-                lead.applying.hiringmanager_interview)
+            lead.applied &&
+            (lead.got_the_job === true ||
+                lead.recruiter_interview ||
+                lead.technical_interview ||
+                lead.hiringmanager_interview)
         );
 
         return [
@@ -304,36 +281,21 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
         setLoading(true);
         setError(null);
         try {
-            // 1. Haal alle job_clicks op voor deze user
-            const { data: clicks, error: clicksError } = await supabase
-                .from('job_clicks')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('clicked_at', { ascending: false });
-            if (clicksError) throw clicksError;
-
-            // 2. Haal alle applying records op voor deze user
-            const { data: applying, error: applyingError } = await supabase
+            // Fetch all applying records for this user (includes both found and applied jobs)
+            const { data: applyingRecords, error: applyingError } = await supabase
                 .from('applying')
                 .select('*')
-                .eq('user_id', user.id);
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+
             if (applyingError) throw applyingError;
 
-            // 3. Combineer per job_id/unique_id_job
-            // Map: unique_id_job (applying) <-> job_id (job_clicks)
-            const leadsData = clicks.map(job => {
-                const apply = applying.find(a => a.unique_id_job === job.job_id);
-                const leadData = {
-                    ...job,
-                    applying: apply || null,
-                    // Ensure collapsed_job_click_card is available at the top level
-                    collapsed_job_click_card: job.collapsed_job_click_card || false
-                };
-
-                return leadData;
+            console.log('[DEBUG] Fetched applying records:', {
+                count: applyingRecords.length,
+                sample: applyingRecords[0]
             });
 
-            setLeads(leadsData);
+            setLeads(applyingRecords || []);
             setDatabaseAvailable(true);
         } catch (err: any) {
             setError(err.message || 'Error fetching leads');
@@ -370,58 +332,39 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
         const leadId = draggableId;
         const newStage = destination.droppableId as LeadStage;
-        const lead = leads.find(l => l.id === leadId);
+        const lead = leads.find(l => l.applying_id === leadId);
 
         if (!lead) return;
 
-        // Update local state immediately for smooth UX
-        setLeads(prevLeads =>
-            prevLeads.map(l =>
-                l.id === leadId ? {
-                    ...l,
-                    stage: newStage,
-                    stage_updated_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                } : l
-            )
-        );
+        console.log(`Moving "${lead.job_title_clicked}" from ${source.droppableId} to ${newStage}`);
 
-        // Update database if available
-        if (databaseAvailable) {
-            try {
-                const { data: session } = await supabase.auth.getSession();
-                if (!session?.session?.access_token) {
-                    throw new Error('No valid session');
-                }
-
-                const response = await fetch('/api/leads', {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${session.session.access_token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        id: leadId,
-                        stage: newStage
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to update lead stage');
-                }
-
-            } catch (error) {
-                console.error('Error updating lead stage:', error);
-                // Revert local state on error
-                setLeads(prevLeads =>
-                    prevLeads.map(l =>
-                        l.id === leadId ? l : l
-                    )
-                );
+        // Handle stage transitions
+        if (newStage === 'connect' && source.droppableId === 'found') {
+            // Moving from Found to Connect - create applying record
+            await handleApplyAction(lead.unique_id_job, true);
+        } else if (newStage === 'found' && source.droppableId === 'connect') {
+            // Moving from Connect to Found - set applied to false
+            if (lead.applied) {
+                await handleUpdateApplying(lead.applying_id, { applied: false });
             }
-        } else {
-            console.log(`✅ Moved "${lead.job_title}" to ${newStage} (local storage - database not available)`);
+        } else if (newStage === 'close' && source.droppableId === 'connect') {
+            // Moving from Connect to Close - this should be done via interview actions
+            console.log('Use interview actions to move to Close stage');
+        } else if (newStage === 'found' && source.droppableId === 'close') {
+            // Moving from Close to Found - reset applying record
+            if (lead.applied) {
+                await handleUpdateApplying(lead.applying_id, {
+                    applied: false,
+                    recruiter_interview: null,
+                    technical_interview: null,
+                    hiringmanager_interview: null,
+                    got_the_job: null
+                });
+            }
         }
+
+        // Refresh data to show updated state
+        await fetchLeads();
     };
 
     // ==========================================
@@ -429,7 +372,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     // ==========================================
     const handleLeadUpdate = async (updatedLead: JobClickWithApplying) => {
         setLeads(prevLeads =>
-            prevLeads.map(l => l.id === updatedLead.id ? updatedLead : l)
+            prevLeads.map(l => l.applying_id === updatedLead.applying_id ? updatedLead : l)
         );
 
         if (databaseAvailable) {
@@ -461,7 +404,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 });
 
                 if (response.ok) {
-                    setFollowUpNotifications(prev => prev.filter(lead => lead.id !== leadId));
+                    setFollowUpNotifications(prev => prev.filter(lead => lead.applying_id !== leadId));
                     await fetchLeads();
                 }
             } catch (error) {
@@ -469,10 +412,10 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             }
         } else {
             // Local only
-            setFollowUpNotifications(prev => prev.filter(lead => lead.id !== leadId));
+            setFollowUpNotifications(prev => prev.filter(lead => lead.applying_id !== leadId));
             setLeads(prevLeads =>
                 prevLeads.map(l =>
-                    l.id === leadId ? { ...l, follow_up_completed: true } : l
+                    l.applying_id === leadId ? { ...l, follow_up_completed: true } : l
                 )
             );
         }
@@ -484,29 +427,31 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     const handleApplyAction = async (jobId: string, applied: boolean) => {
         if (!user?.id) return;
 
+        console.log('[DEBUG] handleApplyAction called:', { jobId, applied, userId: user.id });
+
         try {
             if (applied) {
-                // Create applying record with UUID for applying_id
+                // Update existing applying record to set applied = true
                 const { error } = await supabase
                     .from('applying')
-                    .insert([{
-                        applying_id: crypto.randomUUID(), // <-- Fix: Generate UUID for applying_id
-                        user_id: user.id,
-                        unique_id_job: jobId,
-                        applied: true,
-                        created_at: new Date().toISOString()
-                    }]);
-
-                if (error) throw error;
-            } else {
-                // If applied = false, remove the job from job_clicks (user doesn't want to pursue it)
-                const { error } = await supabase
-                    .from('job_clicks')
-                    .delete()
-                    .eq('id', jobId)
+                    .update({ applied: true })
+                    .eq('unique_id_job', jobId)
                     .eq('user_id', user.id);
 
                 if (error) throw error;
+                console.log('[DEBUG] Successfully updated applying record to applied = true');
+            } else {
+                // If applied = false, remove the applying record entirely
+                console.log('[DEBUG] Removing applying record for jobId:', jobId);
+
+                const { error } = await supabase
+                    .from('applying')
+                    .delete()
+                    .eq('unique_id_job', jobId)
+                    .eq('user_id', user.id);
+
+                if (error) throw error;
+                console.log('[DEBUG] Successfully removed applying record');
             }
 
             // Refresh leads
@@ -915,7 +860,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         {followUpNotifications.map(lead => (
-                            <div key={lead.id} style={{
+                            <div key={lead.applying_id} style={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
@@ -923,10 +868,10 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                                 borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
                             }}>
                                 <span>
-                                    <strong>{lead.job_title}</strong> at {lead.company}
+                                    <strong>{lead.job_title_clicked}</strong> at {lead.company_clicked}
                                 </span>
                                 <button
-                                    onClick={() => markFollowUpComplete(lead.id)}
+                                    onClick={() => markFollowUpComplete(lead.applying_id)}
                                     style={{
                                         padding: '0.25rem 0.5rem',
                                         background: 'rgba(16, 185, 129, 0.2)',
@@ -1226,7 +1171,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                             {column.leads.map((lead, index) => (
-                                                <Draggable key={lead.id} draggableId={lead.id} index={index}>
+                                                <Draggable key={lead.applying_id} draggableId={lead.applying_id} index={index}>
                                                     {(provided, snapshot) => (
                                                         <div
                                                             ref={provided.innerRef}
@@ -1242,41 +1187,40 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                                                                 lead={lead}
                                                                 index={index}
                                                                 isDragging={snapshot.isDragging}
-                                                                hasFollowUp={followUpNotifications.some(fu => fu.id === lead.id)}
+                                                                hasFollowUp={followUpNotifications.some(fu => fu.applying_id === lead.applying_id)}
                                                                 onClick={() => { }} // Empty function for now
                                                                 onStageAction={(action, data) => {
                                                                     if (action === 'apply') {
-                                                                        handleApplyAction(lead.id, data.applied);
+                                                                        handleApplyAction(lead.unique_id_job, data.applied);
                                                                     } else if (action === 'interview_date') {
-                                                                        handleInterviewAction(lead.applying?.applying_id || '', data.interviewData);
+                                                                        handleInterviewAction(lead.applying_id, data.interviewData);
                                                                     } else if (action === 'interview_rating') {
-                                                                        handleInterviewAction(lead.applying?.applying_id || '', data.interviewData);
+                                                                        handleInterviewAction(lead.applying_id, data.interviewData);
                                                                     } else if (action === 'update_notes') {
-                                                                        handleUpdateApplying(lead.applying?.applying_id || '', { notes: data.notes });
+                                                                        handleUpdateApplying(lead.applying_id, { notes: data.notes });
                                                                     } else if (action === 'follow_up_complete') {
-                                                                        handleFollowUpComplete(lead.applying?.applying_id || '');
+                                                                        handleFollowUpComplete(lead.applying_id);
                                                                     } else if (action === 'got_job') {
-                                                                        handleGotJob(lead.applying?.applying_id || '', data.gotJob, data.startingDate);
+                                                                        handleGotJob(lead.applying_id, data.gotJob, data.startingDate);
                                                                     } else if (action === 'toggle_collapse') {
                                                                         console.log('toggle_collapse action received:', {
-                                                                            leadId: lead.id,
+                                                                            leadId: lead.applying_id,
                                                                             collapsed: data.collapsed,
-                                                                            currentCollapsed: lead.collapsed_job_click_card
+                                                                            currentCollapsed: lead.collapsed_card
                                                                         });
 
                                                                         // Update local state for immediate UI feedback
                                                                         setLeads(prevLeads => {
                                                                             const updatedLeads = prevLeads.map(l =>
-                                                                                l.id === lead.id
+                                                                                l.applying_id === lead.applying_id
                                                                                     ? {
                                                                                         ...l,
-                                                                                        collapsed_job_click_card: data.collapsed, // Update job_clicks collapsed_job_click_card
-                                                                                        applying: l.applying ? { ...l.applying, collapsed_card: data.collapsed } : null
+                                                                                        collapsed_card: data.collapsed, // Update applying collapsed_card
                                                                                     }
                                                                                     : l
                                                                             );
 
-                                                                            console.log('Updated leads state:', updatedLeads.find(l => l.id === lead.id));
+                                                                            console.log('Updated leads state:', updatedLeads.find(l => l.applying_id === lead.applying_id));
                                                                             return updatedLeads;
                                                                         });
                                                                     }
