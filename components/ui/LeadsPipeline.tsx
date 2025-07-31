@@ -67,6 +67,14 @@ interface JobClickWithApplying {
     // Additional fields
     receive_confirmation?: boolean;
     collapsed_job_click_card?: boolean;
+    // Contacts stored as JSON array
+    contacts?: Array<{
+        id: string;
+        name: string;
+        phone?: string;
+        email?: string;
+        created_at: string;
+    }>;
 }
 
 const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) => {

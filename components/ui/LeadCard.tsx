@@ -52,6 +52,14 @@ interface JobClickWithApplying {
     // Additional fields
     receive_confirmation?: boolean;
     collapsed_job_click_card?: boolean;
+    // Contacts stored as JSON array
+    contacts?: Array<{
+        id: string;
+        name: string;
+        phone?: string;
+        email?: string;
+        created_at: string;
+    }>;
 }
 
 interface LeadCardProps {
@@ -149,7 +157,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
     // Interview flow states (moved from renderInterviewFlow)
     const [selectedInterviewType, setSelectedInterviewType] = useState<string>('recruiter');
     const [interviewDate, setInterviewDate] = useState('');
-    const [showNewInterview, setShowNewInterview] = useState(true);
+    const [showNewInterview, setShowNewInterview] = useState(false);
     const [canRateInterview, setCanRateInterview] = useState(false);
 
     // Calculate progress percentage
@@ -260,47 +268,42 @@ const LeadCard: React.FC<LeadCardProps> = ({
         if (!newContact.name.trim() || !lead.applying_id) return;
 
         try {
+            // Get current contacts from lead object, or empty array
+            const currentContacts = lead.contacts || [];
+
+            let updatedContacts;
             if (editingContact) {
                 // Edit existing contact
-                const { error } = await supabase
-                    .from('applying_contact_details')
-                    .update({
-                        name: newContact.name,
-                        phone: newContact.phone || null,
-                        email: newContact.email || null
-                    })
-                    .eq('id', editingContact);
-
-                if (error) throw error;
-
-                setContacts(contacts.map(contact =>
+                updatedContacts = currentContacts.map((contact: any) =>
                     contact.id === editingContact
                         ? { ...contact, ...newContact }
                         : contact
-                ));
-                setEditingContact(null);
+                );
             } else {
-                // Add new contact
-                const { data, error } = await supabase
-                    .from('applying_contact_details')
-                    .insert([{
-                        applying_id: lead.applying_id,
-                        name: newContact.name,
-                        phone: newContact.phone || null,
-                        email: newContact.email || null
-                    }])
-                    .select();
-
-                if (error) throw error;
-
-                if (data && data[0]) {
-                    setContacts([...contacts, data[0]]);
-                }
+                // Add new contact with unique ID
+                const newContactWithId = {
+                    id: crypto.randomUUID(),
+                    ...newContact,
+                    created_at: new Date().toISOString()
+                };
+                updatedContacts = [...currentContacts, newContactWithId];
             }
+
+            // Update in database
+            const { error } = await supabase
+                .from('applying')
+                .update({ contacts: updatedContacts })
+                .eq('applying_id', lead.applying_id);
+
+            if (error) throw error;
+
+            // Update local state
+            setContacts(updatedContacts);
 
             // Reset form
             setNewContact({ name: '', phone: '', email: '' });
             setShowContactForm(false);
+            setEditingContact(null);
         } catch (err: any) {
             console.error('Error saving contact:', err);
         }
@@ -315,13 +318,13 @@ const LeadCard: React.FC<LeadCardProps> = ({
     const handleDeleteContact = async (contactId: string) => {
         try {
             const { error } = await supabase
-                .from('applying_contact_details')
-                .delete()
-                .eq('id', contactId);
+                .from('applying')
+                .update({ contacts: (lead.contacts || []).filter(c => c.id !== contactId) })
+                .eq('applying_id', lead.applying_id);
 
             if (error) throw error;
 
-            setContacts(contacts.filter(contact => contact.id !== contactId));
+            setContacts((lead.contacts || []).filter(contact => contact.id !== contactId));
         } catch (err: any) {
             console.error('Error deleting contact:', err);
         }
@@ -376,25 +379,13 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     // Load contacts on component mount
     useEffect(() => {
-        const loadContacts = async () => {
-            if (!lead.applying_id) return;
-
-            try {
-                const { data, error } = await supabase
-                    .from('applying_contact_details')
-                    .select('*')
-                    .eq('applying_id', lead.applying_id);
-
-                if (error) throw error;
-
-                setContacts(data || []);
-            } catch (err: any) {
-                console.error('Error loading contacts:', err);
-            }
-        };
-
-        loadContacts();
-    }, [lead.applying_id]);
+        // Load contacts directly from lead object
+        if (lead.contacts) {
+            setContacts(lead.contacts);
+        } else {
+            setContacts([]);
+        }
+    }, [lead.contacts, lead.applying_id]);
 
     // Update canRateInterview when interview type and date change
     useEffect(() => {
@@ -453,18 +444,22 @@ const LeadCard: React.FC<LeadCardProps> = ({
     ];
 
     const renderInterviewFlow = () => {
-        if (!lead.applied) return null;
+        if (!lead.applied) {
+            return null;
+        }
 
         // Verzamel welke interviews al zijn ingevuld
         const doneTypes = INTERVIEW_TYPES.filter(t => {
-            if (t.key === 'recruiter') return lead.interview_rating_recruiter !== null;
-            if (t.key === 'technical') return lead.interview_rating_technical !== null;
-            if (t.key === 'hiringmanager') return lead.interview_rating_hiringmanager !== null;
+            if (t.key === 'recruiter') return lead.recruiter_interview && lead.interview_rating_recruiter !== null;
+            if (t.key === 'technical') return lead.technical_interview && lead.interview_rating_technical !== null;
+            if (t.key === 'hiringmanager') return lead.hiringmanager_interview && lead.interview_rating_hiringmanager !== null;
             return false;
         }).map(t => t.key);
 
         // Types die nog niet zijn ingevuld
         const availableTypes = INTERVIEW_TYPES.filter(t => !doneTypes.includes(t.key));
+
+
 
         // Helper om label te krijgen
         const getLabel = (key: string) => INTERVIEW_TYPES.find(t => t.key === key)?.label || key;
@@ -497,9 +492,31 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
         return (
             <div style={{ padding: 12, background: 'rgba(59,130,246,0.15)', borderRadius: 8, marginBottom: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-                    <Users style={{ width: '14px', height: '14px', color: 'rgba(255,255,255,0.8)' }} />
-                    <span style={{ fontWeight: 600, color: 'white' }}>Interviews</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Users style={{ width: '14px', height: '14px', color: 'rgba(255,255,255,0.8)' }} />
+                        <span style={{ fontWeight: 600, color: 'white' }}>Interviews</span>
+                    </div>
+                    {availableTypes.length > 0 && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowNewInterview(!showNewInterview);
+                            }}
+                            style={{
+                                padding: '4px 8px',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                color: '#3b82f6',
+                                border: '1px solid rgba(59, 130, 246, 0.3)',
+                                borderRadius: 4,
+                                fontSize: '10px',
+                                cursor: 'pointer',
+                                fontWeight: '600'
+                            }}
+                        >
+                            + Add Interview
+                        </button>
+                    )}
                 </div>
 
                 {/* Toon reeds ingevulde interviews */}
@@ -555,7 +572,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 cursor: 'pointer'
                             }} />
                         </div>
-                        {canRateInterview && (
+                        {selectedInterviewType && interviewDate && (
                             <div style={{ display: 'flex', gap: 8 }}>
                                 <button
                                     style={{
@@ -587,7 +604,6 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         )}
                     </div>
                 )}
-
             </div>
         );
     };
@@ -646,8 +662,13 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
         // Connect stage: applied but no interviews yet
         if (lead.applied && !hasInterviews) {
+
+
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {/* Interview flow - MOVED TO TOP */}
+                    {renderInterviewFlow()}
+
                     {/* Interview prep */}
                     <div style={{ padding: 12, background: 'rgba(59, 130, 246, 0.08)', borderRadius: 8 }}>
                         <button
@@ -992,8 +1013,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         )}
                     </div>
 
-                    {/* Interview flow */}
-                    {renderInterviewFlow()}
+                    {/* Interview flow - REMOVED: Now at top */}
 
                     {/* Follow-up reminder */}
                     {timeLeft && (
