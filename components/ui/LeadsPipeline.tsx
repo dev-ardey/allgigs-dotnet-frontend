@@ -75,6 +75,14 @@ interface JobClickWithApplying {
         email?: string;
         created_at: string;
     }>;
+    // Interviews stored as JSON array
+    interviews?: Array<{
+        id: string;
+        type: string;
+        date: string;
+        rating: boolean;
+        created_at: string;
+    }>;
 }
 
 const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) => {
@@ -236,22 +244,14 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
         // Found column: job_clicks without applying record (or applied = false)
         const foundLeads = filteredLeads.filter(lead => !lead.applied);
 
-        // Connect column: job_clicks with applying record and applied = true, but no interviews yet and not got the job
+        // Connect column: applied = true, but not got the job yet (regardless of interviews)
         const connectLeads = filteredLeads.filter(lead =>
-            lead.applied &&
-            lead.got_the_job !== true &&
-            !lead.recruiter_interview &&
-            !lead.technical_interview &&
-            !lead.hiringmanager_interview
+            lead.applied && lead.got_the_job !== true
         );
 
-        // Close column: jobs with at least one completed interview OR got the job
+        // Close column: jobs where got_the_job is true
         const closeLeads = filteredLeads.filter(lead =>
-            lead.applied &&
-            (lead.got_the_job === true ||
-                lead.recruiter_interview ||
-                lead.technical_interview ||
-                lead.hiringmanager_interview)
+            lead.applied && lead.got_the_job === true
         );
 
         return [
@@ -303,12 +303,59 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 sample: applyingRecords[0]
             });
 
-            setLeads(applyingRecords || []);
+            // Parse JSON fields if they are strings (for json column) or keep as-is (for jsonb)
+            const processedRecords = applyingRecords?.map(record => {
+                let interviews = [];
+                let contacts = [];
+
+                // Handle interviews field
+                if (record.interviews) {
+                    if (typeof record.interviews === 'string') {
+                        try {
+                            interviews = JSON.parse(record.interviews);
+                        } catch (e) {
+                            console.warn('Failed to parse interviews JSON:', e);
+                            interviews = [];
+                        }
+                    } else if (Array.isArray(record.interviews)) {
+                        interviews = record.interviews;
+                    }
+                }
+
+                // Handle contacts field  
+                if (record.contacts) {
+                    if (typeof record.contacts === 'string') {
+                        try {
+                            contacts = JSON.parse(record.contacts);
+                        } catch (e) {
+                            console.warn('Failed to parse contacts JSON:', e);
+                            contacts = [];
+                        }
+                    } else if (Array.isArray(record.contacts)) {
+                        contacts = record.contacts;
+                    }
+                }
+
+                return {
+                    ...record,
+                    interviews,
+                    contacts
+                };
+            }) || [];
+
+            console.log('[DEBUG] Processed records with parsed JSON:', {
+                count: processedRecords.length,
+                sampleInterviews: processedRecords[0]?.interviews,
+                sampleContacts: processedRecords[0]?.contacts
+            });
+
+            setLeads(processedRecords);
             setDatabaseAvailable(true);
         } catch (err: any) {
             setError(err.message || 'Error fetching leads');
             setLeads([]);
             setDatabaseAvailable(false);
+            console.error('[DEBUG] fetchLeads error:', err);
         } finally {
             setLoading(false);
         }
@@ -1210,6 +1257,9 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                                                                         handleFollowUpComplete(lead.applying_id);
                                                                     } else if (action === 'got_job') {
                                                                         handleGotJob(lead.applying_id, data.gotJob, data.startingDate);
+                                                                    } else if (action === 'interview_added') {
+                                                                        // Refresh leads when interview is added
+                                                                        fetchLeads();
                                                                     } else if (action === 'toggle_collapse') {
                                                                         console.log('toggle_collapse action received:', {
                                                                             leadId: lead.applying_id,

@@ -12,18 +12,10 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ onClose, leads = [] }
     const totalLeads = leads.length;
     const foundLeads = leads.filter(lead => !lead.applied).length;
     const connectLeads = leads.filter(lead =>
-        lead.applied &&
-        lead.got_the_job !== true &&
-        !lead.recruiter_interview &&
-        !lead.technical_interview &&
-        !lead.hiringmanager_interview
+        lead.applied && lead.got_the_job !== true
     ).length;
     const closeLeads = leads.filter(lead =>
-        lead.applied &&
-        (lead.got_the_job === true ||
-            lead.recruiter_interview ||
-            lead.technical_interview ||
-            lead.hiringmanager_interview)
+        lead.applied && lead.got_the_job === true
     ).length;
 
     const appliedLeads = leads.filter(lead => lead.applied).length;

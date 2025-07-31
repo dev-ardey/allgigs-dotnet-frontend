@@ -11,7 +11,8 @@ import {
     StickyNote,
     CheckCircle,
     Maximize2,
-    Minimize2
+    Minimize2,
+    X
 } from 'lucide-react';
 // import { Lead } from '../../types/leads';
 import { supabase } from '../../SupabaseClient';
@@ -59,6 +60,11 @@ interface JobClickWithApplying {
         phone?: string;
         email?: string;
         created_at: string;
+    }>;
+    interviews?: Array<{
+        type: string;
+        date: string;
+        rating: boolean;
     }>;
 }
 
@@ -179,9 +185,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
         if (contacts.length > 0) progress += 5;
 
         // Interviews: +20%
-        if (lead.recruiter_interview ||
-            lead.technical_interview ||
-            lead.hiringmanager_interview) {
+        if (lead.interviews && lead.interviews.length > 0) {
             progress += 20;
         }
 
@@ -440,7 +444,10 @@ const LeadCard: React.FC<LeadCardProps> = ({
     const INTERVIEW_TYPES = [
         { key: 'recruiter', label: 'Recruiter' },
         { key: 'technical', label: 'Technical' },
-        { key: 'hiringmanager', label: 'Hiring Manager' }
+        { key: 'hiringmanager', label: 'Hiring Manager' },
+        { key: 'teamlead', label: 'Team Lead' },
+        { key: 'hr', label: 'HR' },
+        { key: 'ceo', label: 'CEO/Founder' }
     ];
 
     const renderInterviewFlow = () => {
@@ -449,12 +456,8 @@ const LeadCard: React.FC<LeadCardProps> = ({
         }
 
         // Verzamel welke interviews al zijn ingevuld
-        const doneTypes = INTERVIEW_TYPES.filter(t => {
-            if (t.key === 'recruiter') return lead.recruiter_interview && lead.interview_rating_recruiter !== null;
-            if (t.key === 'technical') return lead.technical_interview && lead.interview_rating_technical !== null;
-            if (t.key === 'hiringmanager') return lead.hiringmanager_interview && lead.interview_rating_hiringmanager !== null;
-            return false;
-        }).map(t => t.key);
+        const currentInterviews = lead.interviews || [];
+        const doneTypes = currentInterviews.map((interview: any) => interview.type);
 
         // Types die nog niet zijn ingevuld
         const availableTypes = INTERVIEW_TYPES.filter(t => !doneTypes.includes(t.key));
@@ -462,31 +465,66 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
 
         // Helper om label te krijgen
-        const getLabel = (key: string) => INTERVIEW_TYPES.find(t => t.key === key)?.label || key;
+        const getLabel = (key: string) => {
+            const type = INTERVIEW_TYPES.find(t => t.key === key);
+            return type ? type.label : key.charAt(0).toUpperCase() + key.slice(1);
+        };
 
         // Sla interview data en rating op na klikken Good/Bad
-        const handleRating = (rating: boolean) => {
-            if (onStageAction && lead.applying_id && selectedInterviewType && interviewDate) {
-                // Eerst interview data opslaan
-                onStageAction('interview_date', {
-                    applyingId: lead.applying_id,
-                    interviewData: {
-                        type: selectedInterviewType as 'recruiter' | 'technical' | 'hiringmanager',
-                        date: interviewDate
-                    }
-                });
+        const handleRating = async (rating: boolean) => {
+            if (!lead.applying_id || !selectedInterviewType || !interviewDate) return;
 
-                // Dan rating opslaan
-                onStageAction('interview_rating', {
-                    applyingId: lead.applying_id,
-                    interviewData: {
-                        type: selectedInterviewType as 'recruiter' | 'technical' | 'hiringmanager',
-                        date: interviewDate,
-                        rating
-                    }
-                });
+            console.log('[DEBUG] Saving interview:', {
+                applying_id: lead.applying_id,
+                selectedInterviewType,
+                interviewDate,
+                rating,
+                currentInterviews: lead.interviews
+            });
+
+            try {
+                const currentInterviews = Array.isArray(lead.interviews) ? lead.interviews : [];
+
+                // Create new interview object
+                const newInterview = {
+                    id: crypto.randomUUID(),
+                    type: selectedInterviewType,
+                    date: interviewDate,
+                    rating: rating,
+                    created_at: new Date().toISOString()
+                };
+
+                // Add to interviews array
+                const updatedInterviews = [...currentInterviews, newInterview];
+
+                console.log('[DEBUG] Updating interviews in database:', updatedInterviews);
+
+                // For JSONB: send array directly (PostgreSQL handles JSON conversion)
+                const { data, error } = await supabase
+                    .from('applying')
+                    .update({ interviews: updatedInterviews })
+                    .eq('applying_id', lead.applying_id)
+                    .select();
+
+                if (error) {
+                    console.error('[DEBUG] Database error:', error);
+                    throw error;
+                }
+
+                console.log('[DEBUG] Interview saved successfully, returned data:', data);
+
+                // Reset form
                 setShowNewInterview(false);
                 setInterviewDate('');
+                setSelectedInterviewType('');
+
+                // Refresh data
+                if (onStageAction) {
+                    onStageAction('interview_added', { refresh: true });
+                }
+            } catch (err: any) {
+                console.error('[DEBUG] Error saving interview:', err);
+                alert('Error saving interview: ' + err.message);
             }
         };
 
@@ -520,29 +558,31 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 </div>
 
                 {/* Toon reeds ingevulde interviews */}
-                {INTERVIEW_TYPES.map(t => {
-                    let d = null, r = null;
-                    if (t.key === 'recruiter') {
-                        d = lead.recruiter_interview;
-                        r = lead.interview_rating_recruiter;
-                    }
-                    if (t.key === 'technical') {
-                        d = lead.technical_interview;
-                        r = lead.interview_rating_technical;
-                    }
-                    if (t.key === 'hiringmanager') {
-                        d = lead.hiringmanager_interview;
-                        r = lead.interview_rating_hiringmanager;
-                    }
-                    if (!d) return null;
-                    return (
-                        <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: 6 }}>
-                            <span style={{ fontWeight: 600, fontSize: '12px' }}>{getLabel(t.key)}:</span>
-                            <span style={{ fontSize: '12px' }}>{new Date(d).toLocaleDateString()}</span>
-                            <span style={{ color: r ? '#10b981' : '#ef4444', fontWeight: 600, fontSize: '12px' }}>{r === true ? 'Good' : r === false ? 'Bad' : ''}</span>
-                        </div>
-                    );
-                })}
+                {currentInterviews.map((interview: any) => (
+                    <div key={interview.id} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        marginBottom: 8,
+                        padding: '8px',
+                        background: 'rgba(255,255,255,0.05)',
+                        borderRadius: 6
+                    }}>
+                        <span style={{ fontWeight: 600, fontSize: '12px' }}>
+                            {getLabel(interview.type)}:
+                        </span>
+                        <span style={{ fontSize: '12px' }}>
+                            {new Date(interview.date).toLocaleDateString()}
+                        </span>
+                        <span style={{
+                            color: interview.rating ? '#10b981' : '#ef4444',
+                            fontWeight: 600,
+                            fontSize: '12px'
+                        }}>
+                            {interview.rating ? 'Good' : 'Bad'}
+                        </span>
+                    </div>
+                ))}
 
                 {/* Add new interview */}
                 {showNewInterview && availableTypes.length > 0 && (
@@ -656,12 +696,10 @@ const LeadCard: React.FC<LeadCardProps> = ({
         }
 
         // Check if job has interviews (for Close stage)
-        const hasInterviews = lead.recruiter_interview ||
-            lead.technical_interview ||
-            lead.hiringmanager_interview;
+        const hasInterviews = lead.interviews && lead.interviews.length > 0;
 
-        // Connect stage: applied but no interviews yet
-        if (lead.applied && !hasInterviews) {
+        // Connect stage: applied but not got the job yet (regardless of interviews)
+        if (lead.applied && lead.got_the_job !== true) {
 
 
             return (
@@ -1046,12 +1084,93 @@ const LeadCard: React.FC<LeadCardProps> = ({
                             </button>
                         </div>
                     )}
+
+                    {/* Got the job */}
+                    <div style={{ padding: 12, background: 'rgba(255, 255, 255, 0.05)', borderRadius: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                            <Award style={{ width: '14px', height: '14px', color: 'rgba(255,255,255,0.8)' }} />
+                            <span style={{ fontWeight: 600, fontSize: '12px' }}>Got the job?</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleGotJob(true); }}
+                                style={{
+                                    padding: '6px 12px',
+                                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                    color: '#10b981',
+                                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                                    borderRadius: 6,
+                                    fontSize: '11px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600'
+                                }}
+                            >
+                                YES
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleGotJob(false); }}
+                                style={{
+                                    padding: '6px 12px',
+                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                    color: '#ef4444',
+                                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                                    borderRadius: 6,
+                                    fontSize: '11px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600'
+                                }}
+                            >
+                                NO
+                            </button>
+                        </div>
+                        {lead.got_the_job && (
+                            <div style={{ marginTop: 8 }}>
+                                <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>Starting date (optional):</div>
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                    <input
+                                        type="date"
+                                        value={startingDate}
+                                        onChange={(e) => setStartingDate(e.target.value)}
+                                        onBlur={(e) => {
+                                            if (e.target.value && onStageAction) {
+                                                onStageAction('got_job', { gotJob: true, startingDate: e.target.value });
+                                            }
+                                        }}
+                                        style={{
+                                            padding: '6px 12px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'white',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 6,
+                                            fontSize: '11px',
+                                            cursor: 'pointer'
+                                        }}
+                                    />
+                                </div>
+                                {/* Congratulations message */}
+                                <div style={{
+                                    marginTop: 8,
+                                    padding: '8px',
+                                    background: 'rgba(16, 185, 129, 0.1)',
+                                    borderRadius: 6,
+                                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                                }}>
+                                    <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 600, marginBottom: 4 }}>
+                                        🎉 Congratulations! You got the job!
+                                    </div>
+                                    <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                                        Potential earnings: €100,000
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             );
         }
 
-        // Close stage: has interviews
-        if (lead.applied && hasInterviews) {
+        // Close stage: got the job
+        if (lead.applied && lead.got_the_job === true) {
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {/* Interview flow */}
@@ -1180,23 +1299,23 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         </div>
 
                         {/* Progress bar */}
-                        <div style={{ marginBottom: '8px' }}>
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                marginBottom: '4px'
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            marginTop: '8px',
+                            marginRight: '60px' // Make room for buttons
+                        }}>
+                            <span style={{
+                                fontSize: '11px',
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                minWidth: '30px'
                             }}>
-                                <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.7)' }}>
-                                    Progress
-                                </span>
-                                <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: '600' }}>
-                                    {progressPercentage}%
-                                </span>
-                            </div>
+                                {progressPercentage}%
+                            </span>
                             <div style={{
-                                width: '100%',
-                                height: '6px',
+                                flex: 1,
+                                height: '4px',
                                 backgroundColor: 'rgba(255, 255, 255, 0.1)',
                                 borderRadius: '3px',
                                 overflow: 'hidden'
@@ -1212,24 +1331,47 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         </div>
                     </div>
 
-                    {/* Expand button */}
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleToggleCollapse(false);
-                        }}
-                        style={{
-                            padding: '4px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            marginLeft: '8px'
-                        }}
-                    >
-                        <Maximize2 style={{ width: '12px', height: '12px' }} />
-                    </button>
+                    {/* Buttons */}
+                    <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                        {/* Delete button - only for Found stage (not applied) */}
+                        {!lead.applied && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAppliedClick(false); // Same as clicking "No"
+                                }}
+                                style={{
+                                    padding: '4px',
+                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                    color: '#ef4444',
+                                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer'
+                                }}
+                                title="Remove job"
+                            >
+                                <X style={{ width: '12px', height: '12px' }} />
+                            </button>
+                        )}
+
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleCollapse(false);
+                            }}
+                            style={{
+                                padding: '4px',
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                            }}
+                            title="Expand"
+                        >
+                            <Maximize2 style={{ width: '12px', height: '12px' }} />
+                        </button>
+                    </div>
                 </div>
             </div>
         );
