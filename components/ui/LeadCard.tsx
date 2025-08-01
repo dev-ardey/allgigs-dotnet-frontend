@@ -83,6 +83,7 @@ interface LeadCardProps {
     hasFollowUp: boolean;
     onStageAction?: (action: string, data?: any) => void;
     onArchived?: (leadId: string) => void;
+    onStateChanged?: () => void;
     index: number;
 }
 
@@ -92,7 +93,8 @@ const LeadCard: React.FC<LeadCardProps> = ({
     isDragging,
     hasFollowUp,
     onStageAction,
-    onArchived
+    onArchived,
+    onStateChanged
 }) => {
     // Timer states
     const [timeLeft, setTimeLeft] = useState<string>('');
@@ -341,6 +343,11 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 // Update local state immediately (optimistic update)
                 lead.applied = true;
                 triggerRerender();
+
+                // Notify parent that state changed (for column movement)
+                if (onStateChanged) {
+                    onStateChanged();
+                }
             } else {
                 // If NO in Found stage - delete the job (don't archive)
                 await supabase
@@ -430,6 +437,11 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 lead.got_the_job = true;
                 if (startingDate) lead.starting_date = startingDate;
                 triggerRerender();
+
+                // Notify parent that state changed (for column movement)
+                if (onStateChanged) {
+                    onStateChanged();
+                }
             }
         } catch (err) {
             console.error('Error updating got_the_job status:', err);
@@ -637,9 +649,8 @@ const LeadCard: React.FC<LeadCardProps> = ({
         const currentInterviews = lead.interviews || [];
         const doneTypes = currentInterviews.map((interview: any) => interview.type);
 
-        // Types die nog niet zijn ingevuld
-        const availableTypes = INTERVIEW_TYPES.filter(t => !doneTypes.includes(t.key));
-
+        // All types are always available (don't filter out done types)
+        const availableTypes = INTERVIEW_TYPES;
 
 
         // Helper om label te krijgen
@@ -775,6 +786,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 fontSize: '11px',
                                 cursor: 'pointer'
                             }}>
+                                <option value="" style={{ backgroundColor: '#1f2937', color: 'white' }}>Select interview type...</option>
                                 {availableTypes.map(t => (
                                     <option key={t.key} value={t.key} style={{ backgroundColor: '#1f2937', color: 'white' }}>{t.label}</option>
                                 ))}

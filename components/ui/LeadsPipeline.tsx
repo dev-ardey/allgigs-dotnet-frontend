@@ -1369,6 +1369,10 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                                                                     // Recalculate archived count
                                                                     calculateArchivedCount();
                                                                 }}
+                                                                onStateChanged={() => {
+                                                                    // Force refresh of leads when important state changes
+                                                                    fetchLeads();
+                                                                }}
                                                                 onStageAction={(action, data) => {
                                                                     if (action === 'apply') {
                                                                         handleApplyAction(lead.unique_id_job, data.applied);
