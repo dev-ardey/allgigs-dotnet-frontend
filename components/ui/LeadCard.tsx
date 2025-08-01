@@ -164,6 +164,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
             // Clear timer if not applicable
             setTimeLeft('');
             setIsOverdue(false);
+            return undefined;
         }
     }, [lead.applied, lead.created_at, lead.follow_up_completed]);
 
@@ -205,6 +206,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
             // Clear timer if not applicable
             setFoundTimeLeft('');
             setFoundIsOverdue(false);
+            return undefined;
         }
     }, [lead.applied, lead.created_at]);
 
@@ -613,6 +615,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
         if (onStageAction) {
             onStageAction('open_prep_modal');
         }
+        return;
     };
 
     // const handleInterviewRating = (rating: 'thumbs_up' | 'thumbs_down') => {
@@ -621,7 +624,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
     //     }
     // };
 
-    console.log(handleOpenPrepModal(), "handleOpenPrepModal - build fix");
+    console.log(handleOpenPrepModal, "handleOpenPrepModal - build fix");
 
     const [startingDate, setStartingDate] = React.useState(lead.starting_date || '');
 
