@@ -573,6 +573,9 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
         }
     };
 
+
+    console.log(markFollowUpComplete, "markFollowUpComplete - build fix");
+
     // ==========================================
     // APPLY ACTION HANDLER (NIEUWE LOGICA)
     // ==========================================

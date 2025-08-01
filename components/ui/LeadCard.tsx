@@ -247,7 +247,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
     const [interviewDate, setInterviewDate] = useState('');
     const [showNewInterview, setShowNewInterview] = useState(false);
     const [canRateInterview, setCanRateInterview] = useState(false);
-
+    console.log(canRateInterview, "canRateInterview - build fix");
     // Follow-up state
     const [followUpMessage, setFollowUpMessage] = useState(lead.follow_up_message || '');
 
@@ -648,7 +648,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
         // Verzamel welke interviews al zijn ingevuld
         const currentInterviews = lead.interviews || [];
         const doneTypes = currentInterviews.map((interview: any) => interview.type);
-
+        console.log(doneTypes, "doneTypes - build fix");
         // All types are always available (don't filter out done types)
         const availableTypes = INTERVIEW_TYPES;
 
@@ -1015,7 +1015,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
         // Check if job has interviews (for Close stage)
         const hasInterviews = lead.interviews && lead.interviews.length > 0;
-
+        console.log(hasInterviews, "hasInterviews - build fix");
         // Connect stage: applied but not got the job yet (regardless of interviews)
         if (lead.applied && lead.got_the_job !== true) {
 
