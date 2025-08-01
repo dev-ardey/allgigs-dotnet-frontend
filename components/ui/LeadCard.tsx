@@ -73,9 +73,9 @@ interface JobClickWithApplying {
         type: string;
         date: string;
         rating: boolean | null;
-        completed?: boolean;
-        id?: string;
-        created_at?: string;
+        completed: boolean | undefined;
+        id: string | undefined;
+        created_at: string | undefined;
     }>;
     // Interview prep data
     interview_prep_data?: {
@@ -720,9 +720,14 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 if (existingInterviewIndex >= 0) {
                     // Update existing interview with new date
                     updatedInterviews = [...currentInterviews];
+                    const existingInterview = updatedInterviews[existingInterviewIndex]!;
                     updatedInterviews[existingInterviewIndex] = {
-                        ...updatedInterviews[existingInterviewIndex],
-                        date: interviewDate
+                        type: existingInterview.type,
+                        date: interviewDate,
+                        rating: existingInterview.rating,
+                        completed: existingInterview.completed,
+                        id: existingInterview.id,
+                        created_at: existingInterview.created_at
                     };
                 } else {
                     // Create new interview object (without rating)
@@ -791,10 +796,14 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 if (existingInterviewIndex >= 0) {
                     // Update existing interview with rating
                     updatedInterviews = [...currentInterviews];
+                    const existingInterview = updatedInterviews[existingInterviewIndex]!;
                     updatedInterviews[existingInterviewIndex] = {
-                        ...updatedInterviews[existingInterviewIndex],
+                        type: existingInterview.type,
+                        date: existingInterview.date,
                         rating: rating,
-                        completed: true
+                        completed: true,
+                        id: existingInterview.id,
+                        created_at: existingInterview.created_at
                     };
                 } else {
                     // Create new interview object (fallback)

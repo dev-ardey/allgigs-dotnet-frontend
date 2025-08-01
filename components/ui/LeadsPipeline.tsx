@@ -84,11 +84,12 @@ interface JobClickWithApplying {
     }>;
     // Interviews stored as JSON array
     interviews?: Array<{
-        id: string;
         type: string;
         date: string;
-        rating: boolean;
-        created_at: string;
+        rating: boolean | null;
+        completed: boolean | undefined;
+        id: string | undefined;
+        created_at: string | undefined;
     }>;
 }
 
