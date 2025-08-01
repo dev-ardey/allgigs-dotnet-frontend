@@ -12,7 +12,8 @@ import {
     CheckCircle,
     Maximize2,
     Minimize2,
-    X
+    X,
+    Archive
 } from 'lucide-react';
 // import { Lead } from '../../types/leads';
 import { supabase } from '../../SupabaseClient';
@@ -53,6 +54,13 @@ interface JobClickWithApplying {
     // Additional fields
     receive_confirmation?: boolean;
     collapsed_job_click_card?: boolean;
+    // Follow-up fields
+    follow_up_completed?: boolean;
+    follow_up_completed_at?: string;
+    follow_up_message?: string;
+    // Archive fields
+    is_archived?: boolean;
+    archived_at?: string;
     // Contacts stored as JSON array
     contacts?: Array<{
         id: string;
@@ -84,15 +92,18 @@ const LeadCard: React.FC<LeadCardProps> = ({
     hasFollowUp,
     onStageAction
 }) => {
+    // Timer states
     const [timeLeft, setTimeLeft] = useState<string>('');
     const [isOverdue, setIsOverdue] = useState(false);
+    const [foundTimeLeft, setFoundTimeLeft] = useState<string>('');
+    const [foundIsOverdue, setFoundIsOverdue] = useState(false);
     const [notes, setNotes] = useState(lead.notes || '');
 
-    // Calculate follow-up timer
+    // Calculate follow-up timer for Connect stage
     useEffect(() => {
-        if (lead.applied && lead.created_at) {
+        if (lead.applied && lead.created_at && !lead.follow_up_completed) {
             const startDate = new Date(lead.created_at);
-            const followUpDays = lead.receive_confirmation ? 3 : 7; // Default to 3 days if no confirmation
+            const followUpDays = 2; // 2 days after applying
             const targetDate = new Date(startDate.getTime() + followUpDays * 24 * 60 * 60 * 1000);
 
             const updateTimer = () => {
@@ -122,10 +133,53 @@ const LeadCard: React.FC<LeadCardProps> = ({
             const interval = setInterval(updateTimer, 60000); // Update every minute
 
             return () => clearInterval(interval);
+        } else {
+            // Clear timer if not applicable
+            setTimeLeft('');
+            setIsOverdue(false);
         }
+    }, [lead.applied, lead.created_at, lead.follow_up_completed]);
 
-        return undefined;
-    }, [lead.applied, lead.created_at, lead.receive_confirmation]);
+    // Calculate Found stage countdown timer (2 days to apply)
+    useEffect(() => {
+        if (!lead.applied && lead.created_at) {
+            const startDate = new Date(lead.created_at);
+            const applyDays = 2; // 2 days to apply
+            const targetDate = new Date(startDate.getTime() + applyDays * 24 * 60 * 60 * 1000);
+
+            const updateFoundTimer = () => {
+                const now = new Date();
+                const diff = targetDate.getTime() - now.getTime();
+
+                if (diff <= 0) {
+                    setFoundTimeLeft('Job expired');
+                    setFoundIsOverdue(true);
+                } else {
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+                    if (days > 0) {
+                        setFoundTimeLeft(`${days}d ${hours}h ${minutes}m`);
+                    } else if (hours > 0) {
+                        setFoundTimeLeft(`${hours}h ${minutes}m`);
+                    } else {
+                        setFoundTimeLeft(`${minutes}m`);
+                    }
+                    setFoundIsOverdue(false);
+                }
+            };
+
+            updateFoundTimer();
+            const interval = setInterval(updateFoundTimer, 60000); // Update every minute
+
+            return () => clearInterval(interval);
+        } else {
+            // Clear timer if not applicable
+            setFoundTimeLeft('');
+            setFoundIsOverdue(false);
+        }
+    }, [lead.applied, lead.created_at]);
 
     // Voeg direct na de useState hooks toe:
     // Zet het type van mockPriority expliciet op string:
@@ -157,7 +211,8 @@ const LeadCard: React.FC<LeadCardProps> = ({
         companyValues: '',
         roleResponsibilities: '',
         specificQuestions: '',
-        portfolioReview: ''
+        portfolioReview: '',
+        whyCompany: ''
     });
 
     // Interview flow states (moved from renderInterviewFlow)
@@ -165,6 +220,10 @@ const LeadCard: React.FC<LeadCardProps> = ({
     const [interviewDate, setInterviewDate] = useState('');
     const [showNewInterview, setShowNewInterview] = useState(false);
     const [canRateInterview, setCanRateInterview] = useState(false);
+
+    // Follow-up state
+    const [followUpMessage, setFollowUpMessage] = useState(lead.follow_up_message || '');
+    const [showFollowUpForm, setShowFollowUpForm] = useState(false);
 
     // Calculate progress percentage
     const calculateProgress = () => {
@@ -244,7 +303,13 @@ const LeadCard: React.FC<LeadCardProps> = ({
     // Handle button actions
     const handleAppliedClick = (applied: boolean) => {
         if (onStageAction) {
-            onStageAction('apply', { applied });
+            if (applied) {
+                // If YES in Found stage - mark as applied
+                onStageAction('apply', { applied: true });
+            } else {
+                // If NO in Found stage - just delete the job (don't archive)
+                onStageAction('apply', { applied: false });
+            }
         }
     };
 
@@ -261,9 +326,27 @@ const LeadCard: React.FC<LeadCardProps> = ({
     };
     console.log(handleInvitedToInterview(), "handleInvitedToInterview - build fix");
 
-    const handleGotJob = (gotJob: boolean) => {
+    const handleGotJob = (gotJob: boolean, startingDate?: string) => {
         if (onStageAction) {
-            onStageAction('got_job', { gotJob });
+            if (gotJob === false) {
+                // If "No" - only archive if this was an applied job (not Found stage)
+                if (lead.applied) {
+                    onStageAction('archive_job', { applying_id: lead.applying_id });
+                } else {
+                    // If not applied yet, just delete (don't archive)
+                    onStageAction('apply', { applied: false });
+                }
+            } else {
+                // If "Yes", update got_the_job but don't archive yet (show archive button)
+                onStageAction('got_job', { gotJob, startingDate });
+            }
+        }
+    };
+
+    const handleArchiveJob = () => {
+        if (onStageAction && lead.applied) {
+            // Only archive if job was actually applied to
+            onStageAction('archive_job', { applying_id: lead.applying_id });
         }
     };
 
@@ -644,52 +727,181 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         )}
                     </div>
                 )}
+
+                {/* Interview prep section - moved inside interview flow */}
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); setShowInterviewPrep(!showInterviewPrep); }}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            width: '100%',
+                            padding: '8px 12px',
+                            backgroundColor: interviewPrepComplete ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                            color: interviewPrepComplete ? '#10b981' : '#3b82f6',
+                            border: `1px solid ${interviewPrepComplete ? 'rgba(16, 185, 129, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
+                            borderRadius: 6,
+                            fontSize: '11px',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        {interviewPrepComplete ? (
+                            <>
+                                <CheckCircle style={{ width: '14px', height: '14px' }} />
+                                Interview prep complete
+                            </>
+                        ) : (
+                            <>
+                                <Target style={{ width: '14px', height: '14px', color: '#fff' }} />
+                                <span style={{ color: '#fff' }}>Prep for interview</span>
+                            </>
+                        )}
+                    </button>
+
+                    {/* Interview prep form */}
+                    {showInterviewPrep && (
+                        <div style={{ marginTop: 12, padding: '12px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: 6 }}>
+                            <div style={{ fontSize: '11px', fontWeight: 600, marginBottom: 8, color: 'rgba(255, 255, 255, 0.9)' }}>
+                                Interview Preparation Questions:
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                <div>
+                                    <div style={{ fontSize: '10px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>
+                                        What are the company's values and mission?
+                                    </div>
+                                    <textarea
+                                        value={interviewPrepData.companyValues}
+                                        onChange={(e) => setInterviewPrepData({ ...interviewPrepData, companyValues: e.target.value })}
+                                        placeholder="Research and write down the company's values and mission..."
+                                        style={{
+                                            width: '100%',
+                                            minHeight: '40px',
+                                            padding: '6px 8px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'white',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 4,
+                                            fontSize: '10px',
+                                            resize: 'vertical',
+                                            boxSizing: 'border-box'
+                                        }}
+                                    />
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '10px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>
+                                        What are the main responsibilities for this role?
+                                    </div>
+                                    <textarea
+                                        value={interviewPrepData.roleResponsibilities}
+                                        onChange={(e) => setInterviewPrepData({ ...interviewPrepData, roleResponsibilities: e.target.value })}
+                                        placeholder="List the key responsibilities and expectations..."
+                                        style={{
+                                            width: '100%',
+                                            minHeight: '40px',
+                                            padding: '6px 8px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'white',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 4,
+                                            fontSize: '10px',
+                                            resize: 'vertical',
+                                            boxSizing: 'border-box'
+                                        }}
+                                    />
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '10px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>
+                                        Why do you want to work for this company?
+                                    </div>
+                                    <textarea
+                                        value={interviewPrepData.whyCompany}
+                                        onChange={(e) => setInterviewPrepData({ ...interviewPrepData, whyCompany: e.target.value })}
+                                        placeholder="Prepare your reasons and motivation..."
+                                        style={{
+                                            width: '100%',
+                                            minHeight: '40px',
+                                            padding: '6px 8px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'white',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 4,
+                                            fontSize: '10px',
+                                            resize: 'vertical',
+                                            boxSizing: 'border-box'
+                                        }}
+                                    />
+                                </div>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setInterviewPrepComplete(true);
+                                        setShowInterviewPrep(false);
+                                    }}
+                                    style={{
+                                        padding: '8px 16px',
+                                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                        color: '#10b981',
+                                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                                        borderRadius: 6,
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600',
+                                        alignSelf: 'flex-start'
+                                    }}
+                                >
+                                    Mark as Complete
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         );
     };
 
     // Render stage-specific content
     const renderStageContent = () => {
-        // Found stage: Toon altijd de 'Applied?' knoppen als er geen applying record is of applied = false
+        // Found stage: basic job info with apply option
         if (!lead.applied) {
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {/* URL */}
-                    {lead.url_clicked && (
-                        <div style={{ marginBottom: '12px' }}>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    window.open(lead.url_clicked, '_blank', 'noopener,noreferrer');
-                                }}
-                                style={{
-                                    padding: '8px 16px',
-                                    backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                                    color: 'white',
-                                    border: '1px solid rgba(59, 130, 246, 0.3)',
-                                    borderRadius: '8px',
-                                    fontSize: '12px',
-                                    cursor: 'pointer',
-                                    fontWeight: '600',
-                                    backdropFilter: 'blur(10px)',
-                                    transition: 'all 0.2s ease',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '6px'
-                                }}
-                            >
-                                <Target style={{ width: '12px', height: '12px' }} />
-                                View Job Posting
-                            </button>
+                    {/* Apply buttons with countdown inside */}
+                    <div style={{ padding: 12, background: 'rgba(59, 130, 246, 0.08)', borderRadius: 8, border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                            <Target style={{ width: '14px', height: '14px', color: '#3b82f6' }} />
+                            <span style={{ fontWeight: 600, fontSize: '12px', color: 'white' }}>Applied?</span>
                         </div>
-                    )}
-                    {/* Applied status */}
-                    <div>
-                        <div style={{ fontSize: '13px', marginBottom: '8px', fontWeight: '500', color: 'rgba(255, 255, 255, 0.7)' }}>Applied?</div>
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: 8, marginBottom: foundTimeLeft ? 12 : 0 }}>
                             <button onClick={(e) => { e.stopPropagation(); handleAppliedClick(true); }} style={{ padding: '8px 16px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontWeight: '600', backdropFilter: 'blur(10px)', transition: 'all 0.2s ease' }}>YES</button>
                             <button onClick={(e) => { e.stopPropagation(); handleAppliedClick(false); }} style={{ padding: '8px 16px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontWeight: '600', backdropFilter: 'blur(10px)', transition: 'all 0.2s ease' }}>NO</button>
                         </div>
+
+                        {/* Countdown timer inside Applied? box */}
+                        {foundTimeLeft && (
+                            <div style={{
+                                padding: 8,
+                                background: foundIsOverdue ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255, 255, 255, 0.1)',
+                                borderRadius: 6,
+                                border: `1px solid ${foundIsOverdue ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255, 255, 255, 0.2)'}`
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                                    <Timer style={{ width: '12px', height: '12px', color: foundIsOverdue ? '#ef4444' : 'white' }} />
+                                    <span style={{
+                                        fontWeight: 600,
+                                        fontSize: '11px',
+                                        color: foundIsOverdue ? '#ef4444' : 'white'
+                                    }}>
+                                        {foundIsOverdue ? 'Expired' : 'Apply now or the job will be deleted'}
+                                    </span>
+                                </div>
+                                <div style={{ fontSize: '10px', color: foundIsOverdue ? '#ef4444' : 'white', fontWeight: 600 }}>
+                                    {foundIsOverdue ? 'This job opportunity has expired' : `${foundTimeLeft} remaining`}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             );
@@ -704,174 +916,98 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {/* Interview flow - MOVED TO TOP */}
-                    {renderInterviewFlow()}
-
-                    {/* Interview prep */}
-                    <div style={{ padding: 12, background: 'rgba(59, 130, 246, 0.08)', borderRadius: 8 }}>
-                        <button
-                            onClick={(e) => { e.stopPropagation(); setShowInterviewPrep(!showInterviewPrep); }}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 6,
-                                width: '100%',
-                                padding: '8px 12px',
-                                backgroundColor: interviewPrepComplete ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-                                color: interviewPrepComplete ? '#10b981' : '#3b82f6',
-                                border: `1px solid ${interviewPrepComplete ? 'rgba(16, 185, 129, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
-                                borderRadius: 6,
-                                fontSize: '11px',
-                                cursor: 'pointer',
-                                fontWeight: '600',
-                                justifyContent: 'center'
-                            }}
-                        >
-                            {interviewPrepComplete ? (
-                                <>
-                                    <CheckCircle style={{ width: '14px', height: '14px' }} />
-                                    Interview prep complete
-                                </>
-                            ) : (
-                                <>
-                                    <Target style={{ width: '14px', height: '14px', color: '#fff' }} />
-                                    <span style={{ color: '#fff' }}>Prep for interview</span>
-                                </>
-                            )}
-                        </button>
-
-                        {/* Interview prep form */}
-                        {showInterviewPrep && (
-                            <div style={{ marginTop: 12, padding: '12px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: 6 }}>
-                                <div style={{ fontSize: '11px', fontWeight: 600, marginBottom: 8, color: 'rgba(255, 255, 255, 0.9)' }}>
-                                    Interview Preparation Questions:
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                    <div>
-                                        <div style={{ fontSize: '10px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>
-                                            What are the company's values and mission?
-                                        </div>
-                                        <textarea
-                                            value={interviewPrepData.companyValues}
-                                            onChange={(e) => setInterviewPrepData({ ...interviewPrepData, companyValues: e.target.value })}
-                                            placeholder="Research and write down the company's values and mission..."
-                                            style={{
-                                                width: '100%',
-                                                minHeight: '40px',
-                                                padding: '6px 8px',
-                                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                                color: 'white',
-                                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                                borderRadius: 4,
-                                                fontSize: '10px',
-                                                resize: 'vertical'
-                                            }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: '10px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>
-                                            What are the main responsibilities for this role?
-                                        </div>
-                                        <textarea
-                                            value={interviewPrepData.roleResponsibilities}
-                                            onChange={(e) => setInterviewPrepData({ ...interviewPrepData, roleResponsibilities: e.target.value })}
-                                            placeholder="List the key responsibilities and expectations..."
-                                            style={{
-                                                width: '100%',
-                                                minHeight: '40px',
-                                                padding: '6px 8px',
-                                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                                color: 'white',
-                                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                                borderRadius: 4,
-                                                fontSize: '10px',
-                                                resize: 'vertical'
-                                            }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: '10px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>
-                                            What specific questions do you want to ask?
-                                        </div>
-                                        <textarea
-                                            value={interviewPrepData.specificQuestions}
-                                            onChange={(e) => setInterviewPrepData({ ...interviewPrepData, specificQuestions: e.target.value })}
-                                            placeholder="Prepare thoughtful questions to ask during the interview..."
-                                            style={{
-                                                width: '100%',
-                                                minHeight: '40px',
-                                                padding: '6px 8px',
-                                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                                color: 'white',
-                                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                                borderRadius: 4,
-                                                fontSize: '10px',
-                                                resize: 'vertical'
-                                            }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: '10px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>
-                                            What should you review in your portfolio?
-                                        </div>
-                                        <textarea
-                                            value={interviewPrepData.portfolioReview}
-                                            onChange={(e) => setInterviewPrepData({ ...interviewPrepData, portfolioReview: e.target.value })}
-                                            placeholder="Note which projects and skills to highlight..."
-                                            style={{
-                                                width: '100%',
-                                                minHeight: '40px',
-                                                padding: '6px 8px',
-                                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                                color: 'white',
-                                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                                borderRadius: 4,
-                                                fontSize: '10px',
-                                                resize: 'vertical'
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                                <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
-                                    {!interviewPrepComplete && (
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setInterviewPrepComplete(true);
-                                                setShowInterviewPrep(false);
-                                            }}
-                                            style={{
-                                                padding: '6px 12px',
-                                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                                color: '#10b981',
-                                                border: '1px solid rgba(16, 185, 129, 0.3)',
-                                                borderRadius: 4,
-                                                fontSize: '11px',
-                                                cursor: 'pointer',
-                                                fontWeight: '600'
-                                            }}
-                                        >
-                                            Save
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); setShowInterviewPrep(false); }}
-                                        style={{
-                                            padding: '6px 12px',
-                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                            color: 'rgba(255, 255, 255, 0.7)',
-                                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                                            borderRadius: 4,
-                                            fontSize: '11px',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        {interviewPrepComplete ? 'Close' : 'Cancel'}
-                                    </button>
-                                </div>
+                    {/* Follow-up reminder - MOVED TO TOP */}
+                    {timeLeft && !lead.follow_up_completed && (
+                        <div style={{ padding: 12, background: 'rgba(245, 158, 11, 0.08)', borderRadius: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                                <Timer style={{ width: '14px', height: '14px', color: isOverdue ? '#ef4444' : '#f59e0b' }} />
+                                <span style={{ fontWeight: 600, fontSize: '12px', color: isOverdue ? '#ef4444' : '#f59e0b' }}>Follow-up</span>
                             </div>
-                        )}
-                    </div>
+                            <div style={{
+                                marginBottom: 8
+                            }}>
+                                <span style={{ fontSize: '11px', color: isOverdue ? '#ef4444' : '#f59e0b', fontWeight: 600 }}>
+                                    {timeLeft}
+                                </span>
+                            </div>
+
+                            {/* Follow-up message input */}
+                            <div style={{ marginBottom: 8 }}>
+                                <textarea
+                                    placeholder="Paste your followup message..."
+                                    value={followUpMessage}
+                                    onChange={(e) => setFollowUpMessage(e.target.value)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{
+                                        width: '100%',
+                                        minHeight: '30px', // Half the height of notes textbox
+                                        padding: '8px',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                        color: 'white',
+                                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                                        borderRadius: 4,
+                                        fontSize: '11px',
+                                        resize: 'vertical',
+                                        fontFamily: 'inherit',
+                                        boxSizing: 'border-box'
+                                    }}
+                                />
+                            </div>
+
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (followUpMessage.trim() && onStageAction) {
+                                        onStageAction('follow_up_complete', { followUpMessage: followUpMessage.trim() });
+                                    }
+                                }}
+                                disabled={!followUpMessage.trim()}
+                                style={{
+                                    padding: '6px 12px',
+                                    backgroundColor: followUpMessage.trim() ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.1)',
+                                    color: followUpMessage.trim() ? '#10b981' : 'rgba(255, 255, 255, 0.3)',
+                                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                                    borderRadius: 6,
+                                    fontSize: '11px',
+                                    cursor: followUpMessage.trim() ? 'pointer' : 'not-allowed',
+                                    fontWeight: '600'
+                                }}
+                            >
+                                Mark Complete
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Completed follow-up message */}
+                    {lead.follow_up_completed && lead.follow_up_message && (
+                        <div style={{ padding: 12, background: 'rgba(16, 185, 129, 0.08)', borderRadius: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                                <CheckCircle style={{ width: '14px', height: '14px', color: '#10b981' }} />
+                                <span style={{ fontWeight: 600, fontSize: '12px', color: '#10b981' }}>Follow-up Completed</span>
+                            </div>
+                            <textarea
+                                value={lead.follow_up_message}
+                                readOnly
+                                style={{
+                                    width: '100%',
+                                    minHeight: '30px', // Half the height of notes textbox
+                                    padding: '8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'rgba(255, 255, 255, 0.8)',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    resize: 'vertical',
+                                    fontFamily: 'inherit',
+                                    boxSizing: 'border-box',
+                                    cursor: 'text'
+                                }}
+                            />
+                        </div>
+                    )}
+
+                    {/* Interview flow - MOVED BELOW FOLLOW-UP */}
+                    {renderInterviewFlow()}
 
                     {/* Contacts */}
                     <div style={{ padding: 12, background: 'rgba(255, 255, 255, 0.05)', borderRadius: 8 }}>
@@ -1053,38 +1189,6 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
                     {/* Interview flow - REMOVED: Now at top */}
 
-                    {/* Follow-up reminder */}
-                    {timeLeft && (
-                        <div style={{ padding: 12, background: 'rgba(245, 158, 11, 0.08)', borderRadius: 8 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                                <Timer style={{ width: '14px', height: '14px', color: isOverdue ? '#ef4444' : '#f59e0b' }} />
-                                <span style={{ fontWeight: 600, fontSize: '12px', color: isOverdue ? '#ef4444' : '#f59e0b' }}>Follow-up</span>
-                            </div>
-                            <div style={{
-                                marginBottom: 8
-                            }}>
-                                <span style={{ fontSize: '11px', color: isOverdue ? '#ef4444' : '#f59e0b', fontWeight: 600 }}>
-                                    {timeLeft}
-                                </span>
-                            </div>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); handleFollowUpComplete(true); }}
-                                style={{
-                                    padding: '6px 12px',
-                                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                    color: '#10b981',
-                                    border: '1px solid rgba(16, 185, 129, 0.3)',
-                                    borderRadius: 6,
-                                    fontSize: '11px',
-                                    cursor: 'pointer',
-                                    fontWeight: '600'
-                                }}
-                            >
-                                Mark Complete
-                            </button>
-                        </div>
-                    )}
-
                     {/* Got the job */}
                     <div style={{ padding: 12, background: 'rgba(255, 255, 255, 0.05)', borderRadius: 8 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
@@ -1162,6 +1266,28 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                         Potential earnings: €100,000
                                     </div>
                                 </div>
+
+                                {/* Archive button */}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleArchiveJob(); }}
+                                    style={{
+                                        padding: '6px 12px',
+                                        backgroundColor: 'rgba(156, 163, 175, 0.1)',
+                                        color: '#9ca3af',
+                                        border: '1px solid rgba(156, 163, 175, 0.3)',
+                                        borderRadius: 6,
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600',
+                                        marginTop: 8,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 4
+                                    }}
+                                >
+                                    <Archive style={{ width: '12px', height: '12px' }} />
+                                    Archive Job
+                                </button>
                             </div>
                         )}
                     </div>
@@ -1249,9 +1375,30 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                     <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 600, marginBottom: 4 }}>
                                         🎉 Congratulations! You got the job!
                                     </div>
-                                    <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                                    <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: 8 }}>
                                         Potential earnings: €100,000
                                     </div>
+
+                                    {/* Archive button */}
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleArchiveJob(); }}
+                                        style={{
+                                            padding: '6px 12px',
+                                            backgroundColor: 'rgba(156, 163, 175, 0.1)',
+                                            color: '#9ca3af',
+                                            border: '1px solid rgba(156, 163, 175, 0.3)',
+                                            borderRadius: 6,
+                                            fontSize: '10px',
+                                            cursor: 'pointer',
+                                            fontWeight: '600',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 4
+                                        }}
+                                    >
+                                        <Archive style={{ width: '10px', height: '10px' }} />
+                                        Archive Job
+                                    </button>
                                 </div>
                             </div>
                         )}

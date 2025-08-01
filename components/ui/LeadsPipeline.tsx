@@ -67,6 +67,13 @@ interface JobClickWithApplying {
     // Additional fields
     receive_confirmation?: boolean;
     collapsed_job_click_card?: boolean;
+    // Follow-up fields
+    follow_up_completed?: boolean;
+    follow_up_completed_at?: string;
+    follow_up_message?: string;
+    // Archive fields
+    is_archived?: boolean;
+    archived_at?: string;
     // Contacts stored as JSON array
     contacts?: Array<{
         id: string;
@@ -111,8 +118,8 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
     // Filter states
     const [searchTerm, setSearchTerm] = useState('');
-    const [stageFilter, setStageFilter] = useState<LeadStage | 'all'>('all');
     const [allCollapsed, setAllCollapsed] = useState(false);
+    const [showFollowUpOnly, setShowFollowUpOnly] = useState(false);
 
     console.log('build', allCollapsed, setAllCollapsed, "allCollapsed - build fix");
     // Collapse/Expand all handlers
@@ -230,15 +237,32 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             ];
         }
 
-        // Filter leads based on search term
-        const filteredLeads = leads.filter(lead => {
-            if (!searchTerm) return true;
-            const searchLower = searchTerm.toLowerCase();
-            return (
-                lead.job_title_clicked?.toLowerCase().includes(searchLower) ||
-                lead.company_clicked?.toLowerCase().includes(searchLower) ||
-                lead.location_clicked?.toLowerCase().includes(searchLower)
+        // Filter leads based on search term and follow-up filter
+        let filteredLeads = leads.filter(lead => {
+            if (!searchTerm && !showFollowUpOnly) return true;
+
+            // Search filter
+            const matchesSearch = !searchTerm || (
+                lead.job_title_clicked?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                lead.company_clicked?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                lead.location_clicked?.toLowerCase().includes(searchTerm.toLowerCase())
             );
+
+            // Follow-up filter
+            if (showFollowUpOnly) {
+                // Only show applied jobs that need follow-up (2+ days old, not completed, not got job)
+                if (!lead.applied || lead.got_the_job === true || lead.follow_up_completed) {
+                    return false;
+                }
+
+                const appliedDate = new Date(lead.created_at);
+                const now = new Date();
+                const daysSinceApplied = (now.getTime() - appliedDate.getTime()) / (1000 * 60 * 60 * 24);
+
+                return matchesSearch && daysSinceApplied >= 2;
+            }
+
+            return matchesSearch;
         });
 
         // Found column: job_clicks without applying record (or applied = false)
@@ -277,7 +301,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 icon: stageConfig.close.icon
             }
         ];
-    }, [leads, searchTerm, stageFilter, stageConfig, loading]);
+    }, [leads, searchTerm, stageConfig, loading, showFollowUpOnly]);
 
     // ==========================================
     // DATA FETCHING (NIEUW: job_clicks + applying)
@@ -294,9 +318,17 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 .from('applying')
                 .select('*')
                 .eq('user_id', user.id)
+                .eq('is_archived', false) // Only get non-archived leads
                 .order('created_at', { ascending: false });
 
             if (applyingError) throw applyingError;
+
+            // Get archived count in parallel (don't await yet)
+            const archivedCountPromise = supabase
+                .from('applying')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+                .eq('is_archived', true);
 
             console.log('[DEBUG] Fetched applying records:', {
                 count: applyingRecords.length,
@@ -351,6 +383,12 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
             setLeads(processedRecords);
             setDatabaseAvailable(true);
+
+            // Get archived count from parallel query
+            const { count: archivedCount, error: countError } = await archivedCountPromise;
+            if (!countError) {
+                setArchivedCount(archivedCount || 0);
+            }
         } catch (err: any) {
             setError(err.message || 'Error fetching leads');
             setLeads([]);
@@ -367,6 +405,59 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     useEffect(() => {
         fetchLeads();
     }, [fetchLeads]);
+
+    // ==========================================
+    // CALCULATE FOLLOW-UP NOTIFICATIONS
+    // ==========================================
+    const calculateFollowUpNotifications = useCallback(() => {
+        const now = new Date();
+        const notifications = leads.filter(lead => {
+            // Only applied jobs need follow-up
+            if (!lead.applied) return false;
+
+            // Skip if already got the job
+            if (lead.got_the_job === true) return false;
+
+            // Skip if follow-up already completed
+            if (lead.follow_up_completed) return false;
+
+            // Calculate days since applied (use created_at as apply date for now)
+            const appliedDate = new Date(lead.created_at);
+            const daysSinceApplied = (now.getTime() - appliedDate.getTime()) / (1000 * 60 * 60 * 24);
+
+            // Follow-up due after 2 days
+            return daysSinceApplied >= 2;
+        });
+
+        setFollowUpNotifications(notifications);
+    }, [leads]);
+
+    // Update follow-up notifications when leads change
+    useEffect(() => {
+        calculateFollowUpNotifications();
+    }, [calculateFollowUpNotifications]);
+
+    // ==========================================
+    // CALCULATE ARCHIVED COUNT
+    // ==========================================
+    const calculateArchivedCount = useCallback(async () => {
+        if (!user?.id) return;
+
+        try {
+            // Count archived leads from database
+            const { count, error } = await supabase
+                .from('applying')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+                .eq('is_archived', true);
+
+            if (error) throw error;
+            setArchivedCount(count || 0);
+        } catch (err) {
+            console.error('Error calculating archived count:', err);
+            setArchivedCount(0);
+        }
+    }, [user?.id]);
 
     // ==========================================
     // DRAG & DROP HANDLERS
@@ -579,13 +670,14 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
         }
     };
 
-    const handleFollowUpComplete = async (applyingId: string) => {
+    const handleFollowUpComplete = async (applyingId: string, followUpMessage: string) => {
         try {
             const { error } = await supabase
                 .from('applying')
                 .update({
                     follow_up_completed: true,
-                    follow_up_completed_at: new Date().toISOString()
+                    follow_up_completed_at: new Date().toISOString(),
+                    follow_up_message: followUpMessage
                 })
                 .eq('applying_id', applyingId);
 
@@ -619,6 +711,69 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
         } catch (err: any) {
             console.error('Error updating got the job status:', err);
             setError(err.message || 'Error updating job status');
+        }
+    };
+
+    const handleArchiveJob = async (applyingId: string) => {
+        try {
+            // Get the job to archive
+            const jobToArchive = leads.find(lead => lead.applying_id === applyingId);
+            if (!jobToArchive) return;
+
+            // Only archive jobs that were actually applied to
+            if (!jobToArchive.applied) {
+                console.log('Cannot archive: Job was not applied to');
+                return;
+            }
+
+            // Update the applying record to mark it as archived
+            const { error: updateError } = await supabase
+                .from('applying')
+                .update({ is_archived: true, archived_at: new Date().toISOString() })
+                .eq('applying_id', applyingId);
+
+            if (updateError) throw updateError;
+
+            // Refresh leads to remove archived job from view
+            await fetchLeads();
+        } catch (err: any) {
+            console.error('Error archiving job:', err);
+            setError(err.message || 'Error archiving job');
+        }
+    };
+
+    const handleRestoreLead = async (archivedApplyingId: string) => {
+        try {
+            // Simply update the archived job to un-archive it
+            const { error: updateError } = await supabase
+                .from('applying')
+                .update({ is_archived: false, archived_at: null })
+                .eq('applying_id', archivedApplyingId);
+
+            if (updateError) throw updateError;
+
+            // Refresh leads and archived count
+            await fetchLeads();
+            await calculateArchivedCount();
+        } catch (err: any) {
+            console.error('Error restoring lead:', err);
+        }
+    };
+
+    const handleDeleteArchivedLead = async (archivedApplyingId: string) => {
+        try {
+            // Simply delete the archived applying record
+            const { error: deleteError } = await supabase
+                .from('applying')
+                .delete()
+                .eq('applying_id', archivedApplyingId);
+
+            if (deleteError) throw deleteError;
+
+            // Refresh archived count
+            await calculateArchivedCount();
+        } catch (err: any) {
+            console.error('Error deleting archived lead:', err);
         }
     };
 
@@ -893,65 +1048,13 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
 
 
-            {/* Follow-up Notifications */}
-            {followUpNotifications.length > 0 && (
-                <div style={{
-                    background: 'rgba(245, 158, 11, 0.2)',
-                    border: '1px solid rgba(245, 158, 11, 0.4)',
-                    borderRadius: '12px',
-                    padding: '1rem',
-                    marginBottom: '2rem'
-                }}>
-                    <h3 style={{
-                        margin: '0 0 0.75rem 0',
-                        fontSize: '1rem',
-                        fontWeight: '600',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                    }}>
-                        <Bell style={{ width: '16px', height: '16px' }} />
-                        Follow-up Reminders ({followUpNotifications.length})
-                    </h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        {followUpNotifications.map(lead => (
-                            <div key={lead.applying_id} style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                padding: '0.5rem 0',
-                                borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-                            }}>
-                                <span>
-                                    <strong>{lead.job_title_clicked}</strong> at {lead.company_clicked}
-                                </span>
-                                <button
-                                    onClick={() => markFollowUpComplete(lead.applying_id)}
-                                    style={{
-                                        padding: '0.25rem 0.5rem',
-                                        background: 'rgba(16, 185, 129, 0.2)',
-                                        border: '1px solid rgba(16, 185, 129, 0.3)',
-                                        borderRadius: '4px',
-                                        color: '#fff',
-                                        cursor: 'pointer',
-                                        fontSize: '0.75rem'
-                                    }}
-                                >
-                                    Mark Complete
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
             {/* Search and Filter Bar */}
             <div style={{
                 display: 'flex',
                 gap: '2rem',
                 marginBottom: '2rem',
                 alignItems: 'center',
-                justifyContent: 'space-between' // Space between search and dropdown
+                justifyContent: 'space-between' // Space between search and buttons
             }}>
                 <div style={{ position: 'relative', flex: '1', minWidth: '200px' }}>
                     <Search style={{
@@ -980,28 +1083,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     />
                 </div>
 
-                <select
-                    value={stageFilter}
-                    onChange={(e) => setStageFilter(e.target.value as LeadStage | 'all')}
-                    style={{
-                        padding: '0.75rem',
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: '8px',
-                        color: '#fff',
-                        fontSize: '0.875rem',
-                        minWidth: '140px',
-                        flexShrink: 0, // Prevent shrinking on mobile
-                        marginLeft: '40px'
-                    }}
-                >
-                    <option value="all">All Stages</option>
-                    {Object.entries(stageConfig).map(([stage, config]) => (
-                        <option key={stage} value={stage}>{config.title}</option>
-                    ))}
-                </select>
-
-                <div style={{ display: 'flex', gap: 8, marginLeft: '20px' }}>
+                <div style={{ display: 'flex', gap: 8 }}>
                     <button
                         onClick={handleArchiveClick}
                         style={{
@@ -1015,7 +1097,8 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                             color: '#fff',
                             cursor: 'pointer',
                             fontSize: '0.875rem',
-                            transition: 'all 0.2s ease'
+                            transition: 'all 0.2s ease',
+                            marginLeft: '2.5rem' // ~1cm spacing from search bar
                         }}
                         onMouseEnter={(e) => {
                             e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
@@ -1051,6 +1134,36 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     >
                         <BarChart3 style={{ width: '16px', height: '16px' }} />
                         Statistics
+                    </button>
+                    <button
+                        onClick={() => setShowFollowUpOnly(!showFollowUpOnly)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: showFollowUpOnly ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                            border: showFollowUpOnly ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)',
+                            borderRadius: '8px',
+                            color: showFollowUpOnly ? '#f59e0b' : '#fff',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!showFollowUpOnly) {
+                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!showFollowUpOnly) {
+                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                            }
+                        }}
+                    >
+                        <Bell style={{ width: '16px', height: '16px' }} />
+                        Follow-up
+                        {showFollowUpOnly && <CheckCircle style={{ width: '14px', height: '14px' }} />}
                     </button>
                     <button
                         onClick={handleCollapseAll}
@@ -1254,9 +1367,11 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                                                                     } else if (action === 'update_notes') {
                                                                         handleUpdateApplying(lead.applying_id, { notes: data.notes });
                                                                     } else if (action === 'follow_up_complete') {
-                                                                        handleFollowUpComplete(lead.applying_id);
+                                                                        handleFollowUpComplete(lead.applying_id, data.followUpMessage);
                                                                     } else if (action === 'got_job') {
                                                                         handleGotJob(lead.applying_id, data.gotJob, data.startingDate);
+                                                                    } else if (action === 'archive_job') {
+                                                                        handleArchiveJob(data.applying_id);
                                                                     } else if (action === 'interview_added') {
                                                                         // Refresh leads when interview is added
                                                                         fetchLeads();
@@ -1281,6 +1396,8 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                                                                             console.log('Updated leads state:', updatedLeads.find(l => l.applying_id === lead.applying_id));
                                                                             return updatedLeads;
                                                                         });
+                                                                    } else if (action === 'archive') {
+                                                                        handleArchiveJob(lead.applying_id);
                                                                     }
                                                                 }}
                                                             />
@@ -1288,6 +1405,28 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                                                     )}
                                                 </Draggable>
                                             ))}
+
+                                            {/* Empty state for follow-up filter */}
+                                            {showFollowUpOnly && column.id === 'connect' && column.leads.length === 0 && (
+                                                <div style={{
+                                                    padding: '2rem 1rem',
+                                                    textAlign: 'center',
+                                                    color: 'rgba(255, 255, 255, 0.6)',
+                                                    fontSize: '0.875rem'
+                                                }}>
+                                                    <Bell style={{
+                                                        width: '24px',
+                                                        height: '24px',
+                                                        margin: '0 auto 0.5rem auto',
+                                                        display: 'block',
+                                                        opacity: 0.5
+                                                    }} />
+                                                    <div>No follow-up reminders needed</div>
+                                                    <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.7 }}>
+                                                        All applied jobs are up to date
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                         {provided.placeholder}
                                     </div>
@@ -1303,16 +1442,11 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 <ArchiveModal
                     onClose={() => setShowArchiveModal(false)}
                     user={user}
-                    archivedLeads={[]} // Currently no archived leads - will show "0 leads archived"
                     onRestoreLead={(leadId) => {
-                        // TODO: Implement restore functionality
-                        console.log('Restore lead:', leadId);
-                        setShowArchiveModal(false);
+                        handleRestoreLead(leadId);
                     }}
                     onDeleteLead={(leadId) => {
-                        // TODO: Implement delete functionality
-                        console.log('Delete lead:', leadId);
-                        setShowArchiveModal(false);
+                        handleDeleteArchivedLead(leadId);
                     }}
                 />
             )}

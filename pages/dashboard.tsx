@@ -1318,7 +1318,7 @@ export default function Dashboard() {
   const [showFeatureModal, setShowFeatureModal] = useState<null | string>(null);
   const [notifyMe, setNotifyMe] = useState<{ [key: string]: boolean }>({});
   console.log(notifyMe, setNotifyMe, "notifyMe - build fix");
-console.log(showFeatureModal, setShowFeatureModal, "showFeatureModal - build fix");
+  console.log(showFeatureModal, setShowFeatureModal, "showFeatureModal - build fix");
 
   // const toggleAvailable = () => setIsAvailable(prev => !prev);
 

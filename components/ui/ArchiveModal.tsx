@@ -1,11 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Archive, Search, X, RotateCcw, Trash2 } from 'lucide-react';
-import { Lead } from '../../types/leads';
+import { supabase } from '../../SupabaseClient';
+
+interface ArchivedJob {
+    applying_id: string;
+    user_id: string;
+    unique_id_job: string;
+    applied: boolean;
+    created_at: string;
+    job_title_clicked: string;
+    company_clicked: string;
+    location_clicked: string;
+    rate_clicked: string;
+    date_posted_clicked: string;
+    summary_clicked: string;
+    url_clicked: string;
+    notes?: string | null;
+    archived_at?: string;
+    got_the_job?: boolean | null;
+    [key: string]: any; // Allow additional properties
+}
 
 interface ArchiveModalProps {
     onClose: () => void;
     user: any;
-    archivedLeads?: Lead[]; // Optional array of archived leads
     onRestoreLead?: (leadId: string) => void;
     onDeleteLead?: (leadId: string) => void;
 }
@@ -13,19 +31,45 @@ interface ArchiveModalProps {
 const ArchiveModal: React.FC<ArchiveModalProps> = ({
     onClose,
     user,
-    archivedLeads = [], // Default to empty array
     onRestoreLead,
     onDeleteLead
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
+    const [archivedLeads, setArchivedLeads] = useState<ArchivedJob[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch archived leads
+    useEffect(() => {
+        const fetchArchivedLeads = async () => {
+            if (!user?.id) return;
+
+            try {
+                const { data, error } = await supabase
+                    .from('applying')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('is_archived', true)
+                    .order('archived_at', { ascending: false });
+
+                if (error) throw error;
+                setArchivedLeads(data || []);
+            } catch (err) {
+                console.error('Error fetching archived leads:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchArchivedLeads();
+    }, [user?.id]);
 
     // Console log to prevent unused variable error
     console.log('ArchiveModal user:', user);
 
     // Filter archived leads based on search term
     const filteredLeads = archivedLeads.filter(lead =>
-        lead.job_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.job_title_clicked.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.company_clicked.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (lead.notes && lead.notes.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
@@ -123,7 +167,29 @@ const ArchiveModal: React.FC<ArchiveModalProps> = ({
                     overflow: 'auto',
                     minHeight: '200px'
                 }}>
-                    {archivedLeads.length === 0 ? (
+                    {loading ? (
+                        // Loading state
+                        <div style={{
+                            textAlign: 'center',
+                            padding: '3rem 1rem',
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        }}>
+                            <h3 style={{
+                                margin: '0 0 0.5rem 0',
+                                fontSize: '1.125rem',
+                                fontWeight: '600'
+                            }}>
+                                Loading Archived Leads...
+                            </h3>
+                            <p style={{
+                                margin: 0,
+                                fontSize: '0.875rem',
+                                opacity: 0.8
+                            }}>
+                                Please wait while we fetch the archived leads.
+                            </p>
+                        </div>
+                    ) : archivedLeads.length === 0 ? (
                         // Empty state
                         <div style={{
                             textAlign: 'center',
@@ -148,7 +214,7 @@ const ArchiveModal: React.FC<ArchiveModalProps> = ({
                                 fontSize: '0.875rem',
                                 opacity: 0.8
                             }}>
-                                When you archive leads, they will appear here for easy management.
+                                They will appear here, when you closed a lead in the closed column
                             </p>
                         </div>
                     ) : filteredLeads.length === 0 ? (
@@ -176,7 +242,7 @@ const ArchiveModal: React.FC<ArchiveModalProps> = ({
                             gap: '0.75rem'
                         }}>
                             {filteredLeads.map(lead => (
-                                <div key={lead.id} style={{
+                                <div key={lead.applying_id} style={{
                                     background: 'rgba(255, 255, 255, 0.1)',
                                     border: '1px solid rgba(255, 255, 255, 0.2)',
                                     borderRadius: '8px',
@@ -191,21 +257,21 @@ const ArchiveModal: React.FC<ArchiveModalProps> = ({
                                             fontSize: '1rem',
                                             fontWeight: '600'
                                         }}>
-                                            {lead.job_title}
+                                            {lead.job_title_clicked}
                                         </h4>
                                         <p style={{
                                             margin: '0 0 0.25rem 0',
                                             fontSize: '0.875rem',
                                             opacity: 0.8
                                         }}>
-                                            {lead.company}
+                                            {lead.company_clicked}
                                         </p>
                                         <p style={{
                                             margin: 0,
                                             fontSize: '0.75rem',
                                             opacity: 0.6
                                         }}>
-                                            Archived {new Date(lead.updated_at).toLocaleDateString()}
+                                            Archived {new Date(lead.archived_at || lead.created_at).toLocaleDateString()}
                                         </p>
                                     </div>
                                     <div style={{
@@ -213,7 +279,7 @@ const ArchiveModal: React.FC<ArchiveModalProps> = ({
                                         gap: '0.5rem'
                                     }}>
                                         <button
-                                            onClick={() => onRestoreLead?.(lead.id)}
+                                            onClick={() => onRestoreLead?.(lead.applying_id)}
                                             style={{
                                                 padding: '0.5rem',
                                                 background: 'rgba(16, 185, 129, 0.2)',
@@ -232,7 +298,7 @@ const ArchiveModal: React.FC<ArchiveModalProps> = ({
                                             Restore
                                         </button>
                                         <button
-                                            onClick={() => onDeleteLead?.(lead.id)}
+                                            onClick={() => onDeleteLead?.(lead.applying_id)}
                                             style={{
                                                 padding: '0.5rem',
                                                 background: 'rgba(239, 68, 68, 0.2)',
