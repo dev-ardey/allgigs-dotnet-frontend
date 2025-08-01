@@ -57,6 +57,15 @@ interface JobClickWithApplying {
     // Additional fields
     receive_confirmation?: boolean;
     collapsed_job_click_card?: boolean;
+    // Interviews stored as JSON array
+    interviews?: Array<{
+        type: string;
+        date: string;
+        rating: boolean | null;
+        completed?: boolean;
+        id?: string;
+        created_at?: string;
+    }>;
 }
 
 interface LeadDetailModalProps {
@@ -151,7 +160,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
             description: 'Had positive 30-minute phone conversation about role and company culture',
             date: '2025-01-16T16:00:00Z',
             contact_id: '1',
-            stage: 'connect'
+            stage: 'lead'
         },
         {
             id: '4',
@@ -168,7 +177,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
             description: 'Scheduled technical interview for next Tuesday at 2 PM',
             date: '2025-01-18T11:30:00Z',
             contact_id: '2',
-            stage: 'connect'
+            stage: 'opportunity'
         },
         {
             id: '6',
@@ -177,7 +186,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
             description: 'Sent thank you email after technical interview',
             date: '2025-01-19T15:45:00Z',
             contact_id: '1',
-            stage: 'close'
+            stage: 'deal'
         }
     ]);
 
@@ -210,7 +219,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                 id: Date.now().toString(),
                 ...newActivity,
                 date: new Date().toISOString(),
-                stage: lead.got_the_job ? 'close' : 'connect' // Automatically assign current lead stage
+                stage: lead.got_the_job ? 'deal' : (lead.interviews && lead.interviews.length > 0 ? 'opportunity' : 'lead') // Automatically assign current lead stage
             };
             setActivities([activity, ...activities]);
             setNewActivity({ type: 'note', title: '', description: '' });
@@ -258,8 +267,9 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
     const getStageColor = (stage: LeadStage) => {
         switch (stage) {
             case 'found': return '#3b82f6';
-            case 'connect': return '#f59e0b';
-            case 'close': return '#10b981';
+            case 'lead': return '#8b5cf6';
+            case 'opportunity': return '#f59e0b';
+            case 'deal': return '#10b981';
             default: return '#6b7280';
         }
     };
@@ -277,8 +287,9 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
     const formatStageName = (stage: LeadStage) => {
         switch (stage) {
             case 'found': return 'Found';
-            case 'connect': return 'Connect';
-            case 'close': return 'Close';
+            case 'lead': return 'Lead';
+            case 'opportunity': return 'Opportunity';
+            case 'deal': return 'Deal';
             default: return stage;
         }
     };
