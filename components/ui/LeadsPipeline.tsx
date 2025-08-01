@@ -323,13 +323,6 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
             if (applyingError) throw applyingError;
 
-            // Get archived count in parallel (don't await yet)
-            const archivedCountPromise = supabase
-                .from('applying')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', user.id)
-                .eq('is_archived', true);
-
             console.log('[DEBUG] Fetched applying records:', {
                 count: applyingRecords.length,
                 sample: applyingRecords[0]
@@ -383,19 +376,32 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
             setLeads(processedRecords);
             setDatabaseAvailable(true);
+            setLoading(false); // Show dashboard immediately
 
-            // Get archived count from parallel query
-            const { count: archivedCount, error: countError } = await archivedCountPromise;
-            if (!countError) {
-                setArchivedCount(archivedCount || 0);
-            }
+            // Load archive count in background (silent, no blocking)
+            setTimeout(async () => {
+                try {
+                    const { count: archivedCount, error: countError } = await supabase
+                        .from('applying')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('user_id', user.id)
+                        .eq('is_archived', true);
+
+                    if (!countError) {
+                        setArchivedCount(archivedCount || 0);
+                    }
+                } catch (err) {
+                    // Silent fail - no user notification needed
+                    console.error('Background archive count failed:', err);
+                }
+            }, 50); // Very short delay to ensure UI renders first
+
         } catch (err: any) {
             setError(err.message || 'Error fetching leads');
             setLeads([]);
             setDatabaseAvailable(false);
             console.error('[DEBUG] fetchLeads error:', err);
-        } finally {
-            setLoading(false);
+            setLoading(false); // Ensure loading stops even on error
         }
     }, [user?.id]);
 
@@ -1357,6 +1363,12 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                                                                 isDragging={snapshot.isDragging}
                                                                 hasFollowUp={followUpNotifications.some(fu => fu.applying_id === lead.applying_id)}
                                                                 onClick={() => { }} // Empty function for now
+                                                                onArchived={(leadId) => {
+                                                                    // Remove the archived/deleted lead from the leads array
+                                                                    setLeads(prevLeads => prevLeads.filter(l => l.applying_id !== leadId));
+                                                                    // Recalculate archived count
+                                                                    calculateArchivedCount();
+                                                                }}
                                                                 onStageAction={(action, data) => {
                                                                     if (action === 'apply') {
                                                                         handleApplyAction(lead.unique_id_job, data.applied);

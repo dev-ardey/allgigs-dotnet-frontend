@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 // import { Draggable } from 'react-beautiful-dnd';
 import {
     MapPin,
@@ -82,6 +82,7 @@ interface LeadCardProps {
     isDragging: boolean;
     hasFollowUp: boolean;
     onStageAction?: (action: string, data?: any) => void;
+    onArchived?: (leadId: string) => void;
     index: number;
 }
 
@@ -90,7 +91,8 @@ const LeadCard: React.FC<LeadCardProps> = ({
     onClick,
     isDragging,
     hasFollowUp,
-    onStageAction
+    onStageAction,
+    onArchived
 }) => {
     // Timer states
     const [timeLeft, setTimeLeft] = useState<string>('');
@@ -98,6 +100,29 @@ const LeadCard: React.FC<LeadCardProps> = ({
     const [foundTimeLeft, setFoundTimeLeft] = useState<string>('');
     const [foundIsOverdue, setFoundIsOverdue] = useState(false);
     const [notes, setNotes] = useState(lead.notes || '');
+
+    // Silent auto-save function (no visual feedback)
+    const debouncedSave = useCallback(
+        (() => {
+            let timeoutId: NodeJS.Timeout;
+            return (field: string, value: any) => {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(async () => {
+                    try {
+                        await supabase
+                            .from('applying')
+                            .update({ [field]: value })
+                            .eq('applying_id', lead.applying_id);
+                        // Silent success - no user notification
+                    } catch (err) {
+                        // Silent error - just log, no user notification
+                        console.error('Auto-save failed:', err);
+                    }
+                }, 1500); // 1.5 second delay after user stops typing
+            };
+        })(),
+        [lead.applying_id]
+    );
 
     // Calculate follow-up timer for Connect stage
     useEffect(() => {
@@ -223,7 +248,10 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     // Follow-up state
     const [followUpMessage, setFollowUpMessage] = useState(lead.follow_up_message || '');
-    const [showFollowUpForm, setShowFollowUpForm] = useState(false);
+
+    // Force re-render after state changes
+    const [, forceUpdate] = useState({});
+    const triggerRerender = () => forceUpdate({});
 
     // Calculate progress percentage
     const calculateProgress = () => {
@@ -301,52 +329,136 @@ const LeadCard: React.FC<LeadCardProps> = ({
     });
 
     // Handle button actions
-    const handleAppliedClick = (applied: boolean) => {
-        if (onStageAction) {
+    const handleAppliedClick = async (applied: boolean) => {
+        try {
             if (applied) {
                 // If YES in Found stage - mark as applied
-                onStageAction('apply', { applied: true });
+                await supabase
+                    .from('applying')
+                    .update({ applied: true })
+                    .eq('applying_id', lead.applying_id);
+
+                // Update local state immediately (optimistic update)
+                lead.applied = true;
+                triggerRerender();
             } else {
-                // If NO in Found stage - just delete the job (don't archive)
-                onStageAction('apply', { applied: false });
+                // If NO in Found stage - delete the job (don't archive)
+                await supabase
+                    .from('applying')
+                    .delete()
+                    .eq('applying_id', lead.applying_id);
+
+                // Notify parent that lead was deleted (component will be removed)
+                if (onArchived) {
+                    onArchived(lead.applying_id);
+                }
             }
+        } catch (err) {
+            console.error('Error updating applied status:', err);
         }
     };
 
-    const handleFollowUpComplete = (completed: boolean) => {
-        if (onStageAction) {
-            onStageAction('follow_up_complete', { completed });
+    const handleFollowUpComplete = async (completed: boolean) => {
+        try {
+            await supabase
+                .from('applying')
+                .update({
+                    follow_up_completed: completed,
+                    follow_up_completed_at: completed ? new Date().toISOString() : null
+                })
+                .eq('applying_id', lead.applying_id);
+
+            // Update local state immediately
+            lead.follow_up_completed = completed;
+            if (completed) {
+                lead.follow_up_completed_at = new Date().toISOString();
+            } else {
+                (lead as any).follow_up_completed_at = null;
+            }
+            triggerRerender();
+        } catch (err) {
+            console.error('Error updating follow-up status:', err);
         }
     };
 
-    const handleInvitedToInterview = () => {
-        if (onStageAction) {
-            onStageAction('invited_to_interview');
-        }
-    };
-    console.log(handleInvitedToInterview(), "handleInvitedToInterview - build fix");
-
-    const handleGotJob = (gotJob: boolean, startingDate?: string) => {
-        if (onStageAction) {
+    const handleGotJob = async (gotJob: boolean, startingDate?: string) => {
+        try {
             if (gotJob === false) {
                 // If "No" - only archive if this was an applied job (not Found stage)
                 if (lead.applied) {
-                    onStageAction('archive_job', { applying_id: lead.applying_id });
+                    await supabase
+                        .from('applying')
+                        .update({
+                            is_archived: true,
+                            archived_at: new Date().toISOString(),
+                            got_the_job: false
+                        })
+                        .eq('applying_id', lead.applying_id);
+
+                    // Update local state immediately
+                    lead.got_the_job = false;
+                    lead.is_archived = true;
+                    triggerRerender();
+
+                    // Notify parent that lead was archived
+                    if (onArchived) {
+                        onArchived(lead.applying_id);
+                    }
                 } else {
                     // If not applied yet, just delete (don't archive)
-                    onStageAction('apply', { applied: false });
+                    await supabase
+                        .from('applying')
+                        .delete()
+                        .eq('applying_id', lead.applying_id);
+
+                    // Notify parent that lead was deleted
+                    if (onArchived) {
+                        onArchived(lead.applying_id);
+                    }
                 }
             } else {
                 // If "Yes", update got_the_job but don't archive yet (show archive button)
-                onStageAction('got_job', { gotJob, startingDate });
+                await supabase
+                    .from('applying')
+                    .update({
+                        got_the_job: true,
+                        starting_date: startingDate || null
+                    })
+                    .eq('applying_id', lead.applying_id);
+
+                // Update local state immediately
+                lead.got_the_job = true;
+                if (startingDate) lead.starting_date = startingDate;
+                triggerRerender();
             }
+        } catch (err) {
+            console.error('Error updating got_the_job status:', err);
         }
     };
 
-    const handleArchiveJob = () => {
-        if (onStageAction && lead.applied) {
-            // Only archive if job was actually applied to
-            onStageAction('archive_job', { applying_id: lead.applying_id });
+    const handleArchiveJob = async () => {
+        if (lead.applied) {
+            try {
+                // Only archive if job was actually applied to
+                await supabase
+                    .from('applying')
+                    .update({
+                        is_archived: true,
+                        archived_at: new Date().toISOString()
+                    })
+                    .eq('applying_id', lead.applying_id);
+
+                // Update local state immediately
+                lead.is_archived = true;
+                triggerRerender();
+
+                // Notify parent that lead was archived
+                if (onArchived) {
+                    onArchived(lead.applying_id);
+                }
+            } catch (err) {
+                console.error('Error archiving job:', err);
+            }
         }
     };
 
@@ -499,29 +611,12 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     console.log(handleOpenPrepModal(), "handleOpenPrepModal - build fix");
 
-    const [notesChanged, setNotesChanged] = React.useState(false);
-    const [originalNotes, setOriginalNotes] = React.useState(notes);
     const [startingDate, setStartingDate] = React.useState(lead.starting_date || '');
 
     const handleNotesChange = (newNotes: string) => {
         setNotes(newNotes);
-        setNotesChanged(newNotes !== originalNotes);
-    };
-
-    const handleNotesSave = () => {
-        if (onStageAction && lead.applying_id) {
-            onStageAction('update_notes', {
-                applyingId: lead.applying_id,
-                notes
-            });
-            setNotesChanged(false);
-            setOriginalNotes(notes);
-        }
-    };
-
-    const handleNotesCancel = () => {
-        setNotes(originalNotes);
-        setNotesChanged(false);
+        // Silent auto-save after user stops typing
+        debouncedSave('notes', newNotes);
     };
 
     const INTERVIEW_TYPES = [
@@ -601,10 +696,9 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 setInterviewDate('');
                 setSelectedInterviewType('');
 
-                // Refresh data
-                if (onStageAction) {
-                    onStageAction('interview_added', { refresh: true });
-                }
+                // Update local state and refresh UI
+                lead.interviews = updatedInterviews;
+                triggerRerender();
             } catch (err: any) {
                 console.error('[DEBUG] Error saving interview:', err);
                 alert('Error saving interview: ' + err.message);
@@ -936,7 +1030,11 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 <textarea
                                     placeholder="Paste your followup message..."
                                     value={followUpMessage}
-                                    onChange={(e) => setFollowUpMessage(e.target.value)}
+                                    onChange={(e) => {
+                                        setFollowUpMessage(e.target.value);
+                                        // Silent auto-save after user stops typing
+                                        debouncedSave('follow_up_message', e.target.value);
+                                    }}
                                     onClick={(e) => e.stopPropagation()}
                                     style={{
                                         width: '100%',
@@ -957,8 +1055,8 @@ const LeadCard: React.FC<LeadCardProps> = ({
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    if (followUpMessage.trim() && onStageAction) {
-                                        onStageAction('follow_up_complete', { followUpMessage: followUpMessage.trim() });
+                                    if (followUpMessage.trim()) {
+                                        handleFollowUpComplete(true);
                                     }
                                 }}
                                 disabled={!followUpMessage.trim()}
@@ -1234,11 +1332,10 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                     <input
                                         type="date"
                                         value={startingDate}
-                                        onChange={(e) => setStartingDate(e.target.value)}
-                                        onBlur={(e) => {
-                                            if (e.target.value && onStageAction) {
-                                                onStageAction('got_job', { gotJob: true, startingDate: e.target.value });
-                                            }
+                                        onChange={(e) => {
+                                            setStartingDate(e.target.value);
+                                            // Silent auto-save after typing
+                                            debouncedSave('starting_date', e.target.value);
                                         }}
                                         style={{
                                             padding: '6px 12px',
@@ -1347,11 +1444,10 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                     <input
                                         type="date"
                                         value={startingDate}
-                                        onChange={(e) => setStartingDate(e.target.value)}
-                                        onBlur={(e) => {
-                                            if (e.target.value && onStageAction) {
-                                                onStageAction('got_job', { gotJob: true, startingDate: e.target.value });
-                                            }
+                                        onChange={(e) => {
+                                            setStartingDate(e.target.value);
+                                            // Silent auto-save after typing
+                                            debouncedSave('starting_date', e.target.value);
                                         }}
                                         style={{
                                             padding: '6px 12px',
@@ -1676,12 +1772,6 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         boxSizing: 'border-box'
                     }}
                 />
-                {notesChanged && (
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                        <button onClick={(e) => { e.stopPropagation(); handleNotesSave(); }} style={{ padding: '6px 12px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '6px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>Save</button>
-                        <button onClick={(e) => { e.stopPropagation(); handleNotesCancel(); }} style={{ padding: '6px 12px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '6px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
-                    </div>
-                )}
             </div>
         </div>
     );
