@@ -63,6 +63,41 @@ const ArchiveModal: React.FC<ArchiveModalProps> = ({
         fetchArchivedLeads();
     }, [user?.id]);
 
+    // Refresh data when restore/delete actions happen
+    const refreshArchivedLeads = async () => {
+        if (!user?.id) return;
+
+        try {
+            const { data, error } = await supabase
+                .from('applying')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('is_archived', true)
+                .order('archived_at', { ascending: false });
+
+            if (error) throw error;
+            setArchivedLeads(data || []);
+        } catch (err) {
+            console.error('Error refreshing archived leads:', err);
+        }
+    };
+
+    // Handle restore with refresh
+    const handleRestore = async (leadId: string) => {
+        if (onRestoreLead) {
+            await onRestoreLead(leadId);
+            await refreshArchivedLeads();
+        }
+    };
+
+    // Handle delete with refresh  
+    const handleDelete = async (leadId: string) => {
+        if (onDeleteLead) {
+            await onDeleteLead(leadId);
+            await refreshArchivedLeads();
+        }
+    };
+
     // Console log to prevent unused variable error
     console.log('ArchiveModal user:', user);
 
@@ -279,7 +314,7 @@ const ArchiveModal: React.FC<ArchiveModalProps> = ({
                                         gap: '0.5rem'
                                     }}>
                                         <button
-                                            onClick={() => onRestoreLead?.(lead.applying_id)}
+                                            onClick={() => handleRestore(lead.applying_id)}
                                             style={{
                                                 padding: '0.5rem',
                                                 background: 'rgba(16, 185, 129, 0.2)',
@@ -298,7 +333,7 @@ const ArchiveModal: React.FC<ArchiveModalProps> = ({
                                             Restore
                                         </button>
                                         <button
-                                            onClick={() => onDeleteLead?.(lead.applying_id)}
+                                            onClick={() => handleDelete(lead.applying_id)}
                                             style={{
                                                 padding: '0.5rem',
                                                 background: 'rgba(239, 68, 68, 0.2)',
