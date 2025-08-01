@@ -74,6 +74,15 @@ interface JobClickWithApplying {
         date: string;
         rating: boolean;
     }>;
+    // Interview prep data
+    interview_prep_data?: {
+        companyValues: string;
+        roleResponsibilities: string;
+        specificQuestions: string;
+        portfolioReview: string;
+        whyCompany: string;
+    };
+    interview_prep_complete?: boolean;
 }
 
 interface LeadCardProps {
@@ -235,8 +244,8 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     // Interview prep states
     const [showInterviewPrep, setShowInterviewPrep] = useState(false);
-    const [interviewPrepComplete, setInterviewPrepComplete] = useState(false);
-    const [interviewPrepData, setInterviewPrepData] = useState({
+    const [interviewPrepComplete, setInterviewPrepComplete] = useState(lead.interview_prep_complete || false);
+    const [interviewPrepData, setInterviewPrepData] = useState(lead.interview_prep_data || {
         companyValues: '',
         roleResponsibilities: '',
         specificQuestions: '',
@@ -618,6 +627,26 @@ const LeadCard: React.FC<LeadCardProps> = ({
         return;
     };
 
+    const handleSaveInterviewPrep = async () => {
+        try {
+            await supabase
+                .from('applying')
+                .update({
+                    interview_prep_data: interviewPrepData,
+                    interview_prep_complete: true
+                })
+                .eq('applying_id', lead.applying_id);
+
+            // Update local state
+            setInterviewPrepComplete(true);
+            lead.interview_prep_data = interviewPrepData;
+            lead.interview_prep_complete = true;
+            triggerRerender();
+        } catch (err) {
+            console.error('Error saving interview prep:', err);
+        }
+    };
+
     // const handleInterviewRating = (rating: 'thumbs_up' | 'thumbs_down') => {
     //     if (onStageAction) {
     //         onStageAction('interview_rating', { rating });
@@ -946,7 +975,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        setInterviewPrepComplete(true);
+                                        handleSaveInterviewPrep();
                                         setShowInterviewPrep(false);
                                     }}
                                     style={{
@@ -1026,7 +1055,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {/* Follow-up reminder - MOVED TO TOP */}
-                    {timeLeft && !lead.follow_up_completed && (
+                    {timeLeft && (
                         <div style={{ padding: 12, background: 'rgba(245, 158, 11, 0.08)', borderRadius: 8 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                                 <Timer style={{ width: '14px', height: '14px', color: isOverdue ? '#ef4444' : '#f59e0b' }} />
