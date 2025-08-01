@@ -189,19 +189,26 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             borderColor: 'rgba(59, 130, 246, 0.4)',
             description: 'Recently clicked jobs to pursue'
         },
-        connect: {
-            title: 'Connect',
+        lead: {
+            title: 'Lead',
             icon: <Users style={{ width: '16px', height: '16px' }} />,
+            color: 'rgba(147, 51, 234, 0.2)',
+            borderColor: 'rgba(147, 51, 234, 0.4)',
+            description: 'Jobs you have applied to'
+        },
+        opportunity: {
+            title: 'Opportunity',
+            icon: <Zap style={{ width: '16px', height: '16px' }} />,
             color: 'rgba(245, 158, 11, 0.2)',
             borderColor: 'rgba(245, 158, 11, 0.4)',
-            description: 'Jobs you have applied to and are in process'
+            description: 'Jobs with interviews in process'
         },
-        close: {
-            title: 'Closed',
+        deal: {
+            title: 'Deal',
             icon: <CircleCheckBig style={{ width: '16px', height: '16px' }} />,
             color: 'rgba(16, 185, 129, 0.2)',
             borderColor: 'rgba(16, 185, 129, 0.4)',
-            description: 'Jobs with completed interviews'
+            description: 'Jobs where you got the job'
         }
     }), []);
 
@@ -221,18 +228,25 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     icon: stageConfig.found.icon
                 },
                 {
-                    id: 'connect' as LeadStage,
-                    title: 'Connect',
+                    id: 'lead' as LeadStage,
+                    title: 'Lead',
                     leads: [],
-                    color: stageConfig.connect.color,
-                    icon: stageConfig.connect.icon
+                    color: stageConfig.lead.color,
+                    icon: stageConfig.lead.icon
                 },
                 {
-                    id: 'close' as LeadStage,
-                    title: 'Closed',
+                    id: 'opportunity' as LeadStage,
+                    title: 'Opportunity',
                     leads: [],
-                    color: stageConfig.close.color,
-                    icon: stageConfig.close.icon
+                    color: stageConfig.opportunity.color,
+                    icon: stageConfig.opportunity.icon
+                },
+                {
+                    id: 'deal' as LeadStage,
+                    title: 'Deal',
+                    leads: [],
+                    color: stageConfig.deal.color,
+                    icon: stageConfig.deal.icon
                 }
             ];
         }
@@ -268,13 +282,18 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
         // Found column: job_clicks without applying record (or applied = false)
         const foundLeads = filteredLeads.filter(lead => !lead.applied);
 
-        // Connect column: applied = true, but not got the job yet (regardless of interviews)
-        const connectLeads = filteredLeads.filter(lead =>
-            lead.applied && lead.got_the_job !== true
+        // Lead column: applied = true, but no interviews yet
+        const leadLeads = filteredLeads.filter(lead =>
+            lead.applied && lead.got_the_job !== true && (!lead.interviews || lead.interviews.length === 0)
         );
 
-        // Close column: jobs where got_the_job is true
-        const closeLeads = filteredLeads.filter(lead =>
+        // Opportunity column: applied = true, has interviews, but not got the job yet
+        const opportunityLeads = filteredLeads.filter(lead =>
+            lead.applied && lead.got_the_job !== true && lead.interviews && lead.interviews.length > 0
+        );
+
+        // Deal column: jobs where got_the_job is true
+        const dealLeads = filteredLeads.filter(lead =>
             lead.applied && lead.got_the_job === true
         );
 
@@ -287,18 +306,25 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 icon: stageConfig.found.icon
             },
             {
-                id: 'connect' as LeadStage,
-                title: 'Connect',
-                leads: connectLeads,
-                color: stageConfig.connect.color,
-                icon: stageConfig.connect.icon
+                id: 'lead' as LeadStage,
+                title: 'Lead',
+                leads: leadLeads,
+                color: stageConfig.lead.color,
+                icon: stageConfig.lead.icon
             },
             {
-                id: 'close' as LeadStage,
-                title: 'Closed',
-                leads: closeLeads,
-                color: stageConfig.close.color,
-                icon: stageConfig.close.icon
+                id: 'opportunity' as LeadStage,
+                title: 'Opportunity',
+                leads: opportunityLeads,
+                color: stageConfig.opportunity.color,
+                icon: stageConfig.opportunity.icon
+            },
+            {
+                id: 'deal' as LeadStage,
+                title: 'Deal',
+                leads: dealLeads,
+                color: stageConfig.deal.color,
+                icon: stageConfig.deal.icon
             }
         ];
     }, [leads, searchTerm, stageConfig, loading, showFollowUpOnly]);
@@ -491,25 +517,31 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
         console.log(`Moving "${lead.job_title_clicked}" from ${source.droppableId} to ${newStage}`);
 
         // Handle stage transitions
-        if (newStage === 'connect' && source.droppableId === 'found') {
-            // Moving from Found to Connect - create applying record
+        if (newStage === 'lead' && source.droppableId === 'found') {
+            // Moving from Found to Lead - create applying record
             await handleApplyAction(lead.unique_id_job, true);
-        } else if (newStage === 'found' && source.droppableId === 'connect') {
-            // Moving from Connect to Found - set applied to false
+        } else if (newStage === 'found' && source.droppableId === 'lead') {
+            // Moving from Lead to Found - set applied to false
             if (lead.applied) {
                 await handleUpdateApplying(lead.applying_id, { applied: false });
             }
-        } else if (newStage === 'close' && source.droppableId === 'connect') {
-            // Moving from Connect to Close - this should be done via interview actions
-            console.log('Use interview actions to move to Close stage');
-        } else if (newStage === 'found' && source.droppableId === 'close') {
-            // Moving from Close to Found - reset applying record
+        } else if (newStage === 'opportunity' && source.droppableId === 'lead') {
+            // Moving from Lead to Opportunity - this should be done via interview actions
+            console.log('Use interview actions to move to Opportunity stage');
+        } else if (newStage === 'lead' && source.droppableId === 'opportunity') {
+            // Moving from Opportunity to Lead - remove interviews
+            if (lead.applied) {
+                await handleUpdateApplying(lead.applying_id, { interviews: [] });
+            }
+        } else if (newStage === 'deal' && source.droppableId === 'opportunity') {
+            // Moving from Opportunity to Deal - this should be done via got the job actions
+            console.log('Use got the job actions to move to Deal stage');
+        } else if (newStage === 'found' && source.droppableId === 'deal') {
+            // Moving from Deal to Found - reset applying record
             if (lead.applied) {
                 await handleUpdateApplying(lead.applying_id, {
                     applied: false,
-                    recruiter_interview: null,
-                    technical_interview: null,
-                    hiringmanager_interview: null,
+                    interviews: [],
                     got_the_job: null
                 });
             }
@@ -1426,7 +1458,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                                             ))}
 
                                             {/* Empty state for follow-up filter */}
-                                            {showFollowUpOnly && column.id === 'connect' && column.leads.length === 0 && (
+                                            {showFollowUpOnly && (column.id === 'lead' || column.id === 'opportunity') && column.leads.length === 0 && (
                                                 <div style={{
                                                     padding: '2rem 1rem',
                                                     textAlign: 'center',

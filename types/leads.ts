@@ -2,7 +2,7 @@
 // LEADS KANBAN BOARD - TypeScript Interfaces
 // ==========================================
 
-export type LeadStage = 'found' | 'connect' | 'close';
+export type LeadStage = 'found' | 'lead' | 'opportunity' | 'deal';
 
 export type ActivityType =
     | 'note'

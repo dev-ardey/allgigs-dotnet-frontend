@@ -72,7 +72,10 @@ interface JobClickWithApplying {
     interviews?: Array<{
         type: string;
         date: string;
-        rating: boolean;
+        rating: boolean | null;
+        completed?: boolean;
+        id?: string;
+        created_at?: string;
     }>;
     // Interview prep data
     interview_prep_data?: {
@@ -278,16 +281,19 @@ const LeadCard: React.FC<LeadCardProps> = ({
         // Notes: +10%
         if (lead.notes && lead.notes.trim()) progress += 10;
 
-        // Follow-up sent: +20% (assuming receive_confirmation means follow-up was sent)
-        if (lead.receive_confirmation) progress += 20;
+        // Follow-up completed: +10%
+        if (lead.follow_up_completed) progress += 10;
 
-        // Contacts added: +5% (if contacts array has items)
-        if (contacts.length > 0) progress += 5;
+        // Contacts added: +10% (if contacts array has items)
+        if (contacts.length > 0) progress += 10;
 
         // Interviews: +20%
         if (lead.interviews && lead.interviews.length > 0) {
             progress += 20;
         }
+
+        // Interview prep completed: +10%
+        if (lead.interview_prep_complete) progress += 10;
 
         // Got the job: fill to 100%
         if (lead.got_the_job) {
@@ -691,11 +697,81 @@ const LeadCard: React.FC<LeadCardProps> = ({
             return type ? type.label : key.charAt(0).toUpperCase() + key.slice(1);
         };
 
+        // Sla interview data op bij datum selectie (zonder rating)
+        const handleSaveInterviewDate = async () => {
+            if (!lead.applying_id || !selectedInterviewType || !interviewDate) return;
+
+            console.log('[DEBUG] Saving interview date:', {
+                applying_id: lead.applying_id,
+                selectedInterviewType,
+                interviewDate,
+                currentInterviews: lead.interviews
+            });
+
+            try {
+                const currentInterviews = Array.isArray(lead.interviews) ? lead.interviews : [];
+
+                // Check if interview of this type already exists
+                const existingInterviewIndex = currentInterviews.findIndex((interview: any) =>
+                    interview.type === selectedInterviewType && !interview.completed
+                );
+
+                let updatedInterviews;
+                if (existingInterviewIndex >= 0) {
+                    // Update existing interview with new date
+                    updatedInterviews = [...currentInterviews];
+                    updatedInterviews[existingInterviewIndex] = {
+                        ...updatedInterviews[existingInterviewIndex],
+                        date: interviewDate
+                    };
+                } else {
+                    // Create new interview object (without rating)
+                    const newInterview = {
+                        id: crypto.randomUUID(),
+                        type: selectedInterviewType,
+                        date: interviewDate,
+                        rating: null,
+                        completed: false,
+                        created_at: new Date().toISOString()
+                    };
+                    updatedInterviews = [...currentInterviews, newInterview];
+                }
+
+                console.log('[DEBUG] Updating interviews in database:', updatedInterviews);
+
+                // For JSONB: send array directly (PostgreSQL handles JSON conversion)
+                const { data, error } = await supabase
+                    .from('applying')
+                    .update({ interviews: updatedInterviews })
+                    .eq('applying_id', lead.applying_id)
+                    .select();
+
+                if (error) {
+                    console.error('[DEBUG] Database error:', error);
+                    throw error;
+                }
+
+                console.log('[DEBUG] Interview date saved successfully, returned data:', data);
+
+                // Update local state and refresh UI
+                lead.interviews = updatedInterviews;
+                triggerRerender();
+
+                // Notify parent that state changed (for column movement)
+                if (onStateChanged) {
+                    onStateChanged();
+                }
+            } catch (err: any) {
+                console.error('[DEBUG] Error saving interview date:', err);
+                alert('Error saving interview date: ' + err.message);
+            }
+        };
+
         // Sla interview data en rating op na klikken Good/Bad
         const handleRating = async (rating: boolean) => {
             if (!lead.applying_id || !selectedInterviewType || !interviewDate) return;
 
-            console.log('[DEBUG] Saving interview:', {
+            console.log('[DEBUG] Saving interview rating:', {
                 applying_id: lead.applying_id,
                 selectedInterviewType,
                 interviewDate,
@@ -706,17 +782,32 @@ const LeadCard: React.FC<LeadCardProps> = ({
             try {
                 const currentInterviews = Array.isArray(lead.interviews) ? lead.interviews : [];
 
-                // Create new interview object
-                const newInterview = {
-                    id: crypto.randomUUID(),
-                    type: selectedInterviewType,
-                    date: interviewDate,
-                    rating: rating,
-                    created_at: new Date().toISOString()
-                };
+                // Find existing interview of this type
+                const existingInterviewIndex = currentInterviews.findIndex((interview: any) =>
+                    interview.type === selectedInterviewType && !interview.completed
+                );
 
-                // Add to interviews array
-                const updatedInterviews = [...currentInterviews, newInterview];
+                let updatedInterviews;
+                if (existingInterviewIndex >= 0) {
+                    // Update existing interview with rating
+                    updatedInterviews = [...currentInterviews];
+                    updatedInterviews[existingInterviewIndex] = {
+                        ...updatedInterviews[existingInterviewIndex],
+                        rating: rating,
+                        completed: true
+                    };
+                } else {
+                    // Create new interview object (fallback)
+                    const newInterview = {
+                        id: crypto.randomUUID(),
+                        type: selectedInterviewType,
+                        date: interviewDate,
+                        rating: rating,
+                        completed: true,
+                        created_at: new Date().toISOString()
+                    };
+                    updatedInterviews = [...currentInterviews, newInterview];
+                }
 
                 console.log('[DEBUG] Updating interviews in database:', updatedInterviews);
 
@@ -742,6 +833,11 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 // Update local state and refresh UI
                 lead.interviews = updatedInterviews;
                 triggerRerender();
+
+                // Notify parent that state changed (for column movement)
+                if (onStateChanged) {
+                    onStateChanged();
+                }
             } catch (err: any) {
                 console.error('[DEBUG] Error saving interview:', err);
                 alert('Error saving interview: ' + err.message);
@@ -764,7 +860,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                             style={{
                                 padding: '4px 8px',
                                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                                color: '#3b82f6',
+                                color: 'white',
                                 border: '1px solid rgba(59, 130, 246, 0.3)',
                                 borderRadius: 4,
                                 fontSize: '10px',
@@ -777,30 +873,87 @@ const LeadCard: React.FC<LeadCardProps> = ({
                     )}
                 </div>
 
-                {/* Toon reeds ingevulde interviews */}
+                {/* Toon interviews (completed en upcoming) */}
                 {currentInterviews.map((interview: any) => (
-                    <div key={interview.id} style={{
+                    <div key={interview.id || interview.type} style={{
                         display: 'flex',
-                        alignItems: 'center',
+                        flexDirection: 'column',
                         gap: 8,
                         marginBottom: 8,
                         padding: '8px',
-                        background: 'rgba(255,255,255,0.05)',
-                        borderRadius: 6
+                        background: interview.completed ? 'rgba(255,255,255,0.05)' : 'rgba(245, 158, 11, 0.1)',
+                        borderRadius: 6,
+                        border: interview.completed ? 'none' : '1px solid rgba(245, 158, 11, 0.3)'
                     }}>
-                        <span style={{ fontWeight: 600, fontSize: '12px' }}>
-                            {getLabel(interview.type)}:
-                        </span>
-                        <span style={{ fontSize: '12px' }}>
-                            {new Date(interview.date).toLocaleDateString()}
-                        </span>
-                        <span style={{
-                            color: interview.rating ? '#10b981' : '#ef4444',
-                            fontWeight: 600,
-                            fontSize: '12px'
-                        }}>
-                            {interview.rating ? 'Good' : 'Bad'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontWeight: 600, fontSize: '12px' }}>
+                                {getLabel(interview.type)}:
+                            </span>
+                            <span style={{ fontSize: '12px' }}>
+                                {new Date(interview.date).toLocaleDateString()}
+                            </span>
+                            {interview.completed ? (
+                                <span style={{
+                                    color: interview.rating ? '#10b981' : '#ef4444',
+                                    fontWeight: 600,
+                                    fontSize: '12px'
+                                }}>
+                                    {interview.rating ? 'Good' : 'Bad'}
+                                </span>
+                            ) : (
+                                <span style={{
+                                    color: '#f59e0b',
+                                    fontWeight: 600,
+                                    fontSize: '12px'
+                                }}>
+                                    Upcoming
+                                </span>
+                            )}
+                        </div>
+                        {!interview.completed && (
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedInterviewType(interview.type);
+                                        setInterviewDate(interview.date);
+                                        handleRating(true);
+                                    }}
+                                    style={{
+                                        padding: '6px 12px',
+                                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                        color: '#10b981',
+                                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                                        borderRadius: 6,
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600'
+                                    }}
+                                >
+                                    Good
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedInterviewType(interview.type);
+                                        setInterviewDate(interview.date);
+                                        handleRating(false);
+                                    }}
+                                    style={{
+                                        padding: '6px 12px',
+                                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                        color: '#ef4444',
+                                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                                        borderRadius: 6,
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600'
+                                    }}
+                                >
+                                    Bad
+                                </button>
+                            </div>
+                        )}
                     </div>
                 ))}
 
@@ -808,30 +961,46 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 {showNewInterview && availableTypes.length > 0 && (
                     <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                         <div style={{ marginBottom: 8, fontWeight: 600, fontSize: '12px' }}>Add interview</div>
-                        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                            <select value={selectedInterviewType} onChange={e => setSelectedInterviewType(e.target.value)} style={{
-                                padding: '6px 12px',
-                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                color: 'white',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                borderRadius: 6,
-                                fontSize: '11px',
-                                cursor: 'pointer'
-                            }}>
-                                <option value="" style={{ backgroundColor: '#1f2937', color: 'white' }}>Select interview type...</option>
-                                {availableTypes.map(t => (
-                                    <option key={t.key} value={t.key} style={{ backgroundColor: '#1f2937', color: 'white' }}>{t.label}</option>
-                                ))}
-                            </select>
-                            <input type="date" value={interviewDate} onChange={e => setInterviewDate(e.target.value)} style={{
-                                padding: '6px 12px',
-                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                color: 'white',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                borderRadius: 6,
-                                fontSize: '11px',
-                                cursor: 'pointer'
-                            }} />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
+                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                <select value={selectedInterviewType} onChange={e => {
+                                    setSelectedInterviewType(e.target.value);
+                                    // Auto-save when type is selected and date exists
+                                    if (e.target.value && interviewDate) {
+                                        setTimeout(() => handleSaveInterviewDate(), 100);
+                                    }
+                                }} style={{
+                                    padding: '6px 12px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 6,
+                                    fontSize: '11px',
+                                    cursor: 'pointer',
+                                    minWidth: '120px'
+                                }}>
+                                    <option value="" style={{ backgroundColor: '#1f2937', color: 'white' }}>Select interview type...</option>
+                                    {availableTypes.map(t => (
+                                        <option key={t.key} value={t.key} style={{ backgroundColor: '#1f2937', color: 'white' }}>{t.label}</option>
+                                    ))}
+                                </select>
+                                <input type="date" value={interviewDate} onChange={e => {
+                                    setInterviewDate(e.target.value);
+                                    // Auto-save when date is selected
+                                    if (e.target.value && selectedInterviewType) {
+                                        setTimeout(() => handleSaveInterviewDate(), 100);
+                                    }
+                                }} style={{
+                                    padding: '6px 12px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 6,
+                                    fontSize: '11px',
+                                    cursor: 'pointer',
+                                    minWidth: '120px'
+                                }} />
+                            </div>
                         </div>
                         {selectedInterviewType && interviewDate && (
                             <div style={{ display: 'flex', gap: 8 }}>
@@ -861,6 +1030,19 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                     }}
                                     onClick={() => handleRating(false)}
                                 >Bad</button>
+                                <button
+                                    style={{
+                                        padding: '6px 16px',
+                                        background: '#f59e0b',
+                                        color: 'white',
+                                        border: '1px solid #f59e0b',
+                                        borderRadius: 6,
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        fontSize: '11px'
+                                    }}
+                                    onClick={() => handleSaveInterviewDate()}
+                                >Upcoming</button>
                             </div>
                         )}
                     </div>
@@ -1045,11 +1227,12 @@ const LeadCard: React.FC<LeadCardProps> = ({
             );
         }
 
-        // Check if job has interviews (for Close stage)
+        // Check if job has interviews (for Opportunity stage)
         const hasInterviews = lead.interviews && lead.interviews.length > 0;
         console.log(hasInterviews, "hasInterviews - build fix");
-        // Connect stage: applied but not got the job yet (regardless of interviews)
-        if (lead.applied && lead.got_the_job !== true) {
+
+        // Lead stage: applied but no interviews yet
+        if (lead.applied && lead.got_the_job !== true && !hasInterviews) {
 
 
             return (
@@ -1100,6 +1283,8 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     if (followUpMessage.trim()) {
+                                        // Update the lead's follow_up_message first
+                                        lead.follow_up_message = followUpMessage;
                                         handleFollowUpComplete(true);
                                     }
                                 }}
@@ -1163,7 +1348,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 style={{
                                     padding: '4px 8px',
                                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                                    color: '#3b82f6',
+                                    color: 'white',
                                     border: '1px solid rgba(59, 130, 246, 0.3)',
                                     borderRadius: 4,
                                     fontSize: '10px',
@@ -1436,12 +1621,480 @@ const LeadCard: React.FC<LeadCardProps> = ({
             );
         }
 
-        // Close stage: got the job
+        // Opportunity stage: applied, has interviews, but not got the job yet
+        if (lead.applied && lead.got_the_job !== true && hasInterviews) {
+            return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {/* Interview flow */}
+                    {renderInterviewFlow()}
+
+                    {/* Contacts */}
+                    <div style={{ padding: 12, background: 'rgba(255, 255, 255, 0.05)', borderRadius: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <Users style={{ width: '14px', height: '14px', color: 'rgba(255,255,255,0.8)' }} />
+                                <span style={{ fontWeight: 600, fontSize: '12px', color: '#fff' }}>Contacts</span>
+                            </div>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setShowContactForm(true); }}
+                                style={{
+                                    padding: '4px 8px',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                                    borderRadius: 4,
+                                    fontSize: '10px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600'
+                                }}
+                            >
+                                + Add
+                            </button>
+                        </div>
+
+                        {/* Contact list */}
+                        {contacts.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                {contacts.map((contact) => (
+                                    <div key={contact.id} style={{
+                                        padding: '8px',
+                                        background: 'rgba(255, 255, 255, 0.05)',
+                                        borderRadius: 6,
+                                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                                            <span style={{ fontSize: '11px', fontWeight: 600 }}>{contact.name}</span>
+                                            <div style={{ display: 'flex', gap: 4 }}>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setEditingContact(contact.id); }}
+                                                    style={{
+                                                        padding: '2px 4px',
+                                                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                                        color: '#f59e0b',
+                                                        border: '1px solid rgba(245, 158, 11, 0.3)',
+                                                        borderRadius: 3,
+                                                        fontSize: '9px',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleDeleteContact(contact.id); }}
+                                                    style={{
+                                                        padding: '2px 4px',
+                                                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                                        color: '#ef4444',
+                                                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                        borderRadius: 3,
+                                                        fontSize: '9px',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    Del
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {contact.email && (
+                                            <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: 2 }}>
+                                                📧 {contact.email}
+                                            </div>
+                                        )}
+                                        {contact.phone && (
+                                            <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                                                📞 {contact.phone}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', textAlign: 'center', padding: '8px' }}>
+                                No contacts added yet
+                            </div>
+                        )}
+
+                        {/* Add/Edit contact form */}
+                        {showContactForm && (
+                            <div style={{
+                                marginTop: 12,
+                                padding: '12px',
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                borderRadius: 6,
+                                border: '1px solid rgba(255, 255, 255, 0.2)'
+                            }}>
+                                <div style={{ fontSize: '11px', fontWeight: 600, marginBottom: 8 }}>
+                                    {editingContact ? 'Edit Contact' : 'Add New Contact'}
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Name *"
+                                        value={newContact.name}
+                                        onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
+                                        style={{
+                                            padding: '6px 8px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'white',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 4,
+                                            fontSize: '11px'
+                                        }}
+                                    />
+                                    <input
+                                        type="email"
+                                        placeholder="Email (optional)"
+                                        value={newContact.email}
+                                        onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
+                                        style={{
+                                            padding: '6px 8px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'white',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 4,
+                                            fontSize: '11px'
+                                        }}
+                                    />
+                                    <input
+                                        type="tel"
+                                        placeholder="Phone (optional)"
+                                        value={newContact.phone}
+                                        onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
+                                        style={{
+                                            padding: '6px 8px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'white',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 4,
+                                            fontSize: '11px'
+                                        }}
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleSaveContact(); }}
+                                        disabled={!newContact.name.trim()}
+                                        style={{
+                                            padding: '6px 12px',
+                                            backgroundColor: newContact.name.trim() ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.1)',
+                                            color: newContact.name.trim() ? '#10b981' : 'rgba(255, 255, 255, 0.3)',
+                                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                                            borderRadius: 4,
+                                            fontSize: '11px',
+                                            cursor: newContact.name.trim() ? 'pointer' : 'not-allowed',
+                                            fontWeight: '600'
+                                        }}
+                                    >
+                                        Save
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleCancelContact(); }}
+                                        style={{
+                                            padding: '6px 12px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'rgba(255, 255, 255, 0.7)',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 4,
+                                            fontSize: '11px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Got the job */}
+                    <div style={{ padding: 12, background: 'rgba(255, 255, 255, 0.05)', borderRadius: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                            <Award style={{ width: '14px', height: '14px', color: 'rgba(255,255,255,0.8)' }} />
+                            <span style={{ fontWeight: 600, fontSize: '12px' }}>Got the job?</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleGotJob(true); }}
+                                style={{
+                                    padding: '6px 12px',
+                                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                    color: '#10b981',
+                                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                                    borderRadius: 6,
+                                    fontSize: '11px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600'
+                                }}
+                            >
+                                YES
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleGotJob(false); }}
+                                style={{
+                                    padding: '6px 12px',
+                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                    color: '#ef4444',
+                                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                                    borderRadius: 6,
+                                    fontSize: '11px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600'
+                                }}
+                            >
+                                NO
+                            </button>
+                        </div>
+                        {lead.got_the_job && (
+                            <div style={{ marginTop: 8 }}>
+                                <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>Starting date (optional):</div>
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                    <input
+                                        type="date"
+                                        value={startingDate}
+                                        onChange={(e) => {
+                                            setStartingDate(e.target.value);
+                                            // Silent auto-save after typing
+                                            debouncedSave('starting_date', e.target.value);
+                                        }}
+                                        style={{
+                                            padding: '6px 12px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'white',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 6,
+                                            fontSize: '11px',
+                                            cursor: 'pointer'
+                                        }}
+                                    />
+                                </div>
+                                {/* Congratulations message */}
+                                <div style={{
+                                    marginTop: 8,
+                                    padding: '8px',
+                                    background: 'rgba(16, 185, 129, 0.1)',
+                                    borderRadius: 6,
+                                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                                }}>
+                                    <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 600, marginBottom: 4 }}>
+                                        🎉 Congratulations! You got the job!
+                                    </div>
+                                    <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                                        Potential earnings: €100,000
+                                    </div>
+                                </div>
+
+                                {/* Archive button */}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleArchiveJob(); }}
+                                    style={{
+                                        padding: '6px 12px',
+                                        backgroundColor: 'rgba(156, 163, 175, 0.1)',
+                                        color: '#9ca3af',
+                                        border: '1px solid rgba(156, 163, 175, 0.3)',
+                                        borderRadius: 6,
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600',
+                                        marginTop: 8,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 4
+                                    }}
+                                >
+                                    <Archive style={{ width: '12px', height: '12px' }} />
+                                    Archive Job
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // Deal stage: got the job
         if (lead.applied && lead.got_the_job === true) {
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {/* Interview flow */}
                     {renderInterviewFlow()}
+
+                    {/* Contacts */}
+                    <div style={{ padding: 12, background: 'rgba(255, 255, 255, 0.05)', borderRadius: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <Users style={{ width: '14px', height: '14px', color: 'rgba(255,255,255,0.8)' }} />
+                                <span style={{ fontWeight: 600, fontSize: '12px', color: '#fff' }}>Contacts</span>
+                            </div>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setShowContactForm(true); }}
+                                style={{
+                                    padding: '4px 8px',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                                    borderRadius: 4,
+                                    fontSize: '10px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600'
+                                }}
+                            >
+                                + Add
+                            </button>
+                        </div>
+
+                        {/* Contact list */}
+                        {contacts.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                {contacts.map((contact) => (
+                                    <div key={contact.id} style={{
+                                        padding: '8px',
+                                        background: 'rgba(255, 255, 255, 0.05)',
+                                        borderRadius: 6,
+                                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                                            <span style={{ fontSize: '11px', fontWeight: 600 }}>{contact.name}</span>
+                                            <div style={{ display: 'flex', gap: 4 }}>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setEditingContact(contact.id); }}
+                                                    style={{
+                                                        padding: '2px 4px',
+                                                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                                        color: '#f59e0b',
+                                                        border: '1px solid rgba(245, 158, 11, 0.3)',
+                                                        borderRadius: 3,
+                                                        fontSize: '9px',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleDeleteContact(contact.id); }}
+                                                    style={{
+                                                        padding: '2px 4px',
+                                                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                                        color: '#ef4444',
+                                                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                        borderRadius: 3,
+                                                        fontSize: '9px',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    Del
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {contact.email && (
+                                            <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: 2 }}>
+                                                📧 {contact.email}
+                                            </div>
+                                        )}
+                                        {contact.phone && (
+                                            <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                                                📞 {contact.phone}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', textAlign: 'center', padding: '8px' }}>
+                                No contacts added yet
+                            </div>
+                        )}
+
+                        {/* Add/Edit contact form */}
+                        {showContactForm && (
+                            <div style={{
+                                marginTop: 12,
+                                padding: '12px',
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                borderRadius: 6,
+                                border: '1px solid rgba(255, 255, 255, 0.2)'
+                            }}>
+                                <div style={{ fontSize: '11px', fontWeight: 600, marginBottom: 8 }}>
+                                    {editingContact ? 'Edit Contact' : 'Add New Contact'}
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Name *"
+                                        value={newContact.name}
+                                        onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
+                                        style={{
+                                            padding: '6px 8px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'white',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 4,
+                                            fontSize: '11px'
+                                        }}
+                                    />
+                                    <input
+                                        type="email"
+                                        placeholder="Email (optional)"
+                                        value={newContact.email}
+                                        onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
+                                        style={{
+                                            padding: '6px 8px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'white',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 4,
+                                            fontSize: '11px'
+                                        }}
+                                    />
+                                    <input
+                                        type="tel"
+                                        placeholder="Phone (optional)"
+                                        value={newContact.phone}
+                                        onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
+                                        style={{
+                                            padding: '6px 8px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'white',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 4,
+                                            fontSize: '11px'
+                                        }}
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleSaveContact(); }}
+                                        disabled={!newContact.name.trim()}
+                                        style={{
+                                            padding: '6px 12px',
+                                            backgroundColor: newContact.name.trim() ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.1)',
+                                            color: newContact.name.trim() ? '#10b981' : 'rgba(255, 255, 255, 0.3)',
+                                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                                            borderRadius: 4,
+                                            fontSize: '11px',
+                                            cursor: newContact.name.trim() ? 'pointer' : 'not-allowed',
+                                            fontWeight: '600'
+                                        }}
+                                    >
+                                        Save
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleCancelContact(); }}
+                                        style={{
+                                            padding: '6px 12px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'rgba(255, 255, 255, 0.7)',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 4,
+                                            fontSize: '11px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     {/* Got the job */}
                     <div style={{ padding: 12, background: 'rgba(255, 255, 255, 0.05)', borderRadius: 8 }}>
