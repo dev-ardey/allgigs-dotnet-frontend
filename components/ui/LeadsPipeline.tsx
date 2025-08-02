@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+
 import {
     Search,
     Archive,
@@ -492,65 +492,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
         }
     }, [user?.id]);
 
-    // ==========================================
-    // DRAG & DROP HANDLERS
-    // ==========================================
-    const onDragEnd = async (result: DropResult) => {
-        const { destination, source, draggableId } = result;
 
-        // Dropped outside the list
-        if (!destination) return;
-
-        // Dropped in the same position
-        if (
-            destination.droppableId === source.droppableId &&
-            destination.index === source.index
-        ) {
-            return;
-        }
-
-        const leadId = draggableId;
-        const newStage = destination.droppableId as LeadStage;
-        const lead = leads.find(l => l.applying_id === leadId);
-
-        if (!lead) return;
-
-        console.log(`Moving "${lead.job_title_clicked}" from ${source.droppableId} to ${newStage}`);
-
-        // Handle stage transitions
-        if (newStage === 'lead' && source.droppableId === 'found') {
-            // Moving from Found to Lead - create applying record
-            await handleApplyAction(lead.unique_id_job, true);
-        } else if (newStage === 'found' && source.droppableId === 'lead') {
-            // Moving from Lead to Found - set applied to false
-            if (lead.applied) {
-                await handleUpdateApplying(lead.applying_id, { applied: false });
-            }
-        } else if (newStage === 'opportunity' && source.droppableId === 'lead') {
-            // Moving from Lead to Opportunity - this should be done via interview actions
-            console.log('Use interview actions to move to Opportunity stage');
-        } else if (newStage === 'lead' && source.droppableId === 'opportunity') {
-            // Moving from Opportunity to Lead - remove interviews
-            if (lead.applied) {
-                await handleUpdateApplying(lead.applying_id, { interviews: [] });
-            }
-        } else if (newStage === 'deal' && source.droppableId === 'opportunity') {
-            // Moving from Opportunity to Deal - this should be done via got the job actions
-            console.log('Use got the job actions to move to Deal stage');
-        } else if (newStage === 'found' && source.droppableId === 'deal') {
-            // Moving from Deal to Found - reset applying record
-            if (lead.applied) {
-                await handleUpdateApplying(lead.applying_id, {
-                    applied: false,
-                    interviews: [],
-                    got_the_job: null
-                });
-            }
-        }
-
-        // Refresh data to show updated state
-        await fetchLeads();
-    };
 
     // ==========================================
     // EVENT HANDLERS
@@ -1308,184 +1250,157 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     display: none;
                 }
             `}</style>
-            <DragDropContext onDragEnd={onDragEnd}>
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                    gap: '1.5rem',
-                    alignItems: 'start'
-                }}>
-                    {organizedColumns.map(column => {
-                        const config = stageConfig[column.id as LeadStage];
-                        return (
-                            <Droppable key={column.id} droppableId={column.id}>
-                                {(provided, snapshot) => (
-                                    <div
-                                        ref={provided.innerRef}
-                                        {...provided.droppableProps}
-                                        style={{
-                                            background: snapshot.isDraggingOver
-                                                ? 'rgba(59, 130, 246, 0.15)'
-                                                : 'rgba(255, 255, 255, 0.05)',
-                                            border: `2px solid ${snapshot.isDraggingOver
-                                                ? 'rgba(59, 130, 246, 0.5)'
-                                                : 'rgba(255, 255, 255, 0.1)'}`,
-                                            borderRadius: '12px',
-                                            padding: '1rem',
-                                            minHeight: '600px',
-                                            height: 'calc(100vh - 250px)',
-                                            overflowY: 'auto',
-                                            scrollbarWidth: 'none', // Firefox
-                                            msOverflowStyle: 'none', // IE/Edge
-                                            transition: 'all 0.2s ease',
-                                            backdropFilter: 'blur(8px)',
-                                            transform: snapshot.isDraggingOver ? 'scale(1.02)' : 'scale(1)'
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: '1.5rem',
+                alignItems: 'start'
+            }}>
+                {organizedColumns.map(column => {
+                    const config = stageConfig[column.id as LeadStage];
+                    return (
+                        <div
+                            key={column.id}
+                            style={{
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                border: '2px solid rgba(255, 255, 255, 0.1)',
+                                borderRadius: '12px',
+                                padding: '1rem',
+                                minHeight: '600px',
+                                height: 'calc(100vh - 250px)',
+                                overflowY: 'auto',
+                                scrollbarWidth: 'none', // Firefox
+                                msOverflowStyle: 'none', // IE/Edge
+                                transition: 'all 0.2s ease',
+                                backdropFilter: 'blur(8px)'
+                            }}
+                        >
+                            {/* Column Header */}
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                marginBottom: '1rem',
+                                padding: '0.75rem',
+                                background: config.color,
+                                border: `1px solid ${config.borderColor}`,
+                                borderRadius: '8px'
+                            }}>
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                }}>
+                                    {config.icon}
+                                    <span style={{
+                                        fontWeight: '600',
+                                        fontSize: '0.875rem'
+                                    }}>
+                                        {config.title}
+                                    </span>
+                                </div>
+                                <div style={{
+                                    background: 'rgba(255, 255, 255, 0.2)',
+                                    borderRadius: '12px',
+                                    padding: '0.25rem 0.5rem',
+                                    fontSize: '0.75rem',
+                                    fontWeight: '600'
+                                }}>
+                                    {column.leads.length}
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {column.leads.map((lead, index) => (
+                                    <LeadCard
+                                        key={lead.applying_id}
+                                        lead={lead}
+                                        index={index}
+                                        isDragging={false}
+                                        hasFollowUp={followUpNotifications.some(fu => fu.applying_id === lead.applying_id)}
+                                        onClick={() => { }} // Empty function for now
+                                        onArchived={(leadId) => {
+                                            // Remove the archived/deleted lead from the leads array
+                                            setLeads(prevLeads => prevLeads.filter(l => l.applying_id !== leadId));
+                                            // Recalculate archived count
+                                            calculateArchivedCount();
                                         }}
-                                    >
-                                        {/* Column Header */}
-                                        <div style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between',
-                                            marginBottom: '1rem',
-                                            padding: '0.75rem',
-                                            background: config.color,
-                                            border: `1px solid ${config.borderColor}`,
-                                            borderRadius: '8px'
-                                        }}>
-                                            <div style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '0.5rem'
-                                            }}>
-                                                {config.icon}
-                                                <span style={{
-                                                    fontWeight: '600',
-                                                    fontSize: '0.875rem'
-                                                }}>
-                                                    {config.title}
-                                                </span>
-                                            </div>
-                                            <div style={{
-                                                background: 'rgba(255, 255, 255, 0.2)',
-                                                borderRadius: '12px',
-                                                padding: '0.25rem 0.5rem',
-                                                fontSize: '0.75rem',
-                                                fontWeight: '600'
-                                            }}>
-                                                {column.leads.length}
-                                            </div>
+                                        onStateChanged={() => {
+                                            // Force refresh of leads when important state changes
+                                            fetchLeads();
+                                        }}
+                                        onStageAction={(action, data) => {
+                                            if (action === 'apply') {
+                                                handleApplyAction(lead.unique_id_job, data.applied);
+                                            } else if (action === 'interview_date') {
+                                                handleInterviewAction(lead.applying_id, data.interviewData);
+                                            } else if (action === 'interview_rating') {
+                                                handleInterviewAction(lead.applying_id, data.interviewData);
+                                            } else if (action === 'update_notes') {
+                                                handleUpdateApplying(lead.applying_id, { notes: data.notes });
+                                            } else if (action === 'follow_up_complete') {
+                                                handleFollowUpComplete(lead.applying_id, data.followUpMessage);
+                                            } else if (action === 'got_job') {
+                                                handleGotJob(lead.applying_id, data.gotJob, data.startingDate);
+                                            } else if (action === 'archive_job') {
+                                                handleArchiveJob(data.applying_id);
+                                            } else if (action === 'interview_added') {
+                                                // Refresh leads when interview is added
+                                                fetchLeads();
+                                            } else if (action === 'toggle_collapse') {
+                                                console.log('toggle_collapse action received:', {
+                                                    leadId: lead.applying_id,
+                                                    collapsed: data.collapsed,
+                                                    currentCollapsed: lead.collapsed_card
+                                                });
+
+                                                // Update local state for immediate UI feedback
+                                                setLeads(prevLeads => {
+                                                    const updatedLeads = prevLeads.map(l =>
+                                                        l.applying_id === lead.applying_id
+                                                            ? {
+                                                                ...l,
+                                                                collapsed_card: data.collapsed, // Update applying collapsed_card
+                                                            }
+                                                            : l
+                                                    );
+
+                                                    console.log('Updated leads state:', updatedLeads.find(l => l.applying_id === lead.applying_id));
+                                                    return updatedLeads;
+                                                });
+                                            } else if (action === 'archive') {
+                                                handleArchiveJob(lead.applying_id);
+                                            }
+                                        }}
+                                    />
+                                ))}
+
+                                {/* Empty state for follow-up filter */}
+                                {showFollowUpOnly && (column.id === 'lead' || column.id === 'opportunity') && column.leads.length === 0 && (
+                                    <div style={{
+                                        padding: '2rem 1rem',
+                                        textAlign: 'center',
+                                        color: 'rgba(255, 255, 255, 0.6)',
+                                        fontSize: '0.875rem'
+                                    }}>
+                                        <Bell style={{
+                                            width: '24px',
+                                            height: '24px',
+                                            margin: '0 auto 0.5rem auto',
+                                            display: 'block',
+                                            opacity: 0.5
+                                        }} />
+                                        <div>No follow-up reminders needed</div>
+                                        <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.7 }}>
+                                            All applied jobs are up to date
                                         </div>
-
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                            {column.leads.map((lead, index) => (
-                                                <Draggable key={lead.applying_id} draggableId={lead.applying_id} index={index}>
-                                                    {(provided, snapshot) => (
-                                                        <div
-                                                            ref={provided.innerRef}
-                                                            {...provided.draggableProps}
-                                                            {...provided.dragHandleProps}
-                                                            style={{
-                                                                ...provided.draggableProps.style,
-                                                                // Ensure proper positioning during drag
-                                                                zIndex: snapshot.isDragging ? 1000 : 'auto'
-                                                            }}
-                                                        >
-                                                            <LeadCard
-                                                                lead={lead}
-                                                                index={index}
-                                                                isDragging={snapshot.isDragging}
-                                                                hasFollowUp={followUpNotifications.some(fu => fu.applying_id === lead.applying_id)}
-                                                                onClick={() => { }} // Empty function for now
-                                                                onArchived={(leadId) => {
-                                                                    // Remove the archived/deleted lead from the leads array
-                                                                    setLeads(prevLeads => prevLeads.filter(l => l.applying_id !== leadId));
-                                                                    // Recalculate archived count
-                                                                    calculateArchivedCount();
-                                                                }}
-                                                                onStateChanged={() => {
-                                                                    // Force refresh of leads when important state changes
-                                                                    fetchLeads();
-                                                                }}
-                                                                onStageAction={(action, data) => {
-                                                                    if (action === 'apply') {
-                                                                        handleApplyAction(lead.unique_id_job, data.applied);
-                                                                    } else if (action === 'interview_date') {
-                                                                        handleInterviewAction(lead.applying_id, data.interviewData);
-                                                                    } else if (action === 'interview_rating') {
-                                                                        handleInterviewAction(lead.applying_id, data.interviewData);
-                                                                    } else if (action === 'update_notes') {
-                                                                        handleUpdateApplying(lead.applying_id, { notes: data.notes });
-                                                                    } else if (action === 'follow_up_complete') {
-                                                                        handleFollowUpComplete(lead.applying_id, data.followUpMessage);
-                                                                    } else if (action === 'got_job') {
-                                                                        handleGotJob(lead.applying_id, data.gotJob, data.startingDate);
-                                                                    } else if (action === 'archive_job') {
-                                                                        handleArchiveJob(data.applying_id);
-                                                                    } else if (action === 'interview_added') {
-                                                                        // Refresh leads when interview is added
-                                                                        fetchLeads();
-                                                                    } else if (action === 'toggle_collapse') {
-                                                                        console.log('toggle_collapse action received:', {
-                                                                            leadId: lead.applying_id,
-                                                                            collapsed: data.collapsed,
-                                                                            currentCollapsed: lead.collapsed_card
-                                                                        });
-
-                                                                        // Update local state for immediate UI feedback
-                                                                        setLeads(prevLeads => {
-                                                                            const updatedLeads = prevLeads.map(l =>
-                                                                                l.applying_id === lead.applying_id
-                                                                                    ? {
-                                                                                        ...l,
-                                                                                        collapsed_card: data.collapsed, // Update applying collapsed_card
-                                                                                    }
-                                                                                    : l
-                                                                            );
-
-                                                                            console.log('Updated leads state:', updatedLeads.find(l => l.applying_id === lead.applying_id));
-                                                                            return updatedLeads;
-                                                                        });
-                                                                    } else if (action === 'archive') {
-                                                                        handleArchiveJob(lead.applying_id);
-                                                                    }
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </Draggable>
-                                            ))}
-
-                                            {/* Empty state for follow-up filter */}
-                                            {showFollowUpOnly && (column.id === 'lead' || column.id === 'opportunity') && column.leads.length === 0 && (
-                                                <div style={{
-                                                    padding: '2rem 1rem',
-                                                    textAlign: 'center',
-                                                    color: 'rgba(255, 255, 255, 0.6)',
-                                                    fontSize: '0.875rem'
-                                                }}>
-                                                    <Bell style={{
-                                                        width: '24px',
-                                                        height: '24px',
-                                                        margin: '0 auto 0.5rem auto',
-                                                        display: 'block',
-                                                        opacity: 0.5
-                                                    }} />
-                                                    <div>No follow-up reminders needed</div>
-                                                    <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.7 }}>
-                                                        All applied jobs are up to date
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                        {provided.placeholder}
                                     </div>
                                 )}
-                            </Droppable>
-                        );
-                    })}
-                </div>
-            </DragDropContext>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
 
             {/* Modals */}
             {showArchiveModal && (

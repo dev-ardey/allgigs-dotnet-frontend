@@ -1874,7 +1874,7 @@ export default function JobBoard() {
               {groupedJobs.map(({ primaryJob: job, stackedJobs }) => (
                 <div
                   key={job.UNIQUE_ID}
-                  style={{ position: 'relative', marginBottom: stackedJobs.length > 0 ? `${stackedJobs.length * 8 + 80}px` : '0' }}
+                  style={{ position: 'relative', marginBottom: stackedJobs.length > 0 ? `${(stackedJobs.length - 1) * 60 + 80}px` : '0' }}
                 >
                   {/* Main Job Card */}
                   <div
@@ -2109,7 +2109,7 @@ export default function JobBoard() {
                       style={{
                         position: 'absolute',
                         top: '100%',
-                        marginTop: `${(index + 1) * 8}px`,
+                        marginTop: `${index * 60}px`,
                         left: '4px',
                         right: '4px',
                         zIndex: 1,
