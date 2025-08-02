@@ -1297,9 +1297,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     <p>
                         Click on some jobs in the search page to see them here as leads
                     </p>
-                    <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.5)' }}>
-                        Debug: User ID: {user?.id}, Total leads: {leads.length}
-                    </div>
+
                 </div>
             )}
 

@@ -163,7 +163,9 @@ export default function JobBoard() {
   // Debounce search term to improve performance
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
+      if (searchTerm.length >= 2 || searchTerm.length === 0) {
+        setDebouncedSearchTerm(searchTerm);
+      }
     }, 300); // 300ms delay
 
     return () => clearTimeout(timer);
@@ -577,12 +579,8 @@ export default function JobBoard() {
       const results = fuse.search(debouncedSearchTerm);
       return results.map(result => result.item);
     }
-    // Sort by created_at or inserted_at descending (newest first)
-    return [...filteredJobs].sort((a, b) => {
-      const aDate = new Date(a.created_at || a.inserted_at || 0).getTime();
-      const bDate = new Date(b.created_at || b.inserted_at || 0).getTime();
-      return bDate - aDate;
-    });
+    // Return empty array when no search term (don't show jobs on page load)
+    return [];
   }, [debouncedSearchTerm, filteredJobs, fuse]);
 
   useEffect(() => {
@@ -1115,312 +1113,7 @@ export default function JobBoard() {
 
 
 
-          {/* Lead Search Section */}
-          <div
-            ref={leadSearchSectionRef}
-            style={{
-              background: 'rgba(255, 255, 255, 0.15)',
-              backdropFilter: 'blur(16px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '24px',
-              padding: '2rem',
-              marginBottom: '2rem',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-              transition: 'all 0.3s ease'
-            }}>
-            {/* Header */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '2rem'
-            }}>
-              <div>
-                <h2 style={{
-                  fontSize: '2rem',
-                  fontWeight: '700',
-                  margin: '0 0 0.5rem 0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem'
-                }}>
-                  <Sparkles style={{ width: '32px', height: '32px' }} />
-                  Lead Search
-                </h2>
-                <p style={{
-                  fontSize: '1.1rem',
-                  opacity: 0.9,
-                  margin: 0
-                }}>
-                  Find leads and opportunities across the platform
-                </p>
-              </div>
-            </div>
 
-            {/* Horizontal Rule */}
-            <hr style={{
-              border: 'none',
-              height: '1px',
-              background: 'rgba(255, 255, 255, 0.2)',
-              margin: '1rem 0'
-            }} />
-
-            {/* Quick Search Section */}
-            <div style={{
-              padding: '0.5rem 1rem',
-              marginBottom: '0'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                <h3 style={{
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  color: '#fff',
-                  margin: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  <SearchCheck style={{ width: '18px', height: '18px' }} />
-                  Quick Search
-                </h3>
-                <button
-                  onClick={() => setEditKeywords(!editKeywords)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 1rem',
-                    fontSize: '0.875rem',
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    color: '#fff',
-                    borderRadius: '12px',
-                    border: 'none',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  <Edit2 style={{ width: '16px', height: '16px' }} />
-                  {editKeywords ? 'Done' : 'Edit'}
-                </button>
-              </div>
-              <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.5rem 0 0.5rem 0' }}>
-                Click to quicksearch jobs
-              </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-                {keywords.map((keyword, index) => (
-                  <span
-                    key={index}
-                    onClick={() => !editKeywords && searchJobs(keyword)}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '0.5rem 1rem',
-                      borderRadius: '999px',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      background: editKeywords ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                      color: '#fff',
-                      border: '1px solid rgba(245, 158, 11, 0.4)',
-                      cursor: editKeywords ? 'default' : 'pointer',
-                      transition: 'all 0.2s',
-                      backdropFilter: 'blur(8px)'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!editKeywords) {
-                        e.currentTarget.style.background = 'rgba(245, 158, 11, 0.4)';
-                        e.currentTarget.style.color = '#fff';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!editKeywords) {
-                        e.currentTarget.style.background = 'rgba(245, 158, 11, 0.2)';
-                        e.currentTarget.style.color = '#fff';
-                      }
-                    }}
-                  >
-                    {keyword}
-                    {editKeywords && (
-                      <button
-                        onClick={() => removeKeyword(index)}
-                        style={{
-                          marginLeft: '0.25rem',
-                          background: 'none',
-                          border: 'none',
-                          color: '#fff',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center'
-                        }}
-                      >
-                        <X style={{ width: '12px', height: '12px' }} />
-                      </button>
-                    )}
-                  </span>
-                ))}
-              </div>
-
-              {editKeywords && (
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <input
-                    type="text"
-                    value={newKeyword}
-                    onChange={(e) => setNewKeyword(e.target.value)}
-                    onKeyDown={handleKeywordKeyDown}
-                    placeholder="New search term..."
-                    style={{
-                      flex: 1,
-                      padding: '0.75rem',
-                      border: '1px solid rgba(255, 255, 255, 0.3)',
-                      borderRadius: '8px',
-                      fontSize: '0.875rem',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      color: '#fff',
-                      backdropFilter: 'blur(8px)'
-                    }}
-                    className="search-input-placeholder"
-                  />
-                  <button
-                    onClick={handleKeywordAdd}
-                    style={{
-                      padding: '0.75rem',
-                      background: 'rgba(245, 158, 11, 0.2)',
-                      color: '#fff',
-                      borderRadius: '12px',
-                      border: '1px solid rgba(245, 158, 11, 0.4)',
-                      cursor: 'pointer',
-                      backdropFilter: 'blur(8px)',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    <Plus style={{ width: '16px', height: '16px' }} />
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Horizontal Rule */}
-            <hr style={{
-              border: 'none',
-              height: '1px',
-              background: 'rgba(255, 255, 255, 0.2)',
-              margin: '1rem 0'
-            }} />
-
-            {/* Recommended Leads Section */}
-            <div style={{
-              padding: '0 1rem 1rem 1rem'
-            }}>
-              <h3 style={{
-                fontSize: '1rem',
-                fontWeight: '600',
-                color: '#fff',
-                marginBottom: '0.75rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <Sparkles style={{ width: '18px', height: '18px' }} />
-                Recommended Leads
-              </h3>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {recommendedJobs.map((job) => (
-                  <div
-                    key={job.UNIQUE_ID}
-                    onClick={() => {
-                      logJobClick(job);
-                      window.open(job.URL, '_blank', 'noopener,noreferrer');
-                    }}
-                    style={{
-                      padding: '1rem',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      borderRadius: '12px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      backdropFilter: 'blur(8px)'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.boxShadow = 'none';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    }}
-                  >
-                    <h3 style={{ fontWeight: '600', color: '#fff', margin: '0 0 0.5rem 0', fontSize: '1rem' }}>{job.Title}</h3>
-
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                      {/* Company - Blue Balloon */}
-                      {job.Company && (
-                        <div style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          padding: '0.5rem 0.75rem',
-                          borderRadius: '20px',
-                          fontSize: '0.875rem',
-                          fontWeight: '600',
-                          background: 'rgba(59, 130, 246, 0.3)',
-                          color: '#fff',
-                          border: '1px solid rgba(59, 130, 246, 0.4)',
-                          backdropFilter: 'blur(8px)'
-                        }}>
-                          <Building2 style={{ width: '14px', height: '14px', color: '#fff' }} />
-                          {job.Company}
-                        </div>
-                      )}
-
-                      {/* Location - Green Balloon */}
-                      {job.Location && (
-                        <div style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          padding: '0.5rem 0.75rem',
-                          borderRadius: '20px',
-                          fontSize: '0.875rem',
-                          fontWeight: '600',
-                          background: 'rgba(16, 185, 129, 0.3)',
-                          color: '#fff',
-                          border: '1px solid rgba(16, 185, 129, 0.4)',
-                          backdropFilter: 'blur(8px)'
-                        }}>
-                          <MapPin style={{ width: '14px', height: '14px', color: '#fff' }} />
-                          {job.Location}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Rate - Purple Balloon */}
-                    {job.rate && (
-                      <div style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        padding: '0.5rem 0.75rem',
-                        borderRadius: '20px',
-                        fontSize: '0.875rem',
-                        fontWeight: '600',
-                        background: 'rgba(147, 51, 234, 0.3)',
-                        color: '#fff',
-                        border: '1px solid rgba(147, 51, 234, 0.4)',
-                        backdropFilter: 'blur(8px)'
-                      }}>
-                        <Coins style={{ width: '14px', height: '14px', color: '#fff' }} />
-                        {job.rate}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
 
           {/* Job List Container */}
           <div style={{
@@ -1442,7 +1135,11 @@ export default function JobBoard() {
                   Discover Your Next Opportunity
                 </h3>
                 <p style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.8)', margin: 0 }}>
-                  From <span style={{ fontWeight: '600', color: '#10b981' }}>{sortedJobs.length}</span> curated positions
+                  {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" ? (
+                    <>From <span style={{ fontWeight: '600', color: '#10b981' }}>{sortedJobs.length}</span> curated positions</>
+                  ) : (
+                    <>Enter at least 2 characters to search jobs</>
+                  )}
                 </p>
               </div>
             </div>
@@ -1968,6 +1665,143 @@ export default function JobBoard() {
               </div>
             </div>
 
+            {/* Quick Search Section */}
+            <div style={{
+              padding: '1rem',
+              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '12px',
+              marginBottom: '1rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                <h3 style={{
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  color: '#fff',
+                  margin: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <SearchCheck style={{ width: '18px', height: '18px' }} />
+                  Quick Search
+                </h3>
+                <button
+                  onClick={() => setEditKeywords(!editKeywords)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.875rem',
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    color: '#fff',
+                    borderRadius: '12px',
+                    border: 'none',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <Edit2 style={{ width: '16px', height: '16px' }} />
+                  {editKeywords ? 'Done' : 'Edit'}
+                </button>
+              </div>
+              <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.5rem 0 0.5rem 0' }}>
+                Click to quicksearch jobs
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                {keywords.map((keyword, index) => (
+                  <span
+                    key={index}
+                    onClick={() => !editKeywords && searchJobs(keyword)}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '999px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      background: editKeywords ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                      color: '#fff',
+                      border: '1px solid rgba(245, 158, 11, 0.4)',
+                      cursor: editKeywords ? 'default' : 'pointer',
+                      transition: 'all 0.2s',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!editKeywords) {
+                        e.currentTarget.style.background = 'rgba(245, 158, 11, 0.4)';
+                        e.currentTarget.style.color = '#fff';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!editKeywords) {
+                        e.currentTarget.style.background = 'rgba(245, 158, 11, 0.2)';
+                        e.currentTarget.style.color = '#fff';
+                      }
+                    }}
+                  >
+                    {keyword}
+                    {editKeywords && (
+                      <button
+                        onClick={() => removeKeyword(index)}
+                        style={{
+                          marginLeft: '0.25rem',
+                          background: 'none',
+                          border: 'none',
+                          color: '#fff',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <X style={{ width: '12px', height: '12px' }} />
+                      </button>
+                    )}
+                  </span>
+                ))}
+              </div>
+
+              {editKeywords && (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    value={newKeyword}
+                    onChange={(e) => setNewKeyword(e.target.value)}
+                    onKeyDown={handleKeywordKeyDown}
+                    placeholder="New search term..."
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      color: '#fff',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                    className="search-input-placeholder"
+                  />
+                  <button
+                    onClick={handleKeywordAdd}
+                    style={{
+                      padding: '0.75rem',
+                      background: 'rgba(245, 158, 11, 0.2)',
+                      color: '#fff',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(245, 158, 11, 0.4)',
+                      cursor: 'pointer',
+                      backdropFilter: 'blur(8px)',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <Plus style={{ width: '16px', height: '16px' }} />
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Search Field */}
             <div style={{ marginBottom: '1rem' }}>
               <input
@@ -2120,15 +1954,30 @@ export default function JobBoard() {
                             </span>
                           )}
                         </div>
-                        <p
-                          style={{
-                            fontSize: '1.1rem',
-                            color: 'rgba(255, 255, 255, 0.9)',
-                            margin: '0 0 0.75rem 0',
-                            fontWeight: '600'
-                          }}
-                          dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.Company, debouncedSearchTerm.split(' ')) }}
-                        />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                          <p
+                            style={{
+                              fontSize: '1.1rem',
+                              color: 'rgba(255, 255, 255, 0.9)',
+                              margin: '0',
+                              fontWeight: '600'
+                            }}
+                            dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.Company, debouncedSearchTerm.split(' ')) }}
+                          />
+                          {job.source && (
+                            <span style={{
+                              background: 'rgba(147, 51, 234, 0.2)',
+                              color: '#fff',
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '12px',
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              border: '1px solid rgba(147, 51, 234, 0.3)'
+                            }}>
+                              {job.source}
+                            </span>
+                          )}
+                        </div>
                         <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
                           {job.rate && job.rate.trim() !== '' && (
                             <span style={{
@@ -2342,18 +2191,33 @@ export default function JobBoard() {
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-                        <p style={{
-                          fontSize: '0.8rem',
-                          color: 'rgba(255, 255, 255, 0.8)',
-                          margin: '0',
-                          fontWeight: '500',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          minWidth: 'fit-content'
-                        }}
-                          dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Company, debouncedSearchTerm.split(' ')) }}
-                        />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <p style={{
+                            fontSize: '0.8rem',
+                            color: 'rgba(255, 255, 255, 0.8)',
+                            margin: '0',
+                            fontWeight: '500',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            minWidth: 'fit-content'
+                          }}
+                            dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Company, debouncedSearchTerm.split(' ')) }}
+                          />
+                          {stackedJob.source && (
+                            <span style={{
+                              background: 'rgba(147, 51, 234, 0.2)',
+                              color: '#fff',
+                              padding: '0.15rem 0.4rem',
+                              borderRadius: '6px',
+                              fontSize: '0.6rem',
+                              fontWeight: '600',
+                              border: '1px solid rgba(147, 51, 234, 0.3)'
+                            }}>
+                              {stackedJob.source}
+                            </span>
+                          )}
+                        </div>
 
                         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                           {stackedJob.rate && stackedJob.rate.trim() !== '' && isDifferentFromPrimary(job.rate, stackedJob.rate) && (
