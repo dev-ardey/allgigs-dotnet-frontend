@@ -66,7 +66,7 @@ export default function JobBoard() {
   // Lead Search state variables (from dashboard)
   const [editKeywords, setEditKeywords] = useState(false);
   const [newKeyword, setNewKeyword] = useState('');
-  const [keywords, setKeywords] = useState(["Frontend", "Backend", "React", "Node.js", "TypeScript"]);
+  const [keywords, setKeywords] = useState<string[]>([]);
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
   console.log(recommendedJobs, "recommendedJobs - build fix");
   // State to track if sticky header should be visible
@@ -159,6 +159,13 @@ export default function JobBoard() {
     };
     fetchJobs();
   }, []);
+
+  // Load keywords from profile when user is available
+  useEffect(() => {
+    if (user) {
+      loadKeywords();
+    }
+  }, [user]);
 
   // Debounce search term to improve performance
   useEffect(() => {
@@ -769,10 +776,54 @@ export default function JobBoard() {
     return primaryValue.toLowerCase().trim() !== stackedValue.toLowerCase().trim();
   };
 
+  // Load keywords from profile
+  const loadKeywords = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('quicksearch')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error loading keywords:', error);
+        return;
+      }
+
+      setKeywords(data?.quicksearch || []);
+    } catch (error) {
+      console.error('Exception loading keywords:', error);
+    }
+  };
+
+  // Save keywords to profile
+  const saveKeywords = async (newKeywords: string[]) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ quicksearch: newKeywords })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error saving keywords:', error);
+        return;
+      }
+
+      setKeywords(newKeywords);
+    } catch (error) {
+      console.error('Exception saving keywords:', error);
+    }
+  };
+
   // Lead Search helper functions (from dashboard)
-  const handleKeywordAdd = () => {
+  const handleKeywordAdd = async () => {
     if (newKeyword.trim() && !keywords.includes(newKeyword.trim())) {
-      setKeywords([...keywords, newKeyword.trim()]);
+      const newKeywords = [...keywords, newKeyword.trim()];
+      await saveKeywords(newKeywords);
       setNewKeyword('');
     }
   };
@@ -783,8 +834,9 @@ export default function JobBoard() {
     }
   };
 
-  const removeKeyword = (index: number) => {
-    setKeywords(keywords.filter((_, i) => i !== index));
+  const removeKeyword = async (index: number) => {
+    const newKeywords = keywords.filter((_, i) => i !== index);
+    await saveKeywords(newKeywords);
   };
 
   const searchJobs = (keyword: string) => {
@@ -1714,7 +1766,7 @@ export default function JobBoard() {
                 </button>
               </div>
               <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.5rem 0 0.5rem 0' }}>
-                Click to quicksearch jobs
+                {keywords.length === 0 ? 'Press edit to add a quicksearch button' : 'Click to quicksearch jobs'}
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
                 {keywords.map((keyword, index) => (
