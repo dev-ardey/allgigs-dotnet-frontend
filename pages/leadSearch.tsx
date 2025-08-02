@@ -817,12 +817,19 @@ export default function JobBoard() {
   const highlightSearchTerms = (text: string, searchWords: string[]): string => {
     if (!searchWords || searchWords.length === 0) return normalizeText(text);
 
+    // Filter out empty strings and whitespace-only strings
+    const validSearchWords = searchWords.filter(word => word && word.trim().length > 0);
+    if (validSearchWords.length === 0) return normalizeText(text);
+
     const normalizedText = normalizeText(text);
     // Escape special regex characters and create case-insensitive regex
-    const escapedWords = searchWords.map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const escapedWords = validSearchWords.map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
     const regex = new RegExp(`(${escapedWords.join('|')})`, 'gi');
+
     return normalizedText.replace(regex, '<span class="highlight">$1</span>');
   };
+
+
 
   // useEffect(() => {
   //   const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
