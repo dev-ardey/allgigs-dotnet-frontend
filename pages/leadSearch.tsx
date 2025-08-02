@@ -12,7 +12,7 @@ import CompleteProfileForm from "../components/ui/CompleteProfileForm";
 import { useProfileCheck } from "../components/ui/useProfileCheck";
 import { useRouter } from "next/router";
 import GlobalNav from "../components/ui/GlobalNav";
-import { Search, Sparkles, SearchCheck, Edit2, Plus, X, Building2, MapPin, Coins, Layers2, ChevronDown, Globe, Lock } from "lucide-react";
+import { Search, SearchCheck, Edit2, Plus, X, Building2, MapPin, Layers2, ChevronDown, Globe, Lock } from "lucide-react";
 
 
 interface Job {
@@ -68,7 +68,7 @@ export default function JobBoard() {
   const [newKeyword, setNewKeyword] = useState('');
   const [keywords, setKeywords] = useState(["Frontend", "Backend", "React", "Node.js", "TypeScript"]);
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
-
+  console.log(recommendedJobs, "recommendedJobs - build fix");
   // State to track if sticky header should be visible
   const [showStickyHeader, setShowStickyHeader] = useState(false);
   const leadSearchSectionRef = useRef<HTMLDivElement>(null);
