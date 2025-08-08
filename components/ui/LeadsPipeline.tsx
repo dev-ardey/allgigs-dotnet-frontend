@@ -359,7 +359,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             const jobIds = applyingRecords?.map(record => record.unique_id_job) || [];
 
             // Fetch job data from Allgigs_All_vacancies_NEW table
-            let jobDataMap = {};
+            let jobDataMap: Record<string, any> = {};
             if (jobIds.length > 0) {
                 const { data: jobData, error: jobError } = await supabase
                     .from('Allgigs_All_vacancies_NEW')
@@ -370,10 +370,10 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     console.error('Error fetching job data:', jobError);
                 } else {
                     // Create a map for quick lookup
-                    jobDataMap = jobData?.reduce((map, job) => {
+                    jobDataMap = jobData?.reduce((map: Record<string, any>, job) => {
                         map[job.UNIQUE_ID] = job;
                         return map;
-                    }, {}) || {};
+                    }, {} as Record<string, any>) || {};
                 }
             }
 
