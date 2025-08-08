@@ -984,11 +984,12 @@ export default function JobBoard() {
     return (
       <div style={{
         minHeight: '100vh',
-        background: `
-          radial-gradient(ellipse at top left, rgba(139, 69, 189, 0.15) 0%, transparent 50%), 
-          radial-gradient(ellipse at bottom right, rgba(59, 130, 246, 0.15) 0%, transparent 50%), 
-          linear-gradient(135deg, #1a0b2e 0%, #16213e 25%, #0f3460 50%, #16213e 75%, #1a0b2e 100%)
-        `,
+        // background: `
+        //   radial-gradient(ellipse at top left, rgba(139, 69, 189, 0.15) 0%, transparent 50%), 
+        //   radial-gradient(ellipse at bottom right, rgba(59, 130, 246, 0.15) 0%, transparent 50%), 
+        //   linear-gradient(135deg, #1a0b2e 0%, #16213e 25%, #0f3460 50%, #16213e 75%, #1a0b2e 100%)
+        // `,
+        background: 'black',
         fontFamily: "'Montserrat', Arial, sans-serif",
         color: '#fff',
         position: 'relative',
@@ -1204,7 +1205,7 @@ export default function JobBoard() {
                   {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" ? (
                     <>From <span style={{ fontWeight: '600', color: '#10b981' }}>{sortedJobs.length}</span> curated positions</>
                   ) : (
-                    <>Use filters or enter at least 2 characters to search jobs</>
+                    <></>
                   )}
                 </p>
               </div>
@@ -1871,7 +1872,7 @@ export default function JobBoard() {
             {/* Search Field */}
             <div style={{ marginBottom: '1rem' }}>
               <input
-                placeholder="Search leads and opportunities..."
+                placeholder="Enter at least 2 characters to search for leads and opportunities..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
