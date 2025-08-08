@@ -355,6 +355,28 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 sample: applyingRecords[0]
             });
 
+            // Get all unique job IDs from applying records
+            const jobIds = applyingRecords?.map(record => record.unique_id_job) || [];
+
+            // Fetch job data from Allgigs_All_vacancies_NEW table
+            let jobDataMap = {};
+            if (jobIds.length > 0) {
+                const { data: jobData, error: jobError } = await supabase
+                    .from('Allgigs_All_vacancies_NEW')
+                    .select('UNIQUE_ID, Title, Company, Location, rate, date, Summary, URL')
+                    .in('UNIQUE_ID', jobIds);
+
+                if (jobError) {
+                    console.error('Error fetching job data:', jobError);
+                } else {
+                    // Create a map for quick lookup
+                    jobDataMap = jobData?.reduce((map, job) => {
+                        map[job.UNIQUE_ID] = job;
+                        return map;
+                    }, {}) || {};
+                }
+            }
+
             // Parse JSON fields if they are strings (for json column) or keep as-is (for jsonb)
             const processedRecords = applyingRecords?.map(record => {
                 let interviews = [];
@@ -388,10 +410,21 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     }
                 }
 
+                // Get job data from the map
+                const jobData = jobDataMap[record.unique_id_job] || {};
+
                 return {
                     ...record,
                     interviews,
-                    contacts
+                    contacts,
+                    // Add job data with _clicked suffix for compatibility
+                    job_title_clicked: jobData.Title || '',
+                    company_clicked: jobData.Company || '',
+                    location_clicked: jobData.Location || '',
+                    rate_clicked: jobData.rate || '',
+                    date_posted_clicked: jobData.date || '',
+                    summary_clicked: jobData.Summary || '',
+                    url_clicked: jobData.URL || ''
                 };
             }) || [];
 

@@ -36,6 +36,11 @@ interface Job {
   Dutch?: boolean; // Regional filter: Dutch jobs
   EU?: boolean; // Regional filter: EU jobs
   Rest_of_World?: boolean; // Regional filter: Rest of World jobs
+  // Display fields for highlighting (not stored in database)
+  displayTitle?: string
+  displayCompany?: string
+  displayLocation?: string
+  displaySummary?: string
 }
 
 export default function JobBoard() {
@@ -586,8 +591,8 @@ export default function JobBoard() {
       const results = fuse.search(debouncedSearchTerm);
       return results.map(result => result.item);
     }
-    // Return empty array when no search term (don't show jobs on page load)
-    return [];
+    // Return filtered jobs when no search term (so filters still work)
+    return filteredJobs;
   }, [debouncedSearchTerm, filteredJobs, fuse]);
 
   useEffect(() => {
@@ -690,23 +695,22 @@ export default function JobBoard() {
       console.error("[LogJobClick] User not available for logging job click. Aborting.");
       return;
     }
-    console.log("[LogJobClick] Logging for user:", user.id, "Job ID:", job.UNIQUE_ID, "Title:", job.Title);
+    console.log("[LogJobClick] Logging for user:", user.id, "Job ID:", job.UNIQUE_ID);
+    console.log("[LogJobClick] Job object:", {
+      UNIQUE_ID: job.UNIQUE_ID,
+      Title: job.Title,
+      displayTitle: job.displayTitle,
+      Company: job.Company,
+      displayCompany: job.displayCompany
+    });
     try {
       const { error } = await supabase.from("applying").insert([
         {
           applying_id: crypto.randomUUID(),
           user_id: user.id,
-          unique_id_job: job.UNIQUE_ID,
+          unique_id_job: job.UNIQUE_ID, // Only store the ID
           applied: false, // This puts it in the Found column
           created_at: new Date().toISOString(),
-          // Job details for display (using _clicked suffix)
-          job_title_clicked: job.Title,
-          company_clicked: job.Company,
-          location_clicked: job.Location,
-          rate_clicked: job.rate,
-          date_posted_clicked: job.date,
-          summary_clicked: job.Summary,
-          url_clicked: job.URL,
         },
       ]);
       if (error) {
@@ -736,6 +740,8 @@ export default function JobBoard() {
   };
 
   // const pageNumbers = getPageNumbers();
+
+
 
   // Function to normalize text and remove weird spacing/characters
   const normalizeText = (text: string): string => {
@@ -907,10 +913,11 @@ export default function JobBoard() {
 
       const updatedJobs = sortedJobs.map(job => ({
         ...job,
-        Title: highlightSearchTerms(job.Title, searchWords),
-        Summary: highlightSearchTerms(job.Summary, searchWords),
-        Company: highlightSearchTerms(job.Company, searchWords),
-        Location: highlightSearchTerms(job.Location, searchWords),
+        // Create display versions with highlighting, but keep original data intact
+        displayTitle: highlightSearchTerms(job.Title, searchWords),
+        displaySummary: highlightSearchTerms(job.Summary, searchWords),
+        displayCompany: highlightSearchTerms(job.Company, searchWords),
+        displayLocation: highlightSearchTerms(job.Location, searchWords),
       }));
 
       setHighlightedJobs(updatedJobs);
@@ -1197,7 +1204,7 @@ export default function JobBoard() {
                   {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" ? (
                     <>From <span style={{ fontWeight: '600', color: '#10b981' }}>{sortedJobs.length}</span> curated positions</>
                   ) : (
-                    <>Enter at least 2 characters to search jobs</>
+                    <>Use filters or enter at least 2 characters to search jobs</>
                   )}
                 </p>
               </div>
@@ -1966,7 +1973,7 @@ export default function JobBoard() {
                               color: '#fff',
                               margin: 0
                             }}
-                            dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.Title, debouncedSearchTerm.split(' ')) }}
+                            dangerouslySetInnerHTML={{ __html: job.displayTitle || highlightSearchTerms(job.Title, debouncedSearchTerm.split(' ')) }}
                           />
                           {stackedJobs.length > 0 && (
                             <div style={{
@@ -2021,7 +2028,7 @@ export default function JobBoard() {
                               margin: '0',
                               fontWeight: '600'
                             }}
-                            dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.Company, debouncedSearchTerm.split(' ')) }}
+                            dangerouslySetInnerHTML={{ __html: job.displayCompany || highlightSearchTerms(job.Company, debouncedSearchTerm.split(' ')) }}
                           />
                           {job.source && (
                             <span style={{
