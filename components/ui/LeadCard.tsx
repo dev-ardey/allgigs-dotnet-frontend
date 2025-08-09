@@ -13,10 +13,15 @@ import {
     Maximize2,
     Minimize2,
     X,
-    Archive
+    Archive,
+    Calendar,
+    Info,
+    ExternalLink,
+    Star
 } from 'lucide-react';
 // import { Lead } from '../../types/leads';
 import { supabase } from '../../SupabaseClient';
+import JobSummaryModal from './JobSummaryModal';
 
 interface JobClickWithApplying {
     applying_id: string;
@@ -86,6 +91,35 @@ interface JobClickWithApplying {
         whyCompany: string;
     };
     interview_prep_complete?: boolean;
+    // Enhanced Features - Found Column
+    sent_cv?: boolean;
+    sent_portfolio?: boolean;
+    sent_cover_letter?: boolean;
+    // Enhanced Features - Lead Column
+    application_time_minutes?: string;
+    match_confidence?: boolean;
+    received_confirmation?: boolean;
+    rejection_reasons_prediction?: string;
+    introduced_via_agency?: boolean;
+    // Enhanced Features - Opportunity Column
+    follow_up_date?: string;
+    interview_went_well?: string;
+    interview_can_improve?: string;
+    offer_rate_alignment?: string;
+    prediction_accuracy?: string;
+    sent_thank_you_note?: boolean;
+    rejection_reason_mentioned?: string;
+    why_got_interview?: string;
+    // Enhanced Features - Deal Column
+    job_start_date?: string;
+    contract_signing_date?: string;
+    job_hourly_rate?: string;
+    hours_per_week?: string;
+    job_total_length?: string;
+    client_rating?: number;
+    payment_interval?: string;
+    why_they_loved_you?: string;
+    what_you_did_well?: string;
 }
 
 interface LeadCardProps {
@@ -115,28 +149,62 @@ const LeadCard: React.FC<LeadCardProps> = ({
     const [foundIsOverdue, setFoundIsOverdue] = useState(false);
     const [notes, setNotes] = useState(lead.notes || '');
 
-    // Silent auto-save function (no visual feedback)
+    // Silent auto-save function (no visual feedback) - FIXED: separate timers per field
     const debouncedSave = useCallback(
         (() => {
-            let timeoutId: NodeJS.Timeout;
+            const timeouts: Record<string, NodeJS.Timeout> = {};
             return (field: string, value: any) => {
-                clearTimeout(timeoutId);
-                timeoutId = setTimeout(async () => {
+                // Clear the specific field's timeout
+                if (timeouts[field]) {
+                    clearTimeout(timeouts[field]);
+                }
+
+                // Set a new timeout for this specific field
+                timeouts[field] = setTimeout(async () => {
                     try {
-                        await supabase
+                        console.log(`[DEBUG] Saving ${field}:`, value, 'for lead:', lead.applying_id);
+                        const { error } = await supabase
                             .from('applying')
                             .update({ [field]: value })
                             .eq('applying_id', lead.applying_id);
+
+                        if (error) {
+                            console.error('Database error:', error);
+                        } else {
+                            console.log(`[SUCCESS] Saved ${field}:`, value);
+                        }
                         // Silent success - no user notification
+
+                        // Clean up the timeout reference
+                        delete timeouts[field];
                     } catch (err) {
                         // Silent error - just log, no user notification
                         console.error('Auto-save failed:', err);
+                        delete timeouts[field];
                     }
                 }, 1500); // 1.5 second delay after user stops typing
             };
         })(),
         [lead.applying_id]
     );
+
+    // Debug: Log job stage and status
+    useEffect(() => {
+        const stage = !lead.applied ? 'Found' :
+            (lead.applied && lead.got_the_job !== true && (!lead.interviews || lead.interviews.length === 0)) ? 'Lead' :
+                (lead.applied && lead.got_the_job !== true && lead.interviews && lead.interviews.length > 0) ? 'Opportunity' :
+                    (lead.applied && lead.got_the_job === true) ? 'Deal' : 'Unknown';
+
+        console.log('[JOB STAGE DEBUG]', {
+            applying_id: lead.applying_id,
+            job_title: lead.job_title_clicked,
+            applied: lead.applied,
+            got_the_job: lead.got_the_job,
+            interviews: lead.interviews,
+            current_stage: stage,
+            interview_insights_visible: stage === 'Opportunity'
+        });
+    }, [lead.applying_id, lead.applied, lead.got_the_job, lead.interviews]);
 
     // Calculate follow-up timer for Connect stage
     useEffect(() => {
@@ -323,6 +391,43 @@ const LeadCard: React.FC<LeadCardProps> = ({
         lead.collapsed_card !== undefined ? lead.collapsed_card : false
     );
 
+    // Job summary modal state
+    const [showSummaryModal, setShowSummaryModal] = useState(false);
+
+    // Enhanced Found column flow states
+    const [showWhatSentFlow, setShowWhatSentFlow] = useState(false);
+    const [sentCV, setSentCV] = useState(lead.sent_cv || false);
+    const [sentPortfolio, setSentPortfolio] = useState(lead.sent_portfolio || false);
+    const [sentCoverLetter, setSentCoverLetter] = useState(lead.sent_cover_letter || false);
+
+    // Enhanced Lead Column states
+    const [applicationTimeMinutes, setApplicationTimeMinutes] = useState(lead.application_time_minutes || '');
+    const [matchConfidence, setMatchConfidence] = useState(lead.match_confidence);
+    const [receivedConfirmation, setReceivedConfirmation] = useState(lead.received_confirmation);
+    const [rejectionReasonsPrediction, setRejectionReasonsPrediction] = useState(lead.rejection_reasons_prediction || '');
+    const [introducedViaAgency, setIntroducedViaAgency] = useState(lead.introduced_via_agency);
+
+    // Enhanced Opportunity Column states
+    const [followUpDate, setFollowUpDate] = useState(lead.follow_up_date || '');
+    const [interviewWentWell, setInterviewWentWell] = useState(lead.interview_went_well || '');
+    const [interviewCanImprove, setInterviewCanImprove] = useState(lead.interview_can_improve || '');
+    const [offerRateAlignment, setOfferRateAlignment] = useState(lead.offer_rate_alignment || '');
+    const [predictionAccuracy, setPredictionAccuracy] = useState(lead.prediction_accuracy || '');
+    const [sentThankYouNote, setSentThankYouNote] = useState(lead.sent_thank_you_note);
+    const [rejectionReasonMentioned, setRejectionReasonMentioned] = useState(lead.rejection_reason_mentioned || '');
+    const [whyGotInterview, setWhyGotInterview] = useState(lead.why_got_interview || '');
+
+    // Enhanced Deal Column states
+    const [jobStartDate, setJobStartDate] = useState(lead.job_start_date || '');
+    const [contractSigningDate, setContractSigningDate] = useState(lead.contract_signing_date || '');
+    const [jobHourlyRate, setJobHourlyRate] = useState(lead.job_hourly_rate || '');
+    const [hoursPerWeek, setHoursPerWeek] = useState(lead.hours_per_week || '');
+    const [jobTotalLength, setJobTotalLength] = useState(lead.job_total_length || '');
+    const [clientRating, setClientRating] = useState(lead.client_rating || 0);
+    const [paymentInterval, setPaymentInterval] = useState(lead.payment_interval || '');
+    const [whyTheyLovedYou, setWhyTheyLovedYou] = useState(lead.why_they_loved_you || '');
+    const [whatYouDidWell, setWhatYouDidWell] = useState(lead.what_you_did_well || '');
+
     // Update local state when props change
     useEffect(() => {
         // Prioritize job_clicks.collapsed_job_click_card since it's always updated
@@ -347,26 +452,51 @@ const LeadCard: React.FC<LeadCardProps> = ({
         finalCollapsed: isCollapsed
     });
 
+    // Helper function to get latest interview info for collapsed view
+    const getLatestInterviewInfo = () => {
+        if (!lead.interviews || lead.interviews.length === 0) return null;
+
+        // Sort interviews by date (newest first)
+        const sortedInterviews = [...lead.interviews].sort((a, b) => {
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            return dateB.getTime() - dateA.getTime();
+        });
+
+        const latestInterview = sortedInterviews[0];
+        if (!latestInterview) return null;
+
+        // Format date (15 Jan)
+        const date = new Date(latestInterview.date);
+        const formattedDate = date.toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'short'
+        });
+
+        // Determine status
+        let status = '';
+        if (latestInterview.rating === null) {
+            status = 'Upcoming';
+        } else if (latestInterview.rating === true) {
+            status = 'Good';
+        } else {
+            status = 'Bad';
+        }
+
+        // Determine prefix
+        const prefix = latestInterview.rating === null ? 'Next interview:' : 'Last interview:';
+
+        return `${prefix} ${formattedDate} (${status})`;
+    };
+
     // Handle button actions
     const handleAppliedClick = async (applied: boolean) => {
-        try {
-            if (applied) {
-                // If YES in Found stage - mark as applied
-                await supabase
-                    .from('applying')
-                    .update({ applied: true })
-                    .eq('applying_id', lead.applying_id);
-
-                // Update local state immediately (optimistic update)
-                lead.applied = true;
-                triggerRerender();
-
-                // Notify parent that state changed (for column movement)
-                if (onStateChanged) {
-                    onStateChanged();
-                }
-            } else {
-                // If NO in Found stage - delete the job (don't archive)
+        if (applied) {
+            // Show the "What did you send?" flow
+            setShowWhatSentFlow(true);
+        } else {
+            // Direct NO - remove job
+            try {
                 await supabase
                     .from('applying')
                     .delete()
@@ -376,10 +506,46 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 if (onArchived) {
                     onArchived(lead.applying_id);
                 }
+            } catch (err) {
+                console.error('Error deleting job:', err);
             }
-        } catch (err) {
-            console.error('Error updating applied status:', err);
         }
+    };
+
+    const handleConfirmApplication = async () => {
+        try {
+            // Update database with sent items and mark as applied
+            await supabase
+                .from('applying')
+                .update({
+                    applied: true,
+                    sent_cv: sentCV,
+                    sent_portfolio: sentPortfolio,
+                    sent_cover_letter: sentCoverLetter
+                })
+                .eq('applying_id', lead.applying_id);
+
+            // Update local state immediately (optimistic update)
+            lead.applied = true;
+            triggerRerender();
+
+            // Notify parent that state changed (for column movement)
+            if (onStateChanged) {
+                onStateChanged();
+            }
+
+            setShowWhatSentFlow(false);
+        } catch (error) {
+            console.error('Error updating application:', error);
+        }
+    };
+
+    const handleCancelApplication = () => {
+        setShowWhatSentFlow(false);
+        // Reset to original values
+        setSentCV(lead.sent_cv || false);
+        setSentPortfolio(lead.sent_portfolio || false);
+        setSentCoverLetter(lead.sent_cover_letter || false);
     };
 
     const handleFollowUpComplete = async (completed: boolean) => {
@@ -1232,6 +1398,86 @@ const LeadCard: React.FC<LeadCardProps> = ({
                             </div>
                         )}
                     </div>
+
+                    {/* What did you send? flow */}
+                    {showWhatSentFlow && (
+                        <div style={{
+                            padding: 12,
+                            background: 'rgba(147, 51, 234, 0.08)',
+                            borderRadius: 8,
+                            border: '1px solid rgba(147, 51, 234, 0.3)'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                                <CheckCircle style={{ width: '14px', height: '14px', color: '#9333ea' }} />
+                                <span style={{ fontWeight: 600, fontSize: '12px', color: 'white' }}>What did you send?</span>
+                            </div>
+
+                            {/* Checkboxes */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={sentCV}
+                                        onChange={(e) => setSentCV(e.target.checked)}
+                                        style={{ cursor: 'pointer' }}
+                                    />
+                                    <span style={{ fontSize: '11px', color: 'white' }}>CV</span>
+                                </label>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={sentPortfolio}
+                                        onChange={(e) => setSentPortfolio(e.target.checked)}
+                                        style={{ cursor: 'pointer' }}
+                                    />
+                                    <span style={{ fontSize: '11px', color: 'white' }}>Portfolio</span>
+                                </label>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={sentCoverLetter}
+                                        onChange={(e) => setSentCoverLetter(e.target.checked)}
+                                        style={{ cursor: 'pointer' }}
+                                    />
+                                    <span style={{ fontSize: '11px', color: 'white' }}>Cover Letter</span>
+                                </label>
+                            </div>
+
+                            {/* Confirm/Cancel buttons */}
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleConfirmApplication(); }}
+                                    style={{
+                                        padding: '6px 12px',
+                                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                                        color: '#10b981',
+                                        border: '1px solid rgba(16, 185, 129, 0.4)',
+                                        borderRadius: '6px',
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600'
+                                    }}
+                                >
+                                    Confirm
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleCancelApplication(); }}
+                                    style={{
+                                        padding: '6px 12px',
+                                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                                        color: '#ef4444',
+                                        border: '1px solid rgba(239, 68, 68, 0.4)',
+                                        borderRadius: '6px',
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600'
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         }
@@ -1341,6 +1587,201 @@ const LeadCard: React.FC<LeadCardProps> = ({
                             />
                         </div>
                     )}
+
+                    {/* Enhanced Lead Column Features */}
+                    <div style={{ padding: 12, background: 'rgba(147, 51, 234, 0.08)', borderRadius: 8, border: '1px solid rgba(147, 51, 234, 0.3)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                            <Users style={{ width: '14px', height: '14px', color: '#9333ea' }} />
+                            <span style={{ fontWeight: 600, fontSize: '12px', color: 'white' }}>Application Details</span>
+                        </div>
+
+                        {/* Application time */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>How much time did it take to apply (minutes)?</div>
+                            <input
+                                type="text"
+                                placeholder="e.g. 30"
+                                value={applicationTimeMinutes}
+                                onChange={(e) => {
+                                    setApplicationTimeMinutes(e.target.value);
+                                    debouncedSave('application_time_minutes', e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    width: '100%',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+
+                        {/* Match confidence */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 6, color: 'rgba(255, 255, 255, 0.7)' }}>How well do you match? (Rate, qualification, duration)</div>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setMatchConfidence(true);
+                                        debouncedSave('match_confidence', true);
+                                    }}
+                                    style={{
+                                        padding: '6px 12px',
+                                        backgroundColor: matchConfidence === true ? '#10b981' : 'rgba(16, 185, 129, 0.1)',
+                                        color: matchConfidence === true ? '#ffffff' : '#10b981',
+                                        border: `1px solid ${matchConfidence === true ? '#10b981' : 'rgba(16, 185, 129, 0.3)'}`,
+                                        borderRadius: 6,
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600'
+                                    }}
+                                >
+                                    GOOD
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setMatchConfidence(false);
+                                        debouncedSave('match_confidence', false);
+                                    }}
+                                    style={{
+                                        padding: '6px 12px',
+                                        backgroundColor: matchConfidence === false ? '#ef4444' : 'rgba(239, 68, 68, 0.1)',
+                                        color: matchConfidence === false ? '#ffffff' : '#ef4444',
+                                        border: `1px solid ${matchConfidence === false ? '#ef4444' : 'rgba(239, 68, 68, 0.3)'}`,
+                                        borderRadius: 6,
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600'
+                                    }}
+                                >
+                                    BAD
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Received confirmation */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 6, color: 'rgba(255, 255, 255, 0.7)' }}>Did you get a confirmation?</div>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setReceivedConfirmation(true);
+                                        debouncedSave('received_confirmation', true);
+                                    }}
+                                    style={{
+                                        padding: '6px 12px',
+                                        backgroundColor: receivedConfirmation === true ? '#10b981' : 'rgba(16, 185, 129, 0.1)',
+                                        color: receivedConfirmation === true ? '#ffffff' : '#10b981',
+                                        border: `1px solid ${receivedConfirmation === true ? '#10b981' : 'rgba(16, 185, 129, 0.3)'}`,
+                                        borderRadius: 6,
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600'
+                                    }}
+                                >
+                                    YES
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setReceivedConfirmation(false);
+                                        debouncedSave('received_confirmation', false);
+                                    }}
+                                    style={{
+                                        padding: '6px 12px',
+                                        backgroundColor: receivedConfirmation === false ? '#ef4444' : 'rgba(239, 68, 68, 0.1)',
+                                        color: receivedConfirmation === false ? '#ffffff' : '#ef4444',
+                                        border: `1px solid ${receivedConfirmation === false ? '#ef4444' : 'rgba(239, 68, 68, 0.3)'}`,
+                                        borderRadius: 6,
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600'
+                                    }}
+                                >
+                                    NO
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Rejection reasons prediction */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>Reasons I might not get the job:</div>
+                            <textarea
+                                placeholder="e.g. too expensive, not enough experience..."
+                                value={rejectionReasonsPrediction}
+                                onChange={(e) => {
+                                    setRejectionReasonsPrediction(e.target.value);
+                                    debouncedSave('rejection_reasons_prediction', e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    width: '100%',
+                                    minHeight: '40px',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    resize: 'vertical',
+                                    fontFamily: 'inherit',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+
+                        {/* Introduced via agency */}
+                        <div>
+                            <div style={{ fontSize: '11px', marginBottom: 6, color: 'rgba(255, 255, 255, 0.7)' }}>Introduced via agency?</div>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIntroducedViaAgency(true);
+                                        debouncedSave('introduced_via_agency', true);
+                                    }}
+                                    style={{
+                                        padding: '6px 12px',
+                                        backgroundColor: introducedViaAgency === true ? '#10b981' : 'rgba(16, 185, 129, 0.1)',
+                                        color: introducedViaAgency === true ? '#ffffff' : '#10b981',
+                                        border: `1px solid ${introducedViaAgency === true ? '#10b981' : 'rgba(16, 185, 129, 0.3)'}`,
+                                        borderRadius: 6,
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600'
+                                    }}
+                                >
+                                    YES
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIntroducedViaAgency(false);
+                                        debouncedSave('introduced_via_agency', false);
+                                    }}
+                                    style={{
+                                        padding: '6px 12px',
+                                        backgroundColor: introducedViaAgency === false ? '#ef4444' : 'rgba(239, 68, 68, 0.1)',
+                                        color: introducedViaAgency === false ? '#ffffff' : '#ef4444',
+                                        border: `1px solid ${introducedViaAgency === false ? '#ef4444' : 'rgba(239, 68, 68, 0.3)'}`,
+                                        borderRadius: 6,
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600'
+                                    }}
+                                >
+                                    NO
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
                     {/* Interview flow - MOVED BELOW FOLLOW-UP */}
                     {renderInterviewFlow()}
@@ -1523,8 +1964,6 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         )}
                     </div>
 
-                    {/* Interview flow - REMOVED: Now at top */}
-
                     {/* Got the job */}
                     <div style={{ padding: 12, background: 'rgba(255, 255, 255, 0.05)', borderRadius: 8 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
@@ -1636,6 +2075,254 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {/* Interview flow */}
                     {renderInterviewFlow()}
+
+                    {/* Enhanced Opportunity Column Features */}
+                    <div style={{ padding: 12, background: 'rgba(245, 158, 11, 0.08)', borderRadius: 8, border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                            <Award style={{ width: '14px', height: '14px', color: '#f59e0b' }} />
+                            <span style={{ fontWeight: 600, fontSize: '12px', color: 'white' }}>Interview Insights</span>
+                        </div>
+
+                        {/* Follow-up date */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>When are they going to get back at you?</div>
+                            <input
+                                type="date"
+                                value={followUpDate}
+                                onChange={(e) => {
+                                    console.log('[TYPING] follow_up_date:', e.target.value);
+                                    setFollowUpDate(e.target.value);
+                                    debouncedSave('follow_up_date', e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    width: '100%',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+
+                        {/* What went well */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>Name one thing that went well:</div>
+                            <textarea
+                                placeholder="e.g. great chemistry with team..."
+                                value={interviewWentWell}
+                                onChange={(e) => {
+                                    console.log('[TYPING] interview_went_well:', e.target.value);
+                                    setInterviewWentWell(e.target.value);
+                                    debouncedSave('interview_went_well', e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    width: '100%',
+                                    minHeight: '40px',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    resize: 'vertical',
+                                    fontFamily: 'inherit',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+
+                        {/* What can improve */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>Name one thing you can improve:</div>
+                            <textarea
+                                placeholder="e.g. speak more confidently about pricing..."
+                                value={interviewCanImprove}
+                                onChange={(e) => {
+                                    console.log('[TYPING] interview_can_improve:', e.target.value);
+                                    setInterviewCanImprove(e.target.value);
+                                    debouncedSave('interview_can_improve', e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    width: '100%',
+                                    minHeight: '40px',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    resize: 'vertical',
+                                    fontFamily: 'inherit',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+
+                        {/* Offer rate alignment */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>Was their offer in line with your rate?</div>
+                            <textarea
+                                placeholder="e.g. yes, exactly what I asked for..."
+                                value={offerRateAlignment}
+                                onChange={(e) => {
+                                    console.log('[TYPING] offer_rate_alignment:', e.target.value);
+                                    setOfferRateAlignment(e.target.value);
+                                    debouncedSave('offer_rate_alignment', e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    width: '100%',
+                                    minHeight: '40px',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    resize: 'vertical',
+                                    fontFamily: 'inherit',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+
+                        {/* Prediction accuracy */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>Were you correct naming the reason you didn't get the job?</div>
+                            <textarea
+                                placeholder="Only fill if you didn't get the job..."
+                                value={predictionAccuracy}
+                                onChange={(e) => {
+                                    console.log('[TYPING] prediction_accuracy:', e.target.value);
+                                    setPredictionAccuracy(e.target.value);
+                                    debouncedSave('prediction_accuracy', e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    width: '100%',
+                                    minHeight: '40px',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    resize: 'vertical',
+                                    fontFamily: 'inherit',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+
+                        {/* Thank you note */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 6, color: 'rgba(255, 255, 255, 0.7)' }}>Did you write a thank you note?</div>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        console.log('[CLICK] sent_thank_you_note: true');
+                                        setSentThankYouNote(true);
+                                        debouncedSave('sent_thank_you_note', true);
+                                    }}
+                                    style={{
+                                        padding: '6px 12px',
+                                        backgroundColor: sentThankYouNote === true ? '#10b981' : 'rgba(16, 185, 129, 0.1)',
+                                        color: sentThankYouNote === true ? '#ffffff' : '#10b981',
+                                        border: `1px solid ${sentThankYouNote === true ? '#10b981' : 'rgba(16, 185, 129, 0.3)'}`,
+                                        borderRadius: 6,
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600'
+                                    }}
+                                >
+                                    YES
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        console.log('[CLICK] sent_thank_you_note: false');
+                                        setSentThankYouNote(false);
+                                        debouncedSave('sent_thank_you_note', false);
+                                    }}
+                                    style={{
+                                        padding: '6px 12px',
+                                        backgroundColor: sentThankYouNote === false ? '#ef4444' : 'rgba(239, 68, 68, 0.1)',
+                                        color: sentThankYouNote === false ? '#ffffff' : '#ef4444',
+                                        border: `1px solid ${sentThankYouNote === false ? '#ef4444' : 'rgba(239, 68, 68, 0.3)'}`,
+                                        borderRadius: 6,
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600'
+                                    }}
+                                >
+                                    NO
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Rejection reason mentioned */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>Why did they mention you didn't get the contract?</div>
+                            <textarea
+                                placeholder="Only fill if you didn't get the job..."
+                                value={rejectionReasonMentioned}
+                                onChange={(e) => {
+                                    console.log('[TYPING] rejection_reason_mentioned:', e.target.value);
+                                    setRejectionReasonMentioned(e.target.value);
+                                    debouncedSave('rejection_reason_mentioned', e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    width: '100%',
+                                    minHeight: '40px',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    resize: 'vertical',
+                                    fontFamily: 'inherit',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+
+                        {/* Why got interview */}
+                        <div>
+                            <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>Why did you get an interview?</div>
+                            <textarea
+                                placeholder="e.g. perfect experience match, portfolio impressed them..."
+                                value={whyGotInterview}
+                                onChange={(e) => {
+                                    console.log('[TYPING] why_got_interview:', e.target.value);
+                                    setWhyGotInterview(e.target.value);
+                                    debouncedSave('why_got_interview', e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    width: '100%',
+                                    minHeight: '40px',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    resize: 'vertical',
+                                    fontFamily: 'inherit',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+                    </div>
 
                     {/* Contacts */}
                     <div style={{ padding: 12, background: 'rgba(255, 255, 255, 0.05)', borderRadius: 8 }}>
@@ -2205,6 +2892,526 @@ const LeadCard: React.FC<LeadCardProps> = ({
                             </div>
                         )}
                     </div>
+
+                    {/* Interview flow */}
+                    {renderInterviewFlow()}
+
+                    {/* Enhanced Deal Column Features */}
+                    <div style={{ padding: 12, background: 'rgba(16, 185, 129, 0.08)', borderRadius: 8, border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                            <Award style={{ width: '14px', height: '14px', color: '#10b981' }} />
+                            <span style={{ fontWeight: 600, fontSize: '12px', color: 'white' }}>Contract Details</span>
+                        </div>
+
+                        {/* Start date */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>When will I start?</div>
+                            <input
+                                type="date"
+                                value={jobStartDate}
+                                onChange={(e) => {
+                                    setJobStartDate(e.target.value);
+                                    debouncedSave('job_start_date', e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    width: '100%',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+
+                        {/* Contract signing date */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>When signing contract?</div>
+                            <input
+                                type="date"
+                                value={contractSigningDate}
+                                onChange={(e) => {
+                                    setContractSigningDate(e.target.value);
+                                    debouncedSave('contract_signing_date', e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    width: '100%',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+
+                        {/* Hourly rate */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>What's the job rate? (hourly)</div>
+                            <input
+                                type="text"
+                                placeholder="e.g. €75/hour"
+                                value={jobHourlyRate}
+                                onChange={(e) => {
+                                    setJobHourlyRate(e.target.value);
+                                    debouncedSave('job_hourly_rate', e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    width: '100%',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+
+                        {/* Hours per week */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>How many hours a week is this job?</div>
+                            <input
+                                type="text"
+                                placeholder="e.g. 40 hours"
+                                value={hoursPerWeek}
+                                onChange={(e) => {
+                                    setHoursPerWeek(e.target.value);
+                                    debouncedSave('hours_per_week', e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    width: '100%',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+
+                        {/* Job length */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>Total length of the job? (end date)</div>
+                            <input
+                                type="date"
+                                value={jobTotalLength}
+                                onChange={(e) => {
+                                    setJobTotalLength(e.target.value);
+                                    debouncedSave('job_total_length', e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    width: '100%',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+
+                        {/* Client rating */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 6, color: 'rgba(255, 255, 255, 0.7)' }}>Rate us? (1-5 stars)</div>
+                            <div style={{ display: 'flex', gap: 4 }}>
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                        key={star}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setClientRating(star);
+                                            debouncedSave('client_rating', star);
+                                        }}
+                                        style={{
+                                            padding: '4px 8px',
+                                            backgroundColor: clientRating >= star ? 'rgba(255, 193, 7, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                                            color: clientRating >= star ? '#ffc107' : 'rgba(255, 255, 255, 0.5)',
+                                            border: `1px solid ${clientRating >= star ? 'rgba(255, 193, 7, 0.4)' : 'rgba(255, 255, 255, 0.2)'}`,
+                                            borderRadius: 4,
+                                            fontSize: '14px',
+                                            cursor: 'pointer',
+                                            fontWeight: '600'
+                                        }}
+                                    >
+                                        <Star style={{ width: '12px', height: '12px' }} />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Payment interval */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>What payment interval for this job?</div>
+                            <input
+                                type="text"
+                                placeholder="e.g. monthly, bi-weekly, per milestone..."
+                                value={paymentInterval}
+                                onChange={(e) => {
+                                    setPaymentInterval(e.target.value);
+                                    debouncedSave('payment_interval', e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    width: '100%',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+
+                        {/* Why they loved you */}
+                        <div style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>Why do you think they loved you?</div>
+                            <textarea
+                                placeholder="e.g. perfect cultural fit, technical expertise..."
+                                value={whyTheyLovedYou}
+                                onChange={(e) => {
+                                    setWhyTheyLovedYou(e.target.value);
+                                    debouncedSave('why_they_loved_you', e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    width: '100%',
+                                    minHeight: '40px',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    resize: 'vertical',
+                                    fontFamily: 'inherit',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+
+                        {/* What you did well */}
+                        <div>
+                            <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>Name one thing you did well:</div>
+                            <textarea
+                                placeholder="e.g. communicated clearly, delivered on time..."
+                                value={whatYouDidWell}
+                                onChange={(e) => {
+                                    setWhatYouDidWell(e.target.value);
+                                    debouncedSave('what_you_did_well', e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    width: '100%',
+                                    minHeight: '40px',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 4,
+                                    fontSize: '11px',
+                                    resize: 'vertical',
+                                    fontFamily: 'inherit',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Contacts */}
+                    <div style={{ padding: 12, background: 'rgba(255, 255, 255, 0.05)', borderRadius: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <Users style={{ width: '14px', height: '14px', color: 'rgba(255,255,255,0.8)' }} />
+                                <span style={{ fontWeight: 600, fontSize: '12px', color: '#fff' }}>Contacts</span>
+                            </div>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setShowContactForm(true); }}
+                                style={{
+                                    padding: '4px 8px',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                    color: 'white',
+                                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                                    borderRadius: 4,
+                                    fontSize: '10px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600'
+                                }}
+                            >
+                                + Add
+                            </button>
+                        </div>
+
+                        {/* Contact list */}
+                        {contacts.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                {contacts.map((contact) => (
+                                    <div key={contact.id} style={{
+                                        padding: '8px',
+                                        background: 'rgba(255, 255, 255, 0.05)',
+                                        borderRadius: 6,
+                                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                                            <span style={{ fontSize: '11px', fontWeight: 600 }}>{contact.name}</span>
+                                            <div style={{ display: 'flex', gap: 4 }}>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setEditingContact(contact.id); }}
+                                                    style={{
+                                                        padding: '2px 4px',
+                                                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                                        color: '#f59e0b',
+                                                        border: '1px solid rgba(245, 158, 11, 0.3)',
+                                                        borderRadius: 3,
+                                                        fontSize: '9px',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleDeleteContact(contact.id); }}
+                                                    style={{
+                                                        padding: '2px 4px',
+                                                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                                        color: '#ef4444',
+                                                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                        borderRadius: 3,
+                                                        fontSize: '9px',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    Del
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {contact.email && (
+                                            <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: 2 }}>
+                                                📧 {contact.email}
+                                            </div>
+                                        )}
+                                        {contact.phone && (
+                                            <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                                                📞 {contact.phone}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', textAlign: 'center', padding: '8px' }}>
+                                No contacts added yet
+                            </div>
+                        )}
+
+                        {/* Add/Edit contact form */}
+                        {showContactForm && (
+                            <div style={{
+                                marginTop: 12,
+                                padding: '12px',
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                borderRadius: 6,
+                                border: '1px solid rgba(255, 255, 255, 0.2)'
+                            }}>
+                                <div style={{ fontSize: '11px', fontWeight: 600, marginBottom: 8 }}>
+                                    {editingContact ? 'Edit Contact' : 'Add New Contact'}
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Name *"
+                                        value={newContact.name}
+                                        onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
+                                        style={{
+                                            padding: '6px 8px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'white',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 4,
+                                            fontSize: '11px'
+                                        }}
+                                    />
+                                    <input
+                                        type="email"
+                                        placeholder="Email (optional)"
+                                        value={newContact.email}
+                                        onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
+                                        style={{
+                                            padding: '6px 8px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'white',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 4,
+                                            fontSize: '11px'
+                                        }}
+                                    />
+                                    <input
+                                        type="tel"
+                                        placeholder="Phone (optional)"
+                                        value={newContact.phone}
+                                        onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
+                                        style={{
+                                            padding: '6px 8px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'white',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 4,
+                                            fontSize: '11px'
+                                        }}
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleSaveContact(); }}
+                                        disabled={!newContact.name.trim()}
+                                        style={{
+                                            padding: '6px 12px',
+                                            backgroundColor: newContact.name.trim() ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.1)',
+                                            color: newContact.name.trim() ? '#10b981' : 'rgba(255, 255, 255, 0.3)',
+                                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                                            borderRadius: 4,
+                                            fontSize: '11px',
+                                            cursor: newContact.name.trim() ? 'pointer' : 'not-allowed',
+                                            fontWeight: '600'
+                                        }}
+                                    >
+                                        Save
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleCancelContact(); }}
+                                        style={{
+                                            padding: '6px 12px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'rgba(255, 255, 255, 0.7)',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 4,
+                                            fontSize: '11px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Got the job */}
+                    <div style={{ padding: 12, background: 'rgba(255, 255, 255, 0.05)', borderRadius: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                            <Award style={{ width: '14px', height: '14px', color: 'rgba(255,255,255,0.8)' }} />
+                            <span style={{ fontWeight: 600, fontSize: '12px' }}>Got the job?</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleGotJob(true); }}
+                                style={{
+                                    padding: '6px 12px',
+                                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                    color: '#10b981',
+                                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                                    borderRadius: 6,
+                                    fontSize: '11px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600'
+                                }}
+                            >
+                                YES
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleGotJob(false); }}
+                                style={{
+                                    padding: '6px 12px',
+                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                    color: '#ef4444',
+                                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                                    borderRadius: 6,
+                                    fontSize: '11px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600'
+                                }}
+                            >
+                                NO
+                            </button>
+                        </div>
+                        {lead.got_the_job && (
+                            <div style={{ marginTop: 8 }}>
+                                <div style={{ fontSize: '11px', marginBottom: 4, color: 'rgba(255, 255, 255, 0.7)' }}>Starting date (optional):</div>
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                    <input
+                                        type="date"
+                                        value={startingDate}
+                                        onChange={(e) => {
+                                            setStartingDate(e.target.value);
+                                            // Silent auto-save after typing
+                                            debouncedSave('starting_date', e.target.value);
+                                        }}
+                                        style={{
+                                            padding: '6px 12px',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            color: 'white',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            borderRadius: 6,
+                                            fontSize: '11px',
+                                            cursor: 'pointer'
+                                        }}
+                                    />
+                                </div>
+                                {/* Congratulations message */}
+                                <div style={{
+                                    marginTop: 8,
+                                    padding: '8px',
+                                    background: 'rgba(16, 185, 129, 0.1)',
+                                    borderRadius: 6,
+                                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                                }}>
+                                    <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 600, marginBottom: 4 }}>
+                                        🎉 Congratulations! You got the job!
+                                    </div>
+                                    <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: 8 }}>
+                                        Potential earnings: €100,000
+                                    </div>
+
+                                    {/* Archive button */}
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleArchiveJob(); }}
+                                        style={{
+                                            padding: '6px 12px',
+                                            backgroundColor: 'rgba(156, 163, 175, 0.1)',
+                                            color: '#9ca3af',
+                                            border: '1px solid rgba(156, 163, 175, 0.3)',
+                                            borderRadius: 6,
+                                            fontSize: '10px',
+                                            cursor: 'pointer',
+                                            fontWeight: '600',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 4
+                                        }}
+                                    >
+                                        <Archive style={{ width: '10px', height: '10px' }} />
+                                        Archive Job
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             );
         }
@@ -2246,6 +3453,21 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         }}>
                             {lead.job_title_clicked}
                         </div>
+
+                        {/* Interview info */}
+                        {getLatestInterviewInfo() && (
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                marginTop: '6px',
+                                fontSize: '11px',
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }}>
+                                <Calendar style={{ width: '12px', height: '12px' }} />
+                                <span>{getLatestInterviewInfo()}</span>
+                            </div>
+                        )}
 
                         {/* Progress bar */}
                         <div style={{
@@ -2350,7 +3572,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 flexDirection: 'column'
             }}
         >
-            {/* Header with title and collapse button */}
+            {/* Header with title and buttons */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                 <div style={{ flex: 1 }}>
                     {/* Job title */}
@@ -2363,6 +3585,65 @@ const LeadCard: React.FC<LeadCardProps> = ({
                     }}>
                         {lead.job_title_clicked}
                     </h3>
+
+                    {/* Action buttons row */}
+                    <div style={{
+                        display: 'flex',
+                        gap: '8px',
+                        marginTop: '8px'
+                    }}>
+                        {/* View Job button */}
+                        {lead.url_clicked && (
+                            <a
+                                href={lead.url_clicked}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    padding: '4px 8px',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                                    border: '1px solid rgba(59, 130, 246, 0.4)',
+                                    borderRadius: '6px',
+                                    color: '#fff',
+                                    textDecoration: 'none',
+                                    fontSize: '12px',
+                                    fontWeight: '500',
+                                    transition: 'all 0.2s ease'
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <ExternalLink style={{ width: '12px', height: '12px' }} />
+                                View Job
+                            </a>
+                        )}
+
+                        {/* Job Summary button */}
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowSummaryModal(true);
+                            }}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                padding: '4px 8px',
+                                backgroundColor: 'rgba(147, 51, 234, 0.2)',
+                                border: '1px solid rgba(147, 51, 234, 0.4)',
+                                borderRadius: '6px',
+                                color: '#fff',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '500',
+                                transition: 'all 0.2s ease'
+                            }}
+                        >
+                            <Info style={{ width: '12px', height: '12px' }} />
+                            Job Summary
+                        </button>
+                    </div>
                 </div>
 
                 {/* Collapse button */}
@@ -2479,6 +3760,15 @@ const LeadCard: React.FC<LeadCardProps> = ({
                     }}
                 />
             </div>
+
+            {/* Job Summary Modal */}
+            <JobSummaryModal
+                isOpen={showSummaryModal}
+                onClose={() => setShowSummaryModal(false)}
+                jobTitle={lead.job_title_clicked}
+                summary={lead.summary_clicked}
+                jobUrl={lead.url_clicked}
+            />
         </div>
     );
 };

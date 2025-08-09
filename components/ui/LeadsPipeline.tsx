@@ -91,6 +91,35 @@ interface JobClickWithApplying {
         id: string | undefined;
         created_at: string | undefined;
     }>;
+    // Enhanced Features - Found Column
+    sent_cv?: boolean;
+    sent_portfolio?: boolean;
+    sent_cover_letter?: boolean;
+    // Enhanced Features - Lead Column
+    application_time_minutes?: string;
+    match_confidence?: boolean;
+    received_confirmation?: boolean;
+    rejection_reasons_prediction?: string;
+    introduced_via_agency?: boolean;
+    // Enhanced Features - Opportunity Column
+    follow_up_date?: string;
+    interview_went_well?: string;
+    interview_can_improve?: string;
+    offer_rate_alignment?: string;
+    prediction_accuracy?: string;
+    sent_thank_you_note?: boolean;
+    rejection_reason_mentioned?: string;
+    why_got_interview?: string;
+    // Enhanced Features - Deal Column
+    job_start_date?: string;
+    contract_signing_date?: string;
+    job_hourly_rate?: string;
+    hours_per_week?: string;
+    job_total_length?: string;
+    client_rating?: number;
+    payment_interval?: string;
+    why_they_loved_you?: string;
+    what_you_did_well?: string;
 }
 
 const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) => {
