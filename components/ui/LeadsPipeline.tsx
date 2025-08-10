@@ -91,7 +91,7 @@ interface JobClickWithApplying {
         id: string | undefined;
         created_at: string | undefined;
     }>;
-    // Enhanced Features - Found Column
+    // Enhanced Features - Prospects Column
     sent_cv?: boolean;
     sent_portfolio?: boolean;
     sent_cover_letter?: boolean;
@@ -213,7 +213,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     // ==========================================
     const stageConfig = useMemo(() => ({
         found: {
-            title: 'Found',
+            title: 'Prospects',
             icon: <Target style={{ width: '16px', height: '16px' }} />,
             color: 'rgba(59, 130, 246, 0.2)',
             borderColor: 'rgba(59, 130, 246, 0.4)',
@@ -252,7 +252,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             return [
                 {
                     id: 'found' as LeadStage,
-                    title: 'Found',
+                    title: 'Prospects',
                     leads: [],
                     color: stageConfig.found.color,
                     icon: stageConfig.found.icon
@@ -309,7 +309,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             return matchesSearch;
         });
 
-        // Found column: job_clicks without applying record (or applied = false)
+        // Prospects column: job_clicks without applying record (or applied = false)
         const foundLeads = filteredLeads.filter(lead => !lead.applied);
 
         // Lead column: applied = true, but no interviews yet
@@ -330,7 +330,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
         return [
             {
                 id: 'found' as LeadStage,
-                title: 'Found',
+                title: 'Prospects',
                 leads: foundLeads,
                 color: stageConfig.found.color,
                 icon: stageConfig.found.icon
@@ -369,7 +369,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
         setLoading(true);
         setError(null);
         try {
-            // Fetch all applying records for this user (includes both found and applied jobs)
+            // Fetch all applying records for this user (includes both prospects and applied jobs)
             const { data: applyingRecords, error: applyingError } = await supabase
                 .from('applying')
                 .select('*')
@@ -919,7 +919,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         gap: '0.75rem'
                     }}>
                         <Target style={{ width: '32px', height: '32px' }} />
-                        Leads Board
+                        allGigs CRM
                     </h1>
                     <p style={{ margin: 0, color: 'rgba(255, 255, 255, 0.7)' }}>
                         Manage your job applications through each stage

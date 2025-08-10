@@ -10,7 +10,7 @@ interface StatisticsModalProps {
 const StatisticsModal: React.FC<StatisticsModalProps> = ({ onClose, leads = [] }) => {
     // Calculate statistics
     const totalLeads = leads.length;
-    const foundLeads = leads.filter(lead => !lead.applied).length;
+    const prospectsLeads = leads.filter(lead => !lead.applied).length;
     const connectLeads = leads.filter(lead =>
         lead.applied && lead.got_the_job !== true
     ).length;
@@ -127,7 +127,7 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ onClose, leads = [] }
                         </div>
                     </div>
 
-                    {/* Found Stage */}
+                    {/* Prospects Stage */}
                     <div style={{
                         background: 'rgba(59, 130, 246, 0.1)',
                         border: '1px solid rgba(59, 130, 246, 0.3)',
@@ -137,10 +137,10 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ onClose, leads = [] }
                     }}>
                         <Target style={{ width: '32px', height: '32px', color: '#3b82f6', marginBottom: '0.5rem' }} />
                         <div style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.25rem' }}>
-                            {foundLeads}
+                            {prospectsLeads}
                         </div>
                         <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.875rem' }}>
-                            Found
+                            Prospects
                         </div>
                     </div>
 

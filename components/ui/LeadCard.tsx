@@ -91,7 +91,7 @@ interface JobClickWithApplying {
         whyCompany: string;
     };
     interview_prep_complete?: boolean;
-    // Enhanced Features - Found Column
+    // Enhanced Features - Prospects Column
     sent_cv?: boolean;
     sent_portfolio?: boolean;
     sent_cover_letter?: boolean;
@@ -190,7 +190,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     // Debug: Log job stage and status
     useEffect(() => {
-        const stage = !lead.applied ? 'Found' :
+        const stage = !lead.applied ? 'Prospects' :
             (lead.applied && lead.got_the_job !== true && (!lead.interviews || lead.interviews.length === 0)) ? 'Lead' :
                 (lead.applied && lead.got_the_job !== true && lead.interviews && lead.interviews.length > 0) ? 'Opportunity' :
                     (lead.applied && lead.got_the_job === true) ? 'Deal' : 'Unknown';
@@ -248,7 +248,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
         }
     }, [lead.applied, lead.created_at, lead.follow_up_completed]);
 
-    // Calculate Found stage countdown timer (2 days to apply)
+    // Calculate Prospects stage countdown timer (2 days to apply)
     useEffect(() => {
         if (!lead.applied && lead.created_at) {
             const startDate = new Date(lead.created_at);
@@ -394,7 +394,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
     // Job summary modal state
     const [showSummaryModal, setShowSummaryModal] = useState(false);
 
-    // Enhanced Found column flow states
+    // Enhanced Prospects column flow states
     const [showWhatSentFlow, setShowWhatSentFlow] = useState(false);
     const [sentCV, setSentCV] = useState(lead.sent_cv || false);
     const [sentPortfolio, setSentPortfolio] = useState(lead.sent_portfolio || false);
@@ -574,7 +574,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
     const handleGotJob = async (gotJob: boolean, startingDate?: string) => {
         try {
             if (gotJob === false) {
-                // If "No" - only archive if this was an applied job (not Found stage)
+                // If "No" - only archive if this was an applied job (not Prospects stage)
                 if (lead.applied) {
                     await supabase
                         .from('applying')
@@ -1359,7 +1359,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     // Render stage-specific content
     const renderStageContent = () => {
-        // Found stage: basic job info with apply option
+        // Prospects stage: basic job info with apply option
         if (!lead.applied) {
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -3504,7 +3504,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
                     {/* Buttons */}
                     <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                        {/* Delete button - only for Found stage (not applied) */}
+                        {/* Delete button - only for Prospects stage (not applied) */}
                         {!lead.applied && (
                             <button
                                 onClick={(e) => {
