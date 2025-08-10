@@ -9,4 +9,10 @@ if (process.env.NODE_ENV === 'development') {
   console.log('Supabase Anon Key:', supabaseAnonKey ? '[Key Loaded]' : '[Key NOT Loaded]');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,  // ✅ Enable session persistence
+    autoRefreshToken: true, // ✅ Auto refresh expired tokens
+    detectSessionInUrl: true // ✅ Handle auth redirects
+  }
+})

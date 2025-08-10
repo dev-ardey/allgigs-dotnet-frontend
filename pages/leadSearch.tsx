@@ -12,7 +12,7 @@ import CompleteProfileForm from "../components/ui/CompleteProfileForm";
 import { useProfileCheck } from "../components/ui/useProfileCheck";
 import { useRouter } from "next/router";
 import GlobalNav from "../components/ui/GlobalNav";
-import { Search, SearchCheck, Edit2, Plus, X, Building2, MapPin, Layers2, ChevronDown, Globe, Lock } from "lucide-react";
+import { Search, SearchCheck, Edit2, Plus, X, Building2, MapPin, Layers2, ChevronDown, Globe, Lock, CheckCircle } from "lucide-react";
 
 
 interface Job {
@@ -41,6 +41,21 @@ interface Job {
   displayCompany?: string
   displayLocation?: string
   displaySummary?: string
+}
+
+// LinkedIn interface
+interface FreelanceJob {
+  id: number
+  auth_id: string
+  timestamp?: string
+  author_name: string
+  author_url: string | null
+  post_text: string
+  post_urn: string
+  keyword_match: string | null
+  probability_freelance_vacancy: number | null
+  created_at: string
+  updated_at: string
 }
 
 export default function JobBoard() {
@@ -139,6 +154,10 @@ export default function JobBoard() {
   const lastScrollY = useRef(0);
   const router = useRouter();
   const { search: querySearch } = router.query;
+
+  // LinkedIn state
+  const [freelanceJobs, setFreelanceJobs] = useState<FreelanceJob[]>([]);
+  const [loadingFreelance, setLoadingFreelance] = useState(false);
 
   useEffect(() => {
     if (querySearch && typeof querySearch === 'string') {
@@ -247,6 +266,90 @@ export default function JobBoard() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearchTerm, user]);
+
+  // useEffect for fetching LinkedIn posts when search term changes
+  useEffect(() => {
+    console.log('[FREELANCE] useEffect triggered:', {
+      linkedinFeedEnabled,
+      debouncedSearchTerm,
+      searchTermLength: debouncedSearchTerm?.trim().length
+    });
+
+    if (linkedinFeedEnabled && debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2) {
+      console.log('[FREELANCE] Calling fetchFreelanceJobs');
+      fetchFreelanceJobs(debouncedSearchTerm);
+    } else if (linkedinFeedEnabled) {
+      // If LinkedIn is enabled but no search term, fetch all jobs
+      console.log('[FREELANCE] LinkedIn enabled but no search term, fetching all jobs');
+      fetchFreelanceJobs('');
+    } else {
+      console.log('[FREELANCE] Clearing freelance jobs');
+      setFreelanceJobs([]);
+    }
+  }, [debouncedSearchTerm, linkedinFeedEnabled]);
+
+  // Function to load LinkedIn feed enabled state from database
+  const loadLinkedinFeedState = async () => {
+    if (!user?.id) return;
+
+    console.log('[LINKEDIN] Loading LinkedIn feed state for user:', user.id);
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('linkedin_feed_enabled')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('[LINKEDIN] Error loading LinkedIn feed state:', error);
+        return;
+      }
+
+      console.log('[LINKEDIN] Loaded data:', data);
+
+      if (data?.linkedin_feed_enabled !== undefined) {
+        console.log('[LINKEDIN] Setting LinkedIn feed enabled to:', data.linkedin_feed_enabled);
+        setLinkedinFeedEnabled(data.linkedin_feed_enabled);
+      } else {
+        console.log('[LINKEDIN] No linkedin_feed_enabled found, using default false');
+        setLinkedinFeedEnabled(false);
+      }
+    } catch (error) {
+      console.error('[LINKEDIN] Error in loadLinkedinFeedState:', error);
+    }
+  };
+
+  // Function to save LinkedIn feed enabled state to database
+  const saveLinkedinFeedState = async (enabled: boolean) => {
+    if (!user?.id) return;
+
+    console.log('[LINKEDIN] Saving LinkedIn feed state:', enabled, 'for user:', user.id);
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          linkedin_feed_enabled: enabled
+        });
+
+      if (error) {
+        console.error('[LINKEDIN] Error saving LinkedIn feed state:', error);
+      } else {
+        console.log('[LINKEDIN] Successfully saved LinkedIn feed state:', enabled);
+      }
+    } catch (error) {
+      console.error('[LINKEDIN] Error in saveLinkedinFeedState:', error);
+    }
+  };
+
+  // Load LinkedIn feed state when user changes
+  useEffect(() => {
+    if (user?.id) {
+      loadLinkedinFeedState();
+    }
+  }, [user?.id]);
 
   // Function to check if user has permission to add jobs
   const hasAddJobPermission = (user: any): boolean => !!user && !!user.id;
@@ -418,113 +521,82 @@ export default function JobBoard() {
     return () => { };
   }, [showCompanyDropdown, showLocationDropdown, showRegionDropdown]);
 
-  // Function to fetch recently clicked jobs
-  // const fetchRecentlyClickedJobs = async () => {
-  //   if (!user || !user.id) {
-  //     console.log("[FetchRecentlyClicked] User not available.");
-  //     return;
-  //   }
-  //   console.log("[FetchRecentlyClicked] Starting for user:", user.id);
-  //   // setLoadingRecentlyClicked(true);
-  //   try {
-  //     const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
-  //     const { data: clicks, error: clicksError } = await supabase
-  //       .from('job_clicks')
-  //       .select('job_id, clicked_at')
-  //       .eq('user_id', user.id)
-  //       .order('clicked_at', { ascending: false });
 
-  //     console.log("[FetchRecentlyClicked] Clicks data raw:", clicks);
-  //     console.log("[FetchRecentlyClicked] Clicks error:", clicksError);
 
-  //     if (clicksError) {
-  //       console.error('[FetchRecentlyClicked] Error fetching job clicks:', clicksError);
-  //       // setRecentlyClickedJobs([]);
-  //       return;
-  //     }
+  // Function to fetch LinkedIn posts
+  const fetchFreelanceJobs = async (searchTerm: string) => {
+    console.log('[FREELANCE] fetchFreelanceJobs called with:', {
+      linkedinFeedEnabled,
+      searchTerm,
+      searchTermLength: searchTerm?.trim().length
+    });
 
-  //     // Filter clicks to only those within the last 10 days
-  //     const recentClicks = (clicks || []).filter(click => {
-  //       if (!click.clicked_at) return false;
-  //       return new Date(click.clicked_at) >= tenDaysAgo;
-  //     });
+    if (!linkedinFeedEnabled) {
+      console.log('[FREELANCE] Early return - LinkedIn not enabled');
+      setFreelanceJobs([]);
+      return;
+    }
 
-  //     if (recentClicks.length === 0) {
-  //       console.log("[FetchRecentlyClicked] No clicks found in the last 10 days for user:", user.id);
-  //       // setRecentlyClickedJobs([]);
-  //       return;
-  //     }
-  //     console.log(`[FetchRecentlyClicked] Found ${recentClicks.length} recent clicks.`);
+    // If no search term, show all jobs
+    const shouldFilter = searchTerm && searchTerm.trim().length >= 2;
+    if (!shouldFilter) {
+      console.log('[FREELANCE] No search term, fetching all jobs');
+    }
 
-  //     const jobIds = recentClicks.map(click => click.job_id).filter(id => id != null); // Ensure no null/undefined ids
-  //     const uniqueJobIds = [...new Set(jobIds)];
-  //     console.log("[FetchRecentlyClicked] Unique Job IDs to fetch:", uniqueJobIds);
+    console.log('[FREELANCE] Fetching freelance jobs for search term:', searchTerm);
+    setLoadingFreelance(true);
 
-  //     if (uniqueJobIds.length === 0) {
-  //       console.log("[FetchRecentlyClicked] No valid unique job IDs to fetch details for.");
-  //       // setRecentlyClickedJobs([]);
-  //       return;
-  //     }
+    try {
+      const searchWords = searchTerm.trim().toLowerCase().split(/\s+/).filter(word => word.length > 0);
+      console.log('[FREELANCE] Search words:', searchWords);
 
-  //     const clickTimeMap = new Map<string, string>();
-  //     recentClicks.forEach(click => {
-  //       if (click.job_id && click.clicked_at && !clickTimeMap.has(click.job_id)) {
-  //         clickTimeMap.set(click.job_id, click.clicked_at);
-  //       }
-  //     });
-  //     console.log("[FetchRecentlyClicked] ClickTimeMap:", clickTimeMap);
+      // Fetch all freelance jobs and filter client-side for better search
+      const { data: jobs, error } = await supabase
+        .from('freelance_jobs')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  //     // Only fetch jobs that are still present in the main jobs table
-  //     const { data: jobsData, error: jobsError } = await supabase
-  //       .from('Allgigs_All_vacancies_NEW')
-  //       .select('UNIQUE_ID, Title, Company, URL, date, Location, Summary, rate')
-  //       .in('UNIQUE_ID', uniqueJobIds);
+      if (error) {
+        console.error('[FREELANCE] Error fetching freelance jobs:', error);
+        setFreelanceJobs([]);
+        return;
+      }
 
-  //     console.log("[FetchRecentlyClicked] JobsData from Allgigs_All_vacancies_NEW raw:", jobsData);
-  //     console.log("[FetchRecentlyClicked] JobsError:", jobsError);
+      console.log('[FREELANCE] Fetched jobs:', jobs?.length || 0);
 
-  //     if (jobsError) {
-  //       console.error('[FetchRecentlyClicked] Error fetching job details:', jobsError);
-  //       // setRecentlyClickedJobs([]);
-  //     } else if (jobsData && jobsData.length > 0) {
-  //       // Only include jobs that are still present in the main jobs table
-  //       const jobsWithClickData = jobsData.map(job => ({
-  //         ...job,
-  //         clicked_at: clickTimeMap.get(job.UNIQUE_ID),
-  //       }));
-  //       console.log("[FetchRecentlyClicked] Jobs with click data (before ordering):", jobsWithClickData);
+      if (!jobs || jobs.length === 0) {
+        console.log('[FREELANCE] No jobs found');
+        setFreelanceJobs([]);
+        return;
+      }
 
-  //       const orderedJobs = uniqueJobIds
-  //         .map(id => jobsWithClickData.find(job => job.UNIQUE_ID === id))
-  //         .filter(job => job !== undefined) as Job[];
-  //       console.log("[FetchRecentlyClicked] Final ordered jobs for state:", orderedJobs);
-  //       // setRecentlyClickedJobs(orderedJobs);
-  //     } else {
-  //       console.log("[FetchRecentlyClicked] No job details found for the clicked job IDs or jobsData is empty.");
-  //       // setRecentlyClickedJobs([]);
-  //     }
-  //   } catch (error) {
-  //     console.error('[FetchRecentlyClicked] Exception in fetchRecentlyClickedJobs:', error);
-  //     // setRecentlyClickedJobs([]);
-  //   } finally {
-  //     // setLoadingRecentlyClicked(false);
-  //     console.log("[FetchRecentlyClicked] Finished.");
-  //   }
-  // };
+      // Filter jobs based on search terms (if search term provided)
+      let filteredJobs = jobs;
+      if (shouldFilter) {
+        filteredJobs = jobs.filter(job => {
+          const jobText = `${job.post_text} ${job.author_name}`.toLowerCase();
+          const matches = searchWords.every(word => jobText.includes(word));
+          console.log('[FREELANCE] Job filter:', {
+            jobId: job.id,
+            jobText: jobText.substring(0, 50) + '...',
+            matches,
+            searchWords
+          });
+          return matches;
+        });
+        console.log('[FREELANCE] Filtered jobs:', filteredJobs.length);
+      } else {
+        console.log('[FREELANCE] No filtering, showing all jobs:', jobs.length);
+      }
 
-  // useEffect for fetching recently clicked jobs
-  // useEffect(() => {
-  //   console.log("[useEffect RecentlyClicked] Triggered. User:", user ? user.id : 'null', "ShowRecentlyClicked:", showRecentlyClicked);
-  //   if (user && user.id && showRecentlyClicked) {
-  //     console.log("[useEffect RecentlyClicked] Conditions met. Calling fetchRecentlyClickedJobs.");
-  //     fetchRecentlyClickedJobs();
-  //   } else {
-  //     console.log("[useEffect RecentlyClicked] Conditions NOT met. Skipping fetchRecentlyClickedJobs.");
-  //     if (!user || !user.id) console.log("[useEffect RecentlyClicked] Reason: User or user.id is missing.");
-  //     if (!showRecentlyClicked) console.log("[useEffect RecentlyClicked] Reason: showRecentlyClicked is false.");
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [user, showRecentlyClicked]);
+      setFreelanceJobs(filteredJobs);
+    } catch (error) {
+      console.error('[FREELANCE] Error in fetchFreelanceJobs:', error);
+      setFreelanceJobs([]);
+    } finally {
+      setLoadingFreelance(false);
+    }
+  };
 
   // Memoize the Fuse.js instance to avoid recreating it on every render
   const fuse = useMemo(() => new Fuse(allJobs, {
@@ -1700,33 +1772,37 @@ export default function JobBoard() {
                   }}
                   onClick={(e) => {
                     e.preventDefault();
-                    // Premium feature - show tooltip or modal in future
-                    console.log('LinkedIn Feed is a premium feature');
-                    // Keep state ready for future implementation
-                    setLinkedinFeedEnabled(prev => !prev);
+                    const newState = !linkedinFeedEnabled;
+                    console.log('[LINKEDIN] Toggle clicked, changing from', linkedinFeedEnabled, 'to', newState);
+                    setLinkedinFeedEnabled(newState);
+                    if (user?.id) {
+                      saveLinkedinFeedState(newState);
+                    }
                   }}
                 >
                   <input
                     type="checkbox"
                     checked={linkedinFeedEnabled}
-                    onChange={() => { }} // Disabled for now
-                    disabled
+                    onChange={() => {
+                      const newState = !linkedinFeedEnabled;
+                      console.log('[LINKEDIN] Checkbox changed, changing from', linkedinFeedEnabled, 'to', newState);
+                      setLinkedinFeedEnabled(newState);
+                      if (user?.id) {
+                        saveLinkedinFeedState(newState);
+                      }
+                    }}
                     style={{
                       width: '16px',
                       height: '16px',
-                      accentColor: '#0077b5',
-                      opacity: 0.5
+                      accentColor: '#0077b5'
                     }}
                   />
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                    </svg>
                     LinkedIn Feed
-                    <Lock
-                      style={{
-                        width: '14px',
-                        height: '14px',
-                        color: 'rgba(255, 255, 255, 0.6)'
-                      }}
-                    />
+                    {linkedinFeedEnabled && <CheckCircle style={{ width: '14px', height: '14px', color: '#10b981' }} />}
                   </span>
                 </label>
               </div>
@@ -1926,6 +2002,153 @@ export default function JobBoard() {
                     </span>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Freelance Job Cards */}
+            {linkedinFeedEnabled && freelanceJobs.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
+                {freelanceJobs.map((job) => (
+                  <div
+                    key={job.id}
+                    onClick={() => {
+                      window.open(job.post_urn, '_blank', 'noopener,noreferrer');
+                    }}
+                    style={{
+                      position: 'relative',
+                      background: 'rgba(59, 130, 246, 0.2)',
+                      backdropFilter: 'blur(8px)',
+                      border: '1px solid rgba(59, 130, 246, 0.4)',
+                      borderRadius: '16px',
+                      padding: '1.5rem',
+                      transition: 'all 0.3s ease',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 8px 32px rgba(59, 130, 246, 0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    {/* LinkedIn Icon */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '1rem',
+                      right: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      fontSize: '0.875rem',
+                      fontWeight: '500'
+                    }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                      </svg>
+                      LinkedIn
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                          <h3
+                            style={{
+                              fontSize: '1.5rem',
+                              fontWeight: '700',
+                              color: '#fff',
+                              margin: 0
+                            }}
+                            dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.post_text.substring(0, 100) + '...', debouncedSearchTerm.split(' ')) }}
+                          />
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                          <p
+                            style={{
+                              fontSize: '1.1rem',
+                              color: 'rgba(255, 255, 255, 0.9)',
+                              margin: '0',
+                              fontWeight: '600'
+                            }}
+                            dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.author_name, debouncedSearchTerm.split(' ')) }}
+                          />
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                          {job.created_at && (
+                            <span style={{
+                              background: 'rgba(59, 130, 246, 0.3)',
+                              color: '#fff',
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '12px',
+                              fontSize: '0.875rem',
+                              fontWeight: '600',
+                              border: '1px solid rgba(59, 130, 246, 0.5)'
+                            }}>
+                              {new Date(job.created_at).toLocaleDateString('en-GB', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          )}
+                          {job.probability_freelance_vacancy && (
+                            <span style={{
+                              background: 'rgba(16, 185, 129, 0.3)',
+                              color: '#fff',
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '12px',
+                              fontSize: '0.875rem',
+                              fontWeight: '600',
+                              border: '1px solid rgba(16, 185, 129, 0.5)'
+                            }}>
+                              {Math.round(job.probability_freelance_vacancy * 100)}% Match
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ margin: '0 0 1rem 0' }}>
+                      <p
+                        style={{
+                          fontSize: '1rem',
+                          color: 'rgba(255, 255, 255, 0.85)',
+                          lineHeight: '1.6',
+                          margin: '0',
+                          fontFamily: "'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+                          letterSpacing: 'normal',
+                        }}
+                        dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.post_text, debouncedSearchTerm.split(' ')) }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <button
+                        style={{
+                          background: 'rgba(59, 130, 246, 0.3)',
+                          color: '#fff',
+                          border: '1px solid rgba(59, 130, 246, 0.5)',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem',
+                          fontWeight: '600',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(59, 130, 246, 0.4)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)';
+                        }}
+                      >
+                        Read more
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
