@@ -1781,23 +1781,7 @@ export default function JobBoard() {
                     }
                   }}
                 >
-                  <input
-                    type="checkbox"
-                    checked={linkedinFeedEnabled}
-                    onChange={() => {
-                      const newState = !linkedinFeedEnabled;
-                      console.log('[LINKEDIN] Checkbox changed, changing from', linkedinFeedEnabled, 'to', newState);
-                      setLinkedinFeedEnabled(newState);
-                      if (user?.id) {
-                        saveLinkedinFeedState(newState);
-                      }
-                    }}
-                    style={{
-                      width: '16px',
-                      height: '16px',
-                      accentColor: '#0077b5'
-                    }}
-                  />
+
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
@@ -2562,37 +2546,36 @@ export default function JobBoard() {
               </div>
             )}
 
-            {/* Pagination */}
-            {
-              getPageNumbers().length > 1 && (
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                  marginTop: '2rem',
-                  flexWrap: 'wrap'
-                }}>
-                  {getPageNumbers().map((pageNum) => (
-                    <button
-                      key={pageNum}
-                      onClick={() => setPage(pageNum)}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        background: page === pageNum ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)',
-                        border: page === pageNum ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: '8px',
-                        color: '#fff',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        backdropFilter: 'blur(8px)',
-                        fontWeight: page === pageNum ? '600' : '400'
-                      }}
-                    >
-                      {pageNum + 1}
-                    </button>
-                  ))}
-                </div>
-              )
+            {/* Pagination - Only show if jobs are visible */}
+            {debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2 && getPageNumbers().length > 1 && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                marginTop: '2rem',
+                flexWrap: 'wrap'
+              }}>
+                {getPageNumbers().map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    onClick={() => setPage(pageNum)}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: page === pageNum ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+                      border: page === pageNum ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      backdropFilter: 'blur(8px)',
+                      fontWeight: page === pageNum ? '600' : '400'
+                    }}
+                  >
+                    {pageNum + 1}
+                  </button>
+                ))}
+              </div>
+            )
             }
           </div>
         </div>

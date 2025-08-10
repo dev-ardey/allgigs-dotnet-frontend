@@ -146,6 +146,10 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
         value_proposition: false
     });
 
+    // Feature popup state
+    const [showFeaturePopup, setShowFeaturePopup] = useState(false);
+    const [selectedFeature, setSelectedFeature] = useState<string>('');
+
     // Filter states
     const [searchTerm, setSearchTerm] = useState('');
     const [allCollapsed, setAllCollapsed] = useState(false);
@@ -531,6 +535,134 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     useEffect(() => {
         calculateFollowUpNotifications();
     }, [calculateFollowUpNotifications]);
+
+    // ==========================================
+    // FUTURE FEATURES DATABASE FUNCTIONS
+    // ==========================================
+    const loadFutureFeatures = useCallback(async () => {
+        if (!user?.id) {
+            console.log('[FUTURE FEATURES] No user ID, skipping load');
+            return;
+        }
+
+        console.log('[FUTURE FEATURES] Loading features for user:', user.id);
+
+        try {
+            // First try to get all records for this user
+            const { data, error } = await supabase
+                .from('future_features')
+                .select('*')
+                .eq('user_id', user.id);
+
+            if (error) {
+                console.error('[FUTURE FEATURES] Error loading:', error);
+                return;
+            }
+
+            if (data && data.length > 0) {
+                // Take the first record (should be only one per user)
+                const userFeatures = data[0];
+                console.log('[FUTURE FEATURES] Loaded data from database:', userFeatures);
+                setFutureFeatures({
+                    marketing: userFeatures.marketing || false,
+                    tooling: userFeatures.tooling || false,
+                    agent: userFeatures.agent || false,
+                    interview_optimisation: userFeatures.interview_optimisation || false,
+                    value_proposition: userFeatures.value_proposition || false
+                });
+            } else {
+                console.log('[FUTURE FEATURES] No data found for user, using defaults');
+            }
+        } catch (err) {
+            console.error('[FUTURE FEATURES] Error loading future features:', err);
+        }
+    }, [user?.id]);
+
+    const saveFutureFeatures = useCallback(async (features: any) => {
+        if (!user?.id) {
+            console.log('[FUTURE FEATURES] No user ID, skipping save');
+            return;
+        }
+
+        console.log('[FUTURE FEATURES] Saving features for user:', user.id, features);
+
+        try {
+            // First check if a record already exists for this user
+            const { data: existingData, error: checkError } = await supabase
+                .from('future_features')
+                .select('features_id')
+                .eq('user_id', user.id)
+                .limit(1);
+
+            if (checkError) {
+                console.error('[FUTURE FEATURES] Error checking existing record:', checkError);
+                throw checkError;
+            }
+
+            let result: any;
+            if (existingData && existingData.length > 0) {
+                // Update existing record
+                console.log('[FUTURE FEATURES] Updating existing record:', existingData[0]?.features_id);
+                result = await supabase
+                    .from('future_features')
+                    .update({
+                        marketing: features.marketing,
+                        tooling: features.tooling,
+                        agent: features.agent,
+                        interview_optimisation: features.interview_optimisation,
+                        value_proposition: features.value_proposition
+                    })
+                    .eq('features_id', existingData[0]?.features_id);
+            } else {
+                // Create new record
+                console.log('[FUTURE FEATURES] Creating new record');
+                result = await supabase
+                    .from('future_features')
+                    .insert({
+                        user_id: user.id,
+                        marketing: features.marketing,
+                        tooling: features.tooling,
+                        agent: features.agent,
+                        interview_optimisation: features.interview_optimisation,
+                        value_proposition: features.value_proposition
+                    });
+            }
+
+            if (result?.error) {
+                console.error('[FUTURE FEATURES] Error saving:', result.error);
+                throw result.error;
+            }
+
+            console.log('[FUTURE FEATURES] Successfully saved features:', result?.data);
+        } catch (err) {
+            console.error('[FUTURE FEATURES] Error saving future features:', err);
+        }
+    }, [user?.id]);
+
+    // ==========================================
+    // USE EFFECT: LOAD FUTURE FEATURES
+    // ==========================================
+    useEffect(() => {
+        loadFutureFeatures();
+    }, [loadFutureFeatures]);
+
+    const handleFeatureToggle = async (feature: string) => {
+        console.log('[FUTURE FEATURES] Toggle clicked for feature:', feature);
+        console.log('[FUTURE FEATURES] Current state:', futureFeatures);
+
+        const newFeatures = { ...futureFeatures, [feature]: !futureFeatures[feature as keyof typeof futureFeatures] };
+        console.log('[FUTURE FEATURES] New state:', newFeatures);
+
+        setFutureFeatures(newFeatures);
+        await saveFutureFeatures(newFeatures);
+
+        // Show popup for new feature
+        if (newFeatures[feature as keyof typeof futureFeatures]) {
+            console.log('[FUTURE FEATURES] Showing popup for feature:', feature);
+            setSelectedFeature(feature);
+            setShowFeaturePopup(true);
+        }
+    };
 
     // ==========================================
     // CALCULATE ARCHIVED COUNT
@@ -934,7 +1066,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 }}>
                     {/* Feature Buttons */}
                     <button
-                        onClick={() => setFutureFeatures(prev => ({ ...prev, marketing: !prev.marketing }))}
+                        onClick={() => handleFeatureToggle('marketing')}
                         style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -965,7 +1097,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         {futureFeatures.marketing && <CheckCircle style={{ width: '14px', height: '14px' }} />}
                     </button>
                     <button
-                        onClick={() => setFutureFeatures(prev => ({ ...prev, tooling: !prev.tooling }))}
+                        onClick={() => handleFeatureToggle('tooling')}
                         style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -996,7 +1128,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         {futureFeatures.tooling && <CheckCircle style={{ width: '14px', height: '14px' }} />}
                     </button>
                     <button
-                        onClick={() => setFutureFeatures(prev => ({ ...prev, agent: !prev.agent }))}
+                        onClick={() => handleFeatureToggle('agent')}
                         style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -1027,7 +1159,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         {futureFeatures.agent && <CheckCircle style={{ width: '14px', height: '14px' }} />}
                     </button>
                     <button
-                        onClick={() => setFutureFeatures(prev => ({ ...prev, interview_optimisation: !prev.interview_optimisation }))}
+                        onClick={() => handleFeatureToggle('interview_optimisation')}
                         style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -1058,7 +1190,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         {futureFeatures.interview_optimisation && <CheckCircle style={{ width: '14px', height: '14px' }} />}
                     </button>
                     <button
-                        onClick={() => setFutureFeatures(prev => ({ ...prev, value_proposition: !prev.value_proposition }))}
+                        onClick={() => handleFeatureToggle('value_proposition')}
                         style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -1463,6 +1595,126 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     );
                 })}
             </div>
+
+            {/* Feature Interest Popup */}
+            {showFeaturePopup && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.8)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 10000,
+                    backdropFilter: 'blur(8px)'
+                }}>
+                    <div style={{
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        backdropFilter: 'blur(16px)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '16px',
+                        padding: '2rem',
+                        maxWidth: '500px',
+                        width: '90%',
+                        position: 'relative'
+                    }}>
+                        {/* Close button */}
+                        <button
+                            onClick={() => setShowFeaturePopup(false)}
+                            style={{
+                                position: 'absolute',
+                                top: '1rem',
+                                right: '1rem',
+                                background: 'none',
+                                border: 'none',
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                fontSize: '1.5rem',
+                                cursor: 'pointer',
+                                padding: '0.5rem',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                e.currentTarget.style.color = 'white';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'none';
+                                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+                            }}
+                        >
+                            ×
+                        </button>
+
+                        {/* Content */}
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{
+                                fontSize: '3rem',
+                                marginBottom: '1rem'
+                            }}>
+                                {selectedFeature === 'marketing' && '📧'}
+                                {selectedFeature === 'tooling' && '⚡'}
+                                {selectedFeature === 'agent' && '✨'}
+                                {selectedFeature === 'interview_optimisation' && '🧠'}
+                                {selectedFeature === 'value_proposition' && '👥'}
+                            </div>
+
+                            <h3 style={{
+                                fontSize: '1.5rem',
+                                fontWeight: '600',
+                                color: 'white',
+                                marginBottom: '1rem'
+                            }}>
+                                {selectedFeature === 'marketing' && 'Marketing Automation'}
+                                {selectedFeature === 'tooling' && 'Advanced Tooling'}
+                                {selectedFeature === 'agent' && 'AI Agent'}
+                                {selectedFeature === 'interview_optimisation' && 'Interview Prep'}
+                                {selectedFeature === 'value_proposition' && 'Value Proposition'}
+                            </h3>
+
+                            <p style={{
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                fontSize: '1rem',
+                                lineHeight: '1.6',
+                                marginBottom: '2rem'
+                            }}>
+                                Amazing! We are just as excited as you are for this feature,
+                                <br />
+                                We will let you know when this feature is ready
+                            </p>
+
+                            <button
+                                onClick={() => setShowFeaturePopup(false)}
+                                style={{
+                                    padding: '0.75rem 2rem',
+                                    background: 'rgba(16, 185, 129, 0.2)',
+                                    border: '1px solid rgba(16, 185, 129, 0.4)',
+                                    borderRadius: '8px',
+                                    color: '#10b981',
+                                    cursor: 'pointer',
+                                    fontSize: '1rem',
+                                    fontWeight: '500',
+                                    transition: 'all 0.2s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = 'rgba(16, 185, 129, 0.3)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = 'rgba(16, 185, 129, 0.2)';
+                                }}
+                            >
+                                Got it!
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Modals */}
             {showArchiveModal && (
