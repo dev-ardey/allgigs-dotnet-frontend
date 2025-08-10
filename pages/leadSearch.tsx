@@ -12,7 +12,7 @@ import CompleteProfileForm from "../components/ui/CompleteProfileForm";
 import { useProfileCheck } from "../components/ui/useProfileCheck";
 import { useRouter } from "next/router";
 import GlobalNav from "../components/ui/GlobalNav";
-import { Search, SearchCheck, Edit2, Plus, X, Building2, MapPin, Layers2, ChevronDown, Globe, Lock, CheckCircle } from "lucide-react";
+import { Search, SearchCheck, Edit2, Plus, X, Building2, MapPin, Layers2, ChevronDown, Globe, CheckCircle } from "lucide-react";
 
 
 interface Job {
@@ -158,6 +158,7 @@ export default function JobBoard() {
   // LinkedIn state
   const [freelanceJobs, setFreelanceJobs] = useState<FreelanceJob[]>([]);
   const [loadingFreelance, setLoadingFreelance] = useState(false);
+  console.log(loadingFreelance, "loadingFreelance - build fix");
 
   useEffect(() => {
     if (querySearch && typeof querySearch === 'string') {
@@ -278,12 +279,8 @@ export default function JobBoard() {
     if (linkedinFeedEnabled && debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2) {
       console.log('[FREELANCE] Calling fetchFreelanceJobs');
       fetchFreelanceJobs(debouncedSearchTerm);
-    } else if (linkedinFeedEnabled) {
-      // If LinkedIn is enabled but no search term, fetch all jobs
-      console.log('[FREELANCE] LinkedIn enabled but no search term, fetching all jobs');
-      fetchFreelanceJobs('');
     } else {
-      console.log('[FREELANCE] Clearing freelance jobs');
+      console.log('[FREELANCE] Clearing freelance jobs - no search term or LinkedIn disabled');
       setFreelanceJobs([]);
     }
   }, [debouncedSearchTerm, linkedinFeedEnabled]);
@@ -410,23 +407,27 @@ export default function JobBoard() {
 
   useEffect(() => {
     if (!user) return;
-    setLoading(true);
-    async function fetchJobs() {
-      const { data, error } = await supabase
-        .from("Allgigs_All_vacancies_NEW")
-        .select("*");
 
-      if (error) {
-        console.error(error);
-      } else {
-        console.log('First job sample for debugging:', data?.[0]);
-        console.log('Total jobs fetched:', data?.length);
-        setAllJobs(data || []);
+    // Load all jobs once when user is available
+    if (allJobs.length === 0) {
+      setLoading(true);
+      async function fetchJobs() {
+        const { data, error } = await supabase
+          .from("Allgigs_All_vacancies_NEW")
+          .select("*");
+
+        if (error) {
+          console.error(error);
+        } else {
+          console.log('First job sample for debugging:', data?.[0]);
+          console.log('Total jobs fetched:', data?.length);
+          setAllJobs(data || []);
+        }
+        setLoading(false);
       }
-      setLoading(false);
+      fetchJobs();
     }
-    fetchJobs();
-  }, [user]);
+  }, [user, allJobs.length]);
 
   // Initialize filters when allJobs change
   useEffect(() => {
@@ -614,7 +615,8 @@ export default function JobBoard() {
     let filtered = allJobs;
 
     // 1. Filter by debouncedSearchTerm (AND logic for multiple words)
-    if (debouncedSearchTerm && debouncedSearchTerm.trim() !== "") {
+    // Only show jobs if search term has 2+ characters
+    if (debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2) {
       const searchWords = debouncedSearchTerm.trim().toLowerCase().split(/\s+/).filter(word => word.length > 0);
       if (searchWords.length > 0) {
         filtered = allJobs.filter(job => {
@@ -622,9 +624,8 @@ export default function JobBoard() {
           return searchWords.every(word => jobText.includes(word));
         });
       }
-      // If searchWords is empty (e.g., searchTerm was just spaces), 
-      // no filtering by search term happens here, filtered remains allJobs.
     }
+    // If search term is less than 2 characters, filtered remains allJobs (but won't be displayed due to render logic)
 
     // 2. Filter by selected companies
     if (selectedCompanies.size > 0) {
@@ -659,11 +660,11 @@ export default function JobBoard() {
 
   // Sort filtered jobs by Fuse.js search results or by newest first
   const sortedJobs = useMemo(() => {
-    if (debouncedSearchTerm && debouncedSearchTerm.trim() !== "") {
+    if (debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2) {
       const results = fuse.search(debouncedSearchTerm);
       return results.map(result => result.item);
     }
-    // Return filtered jobs when no search term (so filters still work)
+    // Return filtered jobs when search term is 2+ characters
     return filteredJobs;
   }, [debouncedSearchTerm, filteredJobs, fuse]);
 
@@ -1948,7 +1949,7 @@ export default function JobBoard() {
             {/* Search Field */}
             <div style={{ marginBottom: '1rem' }}>
               <input
-                placeholder="Enter at least 2 characters to search for leads and opportunities..."
+                placeholder="Type at least 2 characters to search jobs and LinkedIn posts..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
@@ -2152,412 +2153,414 @@ export default function JobBoard() {
               </div>
             )}
 
-            {/* Job Cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {groupedJobs.map(({ primaryJob: job, stackedJobs }) => (
-                <div
-                  key={job.UNIQUE_ID}
-                  style={{ position: 'relative', marginBottom: stackedJobs.length > 0 ? `${(stackedJobs.length - 1) * 60 + 80}px` : '0' }}
-                >
-                  {/* Main Job Card */}
+            {/* Job Cards - Only show if search term has 2+ characters */}
+            {debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {groupedJobs.map(({ primaryJob: job, stackedJobs }) => (
                   <div
-                    onClick={() => {
-                      logJobClick(job);
-                      window.open(job.URL, '_blank', 'noopener,noreferrer');
-                    }}
-                    style={{
-                      position: 'relative',
-                      zIndex: 1,
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      backdropFilter: 'blur(8px)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      borderRadius: '16px',
-                      padding: '1.5rem',
-                      transition: 'all 0.3s ease',
-                      cursor: 'pointer'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
+                    key={job.UNIQUE_ID}
+                    style={{ position: 'relative', marginBottom: stackedJobs.length > 0 ? `${(stackedJobs.length - 1) * 60 + 80}px` : '0' }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                          <h3
-                            style={{
-                              fontSize: '1.5rem',
-                              fontWeight: '700',
-                              color: '#fff',
-                              margin: 0
-                            }}
-                            dangerouslySetInnerHTML={{ __html: job.displayTitle || highlightSearchTerms(job.Title, debouncedSearchTerm.split(' ')) }}
-                          />
-                          {stackedJobs.length > 0 && (
-                            <div style={{
-                              position: 'absolute',
-                              top: '1rem',
-                              right: '1rem',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              color: 'rgba(255, 255, 255, 0.7)',
-                              fontSize: '0.875rem',
-                              fontWeight: '500'
-                            }}>
-                              <Layers2 style={{ width: '16px', height: '16px' }} />
-                              +{stackedJobs.length}
-                            </div>
-                          )}
-                          {isJobNew(job) && (
-                            <span style={{
-                              backgroundColor: "#10b981",
-                              color: "white",
-                              fontSize: "0.75rem",
-                              fontWeight: "bold",
-                              padding: "2px 8px",
-                              borderRadius: "12px",
-                              textTransform: "uppercase",
-                              letterSpacing: "0.5px",
-                            }}>
-                              New
-                            </span>
-                          )}
-                          {(job.source === 'allGigs' || job.tags?.includes('allGigs')) && (
-                            <span style={{
-                              backgroundColor: "#4f46e5",
-                              color: "white",
-                              fontSize: "0.75rem",
-                              fontWeight: "bold",
-                              padding: "2px 8px",
-                              borderRadius: "12px",
-                              textTransform: "uppercase",
-                              letterSpacing: "0.5px",
-                            }}>
-                              allGigs
-                            </span>
-                          )}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                          <p
-                            style={{
-                              fontSize: '1.1rem',
-                              color: 'rgba(255, 255, 255, 0.9)',
-                              margin: '0',
-                              fontWeight: '600'
-                            }}
-                            dangerouslySetInnerHTML={{ __html: job.displayCompany || highlightSearchTerms(job.Company, debouncedSearchTerm.split(' ')) }}
-                          />
-                          {job.source && (
-                            <span style={{
-                              background: 'rgba(147, 51, 234, 0.2)',
-                              color: '#fff',
-                              padding: '0.25rem 0.75rem',
-                              borderRadius: '12px',
-                              fontSize: '0.75rem',
-                              fontWeight: '600',
-                              border: '1px solid rgba(147, 51, 234, 0.3)'
-                            }}>
-                              {job.source}
-                            </span>
-                          )}
-                        </div>
-                        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-                          {job.rate && job.rate.trim() !== '' && (
-                            <span style={{
-                              background: 'rgba(16, 185, 129, 0.2)',
-                              color: '#fff',
-                              padding: '0.25rem 0.75rem',
-                              borderRadius: '12px',
-                              fontSize: '0.875rem',
-                              fontWeight: '600',
-                              border: '1px solid rgba(16, 185, 129, 0.3)'
-                            }}>
-                              {job.rate}
-                            </span>
-                          )}
-                          {job.date && job.date.trim() !== '' && (
-                            <span style={{
-                              background: 'rgba(59, 130, 246, 0.2)',
-                              color: '#fff',
-                              padding: '0.25rem 0.75rem',
-                              borderRadius: '12px',
-                              fontSize: '0.875rem',
-                              fontWeight: '600',
-                              border: '1px solid rgba(59, 130, 246, 0.3)'
-                            }}>
-                              {job.date}
-                            </span>
-                          )}
-                          {job.Location && job.Location.trim() !== '' && (
-                            <span
+                    {/* Main Job Card */}
+                    <div
+                      onClick={() => {
+                        logJobClick(job);
+                        window.open(job.URL, '_blank', 'noopener,noreferrer');
+                      }}
+                      style={{
+                        position: 'relative',
+                        zIndex: 1,
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        backdropFilter: 'blur(8px)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '16px',
+                        padding: '1.5rem',
+                        transition: 'all 0.3s ease',
+                        cursor: 'pointer'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.2)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                            <h3
                               style={{
-                                background: 'rgba(236, 72, 153, 0.2)',
+                                fontSize: '1.5rem',
+                                fontWeight: '700',
+                                color: '#fff',
+                                margin: 0
+                              }}
+                              dangerouslySetInnerHTML={{ __html: job.displayTitle || highlightSearchTerms(job.Title, debouncedSearchTerm.split(' ')) }}
+                            />
+                            {stackedJobs.length > 0 && (
+                              <div style={{
+                                position: 'absolute',
+                                top: '1rem',
+                                right: '1rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                fontSize: '0.875rem',
+                                fontWeight: '500'
+                              }}>
+                                <Layers2 style={{ width: '16px', height: '16px' }} />
+                                +{stackedJobs.length}
+                              </div>
+                            )}
+                            {isJobNew(job) && (
+                              <span style={{
+                                backgroundColor: "#10b981",
+                                color: "white",
+                                fontSize: "0.75rem",
+                                fontWeight: "bold",
+                                padding: "2px 8px",
+                                borderRadius: "12px",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.5px",
+                              }}>
+                                New
+                              </span>
+                            )}
+                            {(job.source === 'allGigs' || job.tags?.includes('allGigs')) && (
+                              <span style={{
+                                backgroundColor: "#4f46e5",
+                                color: "white",
+                                fontSize: "0.75rem",
+                                fontWeight: "bold",
+                                padding: "2px 8px",
+                                borderRadius: "12px",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.5px",
+                              }}>
+                                allGigs
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                            <p
+                              style={{
+                                fontSize: '1.1rem',
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                margin: '0',
+                                fontWeight: '600'
+                              }}
+                              dangerouslySetInnerHTML={{ __html: job.displayCompany || highlightSearchTerms(job.Company, debouncedSearchTerm.split(' ')) }}
+                            />
+                            {job.source && (
+                              <span style={{
+                                background: 'rgba(147, 51, 234, 0.2)',
+                                color: '#fff',
+                                padding: '0.25rem 0.75rem',
+                                borderRadius: '12px',
+                                fontSize: '0.75rem',
+                                fontWeight: '600',
+                                border: '1px solid rgba(147, 51, 234, 0.3)'
+                              }}>
+                                {job.source}
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                            {job.rate && job.rate.trim() !== '' && (
+                              <span style={{
+                                background: 'rgba(16, 185, 129, 0.2)',
                                 color: '#fff',
                                 padding: '0.25rem 0.75rem',
                                 borderRadius: '12px',
                                 fontSize: '0.875rem',
                                 fontWeight: '600',
-                                border: '1px solid rgba(236, 72, 153, 0.3)'
-                              }}
-                              dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.Location, debouncedSearchTerm.split(' ')) }}
-                            />
-                          )}
+                                border: '1px solid rgba(16, 185, 129, 0.3)'
+                              }}>
+                                {job.rate}
+                              </span>
+                            )}
+                            {job.date && job.date.trim() !== '' && (
+                              <span style={{
+                                background: 'rgba(59, 130, 246, 0.2)',
+                                color: '#fff',
+                                padding: '0.25rem 0.75rem',
+                                borderRadius: '12px',
+                                fontSize: '0.875rem',
+                                fontWeight: '600',
+                                border: '1px solid rgba(59, 130, 246, 0.3)'
+                              }}>
+                                {job.date}
+                              </span>
+                            )}
+                            {job.Location && job.Location.trim() !== '' && (
+                              <span
+                                style={{
+                                  background: 'rgba(236, 72, 153, 0.2)',
+                                  color: '#fff',
+                                  padding: '0.25rem 0.75rem',
+                                  borderRadius: '12px',
+                                  fontSize: '0.875rem',
+                                  fontWeight: '600',
+                                  border: '1px solid rgba(236, 72, 153, 0.3)'
+                                }}
+                                dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.Location, debouncedSearchTerm.split(' ')) }}
+                              />
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div style={{ margin: '0 0 1rem 0' }}>
-                      <p
-                        style={{
-                          fontSize: '1rem',
-                          color: 'rgba(255, 255, 255, 0.85)',
-                          lineHeight: '1.6',
-                          margin: '0',
-                          fontFamily: "'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-                          letterSpacing: 'normal',
-                          wordSpacing: 'normal'
-                        }}
-                        dangerouslySetInnerHTML={{
-                          __html: highlightSearchTerms(
-                            expandedSummaries.has(job.UNIQUE_ID) ? job.Summary : getTruncatedSummary(job.Summary),
-                            debouncedSearchTerm.split(' ')
-                          )
-                        }}
-                      />
-                      {isSummaryLong(job.Summary) && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation(); // Prevent job card click
-                            toggleSummaryExpansion(job.UNIQUE_ID);
-                          }}
+                      <div style={{ margin: '0 0 1rem 0' }}>
+                        <p
                           style={{
-                            background: 'none',
-                            border: 'none',
-                            color: '#10b981',
-                            fontSize: '0.875rem',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            padding: '0.25rem 0',
-                            marginTop: '0.5rem',
-                            transition: 'color 0.2s ease'
+                            fontSize: '1rem',
+                            color: 'rgba(255, 255, 255, 0.85)',
+                            lineHeight: '1.6',
+                            margin: '0',
+                            fontFamily: "'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+                            letterSpacing: 'normal',
+                            wordSpacing: 'normal'
                           }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.color = '#34d399';
+                          dangerouslySetInnerHTML={{
+                            __html: highlightSearchTerms(
+                              expandedSummaries.has(job.UNIQUE_ID) ? job.Summary : getTruncatedSummary(job.Summary),
+                              debouncedSearchTerm.split(' ')
+                            )
                           }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.color = '#10b981';
-                          }}
-                        >
-                          {expandedSummaries.has(job.UNIQUE_ID) ? 'Read less' : 'Read more'}
-                        </button>
+                        />
+                        {isSummaryLong(job.Summary) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent job card click
+                              toggleSummaryExpansion(job.UNIQUE_ID);
+                            }}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#10b981',
+                              fontSize: '0.875rem',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              padding: '0.25rem 0',
+                              marginTop: '0.5rem',
+                              transition: 'color 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.color = '#34d399';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.color = '#10b981';
+                            }}
+                          >
+                            {expandedSummaries.has(job.UNIQUE_ID) ? 'Read less' : 'Read more'}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Show poster information for allGigs jobs */}
+                      {(job.source === 'allGigs' || job.tags?.includes('allGigs')) && job.added_by_email && (
+                        <div style={{
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '12px',
+                          padding: '0.75rem',
+                          marginBottom: '1rem'
+                        }}>
+                          <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.9)' }}>
+                            Contact Information:
+                          </p>
+                          <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>
+                            <strong>Name:</strong> {job.poster_name || 'Not provided'}
+                          </p>
+                          <p style={{ margin: 0, fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>
+                            <strong>Email:</strong> {job.added_by_email}
+                          </p>
+                        </div>
                       )}
                     </div>
 
-                    {/* Show poster information for allGigs jobs */}
-                    {(job.source === 'allGigs' || job.tags?.includes('allGigs')) && job.added_by_email && (
-                      <div style={{
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '12px',
-                        padding: '0.75rem',
-                        marginBottom: '1rem'
-                      }}>
-                        <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.9)' }}>
-                          Contact Information:
-                        </p>
-                        <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>
-                          <strong>Name:</strong> {job.poster_name || 'Not provided'}
-                        </p>
-                        <p style={{ margin: 0, fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>
-                          <strong>Email:</strong> {job.added_by_email}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Stacked Jobs - After Main Card */}
-                  {stackedJobs.length > 0 && stackedJobs.map((stackedJob, index) => (
-                    <div
-                      key={stackedJob.UNIQUE_ID}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(stackedJob.URL, '_blank', 'noopener,noreferrer');
-                      }}
-                      style={{
-                        position: 'absolute',
-                        top: '100%',
-                        marginTop: `${index * 60}px`,
-                        left: '4px',
-                        right: '4px',
-                        zIndex: 1,
-                        background: `linear-gradient(to bottom, 
+                    {/* Stacked Jobs - After Main Card */}
+                    {stackedJobs.length > 0 && stackedJobs.map((stackedJob, index) => (
+                      <div
+                        key={stackedJob.UNIQUE_ID}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(stackedJob.URL, '_blank', 'noopener,noreferrer');
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: '100%',
+                          marginTop: `${index * 60}px`,
+                          left: '4px',
+                          right: '4px',
+                          zIndex: 1,
+                          background: `linear-gradient(to bottom, 
                           transparent 0%, 
                           transparent 5%, 
                           rgba(255, 255, 255, 0.1) 70%, 
                           rgba(255, 255, 255, 0.15) 100%)`,
-                        borderLeft: '1px solid transparent',
-                        borderRight: '1px solid transparent',
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: '0 0 16px 16px',
-                        padding: '1rem 1.25rem 0rem 1.25rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        minHeight: 'auto',
-                        overflow: 'visible'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = `linear-gradient(to bottom, 
+                          borderLeft: '1px solid transparent',
+                          borderRight: '1px solid transparent',
+                          borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+                          borderRadius: '0 0 16px 16px',
+                          padding: '1rem 1.25rem 0rem 1.25rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          minHeight: 'auto',
+                          overflow: 'visible'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = `linear-gradient(to bottom, 
                           rgba(255, 255, 255, 0.05) 0%, 
                           rgba(255, 255, 255, 0.08) 10%, 
                           rgba(255, 255, 255, 0.15) 30%, 
                           rgba(255, 255, 255, 0.2) 100%)`;
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.2)';
-                        e.currentTarget.style.zIndex = '10';
-                        e.currentTarget.style.borderBottom = '1px solid rgba(255, 255, 255, 0.3)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = `linear-gradient(to bottom, 
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.2)';
+                          e.currentTarget.style.zIndex = '10';
+                          e.currentTarget.style.borderBottom = '1px solid rgba(255, 255, 255, 0.3)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = `linear-gradient(to bottom, 
                           transparent 0%, 
                           transparent 5%, 
                           rgba(255, 255, 255, 0.1) 50%, 
                           rgba(255, 255, 255, 0.15) 100%)`;
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
-                        e.currentTarget.style.zIndex = '1';
-                        e.currentTarget.style.borderBottom = '1px solid rgba(255, 255, 255, 0.2)';
-                      }}
-                    >
-                      {/* Duplicate indicator */}
-                      <div style={{
-                        position: 'absolute',
-                        top: '1rem',
-                        right: '1rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        color: 'rgba(255, 255, 255, 0.6)',
-                        fontSize: '0.75rem',
-                        fontWeight: '500'
-                      }}>
-                        <Layers2 style={{ width: '14px', height: '14px' }} />
-                        Possibly a duplicate
-                      </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                        <h4 style={{
-                          fontSize: '0.9rem',
-                          fontWeight: '600',
-                          color: '#fff',
-                          margin: 0,
-                          flex: 1,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = 'none';
+                          e.currentTarget.style.zIndex = '1';
+                          e.currentTarget.style.borderBottom = '1px solid rgba(255, 255, 255, 0.2)';
                         }}
-                          dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Title, debouncedSearchTerm.split(' ')) }}
-                        />
-                        {isJobNew(stackedJob) && (
-                          <span style={{
-                            backgroundColor: "#10b981",
-                            color: "white",
-                            fontSize: "0.6rem",
-                            fontWeight: "bold",
-                            padding: "1px 4px",
-                            borderRadius: "6px",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.5px",
-                            marginLeft: '0.5rem'
-                          }}>
-                            New
-                          </span>
-                        )}
-                      </div>
+                      >
+                        {/* Duplicate indicator */}
+                        <div style={{
+                          position: 'absolute',
+                          top: '1rem',
+                          right: '1rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          color: 'rgba(255, 255, 255, 0.6)',
+                          fontSize: '0.75rem',
+                          fontWeight: '500'
+                        }}>
+                          <Layers2 style={{ width: '14px', height: '14px' }} />
+                          Possibly a duplicate
+                        </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <p style={{
-                            fontSize: '0.8rem',
-                            color: 'rgba(255, 255, 255, 0.8)',
-                            margin: '0',
-                            fontWeight: '500',
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                          <h4 style={{
+                            fontSize: '0.9rem',
+                            fontWeight: '600',
+                            color: '#fff',
+                            margin: 0,
+                            flex: 1,
                             whiteSpace: 'nowrap',
                             overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            minWidth: 'fit-content'
+                            textOverflow: 'ellipsis'
                           }}
-                            dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Company, debouncedSearchTerm.split(' ')) }}
+                            dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Title, debouncedSearchTerm.split(' ')) }}
                           />
-                          {stackedJob.source && (
+                          {isJobNew(stackedJob) && (
                             <span style={{
-                              background: 'rgba(147, 51, 234, 0.2)',
-                              color: '#fff',
-                              padding: '0.15rem 0.4rem',
-                              borderRadius: '6px',
-                              fontSize: '0.6rem',
-                              fontWeight: '600',
-                              border: '1px solid rgba(147, 51, 234, 0.3)'
+                              backgroundColor: "#10b981",
+                              color: "white",
+                              fontSize: "0.6rem",
+                              fontWeight: "bold",
+                              padding: "1px 4px",
+                              borderRadius: "6px",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                              marginLeft: '0.5rem'
                             }}>
-                              {stackedJob.source}
+                              New
                             </span>
                           )}
                         </div>
 
-                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                          {stackedJob.rate && stackedJob.rate.trim() !== '' && isDifferentFromPrimary(job.rate, stackedJob.rate) && (
-                            <span style={{
-                              background: 'rgba(16, 185, 129, 0.2)',
-                              color: '#fff',
-                              padding: '0.15rem 0.4rem',
-                              borderRadius: '6px',
-                              fontSize: '0.7rem',
-                              fontWeight: '600',
-                              border: '1px solid rgba(16, 185, 129, 0.3)'
-                            }}>
-                              {stackedJob.rate}
-                            </span>
-                          )}
-
-                          {stackedJob.Location && stackedJob.Location.trim() !== '' && isDifferentFromPrimary(job.Location, stackedJob.Location) && (
-                            <span style={{
-                              background: 'rgba(236, 72, 153, 0.2)',
-                              color: '#fff',
-                              padding: '0.15rem 0.4rem',
-                              borderRadius: '6px',
-                              fontSize: '0.7rem',
-                              fontWeight: '600',
-                              border: '1px solid rgba(236, 72, 153, 0.3)'
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <p style={{
+                              fontSize: '0.8rem',
+                              color: 'rgba(255, 255, 255, 0.8)',
+                              margin: '0',
+                              fontWeight: '500',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              minWidth: 'fit-content'
                             }}
-                              dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Location, debouncedSearchTerm.split(' ')) }}
+                              dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Company, debouncedSearchTerm.split(' ')) }}
                             />
-                          )}
+                            {stackedJob.source && (
+                              <span style={{
+                                background: 'rgba(147, 51, 234, 0.2)',
+                                color: '#fff',
+                                padding: '0.15rem 0.4rem',
+                                borderRadius: '6px',
+                                fontSize: '0.6rem',
+                                fontWeight: '600',
+                                border: '1px solid rgba(147, 51, 234, 0.3)'
+                              }}>
+                                {stackedJob.source}
+                              </span>
+                            )}
+                          </div>
 
-                          {stackedJob.date && stackedJob.date.trim() !== '' && (
-                            <span style={{
-                              background: 'rgba(59, 130, 246, 0.2)',
-                              color: '#fff',
-                              padding: '0.15rem 0.4rem',
-                              borderRadius: '6px',
-                              fontSize: '0.7rem',
-                              fontWeight: '600',
-                              border: '1px solid rgba(59, 130, 246, 0.3)'
-                            }}>
-                              {stackedJob.date}
-                            </span>
-                          )}
+                          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            {stackedJob.rate && stackedJob.rate.trim() !== '' && isDifferentFromPrimary(job.rate, stackedJob.rate) && (
+                              <span style={{
+                                background: 'rgba(16, 185, 129, 0.2)',
+                                color: '#fff',
+                                padding: '0.15rem 0.4rem',
+                                borderRadius: '6px',
+                                fontSize: '0.7rem',
+                                fontWeight: '600',
+                                border: '1px solid rgba(16, 185, 129, 0.3)'
+                              }}>
+                                {stackedJob.rate}
+                              </span>
+                            )}
+
+                            {stackedJob.Location && stackedJob.Location.trim() !== '' && isDifferentFromPrimary(job.Location, stackedJob.Location) && (
+                              <span style={{
+                                background: 'rgba(236, 72, 153, 0.2)',
+                                color: '#fff',
+                                padding: '0.15rem 0.4rem',
+                                borderRadius: '6px',
+                                fontSize: '0.7rem',
+                                fontWeight: '600',
+                                border: '1px solid rgba(236, 72, 153, 0.3)'
+                              }}
+                                dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Location, debouncedSearchTerm.split(' ')) }}
+                              />
+                            )}
+
+                            {stackedJob.date && stackedJob.date.trim() !== '' && (
+                              <span style={{
+                                background: 'rgba(59, 130, 246, 0.2)',
+                                color: '#fff',
+                                padding: '0.15rem 0.4rem',
+                                borderRadius: '6px',
+                                fontSize: '0.7rem',
+                                fontWeight: '600',
+                                border: '1px solid rgba(59, 130, 246, 0.3)'
+                              }}>
+                                {stackedJob.date}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Pagination */}
             {
