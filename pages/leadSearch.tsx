@@ -12,7 +12,7 @@ import CompleteProfileForm from "../components/ui/CompleteProfileForm";
 import { useProfileCheck } from "../components/ui/useProfileCheck";
 import { useRouter } from "next/router";
 import GlobalNav from "../components/ui/GlobalNav";
-import { Search, SearchCheck, Edit2, Plus, X, Building2, MapPin, Layers2, ChevronDown, Globe, CheckCircle } from "lucide-react";
+import { Search, SearchCheck, Edit2, Plus, X, Building2, MapPin, Layers2, ChevronDown, Globe, CheckCircle, Tag } from "lucide-react";
 
 
 interface Job {
@@ -30,7 +30,7 @@ interface Job {
   added_by?: string // User ID who added the job
   added_by_email?: string // Email of user who added the job
   poster_name?: string // Name of the person who posted the job
-  source?: string // Source of the job (e.g., 'allGigs')
+  Source?: string // Source of the job (e.g., 'allGigs') - Note: capital S
   tags?: string // Tags for the job
   clicked_at?: string; // Added to store when the job was clicked by the user
   Dutch?: boolean; // Regional filter: Dutch jobs
@@ -97,11 +97,14 @@ export default function JobBoard() {
   const [selectedCompanies, setSelectedCompanies] = useState<Set<string>>(new Set());
   const [selectedLocations, setSelectedLocations] = useState<Set<string>>(new Set());
   const [selectedRegions, setSelectedRegions] = useState<Set<string>>(new Set());
+  const [selectedSources, setSelectedSources] = useState<Set<string>>(new Set());
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [showRegionDropdown, setShowRegionDropdown] = useState(false);
+  const [showSourceDropdown, setShowSourceDropdown] = useState(false);
   const [companySearchTerm, setCompanySearchTerm] = useState('');
   const [locationSearchTerm, setLocationSearchTerm] = useState('');
+  const [sourceSearchTerm, setSourceSearchTerm] = useState('');
   const [linkedinFeedEnabled, setLinkedinFeedEnabled] = useState(false);
   // const paginatedJobs = filteredJobs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   // const paginationButtonStyle: React.CSSProperties = {
@@ -180,7 +183,10 @@ export default function JobBoard() {
   useEffect(() => {
     const fetchJobs = async () => {
       const { data } = await supabase.from("jobs").select("*");
-      if (data) setJobs(data);
+      if (data) {
+        console.log('Fetched jobs sample:', data[0]);
+        setJobs(data);
+      }
     };
     fetchJobs();
   }, []);
@@ -421,6 +427,8 @@ export default function JobBoard() {
         } else {
           console.log('First job sample for debugging:', data?.[0]);
           console.log('Total jobs fetched:', data?.length);
+          console.log('Sample job source field:', data?.[0]?.source);
+          console.log('Sample job keys:', data?.[0] ? Object.keys(data[0]) : 'No data');
           setAllJobs(data || []);
         }
         setLoading(false);
@@ -431,14 +439,19 @@ export default function JobBoard() {
 
   // Initialize filters when allJobs change
   useEffect(() => {
+    console.log('allJobs changed, length:', allJobs.length);
     if (allJobs.length > 0) {
-      // Extract unique companies and locations
+      // Extract unique companies, locations, and sources
       const companies = new Set(allJobs.map(job => job.Company).filter(company => company && company.trim() !== ''));
       const locations = new Set(allJobs.map(job => job.Location).filter(location => location && location.trim() !== ''));
+      const sources = new Set(allJobs.map(job => job.Source).filter(source => source && source.trim() !== '') as string[]);
 
-      // Initialize with all companies and locations selected
+
+
+      // Initialize with all companies, locations, and sources selected
       setSelectedCompanies(companies);
       setSelectedLocations(locations);
+      setSelectedSources(sources);
 
       // Initialize regions with Dutch and EU selected, Rest_of_World deselected
       setSelectedRegions(new Set(['Dutch', 'EU']));
@@ -452,6 +465,10 @@ export default function JobBoard() {
 
   const getUniqueLocations = useMemo(() => {
     return Array.from(new Set(allJobs.map(job => job.Location).filter(location => location && location.trim() !== ''))).sort();
+  }, [allJobs]);
+
+  const getUniqueSources = useMemo(() => {
+    return Array.from(new Set(allJobs.map(job => job.Source).filter((source): source is string => source && source.trim() !== ''))).sort();
   }, [allJobs]);
 
   const toggleCompany = (company: string) => {
@@ -502,6 +519,24 @@ export default function JobBoard() {
     setSelectedLocations(new Set());
   };
 
+  const toggleSource = (source: string) => {
+    const newSelected = new Set(selectedSources);
+    if (newSelected.has(source)) {
+      newSelected.delete(source);
+    } else {
+      newSelected.add(source);
+    }
+    setSelectedSources(newSelected);
+  };
+
+  const selectAllSources = () => {
+    setSelectedSources(new Set(getUniqueSources as string[]));
+  };
+
+  const deselectAllSources = () => {
+    setSelectedSources(new Set());
+  };
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -510,17 +545,18 @@ export default function JobBoard() {
         setShowCompanyDropdown(false);
         setShowLocationDropdown(false);
         setShowRegionDropdown(false);
+        setShowSourceDropdown(false);
       }
     };
 
-    if (showCompanyDropdown || showLocationDropdown || showRegionDropdown) {
+    if (showCompanyDropdown || showLocationDropdown || showRegionDropdown || showSourceDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
 
     // Always return a cleanup function, even if empty
     return () => { };
-  }, [showCompanyDropdown, showLocationDropdown, showRegionDropdown]);
+  }, [showCompanyDropdown, showLocationDropdown, showRegionDropdown, showSourceDropdown]);
 
 
 
@@ -653,10 +689,16 @@ export default function JobBoard() {
     } else {
       console.log('No region filtering applied (all regions selected or none)');
     }
-    // If all 3 regions are selected or selectedRegions is empty, show all jobs
+
+    // 5. Filter by selected sources
+    if (selectedSources.size > 0) {
+      const beforeCount = filtered.length;
+      filtered = filtered.filter(job => selectedSources.has(job.Source || ''));
+      console.log(`Source filter: ${beforeCount} -> ${filtered.length} jobs`);
+    }
 
     return filtered;
-  }, [allJobs, debouncedSearchTerm, selectedCompanies, selectedLocations, selectedRegions]);
+  }, [allJobs, debouncedSearchTerm, selectedCompanies, selectedLocations, selectedRegions, selectedSources]);
 
   // Sort filtered jobs by Fuse.js search results or by newest first
   const sortedJobs = useMemo(() => {
@@ -1473,6 +1515,7 @@ export default function JobBoard() {
                     setShowLocationDropdown(!showLocationDropdown);
                     setShowCompanyDropdown(false);
                     setShowRegionDropdown(false);
+                    setShowSourceDropdown(false);
                   }}
                   style={{
                     display: 'flex',
@@ -1633,6 +1676,180 @@ export default function JobBoard() {
                             whiteSpace: 'nowrap'
                           }}>
                             {location}
+                          </span>
+                        </label>
+                      ))
+                    }
+                  </div>
+                )}
+              </div>
+
+              {/* Source Filter */}
+              <div style={{ position: 'relative', minWidth: '300px' }} data-filter-dropdown>
+                <button
+                  onClick={() => {
+                    setShowSourceDropdown(!showSourceDropdown);
+                    setShowCompanyDropdown(false);
+                    setShowLocationDropdown(false);
+                    setShowRegionDropdown(false);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '12px',
+                    color: '#fff',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Tag style={{ width: '16px', height: '16px' }} />
+                    Sources ( {selectedSources.size} / {getUniqueSources.length} )
+                  </span>
+                  <ChevronDown style={{
+                    width: '16px',
+                    height: '16px',
+                    transform: showSourceDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease'
+                  }} />
+                </button>
+
+                {showSourceDropdown && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    marginTop: '0.5rem',
+                    background: 'rgba(114, 111, 135, 1)',
+                    backdropFilter: 'blur(16px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    zIndex: 1000,
+                    maxHeight: '300px',
+                    overflowY: 'auto',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+                  }}>
+                    {/* Search within sources */}
+                    <input
+                      type="text"
+                      placeholder="Search sources..."
+                      value={sourceSearchTerm}
+                      onChange={(e) => setSourceSearchTerm(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem',
+                        marginBottom: '0.75rem',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '8px',
+                        color: '#fff',
+                        fontSize: '0.875rem',
+                        boxSizing: 'border-box'
+                      }}
+                      className="search-input-placeholder"
+                    />
+
+                    {/* Select All / Deselect All */}
+                    <div style={{
+                      display: 'flex',
+                      gap: '0.5rem',
+                      marginBottom: '0.75rem',
+                      paddingBottom: '0.75rem',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}>
+                      <button
+                        onClick={selectAllSources}
+                        style={{
+                          flex: 1,
+                          padding: '0.5rem',
+                          background: 'rgba(147, 51, 234, 0.2)',
+                          border: '1px solid rgba(147, 51, 234, 0.3)',
+                          borderRadius: '6px',
+                          color: '#fff',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        Select All
+                      </button>
+                      <button
+                        onClick={deselectAllSources}
+                        style={{
+                          flex: 1,
+                          padding: '0.5rem',
+                          background: 'rgba(239, 68, 68, 0.2)',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          borderRadius: '6px',
+                          color: '#fff',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        Deselect All
+                      </button>
+                    </div>
+
+                    {/* Source List */}
+                    {getUniqueSources
+                      .filter(source => source && source.toLowerCase().includes(sourceSearchTerm.toLowerCase()))
+                      .map(source => source && (
+                        <label
+                          key={source}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.5rem',
+                            cursor: 'pointer',
+                            borderRadius: '6px',
+                            transition: 'background 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedSources.has(source)}
+                            onChange={() => toggleSource(source)}
+                            style={{
+                              width: '16px',
+                              height: '16px',
+                              accentColor: '#9333ea'
+                            }}
+                          />
+                          <span style={{
+                            color: '#fff',
+                            fontSize: '0.875rem',
+                            flex: 1,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {source}
                           </span>
                         </label>
                       ))
@@ -2215,7 +2432,7 @@ export default function JobBoard() {
                                 New
                               </span>
                             )}
-                            {(job.source === 'allGigs' || job.tags?.includes('allGigs')) && (
+                            {(job.Source === 'allGigs' || job.tags?.includes('allGigs')) && (
                               <span style={{
                                 backgroundColor: "#4f46e5",
                                 color: "white",
@@ -2240,7 +2457,7 @@ export default function JobBoard() {
                               }}
                               dangerouslySetInnerHTML={{ __html: job.displayCompany || highlightSearchTerms(job.Company, debouncedSearchTerm.split(' ')) }}
                             />
-                            {job.source && (
+                            {job.Source && (
                               <span style={{
                                 background: 'rgba(147, 51, 234, 0.2)',
                                 color: '#fff',
@@ -2249,10 +2466,11 @@ export default function JobBoard() {
                                 fontSize: '0.75rem',
                                 fontWeight: '600',
                                 border: '1px solid rgba(147, 51, 234, 0.3)'
-                              }}>
-                                {job.source}
-                              </span>
+                              }}
+                                dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.Source || '', debouncedSearchTerm.split(' ')) }}
+                              />
                             )}
+
                           </div>
                           <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
                             {job.rate && job.rate.trim() !== '' && (
@@ -2346,7 +2564,7 @@ export default function JobBoard() {
                       </div>
 
                       {/* Show poster information for allGigs jobs */}
-                      {(job.source === 'allGigs' || job.tags?.includes('allGigs')) && job.added_by_email && (
+                      {(job.Source === 'allGigs' || job.tags?.includes('allGigs')) && job.added_by_email && (
                         <div style={{
                           background: 'rgba(255, 255, 255, 0.05)',
                           border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -2480,7 +2698,7 @@ export default function JobBoard() {
                             }}
                               dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Company, debouncedSearchTerm.split(' ')) }}
                             />
-                            {stackedJob.source && (
+                            {stackedJob.Source && (
                               <span style={{
                                 background: 'rgba(147, 51, 234, 0.2)',
                                 color: '#fff',
@@ -2490,7 +2708,7 @@ export default function JobBoard() {
                                 fontWeight: '600',
                                 border: '1px solid rgba(147, 51, 234, 0.3)'
                               }}>
-                                {stackedJob.source}
+                                {stackedJob.Source}
                               </span>
                             )}
                           </div>
