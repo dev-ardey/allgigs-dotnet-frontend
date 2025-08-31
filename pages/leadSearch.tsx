@@ -653,13 +653,23 @@ export default function JobBoard() {
     // If search term is less than 2 characters, filtered remains allJobs (but won't be displayed due to render logic)
 
     // 2. Filter by selected companies
-    if (selectedCompanies.size > 0) {
+    if (selectedCompanies.size > 0 && selectedCompanies.size < getUniqueCompanies.length) {
       filtered = filtered.filter(job => selectedCompanies.has(job.Company));
+      console.log(`Company filter applied: ${selectedCompanies.size}/${getUniqueCompanies.length} companies selected`);
+    } else if (selectedCompanies.size === 0) {
+      // If no companies selected, show no jobs
+      filtered = [];
+      console.log('No companies selected - showing no jobs');
     }
 
     // 3. Filter by selected locations
-    if (selectedLocations.size > 0) {
+    if (selectedLocations.size > 0 && selectedLocations.size < getUniqueLocations.length) {
       filtered = filtered.filter(job => selectedLocations.has(job.Location));
+      console.log(`Location filter applied: ${selectedLocations.size}/${getUniqueLocations.length} locations selected`);
+    } else if (selectedLocations.size === 0) {
+      // If no locations selected, show no jobs
+      filtered = [];
+      console.log('No locations selected - showing no jobs');
     }
 
     // 4. Filter by selected regions (using boolean fields from Supabase)
@@ -680,10 +690,14 @@ export default function JobBoard() {
     }
 
     // 5. Filter by selected sources
-    if (selectedSources.size > 0) {
+    if (selectedSources.size > 0 && selectedSources.size < getUniqueSources.length) {
       const beforeCount = filtered.length;
       filtered = filtered.filter(job => selectedSources.has(job.Source || ''));
-      console.log(`Source filter: ${beforeCount} -> ${filtered.length} jobs`);
+      console.log(`Source filter applied: ${beforeCount} -> ${filtered.length} jobs (${selectedSources.size}/${getUniqueSources.length} sources selected)`);
+    } else if (selectedSources.size === 0) {
+      // If no sources selected, show no jobs
+      filtered = [];
+      console.log('No sources selected - showing no jobs');
     }
 
     return filtered;
@@ -692,12 +706,22 @@ export default function JobBoard() {
   // Sort filtered jobs by Fuse.js search results or by newest first
   const sortedJobs = useMemo(() => {
     if (debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2) {
-      const results = fuse.search(debouncedSearchTerm);
+      // Create a Fuse instance with the already filtered jobs, not all jobs
+      const filteredFuse = new Fuse(filteredJobs, {
+        keys: [
+          { name: "Title", weight: 0.6 },
+          { name: "Summary", weight: 0.3 },
+          { name: "Company", weight: 0.05 },
+          { name: "Location", weight: 0.05 }
+        ],
+        threshold: 0.36, // Same threshold as main fuse
+      });
+      const results = filteredFuse.search(debouncedSearchTerm);
       return results.map(result => result.item);
     }
-    // Return filtered jobs when search term is 2+ characters
+    // Return filtered jobs when no search term
     return filteredJobs;
-  }, [debouncedSearchTerm, filteredJobs, fuse]);
+  }, [debouncedSearchTerm, filteredJobs]);
 
   useEffect(() => {
     setPage(0);
@@ -1237,10 +1261,14 @@ export default function JobBoard() {
                 Discover Your Next Opportunity
               </h3>
               <p style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.8)', margin: 0 }}>
-                {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" ? (
+                {((debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2) ||
+                  (selectedCompanies.size < getUniqueCompanies.length) ||
+                  (selectedLocations.size < getUniqueLocations.length) ||
+                  (selectedSources.size < getUniqueSources.length) ||
+                  (selectedRegions.size < 3)) ? (
                   <>From <span style={{ fontWeight: '600', color: '#10b981' }}>{sortedJobs.length}</span> curated positions</>
                 ) : (
-                  <></>
+                  <>Ready to filter through <span style={{ fontWeight: '600', color: '#10b981' }}>{allJobs.length}</span> curated positions</>
                 )}
               </p>
             </div>
@@ -2274,8 +2302,12 @@ export default function JobBoard() {
             </div>
           )}
 
-          {/* Job Cards - Only show if search term has 2+ characters */}
-          {debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2 && (
+          {/* Job Cards - Show if search term has 2+ characters OR if any filters are applied */}
+          {(debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2) ||
+            (selectedCompanies.size < getUniqueCompanies.length) ||
+            (selectedLocations.size < getUniqueLocations.length) ||
+            (selectedSources.size < getUniqueSources.length) ||
+            (selectedRegions.size < 3) ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {groupedJobs.map(({ primaryJob: job, stackedJobs }) => (
                 <div
@@ -2682,38 +2714,42 @@ export default function JobBoard() {
                 </div>
               ))}
             </div>
-          )}
+          ) : null}
 
           {/* Pagination - Only show if jobs are visible */}
-          {debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2 && getPageNumbers().length > 1 && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              marginTop: '2rem',
-              flexWrap: 'wrap'
-            }}>
-              {getPageNumbers().map((pageNum) => (
-                <button
-                  key={pageNum}
-                  onClick={() => setPage(pageNum)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: page === pageNum ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)',
-                    border: page === pageNum ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '8px',
-                    color: '#fff',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    backdropFilter: 'blur(8px)',
-                    fontWeight: page === pageNum ? '600' : '400'
-                  }}
-                >
-                  {pageNum + 1}
-                </button>
-              ))}
-            </div>
-          )}
+          {((debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2) ||
+            (selectedCompanies.size < getUniqueCompanies.length) ||
+            (selectedLocations.size < getUniqueLocations.length) ||
+            (selectedSources.size < getUniqueSources.length) ||
+            (selectedRegions.size < 3)) && getPageNumbers().length > 1 && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                marginTop: '2rem',
+                flexWrap: 'wrap'
+              }}>
+                {getPageNumbers().map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    onClick={() => setPage(pageNum)}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: page === pageNum ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+                      border: page === pageNum ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      backdropFilter: 'blur(8px)',
+                      fontWeight: page === pageNum ? '600' : '400'
+                    }}
+                  >
+                    {pageNum + 1}
+                  </button>
+                ))}
+              </div>
+            )}
         </div>
 
         {/* Add Job Form Modal */}
