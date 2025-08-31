@@ -2008,7 +2008,7 @@ export default function JobBoard() {
             </div>
 
             {/* Reset Filter Button */}
-            <div style={{ position: 'relative', minWidth: '200px' }}>
+            <div style={{ position: 'relative', minWidth: '300px' }}>
               <button
                 onClick={resetAllFilters}
                 disabled={!filtersChanged}

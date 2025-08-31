@@ -531,10 +531,10 @@ export default function Profile() {
               height: '28px',
               borderRadius: '14px',
               background: isAvailable
-                ? 'rgba(16, 185, 129, 0.3)'
+                ? 'rgba(147, 51, 234, 0.3)'
                 : 'rgba(255, 255, 255, 0.15)',
               border: isAvailable
-                ? '1px solid rgba(16, 185, 129, 0.4)'
+                ? '1px solid rgba(147, 51, 234, 0.4)'
                 : '1px solid rgba(255, 255, 255, 0.3)',
               backdropFilter: 'blur(8px)',
               transition: 'all 0.3s ease',
@@ -569,9 +569,9 @@ export default function Profile() {
                 borderRadius: '999px',
                 fontSize: '0.875rem',
                 fontWeight: '600',
-                background: isAvailable ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                color: isAvailable ? '#10b981' : 'rgba(255, 255, 255, 0.8)',
-                border: isAvailable ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.2)',
+                background: isAvailable ? 'rgba(147, 51, 234, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                color: isAvailable ? '#9333ea' : 'rgba(255, 255, 255, 0.8)',
+                border: isAvailable ? '1px solid rgba(147, 51, 234, 0.3)' : '1px solid rgba(255, 255, 255, 0.2)',
                 backdropFilter: 'blur(8px)'
               }}>
                 {isAvailable ? 'Active' : 'Hidden'}
@@ -603,14 +603,14 @@ export default function Profile() {
                 fontSize: '0.875rem',
                 background: testimonialSending || !testimonial.trim()
                   ? 'rgba(255, 255, 255, 0.1)'
-                  : 'rgba(16, 185, 129, 0.2)',
+                  : 'rgba(147, 51, 234, 0.2)',
                 color: testimonialSending || !testimonial.trim()
                   ? 'rgba(255, 255, 255, 0.5)'
                   : '#fff',
                 borderRadius: '8px',
                 border: testimonialSending || !testimonial.trim()
                   ? '1px solid rgba(255, 255, 255, 0.2)'
-                  : '1px solid rgba(16, 185, 129, 0.3)',
+                  : '1px solid rgba(147, 51, 234, 0.3)',
                 fontWeight: '600',
                 cursor: testimonialSending || !testimonial.trim()
                   ? 'not-allowed'
@@ -632,11 +632,11 @@ export default function Profile() {
                 style={{
                   width: '100%',
                   padding: '0.75rem',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  border: '1px solid rgba(147, 51, 234, 0.3)',
                   borderRadius: '8px',
                   fontSize: '1rem',
                   boxSizing: 'border-box',
-                  background: 'rgba(16, 185, 129, 0.1)',
+                  background: 'rgba(147, 51, 234, 0.1)',
                   color: '#fff',
                   backdropFilter: 'blur(8px)',
                   minHeight: '80px',
@@ -671,14 +671,14 @@ export default function Profile() {
                 fontSize: '0.875rem',
                 background: feedbackSending || !feedback.trim()
                   ? 'rgba(255, 255, 255, 0.1)'
-                  : 'rgba(16, 185, 129, 0.2)',
+                  : 'rgba(147, 51, 234, 0.2)',
                 color: feedbackSending || !feedback.trim()
                   ? 'rgba(255, 255, 255, 0.5)'
                   : '#fff',
                 borderRadius: '8px',
                 border: feedbackSending || !feedback.trim()
                   ? '1px solid rgba(255, 255, 255, 0.2)'
-                  : '1px solid rgba(16, 185, 129, 0.3)',
+                  : '1px solid rgba(147, 51, 234, 0.3)',
                 fontWeight: '600',
                 cursor: feedbackSending || !feedback.trim()
                   ? 'not-allowed'
@@ -700,11 +700,11 @@ export default function Profile() {
                 style={{
                   width: '100%',
                   padding: '0.75rem',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  border: '1px solid rgba(147, 51, 234, 0.3)',
                   borderRadius: '8px',
                   fontSize: '1rem',
                   boxSizing: 'border-box',
-                  background: 'rgba(16, 185, 129, 0.1)',
+                  background: 'rgba(147, 51, 234, 0.1)',
                   color: '#fff',
                   backdropFilter: 'blur(8px)',
                   minHeight: '80px',
@@ -812,11 +812,11 @@ export default function Profile() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      border: '1px solid rgba(147, 51, 234, 0.3)',
                       borderRadius: '8px',
                       fontSize: '1rem',
                       boxSizing: 'border-box',
-                      background: 'rgba(16, 185, 129, 0.1)',
+                      background: 'rgba(147, 51, 234, 0.1)',
                       color: '#fff',
                       backdropFilter: 'blur(8px)'
                     }}
@@ -832,11 +832,11 @@ export default function Profile() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      border: '1px solid rgba(147, 51, 234, 0.3)',
                       borderRadius: '8px',
                       fontSize: '1rem',
                       boxSizing: 'border-box',
-                      background: 'rgba(16, 185, 129, 0.1)',
+                      background: 'rgba(147, 51, 234, 0.1)',
                       color: '#fff',
                       backdropFilter: 'blur(8px)'
                     }}
@@ -852,11 +852,11 @@ export default function Profile() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      border: '1px solid rgba(147, 51, 234, 0.3)',
                       borderRadius: '8px',
                       fontSize: '1rem',
                       boxSizing: 'border-box',
-                      background: 'rgba(16, 185, 129, 0.1)',
+                      background: 'rgba(147, 51, 234, 0.1)',
                       color: '#fff',
                       backdropFilter: 'blur(8px)'
                     }}
@@ -872,11 +872,11 @@ export default function Profile() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      border: '1px solid rgba(147, 51, 234, 0.3)',
                       borderRadius: '8px',
                       fontSize: '1rem',
                       boxSizing: 'border-box',
-                      background: 'rgba(16, 185, 129, 0.1)',
+                      background: 'rgba(147, 51, 234, 0.1)',
                       color: '#fff',
                       backdropFilter: 'blur(8px)'
                     }}
@@ -892,11 +892,11 @@ export default function Profile() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      border: '1px solid rgba(147, 51, 234, 0.3)',
                       borderRadius: '8px',
                       fontSize: '1rem',
                       boxSizing: 'border-box',
-                      background: 'rgba(16, 185, 129, 0.1)',
+                      background: 'rgba(147, 51, 234, 0.1)',
                       color: '#fff',
                       backdropFilter: 'blur(8px)'
                     }}
@@ -912,11 +912,11 @@ export default function Profile() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      border: '1px solid rgba(147, 51, 234, 0.3)',
                       borderRadius: '8px',
                       fontSize: '1rem',
                       boxSizing: 'border-box',
-                      background: 'rgba(16, 185, 129, 0.1)',
+                      background: 'rgba(147, 51, 234, 0.1)',
                       color: '#fff',
                       backdropFilter: 'blur(8px)'
                     }}
@@ -939,11 +939,11 @@ export default function Profile() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      border: '1px solid rgba(147, 51, 234, 0.3)',
                       borderRadius: '8px',
                       fontSize: '1rem',
                       boxSizing: 'border-box',
-                      background: 'rgba(16, 185, 129, 0.1)',
+                      background: 'rgba(147, 51, 234, 0.1)',
                       color: '#fff',
                       backdropFilter: 'blur(8px)'
                     }}
@@ -958,11 +958,11 @@ export default function Profile() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      border: '1px solid rgba(147, 51, 234, 0.3)',
                       borderRadius: '8px',
                       fontSize: '1rem',
                       boxSizing: 'border-box',
-                      background: 'rgba(16, 185, 129, 0.1)',
+                      background: 'rgba(147, 51, 234, 0.1)',
                       color: '#fff',
                       backdropFilter: 'blur(8px)'
                     }}
@@ -977,11 +977,11 @@ export default function Profile() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      border: '1px solid rgba(147, 51, 234, 0.3)',
                       borderRadius: '8px',
                       fontSize: '1rem',
                       boxSizing: 'border-box',
-                      background: 'rgba(16, 185, 129, 0.1)',
+                      background: 'rgba(147, 51, 234, 0.1)',
                       color: '#fff',
                       backdropFilter: 'blur(8px)'
                     }}
@@ -1002,11 +1002,11 @@ export default function Profile() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      border: '1px solid rgba(147, 51, 234, 0.3)',
                       borderRadius: '8px',
                       fontSize: '1rem',
                       boxSizing: 'border-box',
-                      background: 'rgba(16, 185, 129, 0.1)',
+                      background: 'rgba(147, 51, 234, 0.1)',
                       color: '#fff',
                       backdropFilter: 'blur(8px)'
                     }}
@@ -1024,11 +1024,11 @@ export default function Profile() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      border: '1px solid rgba(147, 51, 234, 0.3)',
                       borderRadius: '8px',
                       fontSize: '1rem',
                       boxSizing: 'border-box',
-                      background: 'rgba(16, 185, 129, 0.1)',
+                      background: 'rgba(147, 51, 234, 0.1)',
                       color: '#fff',
                       backdropFilter: 'blur(8px)',
                       minHeight: '80px',
@@ -1045,11 +1045,11 @@ export default function Profile() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      border: '1px solid rgba(147, 51, 234, 0.3)',
                       borderRadius: '8px',
                       fontSize: '1rem',
                       boxSizing: 'border-box',
-                      background: 'rgba(16, 185, 129, 0.1)',
+                      background: 'rgba(147, 51, 234, 0.1)',
                       color: '#fff',
                       backdropFilter: 'blur(8px)',
                       minHeight: '80px',
@@ -1070,11 +1070,11 @@ export default function Profile() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      border: '1px solid rgba(147, 51, 234, 0.3)',
                       borderRadius: '8px',
                       fontSize: '1rem',
                       boxSizing: 'border-box',
-                      background: 'rgba(16, 185, 129, 0.1)',
+                      background: 'rgba(147, 51, 234, 0.1)',
                       color: '#fff',
                       backdropFilter: 'blur(8px)'
                     }}
@@ -1089,11 +1089,11 @@ export default function Profile() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      border: '1px solid rgba(147, 51, 234, 0.3)',
                       borderRadius: '8px',
                       fontSize: '1rem',
                       boxSizing: 'border-box',
-                      background: 'rgba(16, 185, 129, 0.1)',
+                      background: 'rgba(147, 51, 234, 0.1)',
                       color: '#fff',
                       backdropFilter: 'blur(8px)'
                     }}
@@ -1104,7 +1104,7 @@ export default function Profile() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.75rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)', backdropFilter: 'blur(8px)', marginTop: '1.5rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.75rem', background: 'rgba(147, 51, 234, 0.1)', borderRadius: '8px', border: '1px solid rgba(147, 51, 234, 0.3)', backdropFilter: 'blur(8px)', marginTop: '1.5rem' }}>
                     <div style={{ position: 'relative' }}>
                       <input
                         type="checkbox"
@@ -1117,10 +1117,10 @@ export default function Profile() {
                         height: '24px',
                         borderRadius: '12px',
                         background: editedProfile.isAvailableForWork
-                          ? 'rgba(16, 185, 129, 0.3)'
+                          ? 'rgba(147, 51, 234, 0.3)'
                           : 'rgba(255, 255, 255, 0.15)',
                         border: editedProfile.isAvailableForWork
-                          ? '1px solid rgba(16, 185, 129, 0.4)'
+                          ? '1px solid rgba(147, 51, 234, 0.4)'
                           : '1px solid rgba(255, 255, 255, 0.3)',
                         backdropFilter: 'blur(8px)',
                         transition: 'all 0.3s ease'
@@ -1150,37 +1150,37 @@ export default function Profile() {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
               <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
+                background: 'rgba(147, 51, 234, 0.1)',
                 borderRadius: '12px',
                 padding: '1rem',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
+                border: '1px solid rgba(147, 51, 234, 0.3)'
               }}>
                 <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Name</span>
                 <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.firstName} {profile.lastName}</p>
               </div>
               <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
+                background: 'rgba(147, 51, 234, 0.1)',
                 borderRadius: '12px',
                 padding: '1rem',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
+                border: '1px solid rgba(147, 51, 234, 0.3)'
               }}>
                 <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Location</span>
                 <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.location}</p>
               </div>
               <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
+                background: 'rgba(147, 51, 234, 0.1)',
                 borderRadius: '12px',
                 padding: '1rem',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
+                border: '1px solid rgba(147, 51, 234, 0.3)'
               }}>
                 <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Job title</span>
                 <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.job_title}</p>
               </div>
               <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
+                background: 'rgba(147, 51, 234, 0.1)',
                 borderRadius: '12px',
                 padding: '1rem',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
+                border: '1px solid rgba(147, 51, 234, 0.3)'
               }}>
                 <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>LinkedIn</span>
                 <a href={profile.linkedin_URL} style={{ fontWeight: '600', color: '#fff', textDecoration: 'none', display: 'block', marginTop: '0.25rem' }} target="_blank" rel="noopener noreferrer">
@@ -1188,10 +1188,10 @@ export default function Profile() {
                 </a>
               </div>
               <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
+                background: 'rgba(147, 51, 234, 0.1)',
                 borderRadius: '12px',
                 padding: '1rem',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
+                border: '1px solid rgba(147, 51, 234, 0.3)'
               }}>
                 <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Hourly Rate</span>
                 <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1200,30 +1200,30 @@ export default function Profile() {
                 </p>
               </div>
               <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
+                background: 'rgba(147, 51, 234, 0.1)',
                 borderRadius: '12px',
                 padding: '1rem',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
+                border: '1px solid rgba(147, 51, 234, 0.3)'
               }}>
                 <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Availability</span>
-                <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: profile.isAvailableForWork ? '#10b981' : 'rgba(255, 255, 255, 0.6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: profile.isAvailableForWork ? '#9333ea' : 'rgba(255, 255, 255, 0.6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   {profile.isAvailableForWork ? '✓ Available for work' : '✗ Not available'}
                 </p>
               </div>
               <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
+                background: 'rgba(147, 51, 234, 0.1)',
                 borderRadius: '12px',
                 padding: '1rem',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
+                border: '1px solid rgba(147, 51, 234, 0.3)'
               }}>
                 <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Age</span>
                 <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.age || 'Not specified'} years old</p>
               </div>
               <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
+                background: 'rgba(147, 51, 234, 0.1)',
                 borderRadius: '12px',
                 padding: '1rem',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
+                border: '1px solid rgba(147, 51, 234, 0.3)'
               }}>
                 <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Last Year Earnings</span>
                 <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1232,46 +1232,46 @@ export default function Profile() {
                 </p>
               </div>
               <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
+                background: 'rgba(147, 51, 234, 0.1)',
                 borderRadius: '12px',
                 padding: '1rem',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
+                border: '1px solid rgba(147, 51, 234, 0.3)'
               }}>
                 <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Gender</span>
                 <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.gender || 'Not specified'}</p>
               </div>
               <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
+                background: 'rgba(147, 51, 234, 0.1)',
                 borderRadius: '12px',
                 padding: '1rem',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
+                border: '1px solid rgba(147, 51, 234, 0.3)'
               }}>
                 <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Interests</span>
                 <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.interests || 'Not specified'}</p>
               </div>
               <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
+                background: 'rgba(147, 51, 234, 0.1)',
                 borderRadius: '12px',
                 padding: '1rem',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
+                border: '1px solid rgba(147, 51, 234, 0.3)'
               }}>
                 <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Main Problem</span>
                 <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.mainProblem || 'Not specified'}</p>
               </div>
               <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
+                background: 'rgba(147, 51, 234, 0.1)',
                 borderRadius: '12px',
                 padding: '1rem',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
+                border: '1px solid rgba(147, 51, 234, 0.3)'
               }}>
                 <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Available to Recruiters Date</span>
                 <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.dateAvailableToRecruiters ? new Date(profile.dateAvailableToRecruiters).toLocaleDateString() : 'Not specified'}</p>
               </div>
               <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
+                background: 'rgba(147, 51, 234, 0.1)',
                 borderRadius: '12px',
                 padding: '1rem',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
+                border: '1px solid rgba(147, 51, 234, 0.3)'
               }}>
                 <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Links</span>
                 <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.links || 'Not specified'}</p>
