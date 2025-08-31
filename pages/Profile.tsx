@@ -442,11 +442,7 @@ export default function Profile() {
     return (
       <div style={{
         minHeight: '100vh',
-        background: `
-          radial-gradient(ellipse at top left, rgba(139, 69, 189, 0.15) 0%, transparent 50%), 
-          radial-gradient(ellipse at bottom right, rgba(59, 130, 246, 0.15) 0%, transparent 50%), 
-          linear-gradient(135deg, #1a0b2e 0%, #16213e 25%, #0f3460 50%, #16213e 75%, #1a0b2e 100%)
-        `,
+        background: 'black',
         fontFamily: "'Montserrat', Arial, sans-serif",
         color: '#fff',
         position: 'relative',
@@ -469,45 +465,13 @@ export default function Profile() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: `
-        radial-gradient(ellipse at top left, rgba(139, 69, 189, 0.15) 0%, transparent 50%), 
-        radial-gradient(ellipse at bottom right, rgba(59, 130, 246, 0.15) 0%, transparent 50%), 
-        linear-gradient(135deg, #1a0b2e 0%, #16213e 25%, #0f3460 50%, #16213e 75%, #1a0b2e 100%)
-      `,
+      background: 'black',
       fontFamily: "'Montserrat', Arial, sans-serif",
       color: '#fff',
       position: 'relative',
       overflow: 'hidden'
     }}>
       <GlobalNav currentPage="profile" />
-
-      {/* Floating Orbs Background */}
-      <div style={{
-        position: 'absolute',
-        top: '10%',
-        left: '10%',
-        width: '300px',
-        height: '300px',
-        background: 'radial-gradient(circle, rgba(139, 69, 189, 0.1) 0%, transparent 70%)',
-        borderRadius: '50%',
-        filter: 'blur(40px)',
-        animation: 'float 6s ease-in-out infinite',
-        pointerEvents: 'none',
-        zIndex: 0
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: '10%',
-        right: '10%',
-        width: '400px',
-        height: '400px',
-        background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)',
-        borderRadius: '50%',
-        filter: 'blur(40px)',
-        animation: 'float 8s ease-in-out infinite reverse',
-        pointerEvents: 'none',
-        zIndex: 0
-      }} />
 
       {/* Main Content */}
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '6rem 2rem 2rem 2rem', position: 'relative', zIndex: 5 }}>

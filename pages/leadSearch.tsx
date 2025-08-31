@@ -1152,72 +1152,16 @@ export default function JobBoard() {
     <>
       <GlobalNav currentPage="leadSearch" />
 
-      {/* Main Container with Glassmorphism Background */}
+      {/* Main Container with Black Background */}
       <div style={{
         minHeight: '100vh',
-        background: `
-          radial-gradient(ellipse at top left, rgba(139, 69, 189, 0.15) 0%, transparent 50%), 
-          radial-gradient(ellipse at bottom right, rgba(59, 130, 246, 0.15) 0%, transparent 50%), 
-          linear-gradient(135deg, #1a0b2e 0%, #16213e 25%, #0f3460 50%, #16213e 75%, #1a0b2e 100%)
-        `,
+        background: 'black',
         fontFamily: "'Montserrat', Arial, sans-serif",
         color: '#fff',
         position: 'relative',
         overflow: 'hidden'
       }}>
-        {/* Floating Orbs */}
-        <div style={{
-          position: 'absolute',
-          top: '10%',
-          right: '15%',
-          width: '300px',
-          height: '300px',
-          background: `radial-gradient(circle, 
-            rgba(147, 51, 234, 0.1) 0%, 
-            rgba(147, 51, 234, 0.05) 40%, 
-            transparent 70%
-          )`,
-          borderRadius: '50%',
-          filter: 'blur(40px)',
-          animation: 'float1 6s ease-in-out infinite',
-          pointerEvents: 'none',
-          zIndex: 0
-        }} />
 
-        <div style={{
-          position: 'absolute',
-          bottom: '20%',
-          left: '10%',
-          width: '200px',
-          height: '200px',
-          background: `radial-gradient(circle, 
-            rgba(59, 130, 246, 0.08) 0%, 
-            rgba(59, 130, 246, 0.04) 40%, 
-            transparent 70%
-          )`,
-          borderRadius: '50%',
-          filter: 'blur(30px)',
-          animation: 'float2 8s ease-in-out infinite',
-          pointerEvents: 'none',
-          zIndex: 0
-        }} />
-
-        <div style={{
-          position: 'absolute',
-          top: '60%',
-          right: '40%',
-          width: '120px',
-          height: '120px',
-          background: `radial-gradient(circle, 
-            rgba(236, 72, 153, 0.06) 0%, 
-            transparent 60%
-          )`,
-          borderRadius: '50%',
-          filter: 'blur(20px)',
-          animation: 'float3 10s ease-in-out infinite',
-          pointerEvents: 'none',
-          zIndex: 0
-        }} />
 
         {/* Header */}
         {showStickyHeader && (
@@ -2214,7 +2158,7 @@ export default function JobBoard() {
                   <div
                     key={job.id}
                     onClick={() => {
-                      window.open(job.post_urn, '_blank', 'noopener,noreferrer');
+                      window.open(job.post_urn, '_blank', 'noopener,noreferrer,scrollbars=yes,resizable=yes');
                     }}
                     style={{
                       position: 'relative',
@@ -2366,7 +2310,7 @@ export default function JobBoard() {
                     <div
                       onClick={() => {
                         logJobClick(job);
-                        window.open(job.URL, '_blank', 'noopener,noreferrer');
+                        window.open(job.URL, '_blank', 'noopener,noreferrer,scrollbars=yes,resizable=yes');
                       }}
                       style={{
                         position: 'relative',
@@ -2591,7 +2535,7 @@ export default function JobBoard() {
                         key={stackedJob.UNIQUE_ID}
                         onClick={(e) => {
                           e.stopPropagation();
-                          window.open(stackedJob.URL, '_blank', 'noopener,noreferrer');
+                          window.open(stackedJob.URL, '_blank', 'noopener,noreferrer,scrollbars=yes,resizable=yes');
                         }}
                         style={{
                           position: 'absolute',
@@ -2812,19 +2756,6 @@ export default function JobBoard() {
 
       {/* Global Styles */}
       <style jsx global>{`
-        @keyframes float1 {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(180deg); }
-        }
-        @keyframes float2 {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-15px) rotate(-180deg); }
-        }
-        @keyframes float3 {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-10px) rotate(90deg); }
-        }
-        
         /* Search highlighting */
         .highlight {
           background: rgba(255, 255, 0, 0.3);

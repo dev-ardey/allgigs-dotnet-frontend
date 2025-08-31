@@ -1441,11 +1441,7 @@ export default function Dashboard() {
     return (
       <div style={{
         minHeight: '100vh',
-        background: `
-          radial-gradient(ellipse at top left, rgba(139, 69, 189, 0.15) 0%, transparent 50%), 
-          radial-gradient(ellipse at bottom right, rgba(59, 130, 246, 0.15) 0%, transparent 50%), 
-          linear-gradient(135deg, #1a0b2e 0%, #16213e 25%, #0f3460 50%, #16213e 75%, #1a0b2e 100%)
-        `,
+        background: 'black',
         fontFamily: "'Montserrat', Arial, sans-serif",
         color: '#fff',
         position: 'relative',
@@ -1468,11 +1464,7 @@ export default function Dashboard() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: `
-        radial-gradient(ellipse at top left, rgba(139, 69, 189, 0.15) 0%, transparent 50%), 
-        radial-gradient(ellipse at bottom right, rgba(59, 130, 246, 0.15) 0%, transparent 50%), 
-        linear-gradient(135deg, #1a0b2e 0%, #16213e 25%, #0f3460 50%, #16213e 75%, #1a0b2e 100%)
-      `,
+      background: 'black',
       fontFamily: "'Montserrat', Arial, sans-serif",
       color: '#fff',
       position: 'relative',
@@ -1481,59 +1473,6 @@ export default function Dashboard() {
       onClick={() => setShowFeatureModal(null)}
     >
       <GlobalNav currentPage="dashboard" />
-      {/* Floating Orbs */}
-      <div style={{
-        position: 'absolute',
-        top: '10%',
-        right: '15%',
-        width: '300px',
-        height: '300px',
-        background: `radial-gradient(circle, 
-          rgba(147, 51, 234, 0.1) 0%, 
-          rgba(147, 51, 234, 0.05) 40%, 
-          transparent 70%
-        )`,
-        borderRadius: '50%',
-        filter: 'blur(40px)',
-        animation: 'float1 6s ease-in-out infinite',
-        pointerEvents: 'none',
-        zIndex: 0
-      }} />
-
-      <div style={{
-        position: 'absolute',
-        bottom: '20%',
-        left: '10%',
-        width: '200px',
-        height: '200px',
-        background: `radial-gradient(circle, 
-          rgba(59, 130, 246, 0.08) 0%, 
-          rgba(59, 130, 246, 0.04) 40%, 
-          transparent 70%
-        )`,
-        borderRadius: '50%',
-        filter: 'blur(30px)',
-        animation: 'float2 8s ease-in-out infinite',
-        pointerEvents: 'none',
-        zIndex: 0
-      }} />
-
-      <div style={{
-        position: 'absolute',
-        top: '60%',
-        right: '40%',
-        width: '120px',
-        height: '120px',
-        background: `radial-gradient(circle, 
-          rgba(236, 72, 153, 0.06) 0%, 
-          transparent 60%
-        )`,
-        borderRadius: '50%',
-        filter: 'blur(20px)',
-        animation: 'float3 10s ease-in-out infinite',
-        pointerEvents: 'none',
-        zIndex: 0
-      }} />
 
       {/* Main dashboard content */}
       <div style={{ filter: 'none', transition: 'filter 0.2s' }}>
