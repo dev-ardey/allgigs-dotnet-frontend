@@ -130,6 +130,7 @@ interface LeadCardProps {
     onStageAction?: (action: string, data?: any) => void;
     onArchived?: (leadId: string) => void;
     onStateChanged?: () => void;
+    onLeadUpdate?: () => void;
     index: number;
 }
 
@@ -140,7 +141,8 @@ const LeadCard: React.FC<LeadCardProps> = ({
     hasFollowUp,
     onStageAction,
     onArchived,
-    onStateChanged
+    onStateChanged,
+    onLeadUpdate
 }) => {
     // Timer states
     const [timeLeft, setTimeLeft] = useState<string>('');
@@ -262,6 +264,11 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 if (diff <= 0) {
                     setFoundTimeLeft('Job expired');
                     setFoundIsOverdue(true);
+
+                    // Automatically archive the job when timer reaches 0
+                    if (!lead.is_archived) {
+                        handleAutoArchive();
+                    }
                 } else {
                     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
                     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -279,7 +286,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
             };
 
             updateFoundTimer();
-            const interval = setInterval(updateFoundTimer, 60000); // Update every minute
+            const interval = setInterval(updateFoundTimer, 30000); // Update every 30 seconds for better accuracy
 
             return () => clearInterval(interval);
         } else {
@@ -332,6 +339,33 @@ const LeadCard: React.FC<LeadCardProps> = ({
     console.log(canRateInterview, "canRateInterview - build fix");
     // Follow-up state
     const [followUpMessage, setFollowUpMessage] = useState(lead.follow_up_message || '');
+
+    // Auto-archive function
+    const handleAutoArchive = async () => {
+        try {
+            console.log('Auto-archiving expired job:', lead.applying_id);
+
+            const { error } = await supabase
+                .from('applying')
+                .update({
+                    is_archived: true,
+                    archived_at: new Date().toISOString()
+                })
+                .eq('applying_id', lead.applying_id);
+
+            if (error) {
+                console.error('Error auto-archiving job:', error);
+            } else {
+                console.log('Job auto-archived successfully');
+                // Trigger parent component to refresh
+                if (onLeadUpdate) {
+                    onLeadUpdate();
+                }
+            }
+        } catch (error) {
+            console.error('Exception in auto-archive:', error);
+        }
+    };
 
     // Force re-render after state changes
     const [, forceUpdate] = useState({});
