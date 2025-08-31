@@ -468,7 +468,7 @@ export default function JobBoard() {
   }, [allJobs]);
 
   const getUniqueSources = useMemo(() => {
-    return Array.from(new Set(allJobs.map(job => job.Source).filter((source): source is string => source && source.trim() !== ''))).sort();
+    return Array.from(new Set(allJobs.map(job => job.Source).filter(source => source && typeof source === 'string' && source.trim() !== '') as string[])).sort();
   }, [allJobs]);
 
   const toggleCompany = (company: string) => {
@@ -1243,629 +1243,165 @@ export default function JobBoard() {
 
           {/* Job List Container */}
           <div style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '24px',
-            padding: '1.5rem'
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            marginBottom: '1.5rem'
           }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              marginBottom: '1.5rem'
-            }}>
-              <Search color="white" size={32} />
-              <div>
-                <h3 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#fff', margin: 0 }}>
-                  Discover Your Next Opportunity
-                </h3>
-                <p style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.8)', margin: 0 }}>
-                  {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" ? (
-                    <>From <span style={{ fontWeight: '600', color: '#10b981' }}>{sortedJobs.length}</span> curated positions</>
-                  ) : (
-                    <></>
-                  )}
-                </p>
-              </div>
+            <Search color="white" size={32} />
+            <div>
+              <h3 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#fff', margin: 0 }}>
+                Discover Your Next Opportunity
+              </h3>
+              <p style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.8)', margin: 0 }}>
+                {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" ? (
+                  <>From <span style={{ fontWeight: '600', color: '#10b981' }}>{sortedJobs.length}</span> curated positions</>
+                ) : (
+                  <></>
+                )}
+              </p>
             </div>
+          </div>
 
-            {/* Filters Section */}
-            <div style={{
-              display: 'flex',
-              gap: '1rem',
-              marginBottom: '1.5rem',
-              flexWrap: 'wrap'
-            }}>
-              {/* Company Filter */}
-              <div style={{ position: 'relative', minWidth: '300px' }} data-filter-dropdown>
-                <button
-                  onClick={() => {
-                    setShowCompanyDropdown(!showCompanyDropdown);
-                    setShowLocationDropdown(false);
-                    setShowRegionDropdown(false);
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px',
-                    color: '#fff',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                  }}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Building2 style={{ width: '16px', height: '16px' }} />
-                    Companies ( {selectedCompanies.size} / {getUniqueCompanies.length} )
-                  </span>
-                  <ChevronDown style={{
-                    width: '16px',
-                    height: '16px',
-                    transform: showCompanyDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s ease'
-                  }} />
-                </button>
+          {/* Filters Section */}
+          <div style={{
+            display: 'flex',
+            gap: '1rem',
+            marginBottom: '1.5rem',
+            flexWrap: 'wrap'
+          }}>
+            {/* Company Filter */}
+            <div style={{ position: 'relative', minWidth: '300px' }} data-filter-dropdown>
+              <button
+                onClick={() => {
+                  setShowCompanyDropdown(!showCompanyDropdown);
+                  setShowLocationDropdown(false);
+                  setShowRegionDropdown(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Building2 style={{ width: '16px', height: '16px' }} />
+                  Companies ( {selectedCompanies.size} / {getUniqueCompanies.length} )
+                </span>
+                <ChevronDown style={{
+                  width: '16px',
+                  height: '16px',
+                  transform: showCompanyDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s ease'
+                }} />
+              </button>
 
-                {showCompanyDropdown && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    marginTop: '0.5rem',
-                    background: 'rgba(114, 111, 135, 1)',
-                    backdropFilter: 'blur(16px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px',
-                    padding: '1rem',
-                    zIndex: 1000,
-                    maxHeight: '300px',
-                    overflowY: 'auto',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
-                  }}>
-                    {/* Search within companies */}
-                    <input
-                      type="text"
-                      placeholder="Search companies..."
-                      value={companySearchTerm}
-                      onChange={(e) => setCompanySearchTerm(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        marginBottom: '0.75rem',
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: '8px',
-                        color: '#fff',
-                        fontSize: '0.875rem',
-                        boxSizing: 'border-box'
-                      }}
-                      className="search-input-placeholder"
-                    />
-
-                    {/* Select All / Deselect All */}
-                    <div style={{
-                      display: 'flex',
-                      gap: '0.5rem',
+              {showCompanyDropdown && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: '0.5rem',
+                  background: 'rgba(114, 111, 135, 1)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  zIndex: 1000,
+                  maxHeight: '300px',
+                  overflowY: 'auto',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+                }}>
+                  {/* Search within companies */}
+                  <input
+                    type="text"
+                    placeholder="Search companies..."
+                    value={companySearchTerm}
+                    onChange={(e) => setCompanySearchTerm(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem',
                       marginBottom: '0.75rem',
-                      paddingBottom: '0.75rem',
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-                    }}>
-                      <button
-                        onClick={selectAllCompanies}
-                        style={{
-                          flex: 1,
-                          padding: '0.5rem',
-                          background: 'rgba(16, 185, 129, 0.2)',
-                          border: '1px solid rgba(16, 185, 129, 0.3)',
-                          borderRadius: '6px',
-                          color: '#fff',
-                          fontSize: '0.75rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        Select All
-                      </button>
-                      <button
-                        onClick={deselectAllCompanies}
-                        style={{
-                          flex: 1,
-                          padding: '0.5rem',
-                          background: 'rgba(239, 68, 68, 0.2)',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                          borderRadius: '6px',
-                          color: '#fff',
-                          fontSize: '0.75rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        Deselect All
-                      </button>
-                    </div>
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      fontSize: '0.875rem',
+                      boxSizing: 'border-box'
+                    }}
+                    className="search-input-placeholder"
+                  />
 
-                    {/* Company List */}
-                    {getUniqueCompanies
-                      .filter(company =>
-                        company.toLowerCase().includes(companySearchTerm.toLowerCase())
-                      )
-                      .map(company => (
-                        <label
-                          key={company}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            padding: '0.5rem',
-                            cursor: 'pointer',
-                            borderRadius: '6px',
-                            transition: 'background 0.2s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent';
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedCompanies.has(company)}
-                            onChange={() => toggleCompany(company)}
-                            style={{
-                              width: '16px',
-                              height: '16px',
-                              accentColor: '#10b981'
-                            }}
-                          />
-                          <span style={{
-                            color: '#fff',
-                            fontSize: '0.875rem',
-                            flex: 1,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}>
-                            {company}
-                          </span>
-                        </label>
-                      ))
-                    }
-                  </div>
-                )}
-              </div>
-
-              {/* Location Filter */}
-              <div style={{ position: 'relative', minWidth: '300px' }} data-filter-dropdown>
-                <button
-                  onClick={() => {
-                    setShowLocationDropdown(!showLocationDropdown);
-                    setShowCompanyDropdown(false);
-                    setShowRegionDropdown(false);
-                    setShowSourceDropdown(false);
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px',
-                    color: '#fff',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                  }}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <MapPin style={{ width: '16px', height: '16px' }} />
-                    Locations ( {selectedLocations.size} / {getUniqueLocations.length} )
-                  </span>
-                  <ChevronDown style={{
-                    width: '16px',
-                    height: '16px',
-                    transform: showLocationDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s ease'
-                  }} />
-                </button>
-
-                {showLocationDropdown && (
+                  {/* Select All / Deselect All */}
                   <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    marginTop: '0.5rem',
-                    background: 'rgba(114, 111, 135, 1)',
-                    backdropFilter: 'blur(16px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px',
-                    padding: '1rem',
-                    zIndex: 1000,
-                    maxHeight: '300px',
-                    overflowY: 'auto',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+                    display: 'flex',
+                    gap: '0.5rem',
+                    marginBottom: '0.75rem',
+                    paddingBottom: '0.75rem',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
                   }}>
-                    {/* Search within locations */}
-                    <input
-                      type="text"
-                      placeholder="Search locations..."
-                      value={locationSearchTerm}
-                      onChange={(e) => setLocationSearchTerm(e.target.value)}
+                    <button
+                      onClick={selectAllCompanies}
                       style={{
-                        width: '100%',
+                        flex: 1,
                         padding: '0.5rem',
-                        marginBottom: '0.75rem',
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: '8px',
+                        background: 'rgba(16, 185, 129, 0.2)',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        borderRadius: '6px',
                         color: '#fff',
-                        fontSize: '0.875rem',
-                        boxSizing: 'border-box'
+                        fontSize: '0.75rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
                       }}
-                      className="search-input-placeholder"
-                    />
-
-                    {/* Select All / Deselect All */}
-                    <div style={{
-                      display: 'flex',
-                      gap: '0.5rem',
-                      marginBottom: '0.75rem',
-                      paddingBottom: '0.75rem',
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-                    }}>
-                      <button
-                        onClick={selectAllLocations}
-                        style={{
-                          flex: 1,
-                          padding: '0.5rem',
-                          background: 'rgba(16, 185, 129, 0.2)',
-                          border: '1px solid rgba(16, 185, 129, 0.3)',
-                          borderRadius: '6px',
-                          color: '#fff',
-                          fontSize: '0.75rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        Select All
-                      </button>
-                      <button
-                        onClick={deselectAllLocations}
-                        style={{
-                          flex: 1,
-                          padding: '0.5rem',
-                          background: 'rgba(239, 68, 68, 0.2)',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                          borderRadius: '6px',
-                          color: '#fff',
-                          fontSize: '0.75rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        Deselect All
-                      </button>
-                    </div>
-
-                    {/* Location List */}
-                    {getUniqueLocations
-                      .filter(location =>
-                        location.toLowerCase().includes(locationSearchTerm.toLowerCase())
-                      )
-                      .map(location => (
-                        <label
-                          key={location}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            padding: '0.5rem',
-                            cursor: 'pointer',
-                            borderRadius: '6px',
-                            transition: 'background 0.2s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent';
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedLocations.has(location)}
-                            onChange={() => toggleLocation(location)}
-                            style={{
-                              width: '16px',
-                              height: '16px',
-                              accentColor: '#10b981'
-                            }}
-                          />
-                          <span style={{
-                            color: '#fff',
-                            fontSize: '0.875rem',
-                            flex: 1,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}>
-                            {location}
-                          </span>
-                        </label>
-                      ))
-                    }
-                  </div>
-                )}
-              </div>
-
-              {/* Source Filter */}
-              <div style={{ position: 'relative', minWidth: '300px' }} data-filter-dropdown>
-                <button
-                  onClick={() => {
-                    setShowSourceDropdown(!showSourceDropdown);
-                    setShowCompanyDropdown(false);
-                    setShowLocationDropdown(false);
-                    setShowRegionDropdown(false);
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px',
-                    color: '#fff',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                  }}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Tag style={{ width: '16px', height: '16px' }} />
-                    Sources ( {selectedSources.size} / {getUniqueSources.length} )
-                  </span>
-                  <ChevronDown style={{
-                    width: '16px',
-                    height: '16px',
-                    transform: showSourceDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s ease'
-                  }} />
-                </button>
-
-                {showSourceDropdown && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    marginTop: '0.5rem',
-                    background: 'rgba(114, 111, 135, 1)',
-                    backdropFilter: 'blur(16px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px',
-                    padding: '1rem',
-                    zIndex: 1000,
-                    maxHeight: '300px',
-                    overflowY: 'auto',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
-                  }}>
-                    {/* Search within sources */}
-                    <input
-                      type="text"
-                      placeholder="Search sources..."
-                      value={sourceSearchTerm}
-                      onChange={(e) => setSourceSearchTerm(e.target.value)}
+                    >
+                      Select All
+                    </button>
+                    <button
+                      onClick={deselectAllCompanies}
                       style={{
-                        width: '100%',
+                        flex: 1,
                         padding: '0.5rem',
-                        marginBottom: '0.75rem',
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: '8px',
+                        background: 'rgba(239, 68, 68, 0.2)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '6px',
                         color: '#fff',
-                        fontSize: '0.875rem',
-                        boxSizing: 'border-box'
+                        fontSize: '0.75rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
                       }}
-                      className="search-input-placeholder"
-                    />
-
-                    {/* Select All / Deselect All */}
-                    <div style={{
-                      display: 'flex',
-                      gap: '0.5rem',
-                      marginBottom: '0.75rem',
-                      paddingBottom: '0.75rem',
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-                    }}>
-                      <button
-                        onClick={selectAllSources}
-                        style={{
-                          flex: 1,
-                          padding: '0.5rem',
-                          background: 'rgba(147, 51, 234, 0.2)',
-                          border: '1px solid rgba(147, 51, 234, 0.3)',
-                          borderRadius: '6px',
-                          color: '#fff',
-                          fontSize: '0.75rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        Select All
-                      </button>
-                      <button
-                        onClick={deselectAllSources}
-                        style={{
-                          flex: 1,
-                          padding: '0.5rem',
-                          background: 'rgba(239, 68, 68, 0.2)',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                          borderRadius: '6px',
-                          color: '#fff',
-                          fontSize: '0.75rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        Deselect All
-                      </button>
-                    </div>
-
-                    {/* Source List */}
-                    {getUniqueSources
-                      .filter(source => source && source.toLowerCase().includes(sourceSearchTerm.toLowerCase()))
-                      .map(source => source && (
-                        <label
-                          key={source}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            padding: '0.5rem',
-                            cursor: 'pointer',
-                            borderRadius: '6px',
-                            transition: 'background 0.2s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent';
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedSources.has(source)}
-                            onChange={() => toggleSource(source)}
-                            style={{
-                              width: '16px',
-                              height: '16px',
-                              accentColor: '#9333ea'
-                            }}
-                          />
-                          <span style={{
-                            color: '#fff',
-                            fontSize: '0.875rem',
-                            flex: 1,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}>
-                            {source}
-                          </span>
-                        </label>
-                      ))
-                    }
+                    >
+                      Deselect All
+                    </button>
                   </div>
-                )}
-              </div>
 
-              {/* Region Filter */}
-              <div style={{ position: 'relative', minWidth: '300px' }} data-filter-dropdown>
-                <button
-                  onClick={() => {
-                    setShowRegionDropdown(!showRegionDropdown);
-                    setShowCompanyDropdown(false);
-                    setShowLocationDropdown(false);
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px',
-                    color: '#fff',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                  }}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Globe style={{ width: '16px', height: '16px' }} />
-                    Regions ( {selectedRegions.size} / 3 )
-                  </span>
-                  <ChevronDown style={{
-                    width: '16px',
-                    height: '16px',
-                    transform: showRegionDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s ease'
-                  }} />
-                </button>
-
-                {showRegionDropdown && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    marginTop: '0.5rem',
-                    background: 'rgba(114, 111, 135, 1)',
-                    backdropFilter: 'blur(16px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px',
-                    padding: '1rem',
-                    zIndex: 1000,
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
-                  }}>
-                    {/* Region List */}
-                    {['Dutch', 'EU', 'Rest_of_World'].map(region => (
+                  {/* Company List */}
+                  {getUniqueCompanies
+                    .filter(company =>
+                      company.toLowerCase().includes(companySearchTerm.toLowerCase())
+                    )
+                    .map(company => (
                       <label
-                        key={region}
+                        key={company}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -1884,8 +1420,8 @@ export default function JobBoard() {
                       >
                         <input
                           type="checkbox"
-                          checked={selectedRegions.has(region)}
-                          onChange={() => toggleRegion(region)}
+                          checked={selectedCompanies.has(company)}
+                          onChange={() => toggleCompany(company)}
                           style={{
                             width: '16px',
                             height: '16px',
@@ -1895,310 +1431,902 @@ export default function JobBoard() {
                         <span style={{
                           color: '#fff',
                           fontSize: '0.875rem',
-                          flex: 1
+                          flex: 1,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
                         }}>
-                          {region === 'Rest_of_World' ? 'Rest of World' : region}
+                          {company}
                         </span>
                       </label>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* LinkedIn Feed Filter */}
-              <div style={{ position: 'relative', minWidth: '200px' }}>
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.75rem 1rem',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px',
-                    color: '#fff',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    opacity: 0.7
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const newState = !linkedinFeedEnabled;
-                    console.log('[LINKEDIN] Toggle clicked, changing from', linkedinFeedEnabled, 'to', newState);
-                    setLinkedinFeedEnabled(newState);
-                    if (user?.id) {
-                      saveLinkedinFeedState(newState);
-                    }
-                  }}
-                >
-
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                    </svg>
-                    LinkedIn Feed
-                    {linkedinFeedEnabled && <CheckCircle style={{ width: '14px', height: '14px', color: '#10b981' }} />}
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            {/* Quick Search Section */}
-            <div style={{
-              padding: '1rem',
-              background: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: '12px',
-              marginBottom: '1rem'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                <h3 style={{
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  color: '#fff',
-                  margin: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  <SearchCheck style={{ width: '18px', height: '18px' }} />
-                  Quick Search
-                </h3>
-                <button
-                  onClick={() => setEditKeywords(!editKeywords)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 1rem',
-                    fontSize: '0.875rem',
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    color: '#fff',
-                    borderRadius: '12px',
-                    border: 'none',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  <Edit2 style={{ width: '16px', height: '16px' }} />
-                  {editKeywords ? 'Done' : 'Edit'}
-                </button>
-              </div>
-              <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.5rem 0 0.5rem 0' }}>
-                {keywords.length === 0 ? 'Press edit to add a quicksearch button' : 'Click to quicksearch jobs'}
-              </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-                {keywords.map((keyword, index) => (
-                  <span
-                    key={index}
-                    onClick={() => !editKeywords && searchJobs(keyword)}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '0.5rem 1rem',
-                      borderRadius: '999px',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      background: editKeywords ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                      color: '#fff',
-                      border: '1px solid rgba(245, 158, 11, 0.4)',
-                      cursor: editKeywords ? 'default' : 'pointer',
-                      transition: 'all 0.2s',
-                      backdropFilter: 'blur(8px)'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!editKeywords) {
-                        e.currentTarget.style.background = 'rgba(245, 158, 11, 0.4)';
-                        e.currentTarget.style.color = '#fff';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!editKeywords) {
-                        e.currentTarget.style.background = 'rgba(245, 158, 11, 0.2)';
-                        e.currentTarget.style.color = '#fff';
-                      }
-                    }}
-                  >
-                    {keyword}
-                    {editKeywords && (
-                      <button
-                        onClick={() => removeKeyword(index)}
-                        style={{
-                          marginLeft: '0.25rem',
-                          background: 'none',
-                          border: 'none',
-                          color: '#fff',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center'
-                        }}
-                      >
-                        <X style={{ width: '12px', height: '12px' }} />
-                      </button>
-                    )}
-                  </span>
-                ))}
-              </div>
-
-              {editKeywords && (
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <input
-                    type="text"
-                    value={newKeyword}
-                    onChange={(e) => setNewKeyword(e.target.value)}
-                    onKeyDown={handleKeywordKeyDown}
-                    placeholder="New search term..."
-                    style={{
-                      flex: 1,
-                      padding: '0.75rem',
-                      border: '1px solid rgba(255, 255, 255, 0.3)',
-                      borderRadius: '8px',
-                      fontSize: '0.875rem',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      color: '#fff',
-                      backdropFilter: 'blur(8px)'
-                    }}
-                    className="search-input-placeholder"
-                  />
-                  <button
-                    onClick={handleKeywordAdd}
-                    style={{
-                      padding: '0.75rem',
-                      background: 'rgba(245, 158, 11, 0.2)',
-                      color: '#fff',
-                      borderRadius: '12px',
-                      border: '1px solid rgba(245, 158, 11, 0.4)',
-                      cursor: 'pointer',
-                      backdropFilter: 'blur(8px)',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    <Plus style={{ width: '16px', height: '16px' }} />
-                  </button>
+                    ))
+                  }
                 </div>
               )}
             </div>
 
-            {/* Search Field */}
-            <div style={{ marginBottom: '1rem' }}>
-              <input
-                placeholder="Type at least 2 characters to search jobs and LinkedIn posts..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+            {/* Location Filter */}
+            <div style={{ position: 'relative', minWidth: '300px' }} data-filter-dropdown>
+              <button
+                onClick={() => {
+                  setShowLocationDropdown(!showLocationDropdown);
+                  setShowCompanyDropdown(false);
+                  setShowRegionDropdown(false);
+                  setShowSourceDropdown(false);
+                }}
                 style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
                   width: '100%',
                   padding: '0.75rem 1rem',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  fontSize: '1rem',
                   background: 'rgba(255, 255, 255, 0.1)',
                   backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '12px',
                   color: '#fff',
-                  boxSizing: 'border-box'
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
                 }}
-                className="search-input-placeholder"
-              />
-            </div>
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <MapPin style={{ width: '16px', height: '16px' }} />
+                  Locations ( {selectedLocations.size} / {getUniqueLocations.length} )
+                </span>
+                <ChevronDown style={{
+                  width: '16px',
+                  height: '16px',
+                  transform: showLocationDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s ease'
+                }} />
+              </button>
 
-            {/* Horizontal Rule */}
-            <hr style={{
-              border: 'none',
-              height: '1px',
-              background: 'rgba(255, 255, 255, 0.2)',
-              margin: '1rem 0'
-            }} />
+              {showLocationDropdown && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: '0.5rem',
+                  background: 'rgba(114, 111, 135, 1)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  zIndex: 1000,
+                  maxHeight: '300px',
+                  overflowY: 'auto',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+                }}>
+                  {/* Search within locations */}
+                  <input
+                    type="text"
+                    placeholder="Search locations..."
+                    value={locationSearchTerm}
+                    onChange={(e) => setLocationSearchTerm(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem',
+                      marginBottom: '0.75rem',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      fontSize: '0.875rem',
+                      boxSizing: 'border-box'
+                    }}
+                    className="search-input-placeholder"
+                  />
 
-            {/* Active Search Pills */}
-            {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" && (
-              <div style={{
-                marginBottom: '1rem',
-                padding: '1rem'
-              }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.8)', marginRight: '0.5rem' }}>
-                    Active search:
-                  </span>
-                  {debouncedSearchTerm.trim().toLowerCase().split(/\s+/).filter(word => word.length > 0).map((word, index) => (
-                    <span
-                      key={index}
+                  {/* Select All / Deselect All */}
+                  <div style={{
+                    display: 'flex',
+                    gap: '0.5rem',
+                    marginBottom: '0.75rem',
+                    paddingBottom: '0.75rem',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                  }}>
+                    <button
+                      onClick={selectAllLocations}
                       style={{
-                        background: 'rgba(16, 185, 129, 0.3)',
-                        color: '#10b981',
-                        padding: '0.25rem 0.75rem',
-                        borderRadius: '12px',
-                        fontSize: '0.85rem',
-                        fontWeight: '600',
-                        border: '1px solid rgba(16, 185, 129, 0.4)',
-                        backdropFilter: 'blur(4px)'
+                        flex: 1,
+                        padding: '0.5rem',
+                        background: 'rgba(16, 185, 129, 0.2)',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '0.75rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
                       }}
                     >
-                      {word}
-                    </span>
+                      Select All
+                    </button>
+                    <button
+                      onClick={deselectAllLocations}
+                      style={{
+                        flex: 1,
+                        padding: '0.5rem',
+                        background: 'rgba(239, 68, 68, 0.2)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '0.75rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      Deselect All
+                    </button>
+                  </div>
+
+                  {/* Location List */}
+                  {getUniqueLocations
+                    .filter(location =>
+                      location.toLowerCase().includes(locationSearchTerm.toLowerCase())
+                    )
+                    .map(location => (
+                      <label
+                        key={location}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          padding: '0.5rem',
+                          cursor: 'pointer',
+                          borderRadius: '6px',
+                          transition: 'background 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedLocations.has(location)}
+                          onChange={() => toggleLocation(location)}
+                          style={{
+                            width: '16px',
+                            height: '16px',
+                            accentColor: '#10b981'
+                          }}
+                        />
+                        <span style={{
+                          color: '#fff',
+                          fontSize: '0.875rem',
+                          flex: 1,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {location}
+                        </span>
+                      </label>
+                    ))
+                  }
+                </div>
+              )}
+            </div>
+
+            {/* Source Filter */}
+            <div style={{ position: 'relative', minWidth: '300px' }} data-filter-dropdown>
+              <button
+                onClick={() => {
+                  setShowSourceDropdown(!showSourceDropdown);
+                  setShowCompanyDropdown(false);
+                  setShowLocationDropdown(false);
+                  setShowRegionDropdown(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Tag style={{ width: '16px', height: '16px' }} />
+                  Sources ( {selectedSources.size} / {getUniqueSources.length} )
+                </span>
+                <ChevronDown style={{
+                  width: '16px',
+                  height: '16px',
+                  transform: showSourceDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s ease'
+                }} />
+              </button>
+
+              {showSourceDropdown && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: '0.5rem',
+                  background: 'rgba(114, 111, 135, 1)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  zIndex: 1000,
+                  maxHeight: '300px',
+                  overflowY: 'auto',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+                }}>
+                  {/* Search within sources */}
+                  <input
+                    type="text"
+                    placeholder="Search sources..."
+                    value={sourceSearchTerm}
+                    onChange={(e) => setSourceSearchTerm(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem',
+                      marginBottom: '0.75rem',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      fontSize: '0.875rem',
+                      boxSizing: 'border-box'
+                    }}
+                    className="search-input-placeholder"
+                  />
+
+                  {/* Select All / Deselect All */}
+                  <div style={{
+                    display: 'flex',
+                    gap: '0.5rem',
+                    marginBottom: '0.75rem',
+                    paddingBottom: '0.75rem',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                  }}>
+                    <button
+                      onClick={selectAllSources}
+                      style={{
+                        flex: 1,
+                        padding: '0.5rem',
+                        background: 'rgba(147, 51, 234, 0.2)',
+                        border: '1px solid rgba(147, 51, 234, 0.3)',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '0.75rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      Select All
+                    </button>
+                    <button
+                      onClick={deselectAllSources}
+                      style={{
+                        flex: 1,
+                        padding: '0.5rem',
+                        background: 'rgba(239, 68, 68, 0.2)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '0.75rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      Deselect All
+                    </button>
+                  </div>
+
+                  {/* Source List */}
+                  {getUniqueSources
+                    .filter(source => source && source.toLowerCase().includes(sourceSearchTerm.toLowerCase()))
+                    .map(source => source && (
+                      <label
+                        key={source}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          padding: '0.5rem',
+                          cursor: 'pointer',
+                          borderRadius: '6px',
+                          transition: 'background 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedSources.has(source)}
+                          onChange={() => toggleSource(source)}
+                          style={{
+                            width: '16px',
+                            height: '16px',
+                            accentColor: '#9333ea'
+                          }}
+                        />
+                        <span style={{
+                          color: '#fff',
+                          fontSize: '0.875rem',
+                          flex: 1,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {source}
+                        </span>
+                      </label>
+                    ))
+                  }
+                </div>
+              )}
+            </div>
+
+            {/* Region Filter */}
+            <div style={{ position: 'relative', minWidth: '300px' }} data-filter-dropdown>
+              <button
+                onClick={() => {
+                  setShowRegionDropdown(!showRegionDropdown);
+                  setShowCompanyDropdown(false);
+                  setShowLocationDropdown(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Globe style={{ width: '16px', height: '16px' }} />
+                  Regions ( {selectedRegions.size} / 3 )
+                </span>
+                <ChevronDown style={{
+                  width: '16px',
+                  height: '16px',
+                  transform: showRegionDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s ease'
+                }} />
+              </button>
+
+              {showRegionDropdown && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: '0.5rem',
+                  background: 'rgba(114, 111, 135, 1)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  zIndex: 1000,
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+                }}>
+                  {/* Region List */}
+                  {['Dutch', 'EU', 'Rest_of_World'].map(region => (
+                    <label
+                      key={region}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.5rem',
+                        cursor: 'pointer',
+                        borderRadius: '6px',
+                        transition: 'background 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedRegions.has(region)}
+                        onChange={() => toggleRegion(region)}
+                        style={{
+                          width: '16px',
+                          height: '16px',
+                          accentColor: '#10b981'
+                        }}
+                      />
+                      <span style={{
+                        color: '#fff',
+                        fontSize: '0.875rem',
+                        flex: 1
+                      }}>
+                        {region === 'Rest_of_World' ? 'Rest of World' : region}
+                      </span>
+                    </label>
                   ))}
                 </div>
+              )}
+            </div>
+
+            {/* LinkedIn Feed Filter */}
+            <div style={{ position: 'relative', minWidth: '200px' }}>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  padding: '0.75rem 1rem',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  opacity: 0.7
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  const newState = !linkedinFeedEnabled;
+                  console.log('[LINKEDIN] Toggle clicked, changing from', linkedinFeedEnabled, 'to', newState);
+                  setLinkedinFeedEnabled(newState);
+                  if (user?.id) {
+                    saveLinkedinFeedState(newState);
+                  }
+                }}
+              >
+
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                  </svg>
+                  LinkedIn Feed
+                  {linkedinFeedEnabled && <CheckCircle style={{ width: '14px', height: '14px', color: '#10b981' }} />}
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* Quick Search Section */}
+          <div style={{
+            padding: '1rem',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '12px',
+            marginBottom: '1rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+              <h3 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                color: '#fff',
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <SearchCheck style={{ width: '18px', height: '18px' }} />
+                Quick Search
+              </h3>
+              <button
+                onClick={() => setEditKeywords(!editKeywords)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.5rem 1rem',
+                  fontSize: '0.875rem',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  color: '#fff',
+                  borderRadius: '12px',
+                  border: 'none',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <Edit2 style={{ width: '16px', height: '16px' }} />
+                {editKeywords ? 'Done' : 'Edit'}
+              </button>
+            </div>
+            <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.5rem 0 0.5rem 0' }}>
+              {keywords.length === 0 ? 'Press edit to add a quicksearch button' : 'Click to quicksearch jobs'}
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+              {keywords.map((keyword, index) => (
+                <span
+                  key={index}
+                  onClick={() => !editKeywords && searchJobs(keyword)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '999px',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    background: editKeywords ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                    color: '#fff',
+                    border: '1px solid rgba(245, 158, 11, 0.4)',
+                    cursor: editKeywords ? 'default' : 'pointer',
+                    transition: 'all 0.2s',
+                    backdropFilter: 'blur(8px)'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!editKeywords) {
+                      e.currentTarget.style.background = 'rgba(245, 158, 11, 0.4)';
+                      e.currentTarget.style.color = '#fff';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!editKeywords) {
+                      e.currentTarget.style.background = 'rgba(245, 158, 11, 0.2)';
+                      e.currentTarget.style.color = '#fff';
+                    }
+                  }}
+                >
+                  {keyword}
+                  {editKeywords && (
+                    <button
+                      onClick={() => removeKeyword(index)}
+                      style={{
+                        marginLeft: '0.25rem',
+                        background: 'none',
+                        border: 'none',
+                        color: '#fff',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <X style={{ width: '12px', height: '12px' }} />
+                    </button>
+                  )}
+                </span>
+              ))}
+            </div>
+
+            {editKeywords && (
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input
+                  type="text"
+                  value={newKeyword}
+                  onChange={(e) => setNewKeyword(e.target.value)}
+                  onKeyDown={handleKeywordKeyDown}
+                  placeholder="New search term..."
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: '#fff',
+                    backdropFilter: 'blur(8px)'
+                  }}
+                  className="search-input-placeholder"
+                />
+                <button
+                  onClick={handleKeywordAdd}
+                  style={{
+                    padding: '0.75rem',
+                    background: 'rgba(245, 158, 11, 0.2)',
+                    color: '#fff',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(245, 158, 11, 0.4)',
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(8px)',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <Plus style={{ width: '16px', height: '16px' }} />
+                </button>
               </div>
             )}
+          </div>
 
-            {/* Freelance Job Cards */}
-            {linkedinFeedEnabled && freelanceJobs.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
-                {freelanceJobs.map((job) => (
+          {/* Search Field */}
+          <div style={{ marginBottom: '1rem' }}>
+            <input
+              placeholder="Type at least 2 characters to search jobs and LinkedIn posts..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.75rem 1rem',
+                borderRadius: '12px',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                fontSize: '1rem',
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(8px)',
+                color: '#fff',
+                boxSizing: 'border-box'
+              }}
+              className="search-input-placeholder"
+            />
+          </div>
+
+          {/* Horizontal Rule */}
+          <hr style={{
+            border: 'none',
+            height: '1px',
+            background: 'rgba(255, 255, 255, 0.2)',
+            margin: '1rem 0'
+          }} />
+
+          {/* Active Search Pills */}
+          {debouncedSearchTerm && debouncedSearchTerm.trim() !== "" && (
+            <div style={{
+              marginBottom: '1rem',
+              padding: '1rem'
+            }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.8)', marginRight: '0.5rem' }}>
+                  Active search:
+                </span>
+                {debouncedSearchTerm.trim().toLowerCase().split(/\s+/).filter(word => word.length > 0).map((word, index) => (
+                  <span
+                    key={index}
+                    style={{
+                      background: 'rgba(16, 185, 129, 0.3)',
+                      color: '#10b981',
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '12px',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      border: '1px solid rgba(16, 185, 129, 0.4)',
+                      backdropFilter: 'blur(4px)'
+                    }}
+                  >
+                    {word}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Freelance Job Cards */}
+          {linkedinFeedEnabled && freelanceJobs.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
+              {freelanceJobs.map((job) => (
+                <div
+                  key={job.id}
+                  onClick={() => {
+                    window.open(job.post_urn, '_blank', 'noopener,noreferrer,scrollbars=yes,resizable=yes');
+                  }}
+                  style={{
+                    position: 'relative',
+                    background: 'rgba(59, 130, 246, 0.2)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(59, 130, 246, 0.4)',
+                    borderRadius: '16px',
+                    padding: '1.5rem',
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 8px 32px rgba(59, 130, 246, 0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  {/* LinkedIn Icon */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '1rem',
+                    right: '1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    fontSize: '0.875rem',
+                    fontWeight: '500'
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                    </svg>
+                    LinkedIn
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <h3
+                          style={{
+                            fontSize: '1.5rem',
+                            fontWeight: '700',
+                            color: '#fff',
+                            margin: 0
+                          }}
+                          dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.post_text.substring(0, 100) + '...', debouncedSearchTerm.split(' ')) }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                        <p
+                          style={{
+                            fontSize: '1.1rem',
+                            color: 'rgba(255, 255, 255, 0.9)',
+                            margin: '0',
+                            fontWeight: '600'
+                          }}
+                          dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.author_name, debouncedSearchTerm.split(' ')) }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                        {job.created_at && (
+                          <span style={{
+                            background: 'rgba(59, 130, 246, 0.3)',
+                            color: '#fff',
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '12px',
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            border: '1px solid rgba(59, 130, 246, 0.5)'
+                          }}>
+                            {new Date(job.created_at).toLocaleDateString('en-GB', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric'
+                            })}
+                          </span>
+                        )}
+                        {job.probability_freelance_vacancy && (
+                          <span style={{
+                            background: 'rgba(16, 185, 129, 0.3)',
+                            color: '#fff',
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '12px',
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            border: '1px solid rgba(16, 185, 129, 0.5)'
+                          }}>
+                            {Math.round(job.probability_freelance_vacancy * 100)}% Match
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ margin: '0 0 1rem 0' }}>
+                    <p
+                      style={{
+                        fontSize: '1rem',
+                        color: 'rgba(255, 255, 255, 0.85)',
+                        lineHeight: '1.6',
+                        margin: '0',
+                        fontFamily: "'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+                        letterSpacing: 'normal',
+                      }}
+                      dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.post_text, debouncedSearchTerm.split(' ')) }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                      style={{
+                        background: 'rgba(59, 130, 246, 0.3)',
+                        color: '#fff',
+                        border: '1px solid rgba(59, 130, 246, 0.5)',
+                        padding: '0.5rem 1rem',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(59, 130, 246, 0.4)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)';
+                      }}
+                    >
+                      Read more
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Job Cards - Only show if search term has 2+ characters */}
+          {debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {groupedJobs.map(({ primaryJob: job, stackedJobs }) => (
+                <div
+                  key={job.UNIQUE_ID}
+                  style={{ position: 'relative', marginBottom: stackedJobs.length > 0 ? `${(stackedJobs.length - 1) * 60 + 80}px` : '0' }}
+                >
+                  {/* Main Job Card */}
                   <div
-                    key={job.id}
                     onClick={() => {
-                      window.open(job.post_urn, '_blank', 'noopener,noreferrer,scrollbars=yes,resizable=yes');
+                      logJobClick(job);
+                      window.open(job.URL, '_blank', 'noopener,noreferrer,scrollbars=yes,resizable=yes');
                     }}
                     style={{
                       position: 'relative',
-                      background: 'rgba(59, 130, 246, 0.2)',
+                      zIndex: 1,
+                      background: 'rgba(255, 255, 255, 0.1)',
                       backdropFilter: 'blur(8px)',
-                      border: '1px solid rgba(59, 130, 246, 0.4)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
                       borderRadius: '16px',
                       padding: '1.5rem',
                       transition: 'all 0.3s ease',
                       cursor: 'pointer'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
                       e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 8px 32px rgba(59, 130, 246, 0.2)';
+                      e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.2)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
                       e.currentTarget.style.transform = 'translateY(0)';
                       e.currentTarget.style.boxShadow = 'none';
                     }}
                   >
-                    {/* LinkedIn Icon */}
-                    <div style={{
-                      position: 'absolute',
-                      top: '1rem',
-                      right: '1rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      fontSize: '0.875rem',
-                      fontWeight: '500'
-                    }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                      </svg>
-                      LinkedIn
-                    </div>
-
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
@@ -2209,8 +2337,52 @@ export default function JobBoard() {
                               color: '#fff',
                               margin: 0
                             }}
-                            dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.post_text.substring(0, 100) + '...', debouncedSearchTerm.split(' ')) }}
+                            dangerouslySetInnerHTML={{ __html: job.displayTitle || highlightSearchTerms(job.Title, debouncedSearchTerm.split(' ')) }}
                           />
+                          {stackedJobs.length > 0 && (
+                            <div style={{
+                              position: 'absolute',
+                              top: '1rem',
+                              right: '1rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              color: 'rgba(255, 255, 255, 0.7)',
+                              fontSize: '0.875rem',
+                              fontWeight: '500'
+                            }}>
+                              <Layers2 style={{ width: '16px', height: '16px' }} />
+                              +{stackedJobs.length}
+                            </div>
+                          )}
+                          {isJobNew(job) && (
+                            <span style={{
+                              backgroundColor: "#10b981",
+                              color: "white",
+                              fontSize: "0.75rem",
+                              fontWeight: "bold",
+                              padding: "2px 8px",
+                              borderRadius: "12px",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                            }}>
+                              New
+                            </span>
+                          )}
+                          {(job.Source === 'allGigs' || job.tags?.includes('allGigs')) && (
+                            <span style={{
+                              backgroundColor: "#4f46e5",
+                              color: "white",
+                              fontSize: "0.75rem",
+                              fontWeight: "bold",
+                              padding: "2px 8px",
+                              borderRadius: "12px",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                            }}>
+                              allGigs
+                            </span>
+                          )}
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
                           <p
@@ -2220,39 +2392,63 @@ export default function JobBoard() {
                               margin: '0',
                               fontWeight: '600'
                             }}
-                            dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.author_name, debouncedSearchTerm.split(' ')) }}
+                            dangerouslySetInnerHTML={{ __html: job.displayCompany || highlightSearchTerms(job.Company, debouncedSearchTerm.split(' ')) }}
                           />
+                          {job.Source && (
+                            <span style={{
+                              background: 'rgba(147, 51, 234, 0.2)',
+                              color: '#fff',
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '12px',
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              border: '1px solid rgba(147, 51, 234, 0.3)'
+                            }}
+                              dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.Source || '', debouncedSearchTerm.split(' ')) }}
+                            />
+                          )}
+
                         </div>
                         <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-                          {job.created_at && (
+                          {job.rate && job.rate.trim() !== '' && (
                             <span style={{
-                              background: 'rgba(59, 130, 246, 0.3)',
+                              background: 'rgba(16, 185, 129, 0.2)',
                               color: '#fff',
                               padding: '0.25rem 0.75rem',
                               borderRadius: '12px',
                               fontSize: '0.875rem',
                               fontWeight: '600',
-                              border: '1px solid rgba(59, 130, 246, 0.5)'
+                              border: '1px solid rgba(16, 185, 129, 0.3)'
                             }}>
-                              {new Date(job.created_at).toLocaleDateString('en-GB', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric'
-                              })}
+                              {job.rate}
                             </span>
                           )}
-                          {job.probability_freelance_vacancy && (
+                          {job.date && job.date.trim() !== '' && (
                             <span style={{
-                              background: 'rgba(16, 185, 129, 0.3)',
+                              background: 'rgba(59, 130, 246, 0.2)',
                               color: '#fff',
                               padding: '0.25rem 0.75rem',
                               borderRadius: '12px',
                               fontSize: '0.875rem',
                               fontWeight: '600',
-                              border: '1px solid rgba(16, 185, 129, 0.5)'
+                              border: '1px solid rgba(59, 130, 246, 0.3)'
                             }}>
-                              {Math.round(job.probability_freelance_vacancy * 100)}% Match
+                              {job.date}
                             </span>
+                          )}
+                          {job.Location && job.Location.trim() !== '' && (
+                            <span
+                              style={{
+                                background: 'rgba(236, 72, 153, 0.2)',
+                                color: '#fff',
+                                padding: '0.25rem 0.75rem',
+                                borderRadius: '12px',
+                                fontSize: '0.875rem',
+                                fontWeight: '600',
+                                border: '1px solid rgba(236, 72, 153, 0.3)'
+                              }}
+                              dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.Location, debouncedSearchTerm.split(' ')) }}
+                            />
                           )}
                         </div>
                       </div>
@@ -2266,480 +2462,275 @@ export default function JobBoard() {
                           margin: '0',
                           fontFamily: "'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
                           letterSpacing: 'normal',
+                          wordSpacing: 'normal'
                         }}
-                        dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.post_text, debouncedSearchTerm.split(' ')) }}
+                        dangerouslySetInnerHTML={{
+                          __html: highlightSearchTerms(
+                            expandedSummaries.has(job.UNIQUE_ID) ? job.Summary : getTruncatedSummary(job.Summary),
+                            debouncedSearchTerm.split(' ')
+                          )
+                        }}
                       />
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <button
-                        style={{
-                          background: 'rgba(59, 130, 246, 0.3)',
-                          color: '#fff',
-                          border: '1px solid rgba(59, 130, 246, 0.5)',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                          fontSize: '0.875rem',
-                          fontWeight: '600',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(59, 130, 246, 0.4)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)';
-                        }}
-                      >
-                        Read more
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Job Cards - Only show if search term has 2+ characters */}
-            {debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {groupedJobs.map(({ primaryJob: job, stackedJobs }) => (
-                  <div
-                    key={job.UNIQUE_ID}
-                    style={{ position: 'relative', marginBottom: stackedJobs.length > 0 ? `${(stackedJobs.length - 1) * 60 + 80}px` : '0' }}
-                  >
-                    {/* Main Job Card */}
-                    <div
-                      onClick={() => {
-                        logJobClick(job);
-                        window.open(job.URL, '_blank', 'noopener,noreferrer,scrollbars=yes,resizable=yes');
-                      }}
-                      style={{
-                        position: 'relative',
-                        zIndex: 1,
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(8px)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: '16px',
-                        padding: '1.5rem',
-                        transition: 'all 0.3s ease',
-                        cursor: 'pointer'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.2)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                            <h3
-                              style={{
-                                fontSize: '1.5rem',
-                                fontWeight: '700',
-                                color: '#fff',
-                                margin: 0
-                              }}
-                              dangerouslySetInnerHTML={{ __html: job.displayTitle || highlightSearchTerms(job.Title, debouncedSearchTerm.split(' ')) }}
-                            />
-                            {stackedJobs.length > 0 && (
-                              <div style={{
-                                position: 'absolute',
-                                top: '1rem',
-                                right: '1rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                color: 'rgba(255, 255, 255, 0.7)',
-                                fontSize: '0.875rem',
-                                fontWeight: '500'
-                              }}>
-                                <Layers2 style={{ width: '16px', height: '16px' }} />
-                                +{stackedJobs.length}
-                              </div>
-                            )}
-                            {isJobNew(job) && (
-                              <span style={{
-                                backgroundColor: "#10b981",
-                                color: "white",
-                                fontSize: "0.75rem",
-                                fontWeight: "bold",
-                                padding: "2px 8px",
-                                borderRadius: "12px",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.5px",
-                              }}>
-                                New
-                              </span>
-                            )}
-                            {(job.Source === 'allGigs' || job.tags?.includes('allGigs')) && (
-                              <span style={{
-                                backgroundColor: "#4f46e5",
-                                color: "white",
-                                fontSize: "0.75rem",
-                                fontWeight: "bold",
-                                padding: "2px 8px",
-                                borderRadius: "12px",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.5px",
-                              }}>
-                                allGigs
-                              </span>
-                            )}
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                            <p
-                              style={{
-                                fontSize: '1.1rem',
-                                color: 'rgba(255, 255, 255, 0.9)',
-                                margin: '0',
-                                fontWeight: '600'
-                              }}
-                              dangerouslySetInnerHTML={{ __html: job.displayCompany || highlightSearchTerms(job.Company, debouncedSearchTerm.split(' ')) }}
-                            />
-                            {job.Source && (
-                              <span style={{
-                                background: 'rgba(147, 51, 234, 0.2)',
-                                color: '#fff',
-                                padding: '0.25rem 0.75rem',
-                                borderRadius: '12px',
-                                fontSize: '0.75rem',
-                                fontWeight: '600',
-                                border: '1px solid rgba(147, 51, 234, 0.3)'
-                              }}
-                                dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.Source || '', debouncedSearchTerm.split(' ')) }}
-                              />
-                            )}
-
-                          </div>
-                          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-                            {job.rate && job.rate.trim() !== '' && (
-                              <span style={{
-                                background: 'rgba(16, 185, 129, 0.2)',
-                                color: '#fff',
-                                padding: '0.25rem 0.75rem',
-                                borderRadius: '12px',
-                                fontSize: '0.875rem',
-                                fontWeight: '600',
-                                border: '1px solid rgba(16, 185, 129, 0.3)'
-                              }}>
-                                {job.rate}
-                              </span>
-                            )}
-                            {job.date && job.date.trim() !== '' && (
-                              <span style={{
-                                background: 'rgba(59, 130, 246, 0.2)',
-                                color: '#fff',
-                                padding: '0.25rem 0.75rem',
-                                borderRadius: '12px',
-                                fontSize: '0.875rem',
-                                fontWeight: '600',
-                                border: '1px solid rgba(59, 130, 246, 0.3)'
-                              }}>
-                                {job.date}
-                              </span>
-                            )}
-                            {job.Location && job.Location.trim() !== '' && (
-                              <span
-                                style={{
-                                  background: 'rgba(236, 72, 153, 0.2)',
-                                  color: '#fff',
-                                  padding: '0.25rem 0.75rem',
-                                  borderRadius: '12px',
-                                  fontSize: '0.875rem',
-                                  fontWeight: '600',
-                                  border: '1px solid rgba(236, 72, 153, 0.3)'
-                                }}
-                                dangerouslySetInnerHTML={{ __html: highlightSearchTerms(job.Location, debouncedSearchTerm.split(' ')) }}
-                              />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ margin: '0 0 1rem 0' }}>
-                        <p
+                      {isSummaryLong(job.Summary) && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent job card click
+                            toggleSummaryExpansion(job.UNIQUE_ID);
+                          }}
                           style={{
-                            fontSize: '1rem',
-                            color: 'rgba(255, 255, 255, 0.85)',
-                            lineHeight: '1.6',
-                            margin: '0',
-                            fontFamily: "'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-                            letterSpacing: 'normal',
-                            wordSpacing: 'normal'
+                            background: 'none',
+                            border: 'none',
+                            color: '#10b981',
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            padding: '0.25rem 0',
+                            marginTop: '0.5rem',
+                            transition: 'color 0.2s ease'
                           }}
-                          dangerouslySetInnerHTML={{
-                            __html: highlightSearchTerms(
-                              expandedSummaries.has(job.UNIQUE_ID) ? job.Summary : getTruncatedSummary(job.Summary),
-                              debouncedSearchTerm.split(' ')
-                            )
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = '#34d399';
                           }}
-                        />
-                        {isSummaryLong(job.Summary) && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation(); // Prevent job card click
-                              toggleSummaryExpansion(job.UNIQUE_ID);
-                            }}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: '#10b981',
-                              fontSize: '0.875rem',
-                              fontWeight: '600',
-                              cursor: 'pointer',
-                              padding: '0.25rem 0',
-                              marginTop: '0.5rem',
-                              transition: 'color 0.2s ease'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.color = '#34d399';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.color = '#10b981';
-                            }}
-                          >
-                            {expandedSummaries.has(job.UNIQUE_ID) ? 'Read less' : 'Read more'}
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Show poster information for allGigs jobs */}
-                      {(job.Source === 'allGigs' || job.tags?.includes('allGigs')) && job.added_by_email && (
-                        <div style={{
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          borderRadius: '12px',
-                          padding: '0.75rem',
-                          marginBottom: '1rem'
-                        }}>
-                          <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.9)' }}>
-                            Contact Information:
-                          </p>
-                          <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>
-                            <strong>Name:</strong> {job.poster_name || 'Not provided'}
-                          </p>
-                          <p style={{ margin: 0, fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>
-                            <strong>Email:</strong> {job.added_by_email}
-                          </p>
-                        </div>
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = '#10b981';
+                          }}
+                        >
+                          {expandedSummaries.has(job.UNIQUE_ID) ? 'Read less' : 'Read more'}
+                        </button>
                       )}
                     </div>
 
-                    {/* Stacked Jobs - After Main Card */}
-                    {stackedJobs.length > 0 && stackedJobs.map((stackedJob, index) => (
-                      <div
-                        key={stackedJob.UNIQUE_ID}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.open(stackedJob.URL, '_blank', 'noopener,noreferrer,scrollbars=yes,resizable=yes');
-                        }}
-                        style={{
-                          position: 'absolute',
-                          top: '100%',
-                          marginTop: `${index * 60}px`,
-                          left: '4px',
-                          right: '4px',
-                          zIndex: 1,
-                          background: `linear-gradient(to bottom, 
+                    {/* Show poster information for allGigs jobs */}
+                    {(job.Source === 'allGigs' || job.tags?.includes('allGigs')) && job.added_by_email && (
+                      <div style={{
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '12px',
+                        padding: '0.75rem',
+                        marginBottom: '1rem'
+                      }}>
+                        <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.9)' }}>
+                          Contact Information:
+                        </p>
+                        <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>
+                          <strong>Name:</strong> {job.poster_name || 'Not provided'}
+                        </p>
+                        <p style={{ margin: 0, fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>
+                          <strong>Email:</strong> {job.added_by_email}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Stacked Jobs - After Main Card */}
+                  {stackedJobs.length > 0 && stackedJobs.map((stackedJob, index) => (
+                    <div
+                      key={stackedJob.UNIQUE_ID}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(stackedJob.URL, '_blank', 'noopener,noreferrer,scrollbars=yes,resizable=yes');
+                      }}
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
+                        marginTop: `${index * 60}px`,
+                        left: '4px',
+                        right: '4px',
+                        zIndex: 1,
+                        background: `linear-gradient(to bottom, 
                           transparent 0%, 
                           transparent 5%, 
                           rgba(255, 255, 255, 0.1) 70%, 
                           rgba(255, 255, 255, 0.15) 100%)`,
-                          borderLeft: '1px solid transparent',
-                          borderRight: '1px solid transparent',
-                          borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-                          borderRadius: '0 0 16px 16px',
-                          padding: '1rem 1.25rem 0rem 1.25rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          minHeight: 'auto',
-                          overflow: 'visible'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = `linear-gradient(to bottom, 
+                        borderLeft: '1px solid transparent',
+                        borderRight: '1px solid transparent',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '0 0 16px 16px',
+                        padding: '1rem 1.25rem 0rem 1.25rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        minHeight: 'auto',
+                        overflow: 'visible'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = `linear-gradient(to bottom, 
                           rgba(255, 255, 255, 0.05) 0%, 
                           rgba(255, 255, 255, 0.08) 10%, 
                           rgba(255, 255, 255, 0.15) 30%, 
                           rgba(255, 255, 255, 0.2) 100%)`;
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                          e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.2)';
-                          e.currentTarget.style.zIndex = '10';
-                          e.currentTarget.style.borderBottom = '1px solid rgba(255, 255, 255, 0.3)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = `linear-gradient(to bottom, 
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.2)';
+                        e.currentTarget.style.zIndex = '10';
+                        e.currentTarget.style.borderBottom = '1px solid rgba(255, 255, 255, 0.3)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = `linear-gradient(to bottom, 
                           transparent 0%, 
                           transparent 5%, 
                           rgba(255, 255, 255, 0.1) 50%, 
                           rgba(255, 255, 255, 0.15) 100%)`;
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = 'none';
-                          e.currentTarget.style.zIndex = '1';
-                          e.currentTarget.style.borderBottom = '1px solid rgba(255, 255, 255, 0.2)';
-                        }}
-                      >
-                        {/* Duplicate indicator */}
-                        <div style={{
-                          position: 'absolute',
-                          top: '1rem',
-                          right: '1rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          color: 'rgba(255, 255, 255, 0.6)',
-                          fontSize: '0.75rem',
-                          fontWeight: '500'
-                        }}>
-                          <Layers2 style={{ width: '14px', height: '14px' }} />
-                          Possibly a duplicate
-                        </div>
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                        e.currentTarget.style.zIndex = '1';
+                        e.currentTarget.style.borderBottom = '1px solid rgba(255, 255, 255, 0.2)';
+                      }}
+                    >
+                      {/* Duplicate indicator */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '1rem',
+                        right: '1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        fontSize: '0.75rem',
+                        fontWeight: '500'
+                      }}>
+                        <Layers2 style={{ width: '14px', height: '14px' }} />
+                        Possibly a duplicate
+                      </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                          <h4 style={{
-                            fontSize: '0.9rem',
-                            fontWeight: '600',
-                            color: '#fff',
-                            margin: 0,
-                            flex: 1,
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <h4 style={{
+                          fontSize: '0.9rem',
+                          fontWeight: '600',
+                          color: '#fff',
+                          margin: 0,
+                          flex: 1,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}
+                          dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Title, debouncedSearchTerm.split(' ')) }}
+                        />
+                        {isJobNew(stackedJob) && (
+                          <span style={{
+                            backgroundColor: "#10b981",
+                            color: "white",
+                            fontSize: "0.6rem",
+                            fontWeight: "bold",
+                            padding: "1px 4px",
+                            borderRadius: "6px",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px",
+                            marginLeft: '0.5rem'
+                          }}>
+                            New
+                          </span>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <p style={{
+                            fontSize: '0.8rem',
+                            color: 'rgba(255, 255, 255, 0.8)',
+                            margin: '0',
+                            fontWeight: '500',
                             whiteSpace: 'nowrap',
                             overflow: 'hidden',
-                            textOverflow: 'ellipsis'
+                            textOverflow: 'ellipsis',
+                            minWidth: 'fit-content'
                           }}
-                            dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Title, debouncedSearchTerm.split(' ')) }}
+                            dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Company, debouncedSearchTerm.split(' ')) }}
                           />
-                          {isJobNew(stackedJob) && (
+                          {stackedJob.Source && (
                             <span style={{
-                              backgroundColor: "#10b981",
-                              color: "white",
-                              fontSize: "0.6rem",
-                              fontWeight: "bold",
-                              padding: "1px 4px",
-                              borderRadius: "6px",
-                              textTransform: "uppercase",
-                              letterSpacing: "0.5px",
-                              marginLeft: '0.5rem'
+                              background: 'rgba(147, 51, 234, 0.2)',
+                              color: '#fff',
+                              padding: '0.15rem 0.4rem',
+                              borderRadius: '6px',
+                              fontSize: '0.6rem',
+                              fontWeight: '600',
+                              border: '1px solid rgba(147, 51, 234, 0.3)'
                             }}>
-                              New
+                              {stackedJob.Source}
                             </span>
                           )}
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <p style={{
-                              fontSize: '0.8rem',
-                              color: 'rgba(255, 255, 255, 0.8)',
-                              margin: '0',
-                              fontWeight: '500',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              minWidth: 'fit-content'
+                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                          {stackedJob.rate && stackedJob.rate.trim() !== '' && isDifferentFromPrimary(job.rate, stackedJob.rate) && (
+                            <span style={{
+                              background: 'rgba(16, 185, 129, 0.2)',
+                              color: '#fff',
+                              padding: '0.15rem 0.4rem',
+                              borderRadius: '6px',
+                              fontSize: '0.7rem',
+                              fontWeight: '600',
+                              border: '1px solid rgba(16, 185, 129, 0.3)'
+                            }}>
+                              {stackedJob.rate}
+                            </span>
+                          )}
+
+                          {stackedJob.Location && stackedJob.Location.trim() !== '' && isDifferentFromPrimary(job.Location, stackedJob.Location) && (
+                            <span style={{
+                              background: 'rgba(236, 72, 153, 0.2)',
+                              color: '#fff',
+                              padding: '0.15rem 0.4rem',
+                              borderRadius: '6px',
+                              fontSize: '0.7rem',
+                              fontWeight: '600',
+                              border: '1px solid rgba(236, 72, 153, 0.3)'
                             }}
-                              dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Company, debouncedSearchTerm.split(' ')) }}
+                              dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Location, debouncedSearchTerm.split(' ')) }}
                             />
-                            {stackedJob.Source && (
-                              <span style={{
-                                background: 'rgba(147, 51, 234, 0.2)',
-                                color: '#fff',
-                                padding: '0.15rem 0.4rem',
-                                borderRadius: '6px',
-                                fontSize: '0.6rem',
-                                fontWeight: '600',
-                                border: '1px solid rgba(147, 51, 234, 0.3)'
-                              }}>
-                                {stackedJob.Source}
-                              </span>
-                            )}
-                          </div>
+                          )}
 
-                          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                            {stackedJob.rate && stackedJob.rate.trim() !== '' && isDifferentFromPrimary(job.rate, stackedJob.rate) && (
-                              <span style={{
-                                background: 'rgba(16, 185, 129, 0.2)',
-                                color: '#fff',
-                                padding: '0.15rem 0.4rem',
-                                borderRadius: '6px',
-                                fontSize: '0.7rem',
-                                fontWeight: '600',
-                                border: '1px solid rgba(16, 185, 129, 0.3)'
-                              }}>
-                                {stackedJob.rate}
-                              </span>
-                            )}
-
-                            {stackedJob.Location && stackedJob.Location.trim() !== '' && isDifferentFromPrimary(job.Location, stackedJob.Location) && (
-                              <span style={{
-                                background: 'rgba(236, 72, 153, 0.2)',
-                                color: '#fff',
-                                padding: '0.15rem 0.4rem',
-                                borderRadius: '6px',
-                                fontSize: '0.7rem',
-                                fontWeight: '600',
-                                border: '1px solid rgba(236, 72, 153, 0.3)'
-                              }}
-                                dangerouslySetInnerHTML={{ __html: highlightSearchTerms(stackedJob.Location, debouncedSearchTerm.split(' ')) }}
-                              />
-                            )}
-
-                            {stackedJob.date && stackedJob.date.trim() !== '' && (
-                              <span style={{
-                                background: 'rgba(59, 130, 246, 0.2)',
-                                color: '#fff',
-                                padding: '0.15rem 0.4rem',
-                                borderRadius: '6px',
-                                fontSize: '0.7rem',
-                                fontWeight: '600',
-                                border: '1px solid rgba(59, 130, 246, 0.3)'
-                              }}>
-                                {stackedJob.date}
-                              </span>
-                            )}
-                          </div>
+                          {stackedJob.date && stackedJob.date.trim() !== '' && (
+                            <span style={{
+                              background: 'rgba(59, 130, 246, 0.2)',
+                              color: '#fff',
+                              padding: '0.15rem 0.4rem',
+                              borderRadius: '6px',
+                              fontSize: '0.7rem',
+                              fontWeight: '600',
+                              border: '1px solid rgba(59, 130, 246, 0.3)'
+                            }}>
+                              {stackedJob.date}
+                            </span>
+                          )}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
 
-            {/* Pagination - Only show if jobs are visible */}
-            {debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2 && getPageNumbers().length > 1 && (
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                marginTop: '2rem',
-                flexWrap: 'wrap'
-              }}>
-                {getPageNumbers().map((pageNum) => (
-                  <button
-                    key={pageNum}
-                    onClick={() => setPage(pageNum)}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      background: page === pageNum ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)',
-                      border: page === pageNum ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)',
-                      borderRadius: '8px',
-                      color: '#fff',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      backdropFilter: 'blur(8px)',
-                      fontWeight: page === pageNum ? '600' : '400'
-                    }}
-                  >
-                    {pageNum + 1}
-                  </button>
-                ))}
-              </div>
-            )
-            }
-          </div>
+          {/* Pagination - Only show if jobs are visible */}
+          {debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2 && getPageNumbers().length > 1 && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              marginTop: '2rem',
+              flexWrap: 'wrap'
+            }}>
+              {getPageNumbers().map((pageNum) => (
+                <button
+                  key={pageNum}
+                  onClick={() => setPage(pageNum)}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: page === pageNum ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+                    border: page === pageNum ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    backdropFilter: 'blur(8px)',
+                    fontWeight: page === pageNum ? '600' : '400'
+                  }}
+                >
+                  {pageNum + 1}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Add Job Form Modal */}
@@ -2788,44 +2779,3 @@ export default function JobBoard() {
     </>
   );
 }
-
-// function AvailableToRecruitersToggle() {
-//   const [available, setAvailable] = useState(true);
-//   return (
-//     <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12, marginTop: 8 }}>
-//       <label style={{ minWidth: 140, fontWeight: 600, color: '#374151', fontSize: '0.98rem', marginRight: 12 }}>
-//         Available to Recruiters
-//       </label>
-//       <span style={{ marginRight: 8, color: available ? '#0ccf83' : '#aaa', fontWeight: available ? 700 : 400 }}>Yes</span>
-//       <div
-//         onClick={() => setAvailable(a => !a)}
-//         style={{
-//           width: 44,
-//           height: 24,
-//           borderRadius: 12,
-//           background: available ? '#0ccf83' : '#ccc',
-//           cursor: 'pointer',
-//           position: 'relative',
-//           margin: '0 8px',
-//           transition: 'background 0.2s',
-//           display: 'inline-block',
-//         }}
-//         aria-label="Toggle Available to Recruiters"
-//       >
-//         <div
-//           style={{
-//             width: 20,
-//             height: 20,
-//             borderRadius: '50%',
-//             background: '#fff',
-//             position: 'absolute',
-//             top: 2,
-//             left: available ? 22 : 2,
-//             boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
-//             transition: 'left 0.2s',
-//           }}
-//         />
-//       </div>
-//     </div>
-//   );
-// }

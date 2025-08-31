@@ -1045,6 +1045,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         fontSize: '2rem',
                         fontWeight: '700',
                         margin: '0 0 0.5rem 0',
+                        marginLeft: '70px',
                         color: '#fff',
                         display: 'flex',
                         alignItems: 'center',
@@ -1053,7 +1054,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         <Target style={{ width: '32px', height: '32px' }} />
                         allGigs CRM
                     </h1>
-                    <p style={{ margin: 0, color: 'rgba(255, 255, 255, 0.7)' }}>
+                    <p style={{ margin: 0, marginLeft: '70px', color: 'rgba(255, 255, 255, 0.7)' }}>
                         Manage your job applications through each stage
                     </p>
                 </div>
