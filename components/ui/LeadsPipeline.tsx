@@ -540,102 +540,56 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     // FUTURE FEATURES DATABASE FUNCTIONS
     // ==========================================
     const loadFutureFeatures = useCallback(async () => {
-        if (!user?.id) {
-            console.log('[FUTURE FEATURES] No user ID, skipping load');
-            return;
-        }
+        if (!user?.id) return;
 
-        console.log('[FUTURE FEATURES] Loading features for user:', user.id);
+        console.log('Loading future features for user:', user.id);
 
         try {
-            // First try to get all records for this user
             const { data, error } = await supabase
                 .from('future_features')
                 .select('*')
-                .eq('user_id', user.id);
+                .eq('user_id', user.id)
+                .single();
 
-            if (error) {
-                console.error('[FUTURE FEATURES] Error loading:', error);
-                return;
-            }
+            console.log('Database response:', { data, error });
 
-            if (data && data.length > 0) {
-                // Take the first record (should be only one per user)
-                const userFeatures = data[0];
-                console.log('[FUTURE FEATURES] Loaded data from database:', userFeatures);
+            if (error && error.code !== 'PGRST116') {
+                console.error('Error loading future features:', error);
+            } else if (data) {
+                console.log('Setting future features:', data);
                 setFutureFeatures({
-                    marketing: userFeatures.marketing || false,
-                    tooling: userFeatures.tooling || false,
-                    agent: userFeatures.agent || false,
-                    interview_optimisation: userFeatures.interview_optimisation || false,
-                    value_proposition: userFeatures.value_proposition || false
+                    marketing: data.marketing ?? false,
+                    tooling: data.tooling ?? false,
+                    agent: data.agent ?? false,
+                    interview_optimisation: data.interview_optimisation ?? false,
+                    value_proposition: data.value_proposition ?? false
                 });
             } else {
-                console.log('[FUTURE FEATURES] No data found for user, using defaults');
+                console.log('No data found, using defaults');
             }
-        } catch (err) {
-            console.error('[FUTURE FEATURES] Error loading future features:', err);
+        } catch (error) {
+            console.error('Error loading future features:', error);
         }
     }, [user?.id]);
 
     const saveFutureFeatures = useCallback(async (features: any) => {
-        if (!user?.id) {
-            console.log('[FUTURE FEATURES] No user ID, skipping save');
-            return;
-        }
+        if (!user?.id) return;
 
-        console.log('[FUTURE FEATURES] Saving features for user:', user.id, features);
+        console.log('Saving future features:', features);
 
         try {
-            // First check if a record already exists for this user
-            const { data: existingData, error: checkError } = await supabase
+            const { data, error } = await supabase
                 .from('future_features')
-                .select('features_id')
-                .eq('user_id', user.id)
-                .limit(1);
+                .upsert({
+                    user_id: user.id,
+                    ...features
+                });
 
-            if (checkError) {
-                console.error('[FUTURE FEATURES] Error checking existing record:', checkError);
-                throw checkError;
-            }
+            console.log('Save response:', { data, error });
 
-            let result: any;
-            if (existingData && existingData.length > 0) {
-                // Update existing record
-                console.log('[FUTURE FEATURES] Updating existing record:', existingData[0]?.features_id);
-                result = await supabase
-                    .from('future_features')
-                    .update({
-                        marketing: features.marketing,
-                        tooling: features.tooling,
-                        agent: features.agent,
-                        interview_optimisation: features.interview_optimisation,
-                        value_proposition: features.value_proposition
-                    })
-                    .eq('features_id', existingData[0]?.features_id);
-            } else {
-                // Create new record
-                console.log('[FUTURE FEATURES] Creating new record');
-                result = await supabase
-                    .from('future_features')
-                    .insert({
-                        user_id: user.id,
-                        marketing: features.marketing,
-                        tooling: features.tooling,
-                        agent: features.agent,
-                        interview_optimisation: features.interview_optimisation,
-                        value_proposition: features.value_proposition
-                    });
-            }
-
-            if (result?.error) {
-                console.error('[FUTURE FEATURES] Error saving:', result.error);
-                throw result.error;
-            }
-
-            console.log('[FUTURE FEATURES] Successfully saved features:', result?.data);
-        } catch (err) {
-            console.error('[FUTURE FEATURES] Error saving future features:', err);
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error saving future features:', error);
         }
     }, [user?.id]);
 
@@ -643,22 +597,24 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     // USE EFFECT: LOAD FUTURE FEATURES
     // ==========================================
     useEffect(() => {
-        loadFutureFeatures();
-    }, [loadFutureFeatures]);
+        console.log('useEffect triggered, user:', user?.id);
+        if (user?.id) {
+            loadFutureFeatures();
+        }
+    }, [user?.id, loadFutureFeatures]);
 
     const handleFeatureToggle = async (feature: string) => {
-        console.log('[FUTURE FEATURES] Toggle clicked for feature:', feature);
-        console.log('[FUTURE FEATURES] Current state:', futureFeatures);
+        console.log('Toggle clicked for feature:', feature);
+        console.log('Current state:', futureFeatures);
 
         const newFeatures = { ...futureFeatures, [feature]: !futureFeatures[feature as keyof typeof futureFeatures] };
-        console.log('[FUTURE FEATURES] New state:', newFeatures);
+        console.log('New state:', newFeatures);
 
         setFutureFeatures(newFeatures);
         await saveFutureFeatures(newFeatures);
 
         // Show popup for new feature
         if (newFeatures[feature as keyof typeof futureFeatures]) {
-            console.log('[FUTURE FEATURES] Showing popup for feature:', feature);
             setSelectedFeature(feature);
             setShowFeaturePopup(true);
         }
@@ -1073,22 +1029,22 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                             alignItems: 'center',
                             gap: '0.5rem',
                             padding: '0.75rem 1rem',
-                            background: futureFeatures.marketing ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.1)',
-                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                            background: futureFeatures.marketing ? 'rgba(147, 51, 234, 0.2)' : 'rgba(147, 51, 234, 0.1)',
+                            border: '1px solid rgba(147, 51, 234, 0.3)',
                             borderRadius: '8px',
-                            color: '#10b981',
+                            color: '#9333ea',
                             cursor: 'pointer',
                             fontSize: '0.875rem',
                             transition: 'all 0.2s ease'
                         }}
                         onMouseEnter={(e) => {
                             if (!futureFeatures.marketing) {
-                                e.currentTarget.style.background = 'rgba(16, 185, 129, 0.2)';
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.2)';
                             }
                         }}
                         onMouseLeave={(e) => {
                             if (!futureFeatures.marketing) {
-                                e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)';
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.1)';
                             }
                         }}
                     >
@@ -1104,22 +1060,22 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                             alignItems: 'center',
                             gap: '0.5rem',
                             padding: '0.75rem 1rem',
-                            background: futureFeatures.tooling ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)',
-                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            background: futureFeatures.tooling ? 'rgba(147, 51, 234, 0.2)' : 'rgba(147, 51, 234, 0.1)',
+                            border: '1px solid rgba(147, 51, 234, 0.3)',
                             borderRadius: '8px',
-                            color: '#3b82f6',
+                            color: '#9333ea',
                             cursor: 'pointer',
                             fontSize: '0.875rem',
                             transition: 'all 0.2s ease'
                         }}
                         onMouseEnter={(e) => {
                             if (!futureFeatures.tooling) {
-                                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.2)';
                             }
                         }}
                         onMouseLeave={(e) => {
                             if (!futureFeatures.tooling) {
-                                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)';
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.1)';
                             }
                         }}
                     >
@@ -1166,29 +1122,29 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                             alignItems: 'center',
                             gap: '0.5rem',
                             padding: '0.75rem 1rem',
-                            background: futureFeatures.interview_optimisation ? 'rgba(236, 72, 153, 0.2)' : 'rgba(236, 72, 153, 0.1)',
-                            border: '1px solid rgba(236, 72, 153, 0.3)',
+                            background: futureFeatures.interview_optimisation ? 'rgba(147, 51, 234, 0.2)' : 'rgba(147, 51, 234, 0.1)',
+                            border: '1px solid rgba(147, 51, 234, 0.3)',
                             borderRadius: '8px',
-                            color: '#ec4899',
+                            color: '#9333ea',
                             cursor: 'pointer',
                             fontSize: '0.875rem',
                             transition: 'all 0.2s ease'
                         }}
                         onMouseEnter={(e) => {
                             if (!futureFeatures.interview_optimisation) {
-                                e.currentTarget.style.background = 'rgba(236, 72, 153, 0.2)';
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.2)';
                             }
                         }}
                         onMouseLeave={(e) => {
                             if (!futureFeatures.interview_optimisation) {
-                                e.currentTarget.style.background = 'rgba(236, 72, 153, 0.1)';
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.1)';
                             }
                         }}
                     >
                         <Brain style={{ width: '16px', height: '16px' }} />
                         Interview Prep
                         <Lock style={{ width: '14px', height: '14px' }} />
-                        {futureFeatures.interview_optimisation && <CheckCircle style={{ width: '14px', height: '14px' }} />}
+                        {futureFeatures.interview_optimisation && <CheckCircle style={{ width: '14px', height: '16px' }} />}
                     </button>
                     <button
                         onClick={() => handleFeatureToggle('value_proposition')}
@@ -1197,22 +1153,22 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                             alignItems: 'center',
                             gap: '0.5rem',
                             padding: '0.75rem 1rem',
-                            background: futureFeatures.value_proposition ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.1)',
-                            border: '1px solid rgba(245, 158, 11, 0.3)',
+                            background: futureFeatures.value_proposition ? 'rgba(147, 51, 234, 0.2)' : 'rgba(147, 51, 234, 0.1)',
+                            border: '1px solid rgba(147, 51, 234, 0.3)',
                             borderRadius: '8px',
-                            color: '#f59e0b',
+                            color: '#9333ea',
                             cursor: 'pointer',
                             fontSize: '0.875rem',
                             transition: 'all 0.2s ease'
                         }}
                         onMouseEnter={(e) => {
                             if (!futureFeatures.value_proposition) {
-                                e.currentTarget.style.background = 'rgba(245, 158, 11, 0.2)';
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.2)';
                             }
                         }}
                         onMouseLeave={(e) => {
                             if (!futureFeatures.value_proposition) {
-                                e.currentTarget.style.background = 'rgba(245, 158, 11, 0.1)';
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.1)';
                             }
                         }}
                     >

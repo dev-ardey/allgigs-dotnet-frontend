@@ -322,8 +322,8 @@ const QualifiedLeadsSectionOriginal: React.FC<QualifiedLeadsSectionProps> = ({
           {/* CRM Features (Locked) */}
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             {[
-              { icon: Mail, label: 'Marketing', color: 'rgba(16, 185, 129, 0.3)', borderColor: 'rgba(16, 185, 129, 0.4)' },
-              { icon: Zap, label: 'Tooling', color: 'rgba(59, 130, 246, 0.3)', borderColor: 'rgba(59, 130, 246, 0.4)' },
+              { icon: Mail, label: 'Marketing', color: 'rgba(147, 51, 234, 0.3)', borderColor: 'rgba(147, 51, 234, 0.4)' },
+              { icon: Zap, label: 'Tooling', color: 'rgba(147, 51, 234, 0.3)', borderColor: 'rgba(147, 51, 234, 0.4)' },
               { icon: Sparkles, label: 'AI Agent', color: 'rgba(147, 51, 234, 0.3)', borderColor: 'rgba(147, 51, 234, 0.4)' }
             ].map((feature, index) => (
               <div key={index} style={{ position: 'relative' }}>

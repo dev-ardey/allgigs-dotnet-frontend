@@ -685,6 +685,8 @@ export default function JobBoard() {
     threshold: 0.36, // Reduced fuzziness by 10%
   }), [allJobs]);
 
+  console.log(fuse, 'fuse')
+
   // Memoize filtered jobs to avoid expensive filtering on every render
   const filteredJobs = useMemo(() => {
     let filtered = allJobs;
