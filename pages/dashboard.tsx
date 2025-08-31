@@ -5,10 +5,10 @@ import { supabase } from '../SupabaseClient';
 // import { useRouter } from 'next/router';
 import AddJobForm from '../components/ui/add-job-form';
 import GlobalNav from '../components/ui/GlobalNav';
-import LoginForm from '../components/ui/login';
 import CompleteProfileForm from '../components/ui/CompleteProfileForm';
 import { useProfileCheck } from '../components/ui/useProfileCheck';
 import LeadsPipeline from '../components/ui/LeadsPipeline';
+import { useAuth } from '../components/ui/AuthProvider';
 
 // Qualified Leads Interfaces en Types
 import {
@@ -838,7 +838,7 @@ export default function Dashboard() {
   const [loadingRecentlyClicked, setLoadingRecentlyClicked] = useState(false);
   console.log(loadingRecentlyClicked, "loadingRecentlyClicked");
   console.log(showRecentlyClicked, "showRecentlyClicked - build fix");
-  const [user, setUser] = useState<any>(null);
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   // const router = useRouter();
   // const searchJobs = (keyword: string) => {
@@ -1234,20 +1234,7 @@ export default function Dashboard() {
 
 
 
-  useEffect(() => {
-    // Check auth state on mount
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      setLoading(false);
-    });
-    // Listen for login/logout
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      const user = session?.user ?? null;
-      setUser(user);
-      setLoading(false);
-    });
-    return () => { listener?.subscription.unsubscribe(); };
-  }, []);
+  // Auth state is now handled by AuthProvider
 
   useEffect(() => {
     if (!user) return;
@@ -1429,13 +1416,7 @@ export default function Dashboard() {
   console.log(handleLeadStatusChange, "handleLeadStatusChange - build fix");
   console.log(handleLeadLogClick, "handleLeadLogClick - build fix");
   // Authentication checks - exactly like leadSearch.tsx
-  if (!user) {
-    return (
-      <div>
-        <LoginForm />
-      </div>
-    );
-  }
+  // User auth is handled by AuthProvider, so user should always be available here
 
   if (profileLoading || loading) {
     return (

@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Edit2, Save, X, Users, DollarSign, Bell, FileText, Upload, Trash2, LogOut } from 'lucide-react';
 import { supabase } from '../SupabaseClient';
 import GlobalNav from '../components/ui/GlobalNav';
-import LoginForm from '../components/ui/login';
 import CompleteProfileForm from '../components/ui/CompleteProfileForm';
 import { useProfileCheck } from '../components/ui/useProfileCheck';
+import { useAuth } from '../components/ui/AuthProvider';
 
 // Profile Interface (from dashboard)
 interface Profile {
@@ -41,7 +41,7 @@ interface Document {
 
 export default function Profile() {
   // State variables (from dashboard)
-  const [user, setUser] = useState<any>(null);
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   console.log(user)
   const [isAvailable, setIsAvailable] = useState(true);
@@ -225,21 +225,7 @@ export default function Profile() {
   // Add profile check
   const { needsProfile, loading: profileLoading } = useProfileCheck(user);
 
-  // Auth check (from dashboard) - Updated to match leadSearch/dashboard
-  useEffect(() => {
-    // Check auth state on mount
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      setLoading(false);
-    });
-    // Listen for login/logout
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      const user = session?.user ?? null;
-      setUser(user);
-      setLoading(false);
-    });
-    return () => { listener?.subscription.unsubscribe(); };
-  }, []);
+  // Auth state is now handled by AuthProvider
 
   // Fetch profile function (from dashboard)
   useEffect(() => {
@@ -426,17 +412,10 @@ export default function Profile() {
     if (!confirmed) return;
 
     await supabase.auth.signOut();
-    setUser(null);
+    // AuthProvider will handle the user state change
   };
 
-  // Authentication checks - exactly like leadSearch.tsx and dashboard.tsx
-  if (!user) {
-    return (
-      <div>
-        <LoginForm />
-      </div>
-    );
-  }
+  // User auth is handled by AuthProvider, so user should always be available here
 
   if (profileLoading || loading) {
     return (

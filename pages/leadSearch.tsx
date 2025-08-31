@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useMemo, useRef } from "react"
 import { supabase } from "../SupabaseClient"
-import LoginForm from "../components/ui/login";
 import AddJobForm from "../components/ui/add-job-form";
 import Fuse from "fuse.js";
 // import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -12,6 +11,7 @@ import CompleteProfileForm from "../components/ui/CompleteProfileForm";
 import { useProfileCheck } from "../components/ui/useProfileCheck";
 import { useRouter } from "next/router";
 import GlobalNav from "../components/ui/GlobalNav";
+import { useAuth } from "../components/ui/AuthProvider";
 import { Search, SearchCheck, Edit2, Plus, X, Building2, MapPin, Layers2, ChevronDown, Globe, CheckCircle, Tag } from "lucide-react";
 
 
@@ -63,7 +63,7 @@ export default function JobBoard() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   // Removed searchPills and disregardedPills state variables
-  const [user, setUser] = useState<any>(null);
+  const { user } = useAuth();
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   // Removed selectedIndustry and excludedTerms state variables
@@ -357,18 +357,7 @@ export default function JobBoard() {
   // Function to check if user has permission to add jobs
   const hasAddJobPermission = (user: any): boolean => !!user && !!user.id;
 
-  useEffect(() => {
-    // Check auth state on mount
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-    });
-    // Listen for login/logout
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      const user = session?.user ?? null;
-      setUser(user);
-    });
-    return () => { listener?.subscription.unsubscribe(); };
-  }, []);
+  // Auth state is now handled by AuthProvider
 
   // Function to refresh jobs list
   // const refreshJobs = async () => {
@@ -1087,13 +1076,7 @@ export default function JobBoard() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  if (!user) {
-    return (
-      <div>
-        <LoginForm />
-      </div>
-    );
-  }
+  // User auth is handled by AuthProvider, so user should always be available here
 
   if (profileLoading || loading)
     return (

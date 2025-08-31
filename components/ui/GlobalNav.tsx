@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import { Menu, X, Home, User, Search } from 'lucide-react';
+import { useAuth } from './AuthProvider';
 
 interface GlobalNavProps {
     currentPage?: string;
@@ -8,10 +9,18 @@ interface GlobalNavProps {
 
 export default function GlobalNav({ currentPage = 'dashboard' }: GlobalNavProps) {
     const [menuOpen, setMenuOpen] = useState(false);
+    const { user } = useAuth();
     const router = useRouter();
 
     const navigateTo = (page: string) => {
         setMenuOpen(false);
+
+        // User should always be available here due to AuthProvider
+        // but adding safety check
+        if (!user) {
+            return;
+        }
+
         if (page === 'dashboard') {
             router.push('/dashboard');
         } else if (page === 'profile') {
