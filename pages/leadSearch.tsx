@@ -106,6 +106,8 @@ export default function JobBoard() {
   const [locationSearchTerm, setLocationSearchTerm] = useState('');
   const [sourceSearchTerm, setSourceSearchTerm] = useState('');
   const [linkedinFeedEnabled, setLinkedinFeedEnabled] = useState(false);
+  const [filtersChanged, setFiltersChanged] = useState(false);
+  const [initialFiltersSet, setInitialFiltersSet] = useState(false);
   // const paginatedJobs = filteredJobs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   // const paginationButtonStyle: React.CSSProperties = {
   //   padding: "10px 16px",
@@ -444,8 +446,13 @@ export default function JobBoard() {
 
       // Initialize regions with Dutch and EU selected, Rest_of_World deselected
       setSelectedRegions(new Set(['Dutch', 'EU']));
+
+      // Mark initial filters as set
+      setInitialFiltersSet(true);
     }
   }, [allJobs]);
+
+
 
   // Filter functions
   const getUniqueCompanies = useMemo(() => {
@@ -459,6 +466,25 @@ export default function JobBoard() {
   const getUniqueSources = useMemo(() => {
     return Array.from(new Set(allJobs.map(job => job.Source).filter(source => source && typeof source === 'string' && source.trim() !== '') as string[])).sort();
   }, [allJobs]);
+
+  // Detect when filters have changed from initial state
+  useEffect(() => {
+    if (!initialFiltersSet) return;
+
+    const initialCompanies = getUniqueCompanies;
+    const initialLocations = getUniqueLocations;
+    const initialSources = getUniqueSources;
+    const initialRegions = new Set(['Dutch', 'EU']);
+
+    const hasChanges =
+      selectedCompanies.size !== initialCompanies.length ||
+      selectedLocations.size !== initialLocations.length ||
+      selectedSources.size !== initialSources.length ||
+      selectedRegions.size !== initialRegions.size ||
+      !Array.from(selectedRegions).every(region => initialRegions.has(region));
+
+    setFiltersChanged(hasChanges);
+  }, [selectedCompanies, selectedLocations, selectedSources, selectedRegions, initialFiltersSet, getUniqueCompanies, getUniqueLocations, getUniqueSources]);
 
   const toggleCompany = (company: string) => {
     const newSelected = new Set(selectedCompanies);
@@ -524,6 +550,30 @@ export default function JobBoard() {
 
   const deselectAllSources = () => {
     setSelectedSources(new Set());
+  };
+
+  const resetAllFilters = () => {
+    if (allJobs.length > 0) {
+      const companies = new Set(allJobs.map(job => job.Company).filter(company => company && company.trim() !== ''));
+      const locations = new Set(allJobs.map(job => job.Location).filter(location => location && location.trim() !== ''));
+      const sources = new Set(allJobs.map(job => job.Source).filter(source => source && source.trim() !== '') as string[]);
+
+      setSelectedCompanies(companies);
+      setSelectedLocations(locations);
+      setSelectedSources(sources);
+      setSelectedRegions(new Set(['Dutch', 'EU']));
+
+      // Close all dropdowns
+      setShowCompanyDropdown(false);
+      setShowLocationDropdown(false);
+      setShowRegionDropdown(false);
+      setShowSourceDropdown(false);
+
+      // Clear search terms
+      setCompanySearchTerm('');
+      setLocationSearchTerm('');
+      setSourceSearchTerm('');
+    }
   };
 
   // Close dropdowns when clicking outside
@@ -1266,9 +1316,9 @@ export default function JobBoard() {
                   (selectedLocations.size < getUniqueLocations.length) ||
                   (selectedSources.size < getUniqueSources.length) ||
                   (selectedRegions.size < 3)) ? (
-                  <>From <span style={{ fontWeight: '600', color: '#10b981' }}>{sortedJobs.length}</span> curated positions</>
+                  <>From <span style={{ fontWeight: '600', color: '#9333ea' }}>{sortedJobs.length}</span> curated positions</>
                 ) : (
-                  <>Ready to filter through <span style={{ fontWeight: '600', color: '#10b981' }}>{allJobs.length}</span> curated positions</>
+                  <>Ready to filter through <span style={{ fontWeight: '600', color: '#9333ea' }}>{allJobs.length}</span> curated positions</>
                 )}
               </p>
             </div>
@@ -1376,8 +1426,8 @@ export default function JobBoard() {
                       style={{
                         flex: 1,
                         padding: '0.5rem',
-                        background: 'rgba(16, 185, 129, 0.2)',
-                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        background: 'rgba(147, 51, 234, 0.2)',
+                        border: '1px solid rgba(147, 51, 234, 0.3)',
                         borderRadius: '6px',
                         color: '#fff',
                         fontSize: '0.75rem',
@@ -1392,8 +1442,8 @@ export default function JobBoard() {
                       style={{
                         flex: 1,
                         padding: '0.5rem',
-                        background: 'rgba(239, 68, 68, 0.2)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        background: 'rgba(107, 114, 128, 0.2)',
+                        border: '1px solid rgba(107, 114, 128, 0.3)',
                         borderRadius: '6px',
                         color: '#fff',
                         fontSize: '0.75rem',
@@ -1436,7 +1486,7 @@ export default function JobBoard() {
                           style={{
                             width: '16px',
                             height: '16px',
-                            accentColor: '#10b981'
+                            accentColor: '#9333ea'
                           }}
                         />
                         <span style={{
@@ -1552,8 +1602,8 @@ export default function JobBoard() {
                       style={{
                         flex: 1,
                         padding: '0.5rem',
-                        background: 'rgba(16, 185, 129, 0.2)',
-                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        background: 'rgba(147, 51, 234, 0.2)',
+                        border: '1px solid rgba(147, 51, 234, 0.3)',
                         borderRadius: '6px',
                         color: '#fff',
                         fontSize: '0.75rem',
@@ -1568,8 +1618,8 @@ export default function JobBoard() {
                       style={{
                         flex: 1,
                         padding: '0.5rem',
-                        background: 'rgba(239, 68, 68, 0.2)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        background: 'rgba(107, 114, 128, 0.2)',
+                        border: '1px solid rgba(107, 114, 128, 0.3)',
                         borderRadius: '6px',
                         color: '#fff',
                         fontSize: '0.75rem',
@@ -1612,7 +1662,7 @@ export default function JobBoard() {
                           style={{
                             width: '16px',
                             height: '16px',
-                            accentColor: '#10b981'
+                            accentColor: '#9333ea'
                           }}
                         />
                         <span style={{
@@ -1744,8 +1794,8 @@ export default function JobBoard() {
                       style={{
                         flex: 1,
                         padding: '0.5rem',
-                        background: 'rgba(239, 68, 68, 0.2)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        background: 'rgba(107, 114, 128, 0.2)',
+                        border: '1px solid rgba(107, 114, 128, 0.3)',
                         borderRadius: '6px',
                         color: '#fff',
                         fontSize: '0.75rem',
@@ -1893,7 +1943,7 @@ export default function JobBoard() {
                         style={{
                           width: '16px',
                           height: '16px',
-                          accentColor: '#10b981'
+                          accentColor: '#9333ea'
                         }}
                       />
                       <span style={{
@@ -1910,7 +1960,7 @@ export default function JobBoard() {
             </div>
 
             {/* LinkedIn Feed Filter */}
-            <div style={{ position: 'relative', minWidth: '200px' }}>
+            <div style={{ position: 'relative', minWidth: '300px' }}>
               <label
                 style={{
                   display: 'flex',
@@ -1955,6 +2005,47 @@ export default function JobBoard() {
                   {linkedinFeedEnabled && <CheckCircle style={{ width: '14px', height: '14px', color: '#10b981' }} />}
                 </span>
               </label>
+            </div>
+
+            {/* Reset Filter Button */}
+            <div style={{ position: 'relative', minWidth: '200px' }}>
+              <button
+                onClick={resetAllFilters}
+                disabled={!filtersChanged}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  background: filtersChanged ? 'rgba(147, 51, 234, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(8px)',
+                  border: filtersChanged ? '1px solid rgba(147, 51, 234, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  color: filtersChanged ? '#fff' : 'rgba(255, 255, 255, 0.4)',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  cursor: filtersChanged ? 'pointer' : 'not-allowed',
+                  transition: 'all 0.2s ease',
+                  opacity: filtersChanged ? 1 : 0.5
+                }}
+                onMouseEnter={(e) => {
+                  if (filtersChanged) {
+                    e.currentTarget.style.background = 'rgba(147, 51, 234, 0.3)';
+                    e.currentTarget.style.borderColor = 'rgba(147, 51, 234, 0.4)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (filtersChanged) {
+                    e.currentTarget.style.background = 'rgba(147, 51, 234, 0.2)';
+                    e.currentTarget.style.borderColor = 'rgba(147, 51, 234, 0.3)';
+                  }
+                }}
+              >
+                <X style={{ width: '16px', height: '16px' }} />
+                Reset Filters
+              </button>
             </div>
           </div>
 
@@ -2015,22 +2106,22 @@ export default function JobBoard() {
                     borderRadius: '999px',
                     fontSize: '0.875rem',
                     fontWeight: '600',
-                    background: editKeywords ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                    background: editKeywords ? 'rgba(147, 51, 234, 0.2)' : 'rgba(147, 51, 234, 0.2)',
                     color: '#fff',
-                    border: '1px solid rgba(245, 158, 11, 0.4)',
+                    border: '1px solid rgba(147, 51, 234, 0.4)',
                     cursor: editKeywords ? 'default' : 'pointer',
                     transition: 'all 0.2s',
                     backdropFilter: 'blur(8px)'
                   }}
                   onMouseEnter={(e) => {
                     if (!editKeywords) {
-                      e.currentTarget.style.background = 'rgba(245, 158, 11, 0.4)';
+                      e.currentTarget.style.background = 'rgba(147, 51, 234, 0.4)';
                       e.currentTarget.style.color = '#fff';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!editKeywords) {
-                      e.currentTarget.style.background = 'rgba(245, 158, 11, 0.2)';
+                      e.currentTarget.style.background = 'rgba(147, 51, 234, 0.2)';
                       e.currentTarget.style.color = '#fff';
                     }
                   }}
@@ -2138,13 +2229,13 @@ export default function JobBoard() {
                   <span
                     key={index}
                     style={{
-                      background: 'rgba(16, 185, 129, 0.3)',
-                      color: '#10b981',
+                      background: 'rgba(147, 51, 234, 0.3)',
+                      color: '#9333ea',
                       padding: '0.25rem 0.75rem',
                       borderRadius: '12px',
                       fontSize: '0.85rem',
                       fontWeight: '600',
-                      border: '1px solid rgba(16, 185, 129, 0.4)',
+                      border: '1px solid rgba(147, 51, 234, 0.4)',
                       backdropFilter: 'blur(4px)'
                     }}
                   >
@@ -2247,13 +2338,13 @@ export default function JobBoard() {
                         )}
                         {job.probability_freelance_vacancy && (
                           <span style={{
-                            background: 'rgba(16, 185, 129, 0.3)',
+                            background: 'rgba(147, 51, 234, 0.3)',
                             color: '#fff',
                             padding: '0.25rem 0.75rem',
                             borderRadius: '12px',
                             fontSize: '0.875rem',
                             fontWeight: '600',
-                            border: '1px solid rgba(16, 185, 129, 0.5)'
+                            border: '1px solid rgba(147, 51, 234, 0.5)'
                           }}>
                             {Math.round(job.probability_freelance_vacancy * 100)}% Match
                           </span>
@@ -2277,9 +2368,9 @@ export default function JobBoard() {
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                     <button
                       style={{
-                        background: 'rgba(59, 130, 246, 0.3)',
+                        background: 'rgba(147, 51, 234, 0.3)',
                         color: '#fff',
-                        border: '1px solid rgba(59, 130, 246, 0.5)',
+                        border: '1px solid rgba(147, 51, 234, 0.5)',
                         padding: '0.5rem 1rem',
                         borderRadius: '8px',
                         cursor: 'pointer',
@@ -2288,10 +2379,10 @@ export default function JobBoard() {
                         transition: 'all 0.2s ease'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(59, 130, 246, 0.4)';
+                        e.currentTarget.style.background = 'rgba(147, 51, 234, 0.4)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)';
+                        e.currentTarget.style.background = 'rgba(147, 51, 234, 0.3)';
                       }}
                     >
                       Read more
@@ -2495,7 +2586,7 @@ export default function JobBoard() {
                           style={{
                             background: 'none',
                             border: 'none',
-                            color: '#10b981',
+                            color: '#9333ea',
                             fontSize: '0.875rem',
                             fontWeight: '600',
                             cursor: 'pointer',
@@ -2504,10 +2595,10 @@ export default function JobBoard() {
                             transition: 'color 0.2s ease'
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.color = '#34d399';
+                            e.currentTarget.style.color = '#a855f7';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.color = '#10b981';
+                            e.currentTarget.style.color = '#9333ea';
                           }}
                         >
                           {expandedSummaries.has(job.UNIQUE_ID) ? 'Read less' : 'Read more'}
@@ -2735,8 +2826,8 @@ export default function JobBoard() {
                     onClick={() => setPage(pageNum)}
                     style={{
                       padding: '0.5rem 1rem',
-                      background: page === pageNum ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)',
-                      border: page === pageNum ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)',
+                      background: page === pageNum ? 'rgba(147, 51, 234, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+                      border: page === pageNum ? '1px solid rgba(147, 51, 234, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)',
                       borderRadius: '8px',
                       color: '#fff',
                       cursor: 'pointer',
@@ -2768,7 +2859,7 @@ export default function JobBoard() {
       <style jsx global>{`
         /* Search highlighting */
         .highlight {
-          background: rgba(255, 255, 0, 0.3);
+          background: rgba(147, 51, 234, 0.4);
           color: #fff;
           border-radius: 4px;
           font-weight: 600;
@@ -2778,6 +2869,16 @@ export default function JobBoard() {
         .search-input-placeholder::placeholder {
           color: rgba(255, 255, 255, 0.6);
           opacity: 1;
+        }
+        
+        /* Text selection styling */
+        ::selection {
+          background: rgba(147, 51, 234, 0.4);
+          color: #fff;
+        }
+        ::-moz-selection {
+          background: rgba(147, 51, 234, 0.4);
+          color: #fff;
         }
         
         /* Hide scrollbar for better aesthetics */
