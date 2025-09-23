@@ -78,9 +78,7 @@ const CompanyCard: React.FC<{
     sourceJobStats: SourceJobStats;
     getIndustryColor: (industry: string | undefined) => string;
     onClick: () => void;
-    isSelected: boolean;
-    onSelectionChange: (companyId: number, selected: boolean) => void;
-}> = ({ company, sourceJobStats, getIndustryColor, onClick, isSelected, onSelectionChange }) => {
+}> = ({ company, sourceJobStats, getIndustryColor, onClick }) => {
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const capitalizeFirstLetter = (str: string) => {
         if (!str) return '';
@@ -1875,16 +1873,6 @@ export default function AutomationCompanies() {
                         sourceJobStats={sourceJobStats}
                         getIndustryColor={getIndustryColor}
                         onClick={() => setSelectedCompany(company)}
-                        isSelected={selectedCompanies.has(company.id)}
-                        onSelectionChange={(companyId, selected) => {
-                            const newSelected = new Set(selectedCompanies);
-                            if (selected) {
-                                newSelected.add(companyId);
-                            } else {
-                                newSelected.delete(companyId);
-                            }
-                            setSelectedCompanies(newSelected);
-                        }}
                     />
                 ))}
             </div>
