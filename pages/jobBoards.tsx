@@ -1309,8 +1309,8 @@ export default function AutomationCompanies() {
 
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '20px',
+                    gridTemplateColumns: 'repeat(5, 1fr)',
+                    gap: '12px',
                     marginBottom: '24px'
                 }}>
                     <div>
@@ -1329,12 +1329,15 @@ export default function AutomationCompanies() {
                             onChange={(e) => setRate(e.target.value === '' ? '' : Number(e.target.value))}
                             style={{
                                 width: '100%',
-                                padding: '12px',
+                                paddingTop: '8px',
+                                paddingBottom: '8px',
+                                paddingLeft: '8px',
+                                paddingRight: '0px',
                                 background: 'rgba(255, 255, 255, 0.1)',
                                 border: '1px solid rgba(255, 255, 255, 0.2)',
                                 borderRadius: '8px',
                                 color: '#fff',
-                                fontSize: '16px'
+                                fontSize: '14px'
                             }}
                         />
                     </div>
@@ -1355,12 +1358,15 @@ export default function AutomationCompanies() {
                             onChange={(e) => setHours(e.target.value === '' ? '' : Number(e.target.value))}
                             style={{
                                 width: '100%',
-                                padding: '12px',
+                                paddingTop: '8px',
+                                paddingBottom: '8px',
+                                paddingLeft: '8px',
+                                paddingRight: '0px',
                                 background: 'rgba(255, 255, 255, 0.1)',
                                 border: '1px solid rgba(255, 255, 255, 0.2)',
                                 borderRadius: '8px',
                                 color: '#fff',
-                                fontSize: '16px'
+                                fontSize: '14px'
                             }}
                         />
                     </div>
@@ -1381,12 +1387,15 @@ export default function AutomationCompanies() {
                             onChange={(e) => setWeeksPerMonth(e.target.value === '' ? '' : Number(e.target.value))}
                             style={{
                                 width: '100%',
-                                padding: '12px',
+                                paddingTop: '8px',
+                                paddingBottom: '8px',
+                                paddingLeft: '8px',
+                                paddingRight: '0px',
                                 background: 'rgba(255, 255, 255, 0.1)',
                                 border: '1px solid rgba(255, 255, 255, 0.2)',
                                 borderRadius: '8px',
                                 color: '#fff',
-                                fontSize: '16px'
+                                fontSize: '14px'
                             }}
                         />
                     </div>
@@ -1407,12 +1416,15 @@ export default function AutomationCompanies() {
                             onChange={(e) => setMonths(e.target.value === '' ? '' : Number(e.target.value))}
                             style={{
                                 width: '100%',
-                                padding: '12px',
+                                paddingTop: '8px',
+                                paddingBottom: '8px',
+                                paddingLeft: '8px',
+                                paddingRight: '0px',
                                 background: 'rgba(255, 255, 255, 0.1)',
                                 border: '1px solid rgba(255, 255, 255, 0.2)',
                                 borderRadius: '8px',
                                 color: '#fff',
-                                fontSize: '16px'
+                                fontSize: '14px'
                             }}
                         />
                     </div>
@@ -1433,12 +1445,15 @@ export default function AutomationCompanies() {
                             onChange={(e) => setTax(Number(e.target.value))}
                             style={{
                                 width: '100%',
-                                padding: '12px',
+                                paddingTop: '8px',
+                                paddingBottom: '8px',
+                                paddingLeft: '8px',
+                                paddingRight: '0px',
                                 background: 'rgba(255, 255, 255, 0.1)',
                                 border: '1px solid rgba(255, 255, 255, 0.2)',
                                 borderRadius: '8px',
                                 color: '#fff',
-                                fontSize: '16px'
+                                fontSize: '14px'
                             }}
                         />
                     </div>
@@ -1501,14 +1516,14 @@ export default function AutomationCompanies() {
                 <div style={{
                     display: 'flex',
                     flexWrap: 'wrap',
-                    gap: '16px',
+                    gap: '8px',
                     alignItems: 'center'
                 }}>
                     {/* Search Input */}
-                    <div style={{ position: 'relative', minWidth: '300px' }}>
-                        <Search size={20} style={{
+                    <div style={{ position: 'relative', minWidth: '150px', marginRight: '24px' }}>
+                        <Search size={16} style={{
                             position: 'absolute',
-                            left: '12px',
+                            left: '4px',
                             top: '50%',
                             transform: 'translateY(-50%)',
                             color: '#6b7280'
@@ -1520,7 +1535,10 @@ export default function AutomationCompanies() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             style={{
                                 width: '100%',
-                                padding: '12px 12px 12px 44px',
+                                paddingTop: '12px',
+                                paddingBottom: '12px',
+                                paddingLeft: '24px',
+                                paddingRight: '0px',
                                 background: 'rgba(255, 255, 255, 0.1)',
                                 border: '1px solid rgba(255, 255, 255, 0.2)',
                                 borderRadius: '12px',
