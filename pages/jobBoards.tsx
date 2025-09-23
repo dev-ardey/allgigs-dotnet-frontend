@@ -938,6 +938,10 @@ export default function AutomationCompanies() {
     const [jobStats, setJobStats] = useState<IndustryStats[]>([]);
     const [sourceJobStats, setSourceJobStats] = useState<SourceJobStats>({});
     const [totalJobs, setTotalJobs] = useState<number>(0);
+    const [selectedIndustries, setSelectedIndustries] = useState<Set<string>>(new Set());
+    const [selectedSources, setSelectedSources] = useState<Set<string>>(new Set());
+    const [showIndustryDropdown, setShowIndustryDropdown] = useState(false);
+    const [showSourceDropdown, setShowSourceDropdown] = useState(false);
 
     // Industry color mapping function
     const getIndustryColor = (industry: string): string => {
@@ -1139,6 +1143,30 @@ export default function AutomationCompanies() {
     useEffect(() => {
         let filtered = companies;
 
+        // Filter by selected industries and sources
+        if (selectedIndustries.size > 0 || selectedSources.size > 0) {
+            filtered = filtered.filter(company => {
+                const companyData = sourceJobStats[company.Company_name];
+                if (!companyData) return false;
+
+                // Check if company has jobs in selected industries
+                if (selectedIndustries.size > 0) {
+                    const hasSelectedIndustry = Array.from(selectedIndustries).some(industry =>
+                        companyData[industry] && companyData[industry] > 0
+                    );
+                    if (!hasSelectedIndustry) return false;
+                }
+
+                // Check if company matches selected sources
+                if (selectedSources.size > 0) {
+                    const hasSelectedSource = selectedSources.has(company.Company_name);
+                    if (!hasSelectedSource) return false;
+                }
+
+                return true;
+            });
+        }
+
         if (searchTerm.trim()) {
             filtered = filtered.filter(company =>
                 company.Company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1199,7 +1227,7 @@ export default function AutomationCompanies() {
         }
 
         setFilteredCompanies(filtered);
-    }, [searchTerm, modelFilter, customerFilter, pricingModelFilter, whoPaysFilter, companies]);
+    }, [searchTerm, modelFilter, customerFilter, pricingModelFilter, whoPaysFilter, companies, selectedIndustries, selectedSources, sourceJobStats]);
 
     useEffect(() => {
         fetchCompanies();
@@ -1955,6 +1983,261 @@ export default function AutomationCompanies() {
                             </div>
                         )}
                     </div>
+
+                    {/* Industry Filter */}
+                    {jobStats.length > 0 && (
+                        <div style={{ position: 'relative', minWidth: '200px' }}>
+                            <button
+                                onClick={() => {
+                                    setShowIndustryDropdown(!showIndustryDropdown);
+                                    setShowModelDropdown(false);
+                                    setShowCustomerDropdown(false);
+                                    setShowPricingDropdown(false);
+                                    setShowWhoPaysDropdown(false);
+                                    setShowSourceDropdown(false);
+                                }}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    width: '100%',
+                                    padding: '12px 16px',
+                                    background: 'rgba(255, 255, 255, 0.1)',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: '12px',
+                                    color: '#fff',
+                                    fontSize: '16px',
+                                    cursor: 'pointer',
+                                    backdropFilter: 'blur(8px)'
+                                }}
+                            >
+                                Industries ({selectedIndustries.size > 0 ? selectedIndustries.size : 'All'})
+                                <ChevronDown size={16} />
+                            </button>
+
+                            {showIndustryDropdown && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    left: '0',
+                                    right: '0',
+                                    background: 'black',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: '12px',
+                                    marginTop: '8px',
+                                    padding: '16px',
+                                    zIndex: 1000,
+                                    maxHeight: '300px',
+                                    overflowY: 'auto'
+                                }}>
+                                    <div style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        marginBottom: '12px'
+                                    }}>
+                                        <span style={{ color: '#9ca3af', fontSize: '14px' }}>
+                                            Select Industries
+                                        </span>
+                                        <button
+                                            onClick={() => setSelectedIndustries(new Set())}
+                                            style={{
+                                                padding: '4px 8px',
+                                                background: 'rgba(107, 114, 128, 0.3)',
+                                                border: '1px solid rgba(107, 114, 128, 0.5)',
+                                                borderRadius: '4px',
+                                                color: '#9ca3af',
+                                                fontSize: '12px',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            Deselect All
+                                        </button>
+                                    </div>
+                                    <div style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '8px'
+                                    }}>
+                                        {jobStats.map(({ industry, count, percentage }) => (
+                                            <label key={industry} style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '8px',
+                                                cursor: 'pointer',
+                                                padding: '8px',
+                                                borderRadius: '6px',
+                                                background: selectedIndustries.has(industry) ? 'rgba(147, 51, 234, 0.2)' : 'transparent'
+                                            }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIndustries.has(industry)}
+                                                    onChange={(e) => {
+                                                        const newSelected = new Set(selectedIndustries);
+                                                        if (e.target.checked) {
+                                                            newSelected.add(industry);
+                                                        } else {
+                                                            newSelected.delete(industry);
+                                                        }
+                                                        setSelectedIndustries(newSelected);
+                                                    }}
+                                                    style={{
+                                                        accentColor: '#9333ea',
+                                                        transform: 'scale(1.2)'
+                                                    }}
+                                                />
+                                                <div style={{
+                                                    width: '12px',
+                                                    height: '12px',
+                                                    borderRadius: '50%',
+                                                    backgroundColor: getIndustryColor(industry),
+                                                    flexShrink: 0
+                                                }} />
+                                                <span style={{
+                                                    color: '#fff',
+                                                    flex: 1,
+                                                    fontSize: '14px'
+                                                }}>
+                                                    {industry}
+                                                </span>
+                                                <span style={{
+                                                    color: '#9ca3af',
+                                                    fontSize: '12px'
+                                                }}>
+                                                    {count.toLocaleString()} ({percentage.toFixed(1)}%)
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Source Filter */}
+                    {Object.keys(sourceJobStats).length > 0 && (
+                        <div style={{ position: 'relative', minWidth: '200px' }}>
+                            <button
+                                onClick={() => {
+                                    setShowSourceDropdown(!showSourceDropdown);
+                                    setShowModelDropdown(false);
+                                    setShowCustomerDropdown(false);
+                                    setShowPricingDropdown(false);
+                                    setShowWhoPaysDropdown(false);
+                                    setShowIndustryDropdown(false);
+                                }}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    width: '100%',
+                                    padding: '12px 16px',
+                                    background: 'rgba(255, 255, 255, 0.1)',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: '12px',
+                                    color: '#fff',
+                                    fontSize: '16px',
+                                    cursor: 'pointer',
+                                    backdropFilter: 'blur(8px)'
+                                }}
+                            >
+                                Job Sources ({selectedSources.size > 0 ? selectedSources.size : 'All'})
+                                <ChevronDown size={16} />
+                            </button>
+
+                            {showSourceDropdown && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    left: '0',
+                                    right: '0',
+                                    background: 'black',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: '12px',
+                                    marginTop: '8px',
+                                    padding: '16px',
+                                    zIndex: 1000,
+                                    maxHeight: '300px',
+                                    overflowY: 'auto'
+                                }}>
+                                    <div style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        marginBottom: '12px'
+                                    }}>
+                                        <span style={{ color: '#9ca3af', fontSize: '14px' }}>
+                                            Select Job Sources
+                                        </span>
+                                        <button
+                                            onClick={() => setSelectedSources(new Set())}
+                                            style={{
+                                                padding: '4px 8px',
+                                                background: 'rgba(107, 114, 128, 0.3)',
+                                                border: '1px solid rgba(107, 114, 128, 0.5)',
+                                                borderRadius: '4px',
+                                                color: '#9ca3af',
+                                                fontSize: '12px',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            Deselect All
+                                        </button>
+                                    </div>
+                                    <div style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '8px'
+                                    }}>
+                                        {Object.entries(sourceJobStats)
+                                            .sort(([, a], [, b]) => b.total - a.total)
+                                            .map(([source, data]) => (
+                                                <label key={source} style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    cursor: 'pointer',
+                                                    padding: '8px',
+                                                    borderRadius: '6px',
+                                                    background: selectedSources.has(source) ? 'rgba(147, 51, 234, 0.2)' : 'transparent'
+                                                }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedSources.has(source)}
+                                                        onChange={(e) => {
+                                                            const newSelected = new Set(selectedSources);
+                                                            if (e.target.checked) {
+                                                                newSelected.add(source);
+                                                            } else {
+                                                                newSelected.delete(source);
+                                                            }
+                                                            setSelectedSources(newSelected);
+                                                        }}
+                                                        style={{
+                                                            accentColor: '#9333ea',
+                                                            transform: 'scale(1.2)'
+                                                        }}
+                                                    />
+                                                    <span style={{
+                                                        color: '#fff',
+                                                        flex: 1,
+                                                        fontSize: '14px'
+                                                    }}>
+                                                        {source}
+                                                    </span>
+                                                    <span style={{
+                                                        color: '#9ca3af',
+                                                        fontSize: '12px'
+                                                    }}>
+                                                        {data.total.toLocaleString()} jobs
+                                                    </span>
+                                                </label>
+                                            ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
