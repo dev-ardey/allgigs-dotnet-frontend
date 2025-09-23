@@ -17,6 +17,7 @@ import {
     PieChart
 } from 'lucide-react';
 
+
 // Automation Details Interface
 interface AutomationDetails {
     id: number;
@@ -131,8 +132,8 @@ const CompanyCard: React.FC<{
                 e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
             }}
         >
-            {/* Selection Checkbox */}
-            <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
+            {/* Selection Checkbox - Temporarily commented out */}
+            {/* <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
                 <input
                     type="checkbox"
                     checked={isSelected}
@@ -147,7 +148,7 @@ const CompanyCard: React.FC<{
                         cursor: 'pointer'
                     }}
                 />
-            </div>
+            </div> */}
 
             {/* Company Name - Large Title */}
             <h3 style={{
