@@ -82,7 +82,6 @@ const CompanyCard: React.FC<{
     onSelectionChange: (companyId: number, selected: boolean) => void;
 }> = ({ company, sourceJobStats, getIndustryColor, onClick, isSelected, onSelectionChange }) => {
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-    console.log(isSelected, onSelectionChange)
     const capitalizeFirstLetter = (str: string) => {
         if (!str) return '';
         return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
