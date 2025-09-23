@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Save, X, Users, DollarSign, Bell, FileText, Upload, Trash2, LogOut } from 'lucide-react';
+import { Edit2, Save, X, Users, DollarSign, Bell, LogOut } from 'lucide-react';
 import { supabase } from '../SupabaseClient';
 import GlobalNav from '../components/ui/GlobalNav';
 import CompleteProfileForm from '../components/ui/CompleteProfileForm';
@@ -82,6 +82,7 @@ export default function Profile() {
     { id: "3", name: "Portfolio.pdf", type: "PDF", size: "4.7 MB", uploadedAt: "2025-06-15" },
   ]);
 
+  console.log(documents, setDocuments)
   // Testimonial state - now connected to profile data
   const [testimonial, setTestimonial] = useState('');
   const [testimonialSending, setTestimonialSending] = useState(false);
@@ -120,9 +121,9 @@ export default function Profile() {
   };
 
   // Remove document function (from dashboard)
-  const removeDocument = (id: string) => {
-    setDocuments(documents.filter(doc => doc.id !== id));
-  };
+  // const removeDocument = (id: string) => {
+  //   setDocuments(documents.filter(doc => doc.id !== id));
+  // };
 
   // Send testimonial function - now saves to profile
   const sendTestimonial = async () => {
