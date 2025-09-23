@@ -82,7 +82,7 @@ const CompanyCard: React.FC<{
     onSelectionChange: (companyId: number, selected: boolean) => void;
 }> = ({ company, sourceJobStats, getIndustryColor, onClick, isSelected, onSelectionChange }) => {
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-
+    console.log(isSelected, onSelectionChange)
     const capitalizeFirstLetter = (str: string) => {
         if (!str) return '';
         return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -134,8 +134,8 @@ const CompanyCard: React.FC<{
         >
             {/* Selection Checkbox - Temporarily commented out */}
             {/* <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
-                <input
-                    type="checkbox"
+                <input 
+                    type="checkbox" 
                     checked={isSelected}
                     onChange={(e) => {
                         e.stopPropagation();
@@ -1060,51 +1060,44 @@ export default function AutomationCompanies() {
                 </div>
 
                 {/* Calculator Results */}
-                <div style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    padding: '20px'
-                }}>
+                <div>
+                    {/* First row: Subtotal, Tax Amount, Monthly */}
                     <div style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                        gap: '16px'
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: '16px',
+                        marginBottom: '16px'
                     }}>
                         <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            padding: '8px 0'
+                            padding: '24px 0'
                         }}>
-                            <span style={{ color: '#9ca3af' }}>Subtotal:</span>
+                            <span style={{ color: '#9ca3af' }}>Subtotal: </span>
                             <span style={{ color: '#fff', fontWeight: '600' }}>€{subtotal.toFixed(1)}</span>
                         </div>
                         <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            padding: '8px 0'
+                            padding: '24px 0'
                         }}>
-                            <span style={{ color: '#9ca3af' }}>Tax Amount:</span>
+                            <span style={{ color: '#9ca3af' }}>Tax Amount: </span>
                             <span style={{ color: '#fff', fontWeight: '600' }}>€{taxAmount.toFixed(1)}</span>
                         </div>
                         <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            padding: '8px 0',
-                            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-                            paddingTop: '16px'
+                            padding: '24px 0'
                         }}>
-                            <span style={{ color: '#fff', fontWeight: '600' }}>Total:</span>
-                            <span style={{ color: '#9333ea', fontWeight: '700', fontSize: '18px' }}>€{total.toFixed(1)}</span>
-                        </div>
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            padding: '8px 0'
-                        }}>
-                            <span style={{ color: '#9ca3af' }}>Monthly:</span>
+                            <span style={{ color: '#9ca3af' }}>Monthly: </span>
                             <span style={{ color: '#fff', fontWeight: '600' }}>€{monthlyTotal.toFixed(1)}</span>
                         </div>
+                    </div>
+
+                    {/* Second row: Total over full width */}
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        padding: '8px 0',
+                        borderTop: '1px solid rgba(255, 255, 255, 0.2)',
+                        paddingTop: '16px'
+                    }}>
+                        <span style={{ color: '#fff', fontWeight: '600' }}>Total:</span>
+                        <span style={{ color: '#9333ea', fontWeight: '700', fontSize: '18px' }}>€{total.toFixed(1)}</span>
                     </div>
                 </div>
             </div>
@@ -2209,4 +2202,4 @@ export default function AutomationCompanies() {
             )}
         </div>
     );
-}
+} 
