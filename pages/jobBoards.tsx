@@ -89,7 +89,7 @@ interface SourceJobStats {
 const CompanyCard: React.FC<{
     company: AutomationDetails;
     sourceJobStats: SourceJobStats;
-    getIndustryColor: (industry: string) => string;
+    getIndustryColor: (industry: string | undefined) => string;
     onClick: () => void;
     isSelected: boolean;
     onSelectionChange: (companyId: number, selected: boolean) => void;
@@ -944,16 +944,16 @@ export default function AutomationCompanies() {
     const [showSourceDropdown, setShowSourceDropdown] = useState(false);
 
     // Industry color mapping function
-    const getIndustryColor = (industry: string): string => {
+    const getIndustryColor = (industry: string | undefined): string => {
         const colors = [
             '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
             '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
-        ];
+        ] as const;
         if (!industry || industry.length === 0) {
             return colors[0];
         }
         const index = industry.charCodeAt(0) % colors.length;
-        return colors[index];
+        return colors[index] as string;
     };
 
     // Calculator state
@@ -1097,8 +1097,11 @@ export default function AutomationCompanies() {
                 if (!sourceCounts[source]) {
                     sourceCounts[source] = { total: 0 };
                 }
-                sourceCounts[source][industry] = (sourceCounts[source][industry] || 0) + 1;
-                sourceCounts[source].total++;
+                const sourceData = sourceCounts[source];
+                if (sourceData) {
+                    sourceData[industry] = (sourceData[industry] || 0) + 1;
+                    sourceData.total++;
+                }
             });
 
             // Convert to array and calculate percentages
