@@ -32,6 +32,8 @@
     "**/*.tsx"
   ],
   "exclude": [
+    "temp_original_jobboards",
+    "allGigs-mvp-v2",
     "node_modules"
   ]
 }

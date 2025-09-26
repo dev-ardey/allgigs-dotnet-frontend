@@ -78,9 +78,8 @@ const CompanyCard: React.FC<{
     sourceJobStats: SourceJobStats;
     getIndustryColor: (industry: string | undefined) => string;
     onClick: () => void;
-    isSelected: boolean;
-    onSelectionChange: (companyId: number, selected: boolean) => void;
-}> = ({ company, sourceJobStats, getIndustryColor, onClick, isSelected, onSelectionChange }) => {    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+}> = ({ company, sourceJobStats, getIndustryColor, onClick }) => {
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const capitalizeFirstLetter = (str: string) => {
         if (!str) return '';
         return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -130,8 +129,8 @@ const CompanyCard: React.FC<{
                 e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
             }}
         >
-            {/* Selection Checkbox */}
-            {<div style={{ position: 'absolute', top: '16px', right: '16px' }}>
+            {/* Selection Checkbox - Temporarily commented out */}
+            {/* <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
                 <input 
                     type="checkbox" 
                     checked={isSelected}
@@ -146,7 +145,7 @@ const CompanyCard: React.FC<{
                         cursor: 'pointer'
                     }}
                 />
-            </div>}
+            </div> */}
 
             {/* Company Name - Large Title */}
             <h3 style={{
@@ -610,9 +609,6 @@ export default function AutomationCompanies() {
     const [showIndustryDropdown, setShowIndustryDropdown] = useState(false);
     const [showSourceDropdown, setShowSourceDropdown] = useState(false);
 
-    // Interactive Pie Chart state
-    const [showingSourceBreakdown, setShowingSourceBreakdown] = useState<boolean>(false);
-
     // Industry color mapping function
     const getIndustryColor = (industry: string | undefined): string => {
         const colors = [
@@ -624,35 +620,6 @@ export default function AutomationCompanies() {
         }
         const index = industry.charCodeAt(0) % colors.length;
         return colors[index] as string;
-    };
-
-    // Helper function for source breakdown calculation
-    const getSourceBreakdownForIndustries = (industries: Set<string>) => {
-        const sourceBreakdown: { source: string; count: number; percentage: number }[] = [];
-        let totalForIndustries = 0;
-
-        // Count jobs in selected industries across filtered sources
-        Object.entries(sourceJobStats).forEach(([source, data]) => {
-            if (selectedSources.has(source)) {
-                let sourceCount = 0;
-                industries.forEach(industry => {
-                    if (data[industry]) {
-                        sourceCount += data[industry];
-                    }
-                });
-                if (sourceCount > 0) {
-                    sourceBreakdown.push({ source, count: sourceCount, percentage: 0 });
-                    totalForIndustries += sourceCount;
-                }
-            }
-        });
-
-        // Calculate percentages
-        sourceBreakdown.forEach(item => {
-            item.percentage = totalForIndustries > 0 ? (item.count / totalForIndustries) * 100 : 0;
-        });
-
-        return { breakdown: sourceBreakdown.sort((a, b) => b.count - a.count), total: totalForIndustries };
     };
 
     // Calculator state
@@ -915,7 +882,7 @@ export default function AutomationCompanies() {
                 </p>
             </div>
 
-            {/* Calculator & Pie Chart Section */}
+            {/* Calculator Section */}
             <div style={{
                 background: 'rgba(255, 255, 255, 0.05)',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -924,452 +891,214 @@ export default function AutomationCompanies() {
                 marginBottom: '40px',
                 backdropFilter: 'blur(8px)'
             }}>
+                <h2 style={{
+                    fontSize: '24px',
+                    fontWeight: '600',
+                    color: '#fff',
+                    margin: '0 0 24px 0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px'
+                }}>
+                    <Calculator size={24} style={{ color: '#9333ea' }} />
+                    Cost Calculator
+                </h2>
+
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '40px',
-                    alignItems: 'flex-start'
+                    gridTemplateColumns: 'repeat(5, 1fr)',
+                    gap: '12px',
+                    marginBottom: '24px'
                 }}>
-                    {/* Left: Calculator */}
                     <div>
-                        <h2 style={{
-                            fontSize: '24px',
-                            fontWeight: '600',
-                            color: '#fff',
-                            margin: '0 0 24px 0',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px'
+                        <label style={{
+                            display: 'block',
+                            marginBottom: '8px',
+                            color: '#9ca3af',
+                            fontSize: '14px',
+                            fontWeight: '500'
                         }}>
-                            <Calculator size={24} style={{ color: '#9333ea' }} />
-                            Cost Calculator
-                        </h2>
+                            Hourly Rate (€)
+                        </label>
+                        <input
+                            type="number"
+                            value={rate}
+                            onChange={(e) => setRate(e.target.value === '' ? '' : Number(e.target.value))}
+                            style={{
+                                width: '100%',
+                                paddingTop: '8px',
+                                paddingBottom: '8px',
+                                paddingLeft: '8px',
+                                paddingRight: '0px',
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                borderRadius: '8px',
+                                color: '#fff',
+                                fontSize: '14px'
+                            }}
+                        />
+                    </div>
 
+                    <div>
+                        <label style={{
+                            display: 'block',
+                            marginBottom: '8px',
+                            color: '#9ca3af',
+                            fontSize: '14px',
+                            fontWeight: '500'
+                        }}>
+                            Hours per Week
+                        </label>
+                        <input
+                            type="number"
+                            value={hours}
+                            onChange={(e) => setHours(e.target.value === '' ? '' : Number(e.target.value))}
+                            style={{
+                                width: '100%',
+                                paddingTop: '8px',
+                                paddingBottom: '8px',
+                                paddingLeft: '8px',
+                                paddingRight: '0px',
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                borderRadius: '8px',
+                                color: '#fff',
+                                fontSize: '14px'
+                            }}
+                        />
+                    </div>
+
+                    <div>
+                        <label style={{
+                            display: 'block',
+                            marginBottom: '8px',
+                            color: '#9ca3af',
+                            fontSize: '14px',
+                            fontWeight: '500'
+                        }}>
+                            Weeks per Month
+                        </label>
+                        <input
+                            type="number"
+                            value={weeksPerMonth}
+                            onChange={(e) => setWeeksPerMonth(e.target.value === '' ? '' : Number(e.target.value))}
+                            style={{
+                                width: '100%',
+                                paddingTop: '8px',
+                                paddingBottom: '8px',
+                                paddingLeft: '8px',
+                                paddingRight: '0px',
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                borderRadius: '8px',
+                                color: '#fff',
+                                fontSize: '14px'
+                            }}
+                        />
+                    </div>
+
+                    <div>
+                        <label style={{
+                            display: 'block',
+                            marginBottom: '8px',
+                            color: '#9ca3af',
+                            fontSize: '14px',
+                            fontWeight: '500'
+                        }}>
+                            Months
+                        </label>
+                        <input
+                            type="number"
+                            value={months}
+                            onChange={(e) => setMonths(e.target.value === '' ? '' : Number(e.target.value))}
+                            style={{
+                                width: '100%',
+                                paddingTop: '8px',
+                                paddingBottom: '8px',
+                                paddingLeft: '8px',
+                                paddingRight: '0px',
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                borderRadius: '8px',
+                                color: '#fff',
+                                fontSize: '14px'
+                            }}
+                        />
+                    </div>
+
+                    <div>
+                        <label style={{
+                            display: 'block',
+                            marginBottom: '8px',
+                            color: '#9ca3af',
+                            fontSize: '14px',
+                            fontWeight: '500'
+                        }}>
+                            Tax Rate (%)
+                        </label>
+                        <input
+                            type="number"
+                            value={tax}
+                            onChange={(e) => setTax(Number(e.target.value))}
+                            style={{
+                                width: '100%',
+                                paddingTop: '8px',
+                                paddingBottom: '8px',
+                                paddingLeft: '8px',
+                                paddingRight: '0px',
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                borderRadius: '8px',
+                                color: '#fff',
+                                fontSize: '14px'
+                            }}
+                        />
+                    </div>
+                </div>
+
+                {/* Calculator Results */}
+                <div>
+                    {/* First row: Subtotal, Tax Amount, Monthly */}
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: '16px',
+                        marginBottom: '16px'
+                    }}>
                         <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(2, 1fr)',
-                            gap: '12px',
-                            marginBottom: '24px'
+                            padding: '24px 0'
                         }}>
-                            <div>
-                                <label style={{
-                                    display: 'block',
-                                    marginBottom: '8px',
-                                    color: '#9ca3af',
-                                    fontSize: '14px',
-                                    fontWeight: '500'
-                                }}>
-                                    Hourly Rate (€)
-                                </label>
-                                <input
-                                    type="number"
-                                    value={rate}
-                                    onChange={(e) => setRate(e.target.value === '' ? '' : Number(e.target.value))}
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        background: 'rgba(255, 255, 255, 0.1)',
-                                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                                        borderRadius: '8px',
-                                        color: '#fff',
-                                        fontSize: '14px'
-                                    }}
-                                />
-                            </div>
-
-                            <div>
-                                <label style={{
-                                    display: 'block',
-                                    marginBottom: '8px',
-                                    color: '#9ca3af',
-                                    fontSize: '14px',
-                                    fontWeight: '500'
-                                }}>
-                                    Hours per Week
-                                </label>
-                                <input
-                                    type="number"
-                                    value={hours}
-                                    onChange={(e) => setHours(e.target.value === '' ? '' : Number(e.target.value))}
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        background: 'rgba(255, 255, 255, 0.1)',
-                                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                                        borderRadius: '8px',
-                                        color: '#fff',
-                                        fontSize: '14px'
-                                    }}
-                                />
-                            </div>
-
-                            <div>
-                                <label style={{
-                                    display: 'block',
-                                    marginBottom: '8px',
-                                    color: '#9ca3af',
-                                    fontSize: '14px',
-                                    fontWeight: '500'
-                                }}>
-                                    Weeks per Month
-                                </label>
-                                <input
-                                    type="number"
-                                    value={weeksPerMonth}
-                                    onChange={(e) => setWeeksPerMonth(e.target.value === '' ? '' : Number(e.target.value))}
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        background: 'rgba(255, 255, 255, 0.1)',
-                                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                                        borderRadius: '8px',
-                                        color: '#fff',
-                                        fontSize: '14px'
-                                    }}
-                                />
-                            </div>
-
-                            <div>
-                                <label style={{
-                                    display: 'block',
-                                    marginBottom: '8px',
-                                    color: '#9ca3af',
-                                    fontSize: '14px',
-                                    fontWeight: '500'
-                                }}>
-                                    Months
-                                </label>
-                                <input
-                                    type="number"
-                                    value={months}
-                                    onChange={(e) => setMonths(e.target.value === '' ? '' : Number(e.target.value))}
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        background: 'rgba(255, 255, 255, 0.1)',
-                                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                                        borderRadius: '8px',
-                                        color: '#fff',
-                                        fontSize: '14px'
-                                    }}
-                                />
-                            </div>
-
-                            <div style={{ gridColumn: 'span 2' }}>
-                                <label style={{
-                                    display: 'block',
-                                    marginBottom: '8px',
-                                    color: '#9ca3af',
-                                    fontSize: '14px',
-                                    fontWeight: '500'
-                                }}>
-                                    Tax Rate (%)
-                                </label>
-                                <input
-                                    type="number"
-                                    value={tax}
-                                    onChange={(e) => setTax(Number(e.target.value))}
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        background: 'rgba(255, 255, 255, 0.1)',
-                                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                                        borderRadius: '8px',
-                                        color: '#fff',
-                                        fontSize: '14px'
-                                    }}
-                                />
-                            </div>
+                            <span style={{ color: '#9ca3af' }}>Subtotal: </span>
+                            <span style={{ color: '#fff', fontWeight: '600' }}>€{subtotal.toFixed(1)}</span>
                         </div>
-
-                        {/* Calculator Results */}
-                        <div>
-                            {/* First row: Subtotal, Tax Amount, Monthly */}
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(3, 1fr)',
-                                gap: '16px',
-                                marginBottom: '16px'
-                            }}>
-                                <div style={{
-                                    padding: '12px 0'
-                                }}>
-                                    <span style={{ color: '#9ca3af' }}>Subtotal: </span>
-                                    <span style={{ color: '#fff', fontWeight: '600' }}>€{subtotal.toFixed(1)}</span>
-                                </div>
-                                <div style={{
-                                    padding: '12px 0'
-                                }}>
-                                    <span style={{ color: '#9ca3af' }}>Tax Amount: </span>
-                                    <span style={{ color: '#fff', fontWeight: '600' }}>€{taxAmount.toFixed(1)}</span>
-                                </div>
-                                <div style={{
-                                    padding: '12px 0'
-                                }}>
-                                    <span style={{ color: '#9ca3af' }}>Monthly: </span>
-                                    <span style={{ color: '#fff', fontWeight: '600' }}>€{monthlyTotal.toFixed(1)}</span>
-                                </div>
-                            </div>
-
-                            {/* Second row: Total over full width */}
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                padding: '8px 0',
-                                borderTop: '1px solid rgba(255, 255, 255, 0.2)',
-                                paddingTop: '16px'
-                            }}>
-                                <span style={{ color: '#fff', fontWeight: '600' }}>Total:</span>
-                                <span style={{ color: '#9333ea', fontWeight: '700', fontSize: '18px' }}>€{total.toFixed(1)}</span>
-                            </div>
+                        <div style={{
+                            padding: '24px 0'
+                        }}>
+                            <span style={{ color: '#9ca3af' }}>Tax Amount: </span>
+                            <span style={{ color: '#fff', fontWeight: '600' }}>€{taxAmount.toFixed(1)}</span>
+                        </div>
+                        <div style={{
+                            padding: '24px 0'
+                        }}>
+                            <span style={{ color: '#9ca3af' }}>Monthly: </span>
+                            <span style={{ color: '#fff', fontWeight: '600' }}>€{monthlyTotal.toFixed(1)}</span>
                         </div>
                     </div>
 
-                    {/* Right: Interactive Pie Chart */}
-                    <div>
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: '16px'
-                        }}>
-                            <h3 style={{
-                                margin: '0',
-                                color: '#fff',
-                                fontSize: '18px',
-                                fontWeight: '600'
-                            }}>
-                                {showingSourceBreakdown 
-                                    ? `Freelance market - Source` 
-                                    : `Freelance market - Industry`
-                                }
-                            </h3>
-                            <button
-                                onClick={() => {
-                                    if (showingSourceBreakdown) {
-                                        // Switch to industry view
-                                        setShowingSourceBreakdown(false);
-                                    } else {
-                                        // Switch to source view (only if industries are selected)
-                                        if (selectedIndustries.size > 0) {
-                                            setShowingSourceBreakdown(true);
-                                        }
-                                    }
-                                }}
-                                style={{
-                                    padding: '6px 12px',
-                                    backgroundColor: showingSourceBreakdown ? '#3b82f6' : '#10b981',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontSize: '12px'
-                                }}
-                            >
-                                {showingSourceBreakdown ? 'Show Industries' : 'Show Sources'}
-                            </button>
-                        </div>
-                        
-                        {jobStats.length > 0 ? (
-                            <>
-                                {/* Show message when no sources selected or no industries selected */}
-                                {(showingSourceBreakdown && selectedSources.size === 0) || (!showingSourceBreakdown && selectedIndustries.size === 0) ? (
-                                    <div style={{ textAlign: 'center', color: '#6b7280', padding: '40px', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', marginBottom: '16px' }}>
-                                        <p style={{ fontSize: '16px', marginBottom: '8px' }}>
-                                            {showingSourceBreakdown ? 'No sources selected' : 'No industries selected'}
-                                        </p>
-                                        <p style={{ fontSize: '14px' }}>
-                                            Please select at least one {showingSourceBreakdown ? 'source' : 'industry'} to view the breakdown
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                                        <svg width="400" height="400" viewBox="0 0 400 400" style={{ border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px' }}>
-                                        {(() => {
-                                            let currentAngle = 0;
-                                            
-                                            // Show source breakdown or industry breakdown based on toggle
-                                            if (showingSourceBreakdown && selectedIndustries.size > 0 && selectedSources.size > 0) {
-                                                const { breakdown } = getSourceBreakdownForIndustries(selectedIndustries);
-                                                
-                                                return breakdown.map((item) => {
-                                                    const sliceAngle = (item.percentage / 100) * 2 * Math.PI;
-                                                    const startAngle = currentAngle;
-                                                    const endAngle = currentAngle + sliceAngle;
-                                                    
-                                                    const startX = 200 + 150 * Math.cos(startAngle - Math.PI / 2);
-                                                    const startY = 200 + 150 * Math.sin(startAngle - Math.PI / 2);
-                                                    const endX = 200 + 150 * Math.cos(endAngle - Math.PI / 2);
-                                                    const endY = 200 + 150 * Math.sin(endAngle - Math.PI / 2);
-                                                    
-                                                    const largeArcFlag = sliceAngle > Math.PI ? 1 : 0;
-                                                    
-                                                    const pathData = [
-                                                        `M 200 200`,
-                                                        `L ${startX} ${startY}`,
-                                                        `A 150 150 0 ${largeArcFlag} 1 ${endX} ${endY}`,
-                                                        `Z`
-                                                    ].join(' ');
-                                                    
-                                                    currentAngle += sliceAngle;
-                                                    
-                                                    return (
-                                                        <g key={item.source}>
-                                                            <path
-                                                                d={pathData}
-                                                                fill={getIndustryColor(item.source)}
-                                                                stroke="#fff"
-                                                                strokeWidth="2"
-                                                                style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}
-                                                                onMouseEnter={(e) => {
-                                                                    e.currentTarget.style.transform = 'scale(1.05)';
-                                                                    e.currentTarget.style.transformOrigin = '200px 200px';
-                                                                    const tooltip = document.createElement('div');
-                                                                    tooltip.id = 'pie-tooltip';
-                                                                    tooltip.style.cssText = `
-                                                                        position: absolute;
-                                                                        background: #1f2937;
-                                                                        color: white;
-                                                                        padding: 8px 12px;
-                                                                        border-radius: 6px;
-                                                                        font-size: 12px;
-                                                                        font-weight: 500;
-                                                                        pointer-events: none;
-                                                                        z-index: 1000;
-                                                                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                                                                    `;
-                                                                    tooltip.textContent = `${item.source}: ${item.count.toLocaleString()} jobs (${item.percentage.toFixed(1)}%)`;
-                                                                    document.body.appendChild(tooltip);
-                                                                }}
-                                                                onMouseMove={(e) => {
-                                                                    const tooltip = document.getElementById('pie-tooltip');
-                                                                    if (tooltip) {
-                                                                        tooltip.style.left = (e.pageX + 10) + 'px';
-                                                                        tooltip.style.top = (e.pageY - 10) + 'px';
-                                                                    }
-                                                                }}
-                                                                onMouseLeave={(e) => {
-                                                                    e.currentTarget.style.transform = 'scale(1)';
-                                                                    const tooltip = document.getElementById('pie-tooltip');
-                                                                    if (tooltip) {
-                                                                        tooltip.remove();
-                                                                    }
-                                                                }}
-                                                            />
-                                                        </g>
-                                                    );
-                                                });
-                                            } else {
-                                                // Show industry breakdown - filter by selected industries AND sources
-                                                let filteredStats = selectedIndustries.size > 0 
-                                                    ? jobStats.filter(stat => selectedIndustries.has(stat.industry))
-                                                    : jobStats;
-                                                
-                                                // If sources are filtered, recalculate industry counts based on selected sources
-                                                if (selectedSources.size > 0 && selectedSources.size < Object.keys(sourceJobStats).length) {
-                                                    filteredStats = filteredStats.map(stat => {
-                                                        // Calculate count for this industry from selected sources only
-                                                        let sourceFilteredCount = 0;
-                                                        selectedSources.forEach(source => {
-                                                            if (sourceJobStats[source] && sourceJobStats[source][stat.industry]) {
-                                                                const count = sourceJobStats[source][stat.industry]; if (typeof count === 'number') sourceFilteredCount += count;
-                                                            }
-                                                        });
-                                                        return {
-                                                            ...stat,
-                                                            count: sourceFilteredCount
-                                                        };
-                                                    }).filter(stat => stat.count > 0); // Remove industries with 0 jobs
-                                                }
-                                                
-                                                // Recalculate percentages for filtered data
-                                                const filteredTotal = filteredStats.reduce((sum, stat) => sum + stat.count, 0);
-                                                const filteredStatsWithPercentages = filteredStats.map(stat => ({
-                                                    ...stat,
-                                                    percentage: filteredTotal > 0 ? (stat.count / filteredTotal) * 100 : 0
-                                                }));
-                                                
-                                                return filteredStatsWithPercentages.map((stat) => {
-                                                const sliceAngle = (stat.percentage / 100) * 2 * Math.PI;
-                                                const startAngle = currentAngle;
-                                                const endAngle = currentAngle + sliceAngle;
-                                                
-                                                const startX = 200 + 150 * Math.cos(startAngle - Math.PI / 2);
-                                                const startY = 200 + 150 * Math.sin(startAngle - Math.PI / 2);
-                                                const endX = 200 + 150 * Math.cos(endAngle - Math.PI / 2);
-                                                const endY = 200 + 150 * Math.sin(endAngle - Math.PI / 2);
-                                                
-                                                const largeArcFlag = sliceAngle > Math.PI ? 1 : 0;
-                                                
-                                                const pathData = [
-                                                    `M 200 200`,
-                                                    `L ${startX} ${startY}`,
-                                                    `A 150 150 0 ${largeArcFlag} 1 ${endX} ${endY}`,
-                                                    `Z`
-                                                ].join(' ');
-                                                
-                                                currentAngle += sliceAngle;
-                                                
-                                                return (
-                                                    <g key={stat.industry}>
-                                                        <path
-                                                            d={pathData}
-                                                            fill={getIndustryColor(stat.industry)}
-                                                            stroke="#fff"
-                                                            strokeWidth="2"
-                                                            style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}
-                                                            onMouseEnter={(e) => {
-                                                                e.currentTarget.style.transform = 'scale(1.05)';
-                                                                e.currentTarget.style.transformOrigin = '200px 200px';
-                                                                const tooltip = document.createElement('div');
-                                                                tooltip.id = 'pie-tooltip';
-                                                                tooltip.style.cssText = `
-                                                                    position: absolute;
-                                                                    background: #1f2937;
-                                                                    color: white;
-                                                                    padding: 8px 12px;
-                                                                    border-radius: 6px;
-                                                                    font-size: 12px;
-                                                                    font-weight: 500;
-                                                                    pointer-events: none;
-                                                                    z-index: 1000;
-                                                                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                                                                `;
-                                                                tooltip.textContent = `${stat.industry}: ${stat.count.toLocaleString()} jobs (${stat.percentage.toFixed(1)}%)`;
-                                                                document.body.appendChild(tooltip);
-                                                            }}
-                                                            onMouseMove={(e) => {
-                                                                const tooltip = document.getElementById('pie-tooltip');
-                                                                if (tooltip) {
-                                                                    tooltip.style.left = (e.pageX + 10) + 'px';
-                                                                    tooltip.style.top = (e.pageY - 10) + 'px';
-                                                                }
-                                                            }}
-                                                            onMouseLeave={(e) => {
-                                                                e.currentTarget.style.transform = 'scale(1)';
-                                                                const tooltip = document.getElementById('pie-tooltip');
-                                                                if (tooltip) {
-                                                                    tooltip.remove();
-                                                                }
-                                                            }}
-                                                        />
-                                                    </g>
-                                                );
-                                                });
-                                            }
-                                        })()}
-                                    </svg>
-                                </div>
-                                )}
-                            </>
-                        ) : (
-                            <div style={{ textAlign: 'center', color: '#6b7280', padding: '20px' }}>
-                                <p>Loading job statistics...</p>
-                            </div>
-                        )}
+                    {/* Second row: Total over full width */}
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        padding: '8px 0',
+                        borderTop: '1px solid rgba(255, 255, 255, 0.2)',
+                        paddingTop: '16px'
+                    }}>
+                        <span style={{ color: '#fff', fontWeight: '600' }}>Total:</span>
+                        <span style={{ color: '#9333ea', fontWeight: '700', fontSize: '18px' }}>€{total.toFixed(1)}</span>
                     </div>
                 </div>
             </div>
+
             {/* Filters Section */}
             <div style={{
                 marginBottom: '40px'
@@ -2144,17 +1873,8 @@ export default function AutomationCompanies() {
                         sourceJobStats={sourceJobStats}
                         getIndustryColor={getIndustryColor}
                         onClick={() => setSelectedCompany(company)}
-                        isSelected={selectedCompanies.has(company.id)}
-                        onSelectionChange={(companyId, selected) => {
-                            const newSelected = new Set(selectedCompanies);
-                            if (selected) {
-                                newSelected.add(companyId);
-                            } else {
-                                newSelected.delete(companyId);
-                            }
-                            setSelectedCompanies(newSelected);
-                        }}
-                    />                ))}
+                    />
+                ))}
             </div>
 
             {/* Selected Companies Costs */}
