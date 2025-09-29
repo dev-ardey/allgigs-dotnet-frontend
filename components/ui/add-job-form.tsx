@@ -81,7 +81,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
 
   const validateForm = (): boolean => {
     const errors: Partial<FormData> = {};
-
+    
     if (!formData.title.trim() || formData.title.length < 3) {
       errors.title = "Title must be at least 3 characters";
     }
@@ -100,7 +100,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
     if (!formData.start_date) {
       errors.start_date = "Start date is required";
     }
-
+    
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -111,7 +111,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
       ...prev,
       [name]: value
     }));
-
+    
     // Clear validation error for this field
     if (validationErrors[name as keyof FormData]) {
       setValidationErrors(prev => ({
@@ -123,11 +123,11 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (!validateForm()) {
       return;
     }
-
+    
     setIsSubmitting(true);
     setError(null);
     setEmailStatus(null);
@@ -138,11 +138,11 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
 
       // Get the user's access token with error handling
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
+      
       if (sessionError) {
         throw new Error(`Session error: ${sessionError.message}`);
       }
-
+      
       if (!session?.access_token) {
         throw new Error("No valid session found. Please log in again.");
       }
@@ -309,7 +309,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
                 width: "100%",
                 padding: "0.75rem",
                 border: "1px solid #d1d5db",
-                borderRadius: "8px",
+                borderRadius: "4px",
                 fontSize: "0.875rem",
                 outline: "none"
               }}
@@ -339,7 +339,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
                 width: "100%",
                 padding: "0.75rem",
                 border: "1px solid #d1d5db",
-                borderRadius: "8px",
+                borderRadius: "4px",
                 fontSize: "0.875rem",
                 outline: "none"
               }}
@@ -369,7 +369,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
                 width: "100%",
                 padding: "0.75rem",
                 border: "1px solid #d1d5db",
-                borderRadius: "8px",
+                borderRadius: "4px",
                 fontSize: "0.875rem",
                 outline: "none"
               }}
@@ -399,7 +399,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
                 width: "100%",
                 padding: "0.75rem",
                 border: "1px solid #d1d5db",
-                borderRadius: "8px",
+                borderRadius: "4px",
                 fontSize: "0.875rem",
                 outline: "none"
               }}
@@ -429,7 +429,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
                 width: "100%",
                 padding: "0.75rem",
                 border: "1px solid #d1d5db",
-                borderRadius: "8px",
+                borderRadius: "4px",
                 fontSize: "0.875rem",
                 outline: "none",
                 resize: "vertical",
@@ -466,7 +466,7 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
                 width: "100%",
                 padding: "0.75rem",
                 border: "1px solid #d1d5db",
-                borderRadius: "8px",
+                borderRadius: "4px",
                 fontSize: "0.875rem",
                 outline: "none"
               }}
@@ -483,16 +483,15 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
               type="button"
               onClick={onClose}
               style={{
-                display: 'flex',
-                marginTop: '1rem',
-                padding: '0.75rem',
-                background: '#f3f4f6',
-                color: '#000',
-                border: 'none',
-                borderRadius: '999px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                fontSize: '0.875rem'
+                flex: 1,
+                padding: "0.75rem 1rem",
+                border: "1px solid #d1d5db",
+                borderRadius: "4px",
+                backgroundColor: "#fff",
+                color: "#374151",
+                fontSize: "0.875rem",
+                fontWeight: "500",
+                cursor: "pointer"
               }}
             >
               Cancel
@@ -501,15 +500,15 @@ export default function AddJobForm({ onClose, onJobAdded, user }: AddJobFormProp
               type="submit"
               disabled={isSubmitting}
               style={{
-                marginTop: '1rem',
-                padding: '0.75rem',
-                background: '#0ccf83',
-                color: '#000',
-                border: 'none',
-                borderRadius: '999px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                fontSize: '0.875rem'
+                flex: 1,
+                padding: "0.75rem 1rem",
+                border: "none",
+                borderRadius: "4px",
+                backgroundColor: isSubmitting ? "#9ca3af" : "#4f46e5",
+                color: "#fff",
+                fontSize: "0.875rem",
+                fontWeight: "500",
+                cursor: isSubmitting ? "not-allowed" : "pointer"
               }}
             >
               {isSubmitting ? "Adding Job..." : "Add Job"}

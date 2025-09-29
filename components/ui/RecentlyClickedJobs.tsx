@@ -1,5 +1,4 @@
 import React from 'react';
-import styles from './recentlyClickedJobs.module.css';
 
 // Interface aligned with the Job type in pages/index.tsx
 interface Job {
@@ -36,30 +35,30 @@ const formatDateViewed = (clickedAtISO?: string): string => {
 
 const RecentlyClickedJobs: React.FC<RecentlyClickedJobsProps> = ({ jobs, isLoading, onJobClick, isJobNew }) => {
   if (isLoading) {
-    return <div className={styles.loading}>Loading manage jobs...</div>;
+    return <div className="recently-clicked-loading">Loading manage jobs...</div>;
   }
 
   if (jobs.length === 0) {
-    return <div className={styles.noJobs}>No jobs clicked yet.</div>;
+    return <div className="recently-clicked-no-jobs">No jobs clicked yet.</div>;
   }
 
   return (
-    <div className={styles.recentlyClickedContainer}>
-      <h3 className={styles.header}>Manage Jobs</h3>
-      <div className={styles.jobRowContainer}>
+    <div className="recently-clicked-container">
+      <h3 className="recently-clicked-header">Manage Jobs</h3>
+      <div className="recently-clicked-job-row-container">
         {jobs.map((job) => {
           const viewedDateText = formatDateViewed(job.clicked_at);
 
           return (
-            <div key={job.UNIQUE_ID} className={`${styles.jobRow} ${isJobNew(job) ? styles.newJob : ''}`} onClick={() => onJobClick(job)}>
-              <div className={styles.jobInfo}>
-                <h4 className={styles.jobTitle}>{job.Title}</h4>
-                <p className={styles.company}>{job.Company}</p>
+            <div key={job.UNIQUE_ID} className={`recently-clicked-job-row ${isJobNew(job) ? 'recently-clicked-new-job' : ''}`} onClick={() => onJobClick(job)}>
+              <div className="recently-clicked-job-info">
+                <h4 className="recently-clicked-job-title">{job.Title}</h4>
+                <p className="recently-clicked-company">{job.Company}</p>
               </div>
-              <div className={styles.jobMeta}>
-                {job.Location && <p className={styles.location}>{job.Location}</p>}
-                <p className={styles.viewedDate}>Viewed: {viewedDateText}</p>
-                <a href={job.URL} target="_blank" rel="noopener noreferrer" className={styles.jobLink} onClick={(e) => e.stopPropagation()}>
+              <div className="recently-clicked-job-meta">
+                {job.Location && <p className="recently-clicked-location">{job.Location}</p>}
+                <p className="recently-clicked-viewed-date">Viewed: {viewedDateText}</p>
+                <a href={job.URL} target="_blank" rel="noopener noreferrer" className="recently-clicked-job-link" onClick={(e) => e.stopPropagation()}>
                   View
                 </a>
               </div>

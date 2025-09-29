@@ -53,222 +53,128 @@ export default function LoginForm() {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'black',
-      fontFamily: "'Montserrat', Arial, sans-serif",
-      color: '#fff',
-      position: 'relative',
-      overflow: 'hidden',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}>
-
-      {/* Login Container */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.15)',
-        backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        borderRadius: '24px',
-        padding: '3rem',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-        transition: 'all 0.3s ease',
-        maxWidth: '480px',
-        width: '100%',
-        margin: '2rem',
-        textAlign: 'center',
-        position: 'relative',
-        zIndex: 5
+    <div className="job-board-container" style={{ maxWidth: 520, margin: "4rem auto", textAlign: "center" }}>
+      <img src="/images/allGigs-logo-white.svg" alt="AllGigs Logo" style={{ height: "70px", marginBottom: "1.5rem" }} />
+      <p style={{
+        color: "#c8c8c8",
+        fontSize: "1.1rem",
+        marginBottom: "2rem",
+        whiteSpace: "normal",
+        overflowWrap: "break-word",
+        wordBreak: "break-word",
+        lineHeight: 1.6,
+        maxWidth: "100%",
+        textAlign: "center"
       }}>
-        <img
-          src="/images/allGigs-logo-white.svg"
-          alt="AllGigs Logo"
-          style={{
-            height: "80px",
-            marginBottom: "2rem",
-            filter: 'brightness(1.1)'
-          }}
+        Discover your next opportunity from <span style={{ fontWeight: "bold", color: "#0ccf83" }}>1000</span> curated positions
+      </p>
+      <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          required
+          onChange={e => setEmail(e.target.value)}
+          style={inputStyle}
         />
-
-        <p style={{
-          color: 'rgba(255, 255, 255, 0.9)',
-          fontSize: "1.2rem",
-          marginBottom: "2.5rem",
-          whiteSpace: "normal",
-          overflowWrap: "break-word",
-          wordBreak: "break-word",
-          lineHeight: 1.6,
-          maxWidth: "100%",
-          textAlign: "center"
-        }}>
-          Discover your next opportunity from <span style={{ fontWeight: "bold", color: "#0ccf83" }}>1000</span> curated positions
-        </p>
-
-        <form onSubmit={handleLogin} style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "1.5rem",
-          width: "100%",
-          alignItems: "center"
-        }}>
+        {mode !== "forgot" && (
           <input
-            type="email"
-            placeholder="Email"
-            value={email}
+            type="password"
+            placeholder="Password"
+            value={password}
             required
-            onChange={e => setEmail(e.target.value)}
-            style={{ ...inputStyle, alignSelf: "stretch" }}
-            className="login-input-placeholder"
-            onFocus={e => {
-              e.currentTarget.style.border = '1px solid rgba(12, 207, 131, 0.5)';
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-            }}
-            onBlur={e => {
-              e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-            }}
+            onChange={e => setPassword(e.target.value)}
+            style={inputStyle}
           />
+        )}
+        <button
+          type="submit"
+          style={buttonStyle}
+          onMouseDown={e => {
+            if (typeof buttonActiveStyle.boxShadow === 'string') e.currentTarget.style.boxShadow = buttonActiveStyle.boxShadow;
+            if (typeof buttonActiveStyle.background === 'string') e.currentTarget.style.background = buttonActiveStyle.background;
+            if (typeof buttonActiveStyle.transform === 'string') e.currentTarget.style.transform = buttonActiveStyle.transform;
+          }}
+          onMouseUp={e => {
+            if (typeof buttonStyle.boxShadow === 'string') e.currentTarget.style.boxShadow = buttonStyle.boxShadow;
+            if (typeof buttonStyle.background === 'string') e.currentTarget.style.background = buttonStyle.background;
+            e.currentTarget.style.transform = "none";
+          }}
+          onMouseLeave={e => {
+            if (typeof buttonStyle.boxShadow === 'string') e.currentTarget.style.boxShadow = buttonStyle.boxShadow;
+            if (typeof buttonStyle.background === 'string') e.currentTarget.style.background = buttonStyle.background;
+            e.currentTarget.style.transform = "none";
+          }}
+        >
+          {mode === "login" && "Login"}
+          {mode === "signup" && "Sign Up"}
+          {mode === "forgot" && "Reset Password"}
+        </button>
+        <div style={{ fontSize: "0.9rem", marginTop: "0.5rem", color: "#c8c8c8" }}>
           {mode !== "forgot" && (
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              required
-              onChange={e => setPassword(e.target.value)}
-              style={{ ...inputStyle, alignSelf: "stretch" }}
-              className="login-input-placeholder"
-              onFocus={e => {
-                e.currentTarget.style.border = '1px solid rgba(12, 207, 131, 0.5)';
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-              }}
-              onBlur={e => {
-                e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-              }}
-            />
+            <span onClick={() => setMode("forgot")} style={linkStyle}>Forgot?</span>
           )}
-          <button
-            type="submit"
-            style={buttonStyle}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = '#0bbf73';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 16px rgba(12, 207, 131, 0.25)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = '#0ccf83';
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(12, 207, 131, 0.15)';
-            }}
-            onMouseDown={e => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 1px 4px rgba(12, 207, 131, 0.25)';
-            }}
-            onMouseUp={e => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 16px rgba(12, 207, 131, 0.25)';
-            }}
-          >
-            {mode === "login" && "Login"}
-            {mode === "signup" && "Sign Up"}
-            {mode === "forgot" && "Reset Password"}
-          </button>
-
-          <div style={{ fontSize: "1rem", marginTop: "1rem", color: "rgba(255, 255, 255, 0.8)" }}>
-            {mode !== "forgot" && (
-              <span onClick={() => setMode("forgot")} style={linkStyle}>Forgot password?</span>
-            )}
-            {mode === "login" && (
-              <div style={{ marginTop: "0.5rem" }}>
-                No account? <span onClick={() => setMode("signup")} style={linkStyle}>Sign up</span>
-              </div>
-            )}
-            {mode === "signup" && (
-              <div style={{ marginTop: "0.5rem" }}>
-                Already have an account? <span onClick={() => setMode("login")} style={linkStyle}>Login</span>
-              </div>
-            )}
-            {mode === "forgot" && (
-              <div style={{ marginTop: "0.5rem" }}>
-                Remembered? <span onClick={() => setMode("login")} style={linkStyle}>Login</span>
-              </div>
-            )}
+          {mode === "login" && (
+            <div>
+              No account? <span onClick={() => setMode("signup")} style={linkStyle}>Sign up</span>
+            </div>
+          )}
+          {mode === "signup" && (
+            <div>
+              Already have an account? <span onClick={() => setMode("login")} style={linkStyle}>Login</span>
+            </div>
+          )}
+          {mode === "forgot" && (
+            <div>
+              Remembered? <span onClick={() => setMode("login")} style={linkStyle}>Login</span>
+            </div>
+          )}
+        </div>
+        {signedUp && (
+          <div style={{ marginTop: "1rem", color: "#0ccf83", fontWeight: 600 }}>
+            Thank you for signing up, please verify your email.
           </div>
-
-          {signedUp && (
-            <div style={{
-              marginTop: "1rem",
-              color: "#0ccf83",
-              fontWeight: 600,
-              padding: "1rem",
-              background: "rgba(12, 207, 131, 0.1)",
-              borderRadius: "12px",
-              border: "1px solid rgba(12, 207, 131, 0.3)"
-            }}>
-              Thank you for signing up, please verify your email.
-            </div>
-          )}
-
-          {message && (
-            <div style={{
-              marginTop: "1rem",
-              color: message.toLowerCase().includes("error") ? "#ef4444" : "#0ccf83",
-              fontWeight: 600,
-              padding: "1rem",
-              background: message.toLowerCase().includes("error")
-                ? "rgba(239, 68, 68, 0.1)"
-                : "rgba(12, 207, 131, 0.1)",
-              borderRadius: "12px",
-              border: message.toLowerCase().includes("error")
-                ? "1px solid rgba(239, 68, 68, 0.3)"
-                : "1px solid rgba(12, 207, 131, 0.3)"
-            }}>
-              {message}
-            </div>
-          )}
-        </form>
-      </div>
+        )}
+        {message && (
+          <div style={{ marginTop: "1rem", color: message.toLowerCase().includes("error") ? "#dc2626" : "#0ccf83" }}>
+            {message}
+          </div>
+        )}
+      </form>
     </div>
   );
 }
 
 const inputStyle: React.CSSProperties = {
-  padding: "1rem 1.25rem",
-  borderRadius: "12px",
-  border: "1px solid rgba(255, 255, 255, 0.3)",
+  padding: "0.75rem 1rem",
+  borderRadius: "4px",
+  border: "1px solid #ccc",
   fontSize: "1rem",
   width: "100%",
-  background: "rgba(255, 255, 255, 0.1)",
-  backdropFilter: "blur(8px)",
-  color: "#fff",
-  transition: "all 0.3s ease",
-  outline: "none",
-  boxSizing: "border-box",
-  textAlign: "left",
 };
 
 const buttonStyle: React.CSSProperties = {
   background: "#0ccf83",
   color: "#000",
   fontWeight: 700,
-  borderRadius: "12px",
-  padding: "1rem 2rem",
-  border: "none",
+  borderRadius: "4px",
+  padding: "0.75rem 1.5rem",
+  border: "2px solid #0ccf83",
   boxShadow: "0 2px 8px rgba(12, 207, 131, 0.15)",
   cursor: "pointer",
   fontSize: "1.1rem",
-  width: "100%",
-  transition: "all 0.3s ease",
-  outline: "none",
-  boxSizing: "border-box",
-  alignSelf: "stretch",
+  alignSelf: "center",
+  transition: "background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.1s",
+};
+
+const buttonActiveStyle: React.CSSProperties = {
+  boxShadow: "0 1px 2px rgba(12, 207, 131, 0.25) inset",
+  background: "#0bbf73",
+  transform: "translateY(2px)",
 };
 
 const linkStyle: React.CSSProperties = {
   color: "#0ccf83",
   cursor: "pointer",
-  fontWeight: 600,
-  textDecoration: "underline",
-  transition: "all 0.2s ease",
+  fontWeight: 500,
 };
