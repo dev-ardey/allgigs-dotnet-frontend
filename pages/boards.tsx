@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from "../SupabaseClient";
 import CompleteProfileForm from "../components/ui/CompleteProfileForm";
-import { useProfileCheck } from "../components/ui/useProfileCheck";
+// import { useProfileCheck } from "../components/ui/useProfileCheck";
 import {
     Search,
     Info,
@@ -47,15 +47,15 @@ interface AutomationDetails {
 }
 
 // Job Data Interface
-interface JobData {
-    id: number;
-    industry?: string;
-    source?: string;
-    company_name?: string;
-    title?: string;
-    location?: string;
-    created_at?: string;
-}
+// interface JobData {
+//     id: number;
+//     industry?: string;
+//     source?: string;
+//     company_name?: string;
+//     title?: string;
+//     location?: string;
+//     created_at?: string;
+// }
 
 // Industry Stats Interface
 interface IndustryStats {
@@ -151,7 +151,7 @@ const CompanyCard: React.FC<{
                                 {(() => {
                                     let currentAngle = 0;
 
-                                    return sourceIndustries.map(([industry, count], index) => {
+                                    return sourceIndustries.map(([industry, count]) => {
                                         const percentage = (count / sourceTotal) * 100;
                                         const sliceAngle = (percentage / 100) * 2 * Math.PI;
                                         const startAngle = currentAngle;
@@ -181,7 +181,7 @@ const CompanyCard: React.FC<{
                                                 stroke="#fff"
                                                 strokeWidth="1"
                                                 style={{ cursor: 'pointer' }}
-                                                onMouseEnter={(e) => {
+                                                onMouseEnter={() => {
                                                     const tooltip = document.createElement('div');
                                                     tooltip.id = 'mini-pie-tooltip';
                                                     tooltip.style.cssText = `
@@ -473,7 +473,7 @@ const CompanyDetailModal: React.FC<{
                                             const monthlyHourlyCost = hourlyRate * calculatorHours * calculatorWeeksPerMonth;
                                             const percentageFee = company["percentage fee"] || 0;
                                             const monthlyPercentageCost = calculatorMonthlyTotal * (percentageFee / 100);
-                                            const totalPercentageCost = calculatorTotalWithTax * (percentageFee / 100);
+                                            // const totalPercentageCost = calculatorTotalWithTax * (percentageFee / 100);
                                             const maxCost = Math.max(subscriptionCost, monthlyHourlyCost, monthlyPercentageCost) * 3 || 1;
 
                                             const subscriptionData = [1, 2, 3].map((month, index) => {
@@ -729,6 +729,7 @@ export default function AutomationCompanies() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
+    console.log('user', user);
     // Temporarily disable profile check to focus on main app functionality
     const needsProfile = false;
     const profileLoading = false;
@@ -851,6 +852,7 @@ export default function AutomationCompanies() {
     };
 
     const selectedCompanyCosts = calculateSelectedCompanyCosts();
+    console.log('selectedCompanyCosts', selectedCompanyCosts);
 
     // Calculate source breakdown for selected industries
     const getSourceBreakdownForIndustries = (industries: Set<string>) => {
@@ -998,7 +1000,7 @@ export default function AutomationCompanies() {
                 'vacancies'
             ];
 
-            let foundData = null;
+            // let foundData = null;
             let workingTable = null;
 
             for (const tableName of tableVariations) {
@@ -1784,8 +1786,9 @@ export default function AutomationCompanies() {
                                                     // Show source breakdown or industry breakdown based on toggle
                                                     if (showingSourceBreakdown && selectedIndustries.size > 0 && selectedSources.size > 0) {
                                                         const { breakdown, total } = getSourceBreakdownForIndustries(selectedIndustries);
+                                                        console.log('breakdown', breakdown, total);
 
-                                                        return breakdown.map((item, index) => {
+                                                        return breakdown.map((item) => {
                                                             const sliceAngle = (item.percentage / 100) * 2 * Math.PI;
                                                             const startAngle = currentAngle;
                                                             const endAngle = currentAngle + sliceAngle;
@@ -1794,6 +1797,7 @@ export default function AutomationCompanies() {
                                                             const frenchSources = ['404Works', 'comet', 'Welcome to the Jungle', 'Freelance-Informatique', 'Codeur.com'];
                                                             const isFrench = frenchSources.includes(item.source);
                                                             const displayName = `${item.source}${isFrench ? ' 🇫🇷' : ''}`;
+                                                            console.log('displayName', displayName);
 
                                                             const startX = 200 + 150 * Math.cos(startAngle - Math.PI / 2);
                                                             const startY = 200 + 150 * Math.sin(startAngle - Math.PI / 2);
@@ -1887,7 +1891,7 @@ export default function AutomationCompanies() {
                                                             percentage: filteredTotal > 0 ? (stat.count / filteredTotal) * 100 : 0
                                                         }));
 
-                                                        return filteredStatsWithPercentages.map((stat, index) => {
+                                                        return filteredStatsWithPercentages.map((stat) => {
                                                             const sliceAngle = (stat.percentage / 100) * 2 * Math.PI;
                                                             const startAngle = currentAngle;
                                                             const endAngle = currentAngle + sliceAngle;
@@ -1907,8 +1911,9 @@ export default function AutomationCompanies() {
                                                             ].join(' ');
 
                                                             const labelAngle = startAngle + sliceAngle / 2;
-                                                            const labelX = 200 + 200 * Math.cos(labelAngle - Math.PI / 2);
-                                                            const labelY = 200 + 200 * Math.sin(labelAngle - Math.PI / 2);
+                                                            console.log('labelAngle', labelAngle);
+                                                            // const labelX = 200 + 200 * Math.cos(labelAngle - Math.PI / 2);
+                                                            // const labelY = 200 + 200 * Math.sin(labelAngle - Math.PI / 2);
 
                                                             currentAngle += sliceAngle;
 
