@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Job } from '../../types/types';
 import JobCard from './JobCard';
 
@@ -29,9 +29,9 @@ const JobStack: React.FC<JobStackProps> = ({ jobs }) => {
       {/* Collapsed View / Always Visible Header */}
       <div onClick={handleToggle} style={{ padding: '1rem', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f9fafb' }}>
         <div>
-          <h3 style={{ margin: 0, fontSize: '1.25rem' }} dangerouslySetInnerHTML={{ __html: primaryJob.Title }} />
+          <h3 style={{ margin: 0, fontSize: '1.25rem' }} dangerouslySetInnerHTML={{ __html: primaryJob.Title || '' }} />
           <p style={{ margin: '0.25rem 0', color: '#6b7280' }}>
-            <span dangerouslySetInnerHTML={{ __html: primaryJob.Company }} /> - {jobs.map(j => j.Location).join(', ')}
+            <span dangerouslySetInnerHTML={{ __html: primaryJob.Company || '' }} /> - {jobs.map(j => j.Location).join(', ')}
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', background: '#e5e7eb', padding: '0.5rem 1rem', borderRadius: '16px' }}>
