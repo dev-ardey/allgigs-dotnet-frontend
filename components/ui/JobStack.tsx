@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Job } from '../../types';
+import { Job } from '../../types/types';
 import JobCard from './JobCard';
 
 interface JobStackProps {
@@ -16,10 +16,10 @@ const JobStack: React.FC<JobStackProps> = ({ jobs }) => {
   if (!jobs || jobs.length === 0) {
     return null;
   }
-  
+
   const primaryJob = jobs[0];
   const jobCount = jobs.length;
-  
+
   if (!primaryJob) {
     return null;
   }

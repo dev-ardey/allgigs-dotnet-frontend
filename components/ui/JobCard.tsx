@@ -1,6 +1,5 @@
 import React from 'react';
-import { Job } from '../../types';
-import styles from './JobCard.module.css';
+import { Job } from '../../types/types';
 
 interface JobCardProps {
   job: Job;
@@ -18,10 +17,10 @@ const JobCard: React.FC<JobCardProps> = ({ job, groupSize, onClick }) => {
     if ((e.target as HTMLElement).closest('button')) {
       return;
     }
-    
+
     // Open the job URL
     window.open(job.URL, '_blank');
-    
+
     // Log the click
     if (onClick) {
       onClick();
@@ -29,27 +28,29 @@ const JobCard: React.FC<JobCardProps> = ({ job, groupSize, onClick }) => {
   };
 
   return (
-    <div className={styles.card} onClick={handleClick}>
-      <div className={styles.cardHeader}>
-        <h3 className={styles.title} dangerouslySetInnerHTML={{ __html: job.Title }} />
-        {groupSize > 1 && <span className={styles.groupBadge}>{groupSize} jobs</span>}
+    <div className="card" onClick={handleClick}>
+      <div className="cardHeader">
+        <h3 className="title" dangerouslySetInnerHTML={{ __html: job.Title || '' }} />
+        {groupSize > 1 && <span className="groupBadge">
+          {groupSize} jobs
+        </span>}
       </div>
-      <p className={styles.company}>
-        <span dangerouslySetInnerHTML={{ __html: job.Company }} /> - <span dangerouslySetInnerHTML={{ __html: job.Location }} />
+      <p className="company">
+        <span dangerouslySetInnerHTML={{ __html: job.Company || '' }} /> - <span dangerouslySetInnerHTML={{ __html: job.Location || '' }} />
       </p>
-      <div className={styles.jobDetails}>
-        {job.Source && <span className={styles.detail}>Source: {job.Source}</span>}
-        {job.hours && <span className={styles.detail}>Hours: {job.hours}</span>}
-        {job.duration && <span className={styles.detail}>Duration: {job.duration}</span>}
+      <div className="jobDetails">
+        {job.Source && <span className="detail">Source: {job.Source}</span>}
+        {job.hours && <span className="detail">Hours: {job.hours}</span>}
+        {job.duration && <span className="detail">Duration: {job.duration}</span>}
       </div>
-      <div className={isExpanded ? styles.descriptionExpanded : styles.description}>
-        <p dangerouslySetInnerHTML={{ __html: content }} />
+      <div className={isExpanded ? "descriptionExpanded" : "description"}>
+        <p dangerouslySetInnerHTML={{ __html: content || '' }} />
       </div>
       {!isExpanded && hasLongContent && (
-         <div className={styles.fadeout}></div>
+        <div className="fadeout"></div>
       )}
       {hasLongContent && (
-        <button onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }} className={styles.moreButton}>
+        <button onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }} className="moreButton">
           {isExpanded ? 'Show less' : 'Show more...'}
         </button>
       )}
