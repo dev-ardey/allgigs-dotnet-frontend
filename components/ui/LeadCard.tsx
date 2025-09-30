@@ -935,7 +935,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         id: crypto.randomUUID(),
                         type: selectedInterviewType,
                         date: interviewDate,
-                        rating: null,
+                        rating: null as boolean | null,
                         completed: false,
                         created_at: new Date().toISOString()
                     };

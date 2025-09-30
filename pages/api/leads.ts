@@ -158,8 +158,8 @@ async function createLead(req: NextApiRequest, res: NextApiResponse, user_id: st
                 source: 'job_board'
             },
             applied_data: {},
-            spoken_data: { conversations: [] },
-            interview_data: { interviews: [] },
+            spoken_data: { conversations: [] as any[] },
+            interview_data: { interviews: [] as any[] },
             denied_data: {},
             success_data: {},
             follow_up_completed: false
