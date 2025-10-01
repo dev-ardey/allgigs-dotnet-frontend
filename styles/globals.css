@@ -641,7 +641,7 @@ body {
 }
 
 .company-selection-box {
-  position: absolute;
+  /* position: absolute; */
   top: 12px;
   right: 12px;
   display: flex;

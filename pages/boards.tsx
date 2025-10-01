@@ -7,6 +7,7 @@ import CompleteProfileForm from "../components/ui/CompleteProfileForm";
 import {
     Search,
     Info,
+    BarChart3,
 } from 'lucide-react';
 
 // Automation Details Interface
@@ -98,7 +99,6 @@ const CompanyCard: React.FC<{
 
     return (
         <div
-            onClick={onClick}
             className="company-card" style={cardStyling}>
             {/* Company Name */}
             <div className="company-name-container">
@@ -226,19 +226,7 @@ const CompanyCard: React.FC<{
                 </div>
             </div>
 
-            {/* Selection Checkbox */}
-            <div className="company-selection-box" onClick={(e) => e.stopPropagation()}>
-                <input
-                    type="checkbox"
-                    className="company-checkbox"
-                    checked={isSelected}
-                    onChange={(e) => {
-                        e.stopPropagation();
-                        onSelectionChange(company.id, e.target.checked);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                />
-            </div>
+
 
             {/* Company Description */}
             {company["Company description"] && (
@@ -386,10 +374,82 @@ const CompanyCard: React.FC<{
                 </div>
             )}
 
-            {/* Hover indicator */}
-            <div className="hover-indicator">
-                Click for details →
+            {/*Price Analysis & Cost Button */}
+            <div className="company-selection-box" onClick={(e) => e.stopPropagation()}>
+                <button
+                    className="compare-chart-button"
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 12px',
+                        backgroundColor: '#8b5cf6',
+                        color: '#fff',
+                        border: '2px solid #8b5cf6',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        transition: 'all 0.2s ease',
+                        marginBottom: '8px'
+                    }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onClick();
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#7c3aed';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#8b5cf6';
+                    }}
+                >
+                    <BarChart3 size={16} />
+                    Price & Cost Summary
+                </button>
             </div>
+
+            {/* Compare in Chart Button (replaces checkbox) */}
+            <div className="company-selection-box" onClick={(e) => e.stopPropagation()}>
+                <button
+                    className="compare-chart-button"
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 12px',
+                        backgroundColor: isSelected ? '#8b5cf6' : 'transparent',
+                        color: isSelected ? '#fff' : '#8b5cf6',
+                        border: `2px solid ${isSelected ? '#8b5cf6' : '#8b5cf6'}`,
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        transition: 'all 0.2s ease'
+
+
+
+                    }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectionChange(company.id, !isSelected);
+                    }}
+                    onMouseEnter={(e) => {
+                        if (!isSelected) {
+                            e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.1)';
+                        }
+                    }}
+                    onMouseLeave={(e) => {
+                        if (!isSelected) {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                        }
+                    }}
+                >
+                    <span style={{ fontSize: '16px' }}>{isSelected ? '✓' : '+'}</span>
+                    Compare in chart
+                </button>
+            </div>
+
         </div>
     );
 };
@@ -2202,7 +2262,7 @@ export default function AutomationCompanies() {
                     // borderRadius: '12px',
                     // border: '1px solid #e2e8f0'
                 }}>
-                    
+
 
                     <p>
                         A full overview of the marketplace: Make better, more informed decisions because you have a broader view of the marketplace.
@@ -2324,12 +2384,12 @@ export default function AutomationCompanies() {
                     </div>
                 </div>
                 <p className="stats-subtitle">
-                        {filteredCompanies.length} of {companies.length} companies
-                    </p>
-                    <hr></hr>
+                    {filteredCompanies.length} of {companies.length} companies
+                </p>
+                <hr></hr>
             </div>
 
-            
+
 
             <div className="companies-grid">
                 {filteredCompanies.map((company) => (
