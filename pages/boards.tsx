@@ -9,6 +9,8 @@ import {
     Info,
     BarChart3,
     ChartPie,
+    MousePointerClick,
+    Plus,
 } from 'lucide-react';
 
 // Automation Details Interface
@@ -357,7 +359,7 @@ const CompanyCard: React.FC<{
 
             {/* Visit Website Button */}
             {company.URL && (
-                <div className="website-button-container">
+                <div style={{ marginBottom: '8px' }}>
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
@@ -370,6 +372,10 @@ const CompanyCard: React.FC<{
                         }}
                         style={{
                             width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
                             padding: '10px 16px',
                             background: 'rgba(139, 92, 246, 0.3)',
                             color: '#fff',
@@ -388,39 +394,41 @@ const CompanyCard: React.FC<{
                             e.currentTarget.style.background = 'rgba(139, 92, 246, 0.3)';
                         }}
                     >
+                        <MousePointerClick size={16} />
                         Visit Website
                     </button>
                 </div>
             )}
 
             {/*Price Analysis & Cost Button */}
-            <div className="company-selection-box" onClick={(e) => e.stopPropagation()}>
+            <div style={{ marginBottom: '8px' }} onClick={(e) => e.stopPropagation()}>
                 <button
-                    className="compare-chart-button"
                     style={{
+                        width: '100%',
                         display: 'flex',
                         alignItems: 'center',
+                        justifyContent: 'center',
                         gap: '6px',
-                        padding: '8px 12px',
-                        backgroundColor: '#8b5cf6',
+                        padding: '10px 16px',
+                        background: 'rgba(139, 92, 246, 0.3)',
                         color: '#fff',
-                        border: '2px solid #8b5cf6',
-                        borderRadius: '6px',
+                        border: '1px solid rgba(139, 92, 246, 0.4)',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: '600',
                         cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: '500',
-                        transition: 'all 0.2s ease',
-                        marginBottom: '8px'
+                        backdropFilter: 'blur(8px)',
+                        transition: 'all 0.2s ease'
                     }}
                     onClick={(e) => {
                         e.stopPropagation();
                         onClick();
                     }}
                     onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#7c3aed';
+                        e.currentTarget.style.background = 'rgba(139, 92, 246, 0.5)';
                     }}
                     onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#8b5cf6';
+                        e.currentTarget.style.background = 'rgba(139, 92, 246, 0.3)';
                     }}
                 >
                     <BarChart3 size={16} />
@@ -429,43 +437,38 @@ const CompanyCard: React.FC<{
             </div>
 
             {/* Compare in Chart Button (replaces checkbox) */}
-            <div className="company-selection-box" onClick={(e) => e.stopPropagation()}>
+            <div style={{ marginBottom: '8px' }} onClick={(e) => e.stopPropagation()}>
                 <button
-                    className="compare-chart-button"
                     style={{
+                        width: '100%',
                         display: 'flex',
                         alignItems: 'center',
+                        justifyContent: 'center',
                         gap: '6px',
-                        padding: '8px 12px',
-                        backgroundColor: isSelected ? '#8b5cf6' : 'transparent',
-                        color: isSelected ? '#fff' : '#8b5cf6',
-                        border: `2px solid ${isSelected ? '#8b5cf6' : '#8b5cf6'}`,
-                        borderRadius: '6px',
+                        padding: '10px 16px',
+                        background: 'rgba(139, 92, 246, 0.3)',
+                        color: '#fff',
+                        border: '1px solid rgba(139, 92, 246, 0.4)',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: '600',
                         cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: '500',
+                        backdropFilter: 'blur(8px)',
                         transition: 'all 0.2s ease'
-
-
-
                     }}
                     onClick={(e) => {
                         e.stopPropagation();
                         onSelectionChange(company.id, !isSelected);
                     }}
                     onMouseEnter={(e) => {
-                        if (!isSelected) {
-                            e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.1)';
-                        }
+                        e.currentTarget.style.background = 'rgba(139, 92, 246, 0.5)';
                     }}
                     onMouseLeave={(e) => {
-                        if (!isSelected) {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                        }
+                        e.currentTarget.style.background = 'rgba(139, 92, 246, 0.3)';
                     }}
                 >
-                    <span style={{ fontSize: '16px' }}>{isSelected ? '✓' : '+'}</span>
-                    Compare in chart
+                    <Plus size={16} />
+                    {isSelected ? 'Added to comparison' : 'Compare in chart'}
                 </button>
             </div>
 
