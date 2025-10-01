@@ -796,6 +796,8 @@ const CompanyDetailModal: React.FC<{
     );
 };
 
+
+
 // Search Bar Component
 const SearchBar: React.FC<{
     value: string;
@@ -1471,16 +1473,6 @@ export default function AutomationCompanies() {
                 </p>
             </div>
 
-            <div>
-                <p style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '1rem' }}>
-                    Welcome to the central hub for understanding the Dutch freelance landscape. We've brought together over 60 job boards, from government portals to private recruiters, into one, free platform. We don't just show you jobs; we are going to give you key insights into the freelancing world, so you can make key informed decisions about your next career move.
-                </p>
-
-
-
-
-            </div>
-
 
             <div className="stats-section" style={cardStyling}>
 
@@ -1499,6 +1491,9 @@ export default function AutomationCompanies() {
                         </div>
                     </div>
                 </div>
+                <p style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '1rem' }}>
+                    Welcome to the central hub for understanding the Dutch freelance landscape. We've brought together over 60 job boards, from government portals to private recruiters, into one, free platform. We don't just show you jobs; we are going to give you key insights into the freelancing world, so you can make key informed decisions about your next career move.
+                </p>
                 <div className="calculation-inputs">
                     <div className="calc-input-group">
                         <label className="calc-label">Rate (€/hour)</label>
@@ -1599,7 +1594,7 @@ export default function AutomationCompanies() {
                         </p>
 
                         {/* Industry Job Statistics */}
-                        <div className="industry-stats-section" style={{ marginBottom: '20px', padding: '16px', background: 'rgba(34, 34, 34)', borderRadius: '8px' }}>
+                        <div className="industry-stats-section" style={{ marginBottom: '20px', background: 'rgba(34, 34, 34)', borderRadius: '8px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                                 <h3 style={{ margin: '0', color: '#c0c0c0' }}>
                                     {showingSourceBreakdown
@@ -2347,122 +2342,124 @@ export default function AutomationCompanies() {
                     // border: '1px solid #e2e8f0'
                 }}>
 
+                    <div className="stats-section" style={cardStyling}>
 
-                    <p>
-                        A full overview of the marketplace: Make better, more informed decisions because you have a broader view of the marketplace.
-                    </p>
-                    <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '16px',
-                        marginTop: '20px'
-                    }}>
-                        <SearchBar value={searchTerm} onChange={setSearchTerm} />
+                        <p>
+                            A full overview of the marketplace: Make better, more informed decisions because you have a broader view of the marketplace.
+                        </p>
                         <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                            display: 'flex',
+                            flexDirection: 'column',
                             gap: '16px',
-                            alignItems: 'end'
+                            marginTop: '20px'
                         }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{
-                                    fontSize: '14px',
-                                    fontWeight: '500',
-                                    color: '#c0c0c0'
-                                }}>Paid/Free:</label>
-                                <select
-                                    value={modelFilter}
-                                    onChange={(e) => setModelFilter(e.target.value)}
-                                    style={{
-                                        padding: '8px 12px',
-                                        border: '1px solid #d1d5db',
-                                        borderRadius: '6px',
-                                        backgroundColor: '#fff',
+                            <SearchBar value={searchTerm} onChange={setSearchTerm} />
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                gap: '16px',
+                                alignItems: 'end'
+                            }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <label style={{
                                         fontSize: '14px',
-                                        color: '#374151',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    <option value="all">All Models</option>
-                                    <option value="paid">Paid</option>
-                                    <option value="free">Free</option>
-                                </select>
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{
-                                    fontSize: '14px',
-                                    fontWeight: '500',
-                                    color: '#c0c0c0'
-                                }}>Customer Type:</label>
-                                <select
-                                    value={customerFilter}
-                                    onChange={(e) => setCustomerFilter(e.target.value)}
-                                    style={{
-                                        padding: '8px 12px',
-                                        border: '1px solid #d1d5db',
-                                        borderRadius: '6px',
-                                        backgroundColor: '#fff',
+                                        fontWeight: '500',
+                                        color: '#c0c0c0'
+                                    }}>Paid/Free:</label>
+                                    <select
+                                        value={modelFilter}
+                                        onChange={(e) => setModelFilter(e.target.value)}
+                                        style={{
+                                            padding: '8px 12px',
+                                            border: '1px solid #d1d5db',
+                                            borderRadius: '6px',
+                                            backgroundColor: '#fff',
+                                            fontSize: '14px',
+                                            color: '#374151',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <option value="all">All Models</option>
+                                        <option value="paid">Paid</option>
+                                        <option value="free">Free</option>
+                                    </select>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <label style={{
                                         fontSize: '14px',
-                                        color: '#374151',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    <option value="all">All Types</option>
-                                    <option value="private">Private</option>
-                                    <option value="semi-gov">Semi-Gov</option>
-                                    <option value="government">Government</option>
-                                </select>
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{
-                                    fontSize: '14px',
-                                    fontWeight: '500',
-                                    color: '#c0c0c0'
-                                }}>Pricing Model:</label>
-                                <select
-                                    value={pricingModelFilter}
-                                    onChange={(e) => setPricingModelFilter(e.target.value)}
-                                    style={{
-                                        padding: '8px 12px',
-                                        border: '1px solid #d1d5db',
-                                        borderRadius: '6px',
-                                        backgroundColor: '#fff',
+                                        fontWeight: '500',
+                                        color: '#c0c0c0'
+                                    }}>Customer Type:</label>
+                                    <select
+                                        value={customerFilter}
+                                        onChange={(e) => setCustomerFilter(e.target.value)}
+                                        style={{
+                                            padding: '8px 12px',
+                                            border: '1px solid #d1d5db',
+                                            borderRadius: '6px',
+                                            backgroundColor: '#fff',
+                                            fontSize: '14px',
+                                            color: '#374151',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <option value="all">All Types</option>
+                                        <option value="private">Private</option>
+                                        <option value="semi-gov">Semi-Gov</option>
+                                        <option value="government">Government</option>
+                                    </select>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <label style={{
                                         fontSize: '14px',
-                                        color: '#374151',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    <option value="all">All Models</option>
-                                    <option value="subscription">Subscription</option>
-                                    <option value="transaction">Transaction Fee</option>
-                                    <option value="percentage">Percentage</option>
-                                    <option value="hourly">Hourly Rate</option>
-                                    <option value="fixed">Fixed Price</option>
-                                </select>
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{
-                                    fontSize: '14px',
-                                    fontWeight: '500',
-                                    color: '#c0c0c0'
-                                }}>Who pays:</label>
-                                <select
-                                    value={whoPaysFilter}
-                                    onChange={(e) => setWhoPaysFilter(e.target.value)}
-                                    style={{
-                                        padding: '8px 12px',
-                                        border: '1px solid #d1d5db',
-                                        borderRadius: '6px',
-                                        backgroundColor: '#fff',
+                                        fontWeight: '500',
+                                        color: '#c0c0c0'
+                                    }}>Pricing Model:</label>
+                                    <select
+                                        value={pricingModelFilter}
+                                        onChange={(e) => setPricingModelFilter(e.target.value)}
+                                        style={{
+                                            padding: '8px 12px',
+                                            border: '1px solid #d1d5db',
+                                            borderRadius: '6px',
+                                            backgroundColor: '#fff',
+                                            fontSize: '14px',
+                                            color: '#374151',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <option value="all">All Models</option>
+                                        <option value="subscription">Subscription</option>
+                                        <option value="transaction">Transaction Fee</option>
+                                        <option value="percentage">Percentage</option>
+                                        <option value="hourly">Hourly Rate</option>
+                                        <option value="fixed">Fixed Price</option>
+                                    </select>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <label style={{
                                         fontSize: '14px',
-                                        color: '#374151',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    <option value="all">All</option>
-                                    <option value="employer">Employer</option>
-                                    <option value="freelancer">Freelancer</option>
-                                </select>
+                                        fontWeight: '500',
+                                        color: '#c0c0c0'
+                                    }}>Who pays:</label>
+                                    <select
+                                        value={whoPaysFilter}
+                                        onChange={(e) => setWhoPaysFilter(e.target.value)}
+                                        style={{
+                                            padding: '8px 12px',
+                                            border: '1px solid #d1d5db',
+                                            borderRadius: '6px',
+                                            backgroundColor: '#fff',
+                                            fontSize: '14px',
+                                            color: '#374151',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <option value="all">All</option>
+                                        <option value="employer">Employer</option>
+                                        <option value="freelancer">Freelancer</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
