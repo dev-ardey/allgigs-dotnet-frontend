@@ -8,6 +8,7 @@ import {
     Search,
     Info,
     BarChart3,
+    ChartPie,
 } from 'lucide-react';
 
 // Automation Details Interface
@@ -358,7 +359,6 @@ const CompanyCard: React.FC<{
             {company.URL && (
                 <div className="website-button-container">
                     <button
-                        className="website-button"
                         onClick={(e) => {
                             e.stopPropagation();
                             let url = company.URL;
@@ -367,6 +367,25 @@ const CompanyCard: React.FC<{
                                 url = 'https://' + url;
                             }
                             window.open(url, '_blank');
+                        }}
+                        style={{
+                            width: '100%',
+                            padding: '10px 16px',
+                            background: 'rgba(139, 92, 246, 0.3)',
+                            color: '#fff',
+                            border: '1px solid rgba(139, 92, 246, 0.4)',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            backdropFilter: 'blur(8px)',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(139, 92, 246, 0.5)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(139, 92, 246, 0.3)';
                         }}
                     >
                         Visit Website
@@ -747,7 +766,23 @@ const CompanyDetailModal: React.FC<{
                     <div className="modal-footer">
                         <button
                             onClick={onClose}
-                            className="modal-close-btn"
+                            style={{
+                                padding: '12px 32px',
+                                background: 'rgba(139, 92, 246, 0.3)',
+                                color: '#fff',
+                                border: '1px solid rgba(139, 92, 246, 0.4)',
+                                borderRadius: '8px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                backdropFilter: 'blur(8px)',
+                                transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = 'rgba(139, 92, 246, 0.5)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'rgba(139, 92, 246, 0.3)';
+                            }}
                         >
                             Close
                         </button>
@@ -1414,16 +1449,27 @@ export default function AutomationCompanies() {
     return (
 
         <div className="container">
-
-
-
-
-            <h2>allGigs job boards</h2>
-            <div>
-                <p>
+            {/* Title Section with Icon */}
+            <div style={{ marginBottom: '2rem' }}>
+                <h1 style={{
+                    fontSize: '2rem',
+                    fontWeight: '700',
+                    margin: '0 0 0.5rem 0',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem'
+                }}>
+                    <ChartPie style={{ width: '32px', height: '32px' }} />
+                    allGigs job boards
+                </h1>
+                <p style={{ margin: 0, color: 'rgba(255, 255, 255, 0.7)', fontSize: '1rem' }}>
                     Market Insights. Better Decisions.
                 </p>
-                <p>
+            </div>
+
+            <div>
+                <p style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '1rem' }}>
                     Welcome to the central hub for understanding the Dutch freelance landscape. We've brought together over 60 job boards, from government portals to private recruiters, into one, free platform. We don't just show you jobs; we are going to give you key insights into the freelancing world, so you can make key informed decisions about your next career move.
                 </p>
 
@@ -1572,12 +1618,15 @@ export default function AutomationCompanies() {
                                     }}
                                     style={{
                                         padding: '6px 12px',
-                                        backgroundColor: showingSourceBreakdown ? '#3b82f6' : '#10b981',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '4px',
+                                        background: 'rgba(139, 92, 246, 0.3)',
+                                        color: '#fff',
+                                        border: '1px solid rgba(139, 92, 246, 0.4)',
+                                        borderRadius: '8px',
                                         cursor: 'pointer',
-                                        fontSize: '12px'
+                                        fontSize: '12px',
+                                        fontWeight: '600',
+                                        backdropFilter: 'blur(8px)',
+                                        transition: 'all 0.2s ease'
                                     }}
                                 >
                                     {showingSourceBreakdown ? 'Show Industries' : 'Show Sources'}
@@ -1702,13 +1751,16 @@ export default function AutomationCompanies() {
                                         <button
                                             onClick={() => setSelectedSources(new Set(availableSources))}
                                             style={{
-                                                padding: '4px 8px',
+                                                padding: '6px 12px',
                                                 fontSize: '11px',
-                                                backgroundColor: '#10b981',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '4px',
-                                                cursor: 'pointer'
+                                                background: 'rgba(139, 92, 246, 0.3)',
+                                                color: '#fff',
+                                                border: '1px solid rgba(139, 92, 246, 0.4)',
+                                                borderRadius: '8px',
+                                                cursor: 'pointer',
+                                                fontWeight: '600',
+                                                backdropFilter: 'blur(8px)',
+                                                transition: 'all 0.2s ease'
                                             }}
                                         >
                                             Select All
@@ -1716,13 +1768,16 @@ export default function AutomationCompanies() {
                                         <button
                                             onClick={() => setSelectedSources(new Set())}
                                             style={{
-                                                padding: '4px 8px',
+                                                padding: '6px 12px',
                                                 fontSize: '11px',
-                                                backgroundColor: '#ef4444',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '4px',
-                                                cursor: 'pointer'
+                                                background: 'transparent',
+                                                color: '#fff',
+                                                border: '1px solid rgba(255, 255, 255, 0.4)',
+                                                borderRadius: '8px',
+                                                cursor: 'pointer',
+                                                fontWeight: '600',
+                                                backdropFilter: 'blur(8px)',
+                                                transition: 'all 0.2s ease'
                                             }}
                                         >
                                             Clear All
@@ -1735,7 +1790,7 @@ export default function AutomationCompanies() {
                                 <>
                                     {/* Show message when no sources selected or no industries selected */}
                                     {(showingSourceBreakdown && selectedSources.size === 0) || (!showingSourceBreakdown && selectedIndustries.size === 0) ? (
-                                        <div style={{ textAlign: 'center', color: '#6b7280', padding: '40px', border: '1px solid #e5e7eb', borderRadius: '8px', marginBottom: '16px' }}>
+                                        <div style={{ textAlign: 'center', color: 'white', padding: '40px', marginBottom: '16px' }}>
                                             <p style={{ fontSize: '16px', marginBottom: '8px' }}>
                                                 {showingSourceBreakdown ? 'No sources selected' : 'No industries selected'}
                                             </p>
@@ -2043,13 +2098,16 @@ export default function AutomationCompanies() {
                                             <button
                                                 onClick={() => setSelectedIndustries(new Set(jobStats.map(stat => stat.industry)))}
                                                 style={{
-                                                    padding: '4px 8px',
+                                                    padding: '6px 12px',
                                                     fontSize: '11px',
-                                                    backgroundColor: '#10b981',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '4px',
-                                                    cursor: 'pointer'
+                                                    background: 'rgba(139, 92, 246, 0.3)',
+                                                    color: '#fff',
+                                                    border: '1px solid rgba(139, 92, 246, 0.4)',
+                                                    borderRadius: '8px',
+                                                    cursor: 'pointer',
+                                                    fontWeight: '600',
+                                                    backdropFilter: 'blur(8px)',
+                                                    transition: 'all 0.2s ease'
                                                 }}
                                             >
                                                 Select All
@@ -2057,13 +2115,16 @@ export default function AutomationCompanies() {
                                             <button
                                                 onClick={() => setSelectedIndustries(new Set())}
                                                 style={{
-                                                    padding: '4px 8px',
+                                                    padding: '6px 12px',
                                                     fontSize: '11px',
-                                                    backgroundColor: '#ef4444',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '4px',
-                                                    cursor: 'pointer'
+                                                    background: 'transparent',
+                                                    color: '#fff',
+                                                    border: '1px solid rgba(255, 255, 255, 0.4)',
+                                                    borderRadius: '8px',
+                                                    cursor: 'pointer',
+                                                    fontWeight: '600',
+                                                    backdropFilter: 'blur(8px)',
+                                                    transition: 'all 0.2s ease'
                                                 }}
                                             >
                                                 Clear All
@@ -2211,7 +2272,27 @@ export default function AutomationCompanies() {
                                                                 </span>
                                                             )}
                                                     </span>
-                                                    <button className="visit-website-btn" onClick={() => window.open(company.URL || '#', '_blank')}>
+                                                    <button
+                                                        onClick={() => window.open(company.URL || '#', '_blank')}
+                                                        style={{
+                                                            padding: '6px 12px',
+                                                            background: 'rgba(139, 92, 246, 0.3)',
+                                                            color: '#fff',
+                                                            border: '1px solid rgba(139, 92, 246, 0.4)',
+                                                            borderRadius: '8px',
+                                                            fontSize: '12px',
+                                                            fontWeight: '600',
+                                                            cursor: 'pointer',
+                                                            backdropFilter: 'blur(8px)',
+                                                            transition: 'all 0.2s ease'
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.background = 'rgba(139, 92, 246, 0.5)';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.background = 'rgba(139, 92, 246, 0.3)';
+                                                        }}
+                                                    >
                                                         Visit Website
                                                     </button>
                                                     <button
