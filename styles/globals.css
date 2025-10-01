@@ -686,6 +686,7 @@ body {
   max-width: 100%;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1059,6 +1060,7 @@ body {
 .description-truncated {
   display: -webkit-box;
   -webkit-line-clamp: 4;
+  line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1100,9 +1102,9 @@ body {
   /* margin-bottom: 20px; */
 }
 
-.expand-description-btn:hover {
-  /* background: #e0e0e0; */
-}
+/* .expand-description-btn:hover {
+  background: #e0e0e0;
+} */
 
 .company-categories {
   display: flex;
