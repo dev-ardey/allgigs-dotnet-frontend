@@ -12,6 +12,7 @@ import {
     ChartPie,
     MousePointerClick,
     Plus,
+    Check,
 } from 'lucide-react';
 
 // Automation Details Interface
@@ -468,7 +469,7 @@ const CompanyCard: React.FC<{
                         e.currentTarget.style.background = 'rgba(139, 92, 246, 0.3)';
                     }}
                 >
-                    <Plus size={16} />
+                    {isSelected ? <Check size={16} /> : <Plus size={16} />}
                     {isSelected ? 'Added to comparison' : 'Compare in chart'}
                 </button>
             </div>
@@ -521,251 +522,247 @@ const CompanyDetailModal: React.FC<{
                         </button>
                     </div>
 
-                    {company["Company description"] && (
+                    {/* Business Model Section - at the top */}
+                    {companyTypes.length > 0 && (
                         <div className="modal-section">
-                            <h3 className="modal-section-title">Description</h3>
-                            <p className="company-description-modal">
-                                {company["Company description"]}
-                            </p>
+                            <h3 className="modal-section-title">Business Model</h3>
+                            <div className="modal-badges">
+                                {companyTypes.map((type, index) => (
+                                    <span key={index} className={`modal-badge ${type.color}`}>
+                                        {type.label}
+                                    </span>
+                                ))}
+                            </div>
                         </div>
                     )}
 
-                    <div className="modal-section" style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
-                        {companyTypes.length > 0 && (
-                            <div style={{ flex: 1 }}>
-                                <h3 className="modal-section-title">Business Model</h3>
-                                <div className="modal-badges">
-                                    {companyTypes.map((type, index) => (
-                                        <span key={index} className={`modal-badge ${type.color}`}>
-                                            {type.label}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                    {/* Cost Analysis Section - below Business Model */}
+                    {((company["subscription price/ month"] !== null && company["subscription price/ month"] !== undefined) || company["Hourly rate"]) && (
+                        <div className="modal-section">
+                            <h3 className="modal-section-title">Cost Analysis</h3>
+                            <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+                                <div style={{ flex: 1 }}>
+                                    <h3 className="modal-section-title" style={{ marginTop: 0 }}>Chart</h3>
+                                    <div style={{ display: 'flex', gap: '16px' }}>
+                                        <div className="cost-chart">
+                                            {(() => {
+                                                const currentDate = new Date();
+                                                const subscriptionCost = company["subscription price/ month"] || 0;
+                                                const hourlyRate = company["Hourly rate"] || 0;
+                                                const monthlyHourlyCost = hourlyRate * calculatorHours * calculatorWeeksPerMonth;
+                                                const percentageFee = company["percentage fee"] || 0;
+                                                const monthlyPercentageCost = calculatorMonthlyTotal * (percentageFee / 100);
+                                                // const totalPercentageCost = calculatorTotalWithTax * (percentageFee / 100);
+                                                const maxCost = Math.max(subscriptionCost, monthlyHourlyCost, monthlyPercentageCost) * 3 || 1;
 
-                        {((company["subscription price/ month"] !== null && company["subscription price/ month"] !== undefined) || company["Hourly rate"]) && (
-                            <div style={{ flex: 1 }}>
-                                <h3 className="modal-section-title">Cost Analysis</h3>
-                                <div style={{ display: 'flex', gap: '16px' }}>
-                                    <div className="cost-chart">
+                                                const subscriptionData = [1, 2, 3].map((month, index) => {
+                                                    const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + index, 1);
+                                                    const monthName = monthDate.toLocaleDateString('en-US', { month: 'short' });
+                                                    const cumulativeCost = subscriptionCost * month;
+                                                    return {
+                                                        month: monthName,
+                                                        cost: cumulativeCost,
+                                                        x: (index / 2) * 100,
+                                                        y: 100 - (cumulativeCost / maxCost) * 100
+                                                    };
+                                                });
+
+                                                const hourlyData = [1, 2, 3].map((month, index) => {
+                                                    const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + index, 1);
+                                                    const monthName = monthDate.toLocaleDateString('en-US', { month: 'short' });
+                                                    const cumulativeCost = monthlyHourlyCost * month;
+                                                    return {
+                                                        month: monthName,
+                                                        cost: cumulativeCost,
+                                                        x: (index / 2) * 100,
+                                                        y: 100 - (cumulativeCost / maxCost) * 100
+                                                    };
+                                                });
+
+                                                const percentageData = [1, 2, 3].map((month, index) => {
+                                                    const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + index, 1);
+                                                    const monthName = monthDate.toLocaleDateString('en-US', { month: 'short' });
+                                                    const cumulativeCost = monthlyPercentageCost * month;
+                                                    return {
+                                                        month: monthName,
+                                                        cost: cumulativeCost,
+                                                        x: (index / 2) * 100,
+                                                        y: 100 - (cumulativeCost / maxCost) * 100
+                                                    };
+                                                });
+
+                                                return (
+                                                    <>
+                                                        <div className="cost-line-chart">
+                                                            <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
+                                                                <line x1="0" y1="100%" x2="100%" y2="100%" stroke="#e5e7eb" strokeWidth="1" />
+                                                                {(company["subscription price/ month"] !== null && company["subscription price/ month"] !== undefined) && subscriptionData.length >= 2 && (
+                                                                    <>
+                                                                        <line x1={`${subscriptionData[0]?.x}%`} y1={`${subscriptionData[0]?.y}%`} x2={`${subscriptionData[1]?.x}%`} y2={`${subscriptionData[1]?.y}%`} stroke="#3b82f6" strokeWidth="3" />
+                                                                        {subscriptionData.length >= 3 && (
+                                                                            <line x1={`${subscriptionData[1]?.x}%`} y1={`${subscriptionData[1]?.y}%`} x2={`${subscriptionData[2]?.x}%`} y2={`${subscriptionData[2]?.y}%`} stroke="#3b82f6" strokeWidth="3" />
+                                                                        )}
+                                                                    </>
+                                                                )}
+                                                                {company["Hourly rate"] !== undefined && company["Hourly rate"] !== null && hourlyData.length >= 2 && (
+                                                                    <>
+                                                                        <line x1={`${hourlyData[0]?.x}%`} y1={`${hourlyData[0]?.y}%`} x2={`${hourlyData[1]?.x}%`} y2={`${hourlyData[1]?.y}%`} stroke="#10b981" strokeWidth="3" />
+                                                                        {hourlyData.length >= 3 && (
+                                                                            <line x1={`${hourlyData[1]?.x}%`} y1={`${hourlyData[1]?.y}%`} x2={`${hourlyData[2]?.x}%`} y2={`${hourlyData[2]?.y}%`} stroke="#10b981" strokeWidth="3" />
+                                                                        )}
+                                                                    </>
+                                                                )}
+                                                                {company["percentage fee"] && percentageData.length >= 2 && (
+                                                                    <>
+                                                                        <line x1={`${percentageData[0]?.x}%`} y1={`${percentageData[0]?.y}%`} x2={`${percentageData[1]?.x}%`} y2={`${percentageData[1]?.y}%`} stroke="#8b5cf6" strokeWidth="3" />
+                                                                        {percentageData.length >= 3 && (
+                                                                            <line x1={`${percentageData[1]?.x}%`} y1={`${percentageData[1]?.y}%`} x2={`${percentageData[2]?.x}%`} y2={`${percentageData[2]?.y}%`} stroke="#8b5cf6" strokeWidth="3" />
+                                                                        )}
+                                                                    </>
+                                                                )}
+                                                            </svg>
+                                                            {(company["subscription price/ month"] !== null && company["subscription price/ month"] !== undefined) && subscriptionData.map((point, index) => (
+                                                                <div key={`sub-point-${index}`}>
+                                                                    <div className="cost-point" style={{ left: `${point.x}%`, top: `${point.y}%`, backgroundColor: '#3b82f6' }} />
+                                                                    <div className="cost-value-labels" style={{ left: `${point.x}%`, top: `${point.y - 10}%`, transform: 'translate(-50%, -50%)', color: '#3b82f6' }}>
+                                                                        {point.cost === 0 ? "€0" : `€${point.cost.toFixed(1)}`}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                            {company["Hourly rate"] !== undefined && company["Hourly rate"] !== null && hourlyData.map((point, index) => (
+                                                                <div key={`hr-point-${index}`}>
+                                                                    <div className="cost-point" style={{ left: `${point.x}%`, top: `${point.y}%`, backgroundColor: '#10b981' }} />
+                                                                    <div className="cost-value-labels" style={{ left: `${point.x}%`, top: `${point.y - 10}%`, transform: 'translate(-50%, -50%)', color: '#10b981' }}>
+                                                                        {point.cost === 0 ? "€0" : `€${point.cost.toFixed(1)}`}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                            {company["percentage fee"] !== undefined && company["percentage fee"] !== null && percentageData.map((point, index) => (
+                                                                <div key={`perc-point-${index}`}>
+                                                                    <div className="cost-point" style={{ left: `${point.x}%`, top: `${point.y}%`, backgroundColor: '#8b5cf6' }} />
+                                                                    <div className="cost-value-labels" style={{ left: `${point.x}%`, top: `${point.y - 10}%`, transform: 'translate(-50%, -50%)', color: '#8b5cf6' }}>
+                                                                        {point.cost === 0 ? "€0" : `€${point.cost.toFixed(1)}`}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <div className="cost-month-labels">
+                                                            {subscriptionData.map((point, index) => (
+                                                                <span key={`month-${index}`}>{point.month}</span>
+                                                            ))}
+                                                        </div>
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+
                                         {(() => {
-                                            const currentDate = new Date();
-                                            const subscriptionCost = company["subscription price/ month"] || 0;
                                             const hourlyRate = company["Hourly rate"] || 0;
                                             const monthlyHourlyCost = hourlyRate * calculatorHours * calculatorWeeksPerMonth;
                                             const percentageFee = company["percentage fee"] || 0;
                                             const monthlyPercentageCost = calculatorMonthlyTotal * (percentageFee / 100);
-                                            // const totalPercentageCost = calculatorTotalWithTax * (percentageFee / 100);
-                                            const maxCost = Math.max(subscriptionCost, monthlyHourlyCost, monthlyPercentageCost) * 3 || 1;
+                                            const totalPercentageCost = calculatorTotalWithTax * (percentageFee / 100);
+                                            const allCompanies = companies || [];
+                                            const subscriptionModelCompanies = allCompanies.filter(c =>
+                                                c["subscription price/ month"] &&
+                                                c["subscription price/ month"] > 0 &&
+                                                c["subscription price/ month"] < 10000
+                                            );
+                                            const subscriptionCosts = subscriptionModelCompanies
+                                                .map(c => Number(c["subscription price/ month"]))
+                                                .filter((cost): cost is number => !isNaN(cost) && cost > 0);
 
-                                            const subscriptionData = [1, 2, 3].map((month, index) => {
-                                                const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + index, 1);
-                                                const monthName = monthDate.toLocaleDateString('en-US', { month: 'short' });
-                                                const cumulativeCost = subscriptionCost * month;
-                                                return {
-                                                    month: monthName,
-                                                    cost: cumulativeCost,
-                                                    x: (index / 2) * 100,
-                                                    y: 100 - (cumulativeCost / maxCost) * 100
-                                                };
-                                            });
+                                            const averageSubscription = subscriptionCosts.length > 0
+                                                ? subscriptionCosts.reduce((sum: number, cost: number) => sum + cost, 0) / subscriptionCosts.length
+                                                : 0;
 
-                                            const hourlyData = [1, 2, 3].map((month, index) => {
-                                                const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + index, 1);
-                                                const monthName = monthDate.toLocaleDateString('en-US', { month: 'short' });
-                                                const cumulativeCost = monthlyHourlyCost * month;
-                                                return {
-                                                    month: monthName,
-                                                    cost: cumulativeCost,
-                                                    x: (index / 2) * 100,
-                                                    y: 100 - (cumulativeCost / maxCost) * 100
-                                                };
-                                            });
+                                            const currentSubscription = company["subscription price/ month"] || 0;
+                                            const percentageOfAverage = averageSubscription > 0
+                                                ? (currentSubscription / averageSubscription) * 100
+                                                : 0;
 
-                                            const percentageData = [1, 2, 3].map((month, index) => {
-                                                const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + index, 1);
-                                                const monthName = monthDate.toLocaleDateString('en-US', { month: 'short' });
-                                                const cumulativeCost = monthlyPercentageCost * month;
-                                                return {
-                                                    month: monthName,
-                                                    cost: cumulativeCost,
-                                                    x: (index / 2) * 100,
-                                                    y: 100 - (cumulativeCost / maxCost) * 100
-                                                };
-                                            });
+                                            let ratioColor = "#6b7280";
+
+                                            if (percentageOfAverage > 150) {
+                                                ratioColor = "#dc2626";
+                                            } else if (percentageOfAverage > 120) {
+                                                ratioColor = "#ea580c";
+                                            } else if (percentageOfAverage > 80) {
+                                                ratioColor = "#6b7280";
+                                            } else if (percentageOfAverage > 50) {
+                                                ratioColor = "#059669";
+                                            } else {
+                                                ratioColor = "#059669";
+                                            }
 
                                             return (
-                                                <>
-                                                    <div className="cost-line-chart">
-                                                        <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
-                                                            <line x1="0" y1="100%" x2="100%" y2="100%" stroke="#e5e7eb" strokeWidth="1" />
-                                                            {(company["subscription price/ month"] !== null && company["subscription price/ month"] !== undefined) && subscriptionData.length >= 2 && (
-                                                                <>
-                                                                    <line x1={`${subscriptionData[0]?.x}%`} y1={`${subscriptionData[0]?.y}%`} x2={`${subscriptionData[1]?.x}%`} y2={`${subscriptionData[1]?.y}%`} stroke="#3b82f6" strokeWidth="3" />
-                                                                    {subscriptionData.length >= 3 && (
-                                                                        <line x1={`${subscriptionData[1]?.x}%`} y1={`${subscriptionData[1]?.y}%`} x2={`${subscriptionData[2]?.x}%`} y2={`${subscriptionData[2]?.y}%`} stroke="#3b82f6" strokeWidth="3" />
-                                                                    )}
-                                                                </>
-                                                            )}
-                                                            {company["Hourly rate"] !== undefined && company["Hourly rate"] !== null && hourlyData.length >= 2 && (
-                                                                <>
-                                                                    <line x1={`${hourlyData[0]?.x}%`} y1={`${hourlyData[0]?.y}%`} x2={`${hourlyData[1]?.x}%`} y2={`${hourlyData[1]?.y}%`} stroke="#10b981" strokeWidth="3" />
-                                                                    {hourlyData.length >= 3 && (
-                                                                        <line x1={`${hourlyData[1]?.x}%`} y1={`${hourlyData[1]?.y}%`} x2={`${hourlyData[2]?.x}%`} y2={`${hourlyData[2]?.y}%`} stroke="#10b981" strokeWidth="3" />
-                                                                    )}
-                                                                </>
-                                                            )}
-                                                            {company["percentage fee"] && percentageData.length >= 2 && (
-                                                                <>
-                                                                    <line x1={`${percentageData[0]?.x}%`} y1={`${percentageData[0]?.y}%`} x2={`${percentageData[1]?.x}%`} y2={`${percentageData[1]?.y}%`} stroke="#8b5cf6" strokeWidth="3" />
-                                                                    {percentageData.length >= 3 && (
-                                                                        <line x1={`${percentageData[1]?.x}%`} y1={`${percentageData[1]?.y}%`} x2={`${percentageData[2]?.x}%`} y2={`${percentageData[2]?.y}%`} stroke="#8b5cf6" strokeWidth="3" />
-                                                                    )}
-                                                                </>
-                                                            )}
-                                                        </svg>
-                                                        {(company["subscription price/ month"] !== null && company["subscription price/ month"] !== undefined) && subscriptionData.map((point, index) => (
-                                                            <div key={`sub-point-${index}`}>
-                                                                <div className="cost-point" style={{ left: `${point.x}%`, top: `${point.y}%`, backgroundColor: '#3b82f6' }} />
-                                                                <div className="cost-value-labels" style={{ left: `${point.x}%`, top: `${point.y - 10}%`, transform: 'translate(-50%, -50%)', color: '#3b82f6' }}>
-                                                                    {point.cost === 0 ? "€0" : `€${point.cost.toFixed(1)}`}
+                                                <div className="cost-summary-box">
+                                                    <h4 className="cost-summary-title">Price Analysis & Cost Summary</h4>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                        {company["subscription price/ month"] ? (
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
+                                                                    <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Subscription Average:</span>
+                                                                    <span style={{ color: '#fff', fontWeight: '600' }}>{averageSubscription === 0 ? "No data" : `€${averageSubscription.toFixed(1)}/month`}</span>
+                                                                </div>
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
+                                                                    <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>This Company:</span>
+                                                                    <span style={{ color: '#fff', fontWeight: '600' }}>{currentSubscription === 0 ? "Free" : `€${(currentSubscription || 0).toFixed(1)}/month`}</span>
+                                                                </div>
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
+                                                                    <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Comparison:</span>
+                                                                    <span style={{ color: ratioColor, fontWeight: '600' }}>
+                                                                        {percentageOfAverage > 100 ? 'Above Average' : percentageOfAverage < 100 ? 'Below Average' : 'Average'}
+                                                                    </span>
                                                                 </div>
                                                             </div>
-                                                        ))}
-                                                        {company["Hourly rate"] !== undefined && company["Hourly rate"] !== null && hourlyData.map((point, index) => (
-                                                            <div key={`hr-point-${index}`}>
-                                                                <div className="cost-point" style={{ left: `${point.x}%`, top: `${point.y}%`, backgroundColor: '#10b981' }} />
-                                                                <div className="cost-value-labels" style={{ left: `${point.x}%`, top: `${point.y - 10}%`, transform: 'translate(-50%, -50%)', color: '#10b981' }}>
-                                                                    {point.cost === 0 ? "€0" : `€${point.cost.toFixed(1)}`}
+                                                        ) : null}
+
+                                                        <div>
+                                                            {(company["subscription price/ month"] !== null && company["subscription price/ month"] !== undefined) && (
+                                                                <div className="cost-summary-item">
+                                                                    <span className="cost-summary-label">Monthly:</span>
+                                                                    <span className="cost-summary-value">{company["subscription price/ month"] === 0 ? "Free" : `€${(company["subscription price/ month"] || 0).toFixed(1)}`}</span>
                                                                 </div>
-                                                            </div>
-                                                        ))}
-                                                        {company["percentage fee"] !== undefined && company["percentage fee"] !== null && percentageData.map((point, index) => (
-                                                            <div key={`perc-point-${index}`}>
-                                                                <div className="cost-point" style={{ left: `${point.x}%`, top: `${point.y}%`, backgroundColor: '#8b5cf6' }} />
-                                                                <div className="cost-value-labels" style={{ left: `${point.x}%`, top: `${point.y - 10}%`, transform: 'translate(-50%, -50%)', color: '#8b5cf6' }}>
-                                                                    {point.cost === 0 ? "€0" : `€${point.cost.toFixed(1)}`}
-                                                                </div>
-                                                            </div>
-                                                        ))}
+                                                            )}
+                                                            {company["Hourly rate"] !== undefined && company["Hourly rate"] !== null && (
+                                                                <>
+                                                                    <div className="cost-summary-item">
+                                                                        <span className="cost-summary-label">Hourly Rate:</span>
+                                                                        <span className="cost-summary-value">{company["Hourly rate"] === 0 ? "Not specified" : `€${(company["Hourly rate"] || 0).toFixed(1)}/hour`}</span>
+                                                                    </div>
+                                                                    <div className="cost-summary-item">
+                                                                        <span className="cost-summary-label">Monthly Cost:</span>
+                                                                        <span className="cost-summary-value">{monthlyHourlyCost === 0 ? "No cost" : `€${monthlyHourlyCost.toFixed(1)}`}</span>
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                            {company["percentage fee"] !== undefined && company["percentage fee"] !== null && (
+                                                                <>
+                                                                    <div className="cost-summary-item">
+                                                                        <span className="cost-summary-label">Percentage fees:</span>
+                                                                        <span className="cost-summary-value">{company["percentage fee"] === 0 ? "No fee" : `${company["percentage fee"]}%`}</span>
+                                                                    </div>
+                                                                    <div className="cost-summary-item">
+                                                                        <span className="cost-summary-label">Monthly Cost:</span>
+                                                                        <span className="cost-summary-value">{monthlyPercentageCost === 0 ? "No cost" : `€${monthlyPercentageCost.toFixed(1)}`}</span>
+                                                                    </div>
+                                                                    <div className="cost-summary-item">
+                                                                        <span className="cost-summary-label">Total Cost:</span>
+                                                                        <span className="cost-summary-value">{totalPercentageCost === 0 ? "No cost" : `€${totalPercentageCost.toFixed(1)}`}</span>
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    <div className="cost-month-labels">
-                                                        {subscriptionData.map((point, index) => (
-                                                            <span key={`month-${index}`}>{point.month}</span>
-                                                        ))}
-                                                    </div>
-                                                </>
+                                                </div>
                                             );
                                         })()}
                                     </div>
-
-                                    {(() => {
-                                        const hourlyRate = company["Hourly rate"] || 0;
-                                        const monthlyHourlyCost = hourlyRate * calculatorHours * calculatorWeeksPerMonth;
-                                        const percentageFee = company["percentage fee"] || 0;
-                                        const monthlyPercentageCost = calculatorMonthlyTotal * (percentageFee / 100);
-                                        const totalPercentageCost = calculatorTotalWithTax * (percentageFee / 100);
-                                        const allCompanies = companies || [];
-                                        const subscriptionModelCompanies = allCompanies.filter(c =>
-                                            c["subscription price/ month"] &&
-                                            c["subscription price/ month"] > 0 &&
-                                            c["subscription price/ month"] < 10000
-                                        );
-                                        const subscriptionCosts = subscriptionModelCompanies
-                                            .map(c => Number(c["subscription price/ month"]))
-                                            .filter((cost): cost is number => !isNaN(cost) && cost > 0);
-
-                                        const averageSubscription = subscriptionCosts.length > 0
-                                            ? subscriptionCosts.reduce((sum: number, cost: number) => sum + cost, 0) / subscriptionCosts.length
-                                            : 0;
-
-                                        const currentSubscription = company["subscription price/ month"] || 0;
-                                        const percentageOfAverage = averageSubscription > 0
-                                            ? (currentSubscription / averageSubscription) * 100
-                                            : 0;
-
-                                        let ratioColor = "#6b7280";
-
-                                        if (percentageOfAverage > 150) {
-                                            ratioColor = "#dc2626";
-                                        } else if (percentageOfAverage > 120) {
-                                            ratioColor = "#ea580c";
-                                        } else if (percentageOfAverage > 80) {
-                                            ratioColor = "#6b7280";
-                                        } else if (percentageOfAverage > 50) {
-                                            ratioColor = "#059669";
-                                        } else {
-                                            ratioColor = "#059669";
-                                        }
-
-                                        return (
-                                            <div className="cost-summary-box">
-                                                <h4 className="cost-summary-title">Price Analysis & Cost Summary</h4>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                                    {company["subscription price/ month"] ? (
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
-                                                                <span style={{ color: '#6b7280' }}>Subscription Average:</span>
-                                                                <span style={{ color: '#374151', fontWeight: '600' }}>{averageSubscription === 0 ? "No data" : `€${averageSubscription.toFixed(1)}/month`}</span>
-                                                            </div>
-                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
-                                                                <span style={{ color: '#6b7280' }}>This Company:</span>
-                                                                <span style={{ color: '#374151', fontWeight: '600' }}>{currentSubscription === 0 ? "Free" : `€${(currentSubscription || 0).toFixed(1)}/month`}</span>
-                                                            </div>
-                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
-                                                                <span style={{ color: '#6b7280' }}>Comparison:</span>
-                                                                <span style={{ color: ratioColor, fontWeight: '600' }}>
-                                                                    {percentageOfAverage > 100 ? 'Above Average' : percentageOfAverage < 100 ? 'Below Average' : 'Average'}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    ) : null}
-
-                                                    <div>
-                                                        {(company["subscription price/ month"] !== null && company["subscription price/ month"] !== undefined) && (
-                                                            <div className="cost-summary-item">
-                                                                <span className="cost-summary-label">Monthly:</span>
-                                                                <span className="cost-summary-value">{company["subscription price/ month"] === 0 ? "Free" : `€${(company["subscription price/ month"] || 0).toFixed(1)}`}</span>
-                                                            </div>
-                                                        )}
-                                                        {company["Hourly rate"] !== undefined && company["Hourly rate"] !== null && (
-                                                            <>
-                                                                <div className="cost-summary-item">
-                                                                    <span className="cost-summary-label">Hourly Rate:</span>
-                                                                    <span className="cost-summary-value">{company["Hourly rate"] === 0 ? "Not specified" : `€${(company["Hourly rate"] || 0).toFixed(1)}/hour`}</span>
-                                                                </div>
-                                                                <div className="cost-summary-item">
-                                                                    <span className="cost-summary-label">Monthly Cost:</span>
-                                                                    <span className="cost-summary-value">{monthlyHourlyCost === 0 ? "No cost" : `€${monthlyHourlyCost.toFixed(1)}`}</span>
-                                                                </div>
-                                                            </>
-                                                        )}
-                                                        {company["percentage fee"] !== undefined && company["percentage fee"] !== null && (
-                                                            <>
-                                                                <div className="cost-summary-item">
-                                                                    <span className="cost-summary-label">Percentage fees:</span>
-                                                                    <span className="cost-summary-value">{company["percentage fee"] === 0 ? "No fee" : `${company["percentage fee"]}%`}</span>
-                                                                </div>
-                                                                <div className="cost-summary-item">
-                                                                    <span className="cost-summary-label">Monthly Cost:</span>
-                                                                    <span className="cost-summary-value">{monthlyPercentageCost === 0 ? "No cost" : `€${monthlyPercentageCost.toFixed(1)}`}</span>
-                                                                </div>
-                                                                <div className="cost-summary-item">
-                                                                    <span className="cost-summary-label">Total Cost:</span>
-                                                                    <span className="cost-summary-value">{totalPercentageCost === 0 ? "No cost" : `€${totalPercentageCost.toFixed(1)}`}</span>
-                                                                </div>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })()}
                                 </div>
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
 
                     <div className="modal-footer">
                         <button
@@ -834,7 +831,7 @@ export default function AutomationCompanies() {
     // Temporarily disable profile check to focus on main app functionality
     const needsProfile = false;
     const profileLoading = false;
-    // const { needsProfile, loading: profileLoading } = useProfileCheck(user);
+    // const {needsProfile, loading: profileLoading } = useProfileCheck(user);
 
     // Job statistics state
     const [jobStats, setJobStats] = useState<IndustryStats[]>([]);
@@ -1702,7 +1699,7 @@ export default function AutomationCompanies() {
                                                 position: 'absolute',
                                                 top: '100%',
                                                 left: 0,
-                                                right: 0,
+                                                width: '100%',
                                                 backgroundColor: '#fff',
                                                 border: '1px solid #e5e7eb',
                                                 borderRadius: '6px',
@@ -2057,7 +2054,7 @@ export default function AutomationCompanies() {
                                                     position: 'absolute',
                                                     top: '100%',
                                                     left: 0,
-                                                    right: 0,
+                                                    width: '100%',
                                                     backgroundColor: '#fff',
                                                     border: '1px solid #e5e7eb',
                                                     borderRadius: '6px',
