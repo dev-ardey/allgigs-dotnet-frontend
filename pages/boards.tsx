@@ -1354,243 +1354,140 @@ export default function AutomationCompanies() {
     return (
 
         <div className="container">
+
+
+
+
+            <h2>allGigs job boards</h2>
+            <div>
+                <p>
+                    Market Insights. Better Decisions.
+                </p>
+                <p>
+                    Welcome to the central hub for understanding the Dutch freelance landscape. We've brought together over 60 job boards, from government portals to private recruiters, into one, free platform. We don't just show you jobs; we are going to give you key insights into the freelancing world, so you can make key informed decisions about your next career move.
+                </p>
+
+
+
+
+            </div>
+
+
             <div className="stats-section" style={cardStyling}>
-                <div className="stats-card">
-                    <div className="stats-content">
-                        <div>
-                            <h2 className="stats-title">allGigs job boards</h2>
-                            <p className="stats-subtitle">
-                                {filteredCompanies.length} of {companies.length} companies
-                            </p>
+
+
+
+
+
+
+                {/* <div className="calculator-left"> */}
+                <div className="calculator-header">
+                    <h2>Calculator</h2>
+                    <div className="info-tooltip-container">
+                        <Info size={14} className="info-icon" />
+                        <div className="info-tooltip calculator-tooltip">
+                            Some partners calculate costs based on a percentage of earnings or hours worked. To get the most accurate estimate, please enter your own calculation. We currently use a default.
                         </div>
                     </div>
-
-                    <div style={{
-                        marginBottom: '24px',
-                        padding: '20px',
-                        // backgroundColor: '#f8fafc',
-                        // borderRadius: '12px',
-                        // border: '1px solid #e2e8f0'
-                    }}>
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '16px'
-                        }}>
-                            <SearchBar value={searchTerm} onChange={setSearchTerm} />
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                                gap: '16px',
-                                alignItems: 'end'
-                            }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                    <label style={{
-                                        fontSize: '14px',
-                                        fontWeight: '500',
-                                        color: '#c0c0c0'
-                                    }}>Paid/Free:</label>
-                                    <select
-                                        value={modelFilter}
-                                        onChange={(e) => setModelFilter(e.target.value)}
-                                        style={{
-                                            padding: '8px 12px',
-                                            border: '1px solid #d1d5db',
-                                            borderRadius: '6px',
-                                            backgroundColor: '#fff',
-                                            fontSize: '14px',
-                                            color: '#374151',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        <option value="all">All Models</option>
-                                        <option value="paid">Paid</option>
-                                        <option value="free">Free</option>
-                                    </select>
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                    <label style={{
-                                        fontSize: '14px',
-                                        fontWeight: '500',
-                                        color: '#c0c0c0'
-                                    }}>Customer Type:</label>
-                                    <select
-                                        value={customerFilter}
-                                        onChange={(e) => setCustomerFilter(e.target.value)}
-                                        style={{
-                                            padding: '8px 12px',
-                                            border: '1px solid #d1d5db',
-                                            borderRadius: '6px',
-                                            backgroundColor: '#fff',
-                                            fontSize: '14px',
-                                            color: '#374151',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        <option value="all">All Types</option>
-                                        <option value="private">Private</option>
-                                        <option value="semi-gov">Semi-Gov</option>
-                                        <option value="government">Government</option>
-                                    </select>
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                    <label style={{
-                                        fontSize: '14px',
-                                        fontWeight: '500',
-                                        color: '#c0c0c0'
-                                    }}>Pricing Model:</label>
-                                    <select
-                                        value={pricingModelFilter}
-                                        onChange={(e) => setPricingModelFilter(e.target.value)}
-                                        style={{
-                                            padding: '8px 12px',
-                                            border: '1px solid #d1d5db',
-                                            borderRadius: '6px',
-                                            backgroundColor: '#fff',
-                                            fontSize: '14px',
-                                            color: '#374151',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        <option value="all">All Models</option>
-                                        <option value="subscription">Subscription</option>
-                                        <option value="transaction">Transaction Fee</option>
-                                        <option value="percentage">Percentage</option>
-                                        <option value="hourly">Hourly Rate</option>
-                                        <option value="fixed">Fixed Price</option>
-                                    </select>
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                    <label style={{
-                                        fontSize: '14px',
-                                        fontWeight: '500',
-                                        color: '#c0c0c0'
-                                    }}>Who pays:</label>
-                                    <select
-                                        value={whoPaysFilter}
-                                        onChange={(e) => setWhoPaysFilter(e.target.value)}
-                                        style={{
-                                            padding: '8px 12px',
-                                            border: '1px solid #d1d5db',
-                                            borderRadius: '6px',
-                                            backgroundColor: '#fff',
-                                            fontSize: '14px',
-                                            color: '#374151',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        <option value="all">All</option>
-                                        <option value="employer">Employer</option>
-                                        <option value="freelancer">Freelancer</option>
-                                    </select>
-                                </div>
+                </div>
+                <div className="calculation-inputs">
+                    <div className="calc-input-group">
+                        <label className="calc-label">Rate (€/hour)</label>
+                        <input
+                            type="number"
+                            className="calc-input"
+                            value={rate}
+                            onChange={(e) => setRate(e.target.value === '' ? '' : Number(e.target.value))}
+                            placeholder=""
+                        />
+                    </div>
+                    <div className="calc-input-group">
+                        <label className="calc-label">Hours per week</label>
+                        <input
+                            type="number"
+                            className="calc-input"
+                            value={hours}
+                            onChange={(e) => setHours(e.target.value === '' ? '' : Number(e.target.value))}
+                            placeholder=""
+                        />
+                    </div>
+                    <div className="calc-input-group">
+                        <label className="calc-label">Weeks per month</label>
+                        <input
+                            type="number"
+                            className="calc-input"
+                            value={weeksPerMonth}
+                            onChange={(e) => setWeeksPerMonth(e.target.value === '' ? '' : Number(e.target.value))}
+                            placeholder=""
+                        />
+                    </div>
+                    <div className="calc-input-group">
+                        <label className="calc-label">Months</label>
+                        <input
+                            type="number"
+                            className="calc-input"
+                            value={months}
+                            onChange={(e) => setMonths(e.target.value === '' ? '' : Number(e.target.value))}
+                            placeholder=""
+                        />
+                    </div>
+                    <div className="calc-input-group">
+                        <label className="calc-label">Tax (%)</label>
+                        <input
+                            type="number"
+                            className="calc-input"
+                            value={tax}
+                            onChange={(e) => setTax(Number(e.target.value))}
+                            placeholder=""
+                        />
+                    </div>
+                </div>
+                <div className="calculation-results">
+                    <div className="calc-results-simple">
+                        <div className="calc-monthly-section">
+                            <h4>Per Month</h4>
+                            <div className="calc-result-row">
+                                <span>Subtotal:</span>
+                                <span>€{monthlySubtotal.toFixed(1)}</span>
+                            </div>
+                            <div className="calc-result-row">
+                                <span>Tax:</span>
+                                <span>+ €{monthlyTaxAmount.toFixed(1)}</span>
+                            </div>
+                            <div className="calc-result-row">
+                                <span>Total:</span>
+                                <span>€{(monthlySubtotal + monthlyTaxAmount).toFixed(1)}</span>
+                            </div>
+                        </div>
+                        <div className="calc-total-section">
+                            <h4>Total</h4>
+                            <div className="calc-result-row">
+                                <span>Subtotal:</span>
+                                <span>€{subtotal.toFixed(1)}</span>
+                            </div>
+                            <div className="calc-result-row">
+                                <span>Tax:</span>
+                                <span>+ €{taxAmount.toFixed(1)}</span>
+                            </div>
+                            <div className="calc-result-row">
+                                <span>Total:</span>
+                                <span>€{total.toFixed(1)}</span>
                             </div>
                         </div>
                     </div>
                 </div>
+                {/* </div> */}
             </div>
 
             <div className="calculator-section">
                 <div className="calculator-split-container">
-                    <div className="calculator-left">
-                        <div className="calculator-header">
-                            <h2>Calculator</h2>
-                            <div className="info-tooltip-container">
-                                <Info size={14} className="info-icon" />
-                                <div className="info-tooltip calculator-tooltip">
-                                    Some partners calculate costs based on a percentage of earnings or hours worked. To get the most accurate estimate, please enter your own calculation. We currently use a default.
-                                </div>
-                            </div>
-                        </div>
-                        <div className="calculation-inputs">
-                            <div className="calc-input-group">
-                                <label className="calc-label">Rate (€/hour)</label>
-                                <input
-                                    type="number"
-                                    className="calc-input"
-                                    value={rate}
-                                    onChange={(e) => setRate(e.target.value === '' ? '' : Number(e.target.value))}
-                                    placeholder=""
-                                />
-                            </div>
-                            <div className="calc-input-group">
-                                <label className="calc-label">Hours per week</label>
-                                <input
-                                    type="number"
-                                    className="calc-input"
-                                    value={hours}
-                                    onChange={(e) => setHours(e.target.value === '' ? '' : Number(e.target.value))}
-                                    placeholder=""
-                                />
-                            </div>
-                            <div className="calc-input-group">
-                                <label className="calc-label">Weeks per month</label>
-                                <input
-                                    type="number"
-                                    className="calc-input"
-                                    value={weeksPerMonth}
-                                    onChange={(e) => setWeeksPerMonth(e.target.value === '' ? '' : Number(e.target.value))}
-                                    placeholder=""
-                                />
-                            </div>
-                            <div className="calc-input-group">
-                                <label className="calc-label">Months</label>
-                                <input
-                                    type="number"
-                                    className="calc-input"
-                                    value={months}
-                                    onChange={(e) => setMonths(e.target.value === '' ? '' : Number(e.target.value))}
-                                    placeholder=""
-                                />
-                            </div>
-                            <div className="calc-input-group">
-                                <label className="calc-label">Tax (%)</label>
-                                <input
-                                    type="number"
-                                    className="calc-input"
-                                    value={tax}
-                                    onChange={(e) => setTax(Number(e.target.value))}
-                                    placeholder=""
-                                />
-                            </div>
-                        </div>
-                        <div className="calculation-results">
-                            <div className="calc-results-simple">
-                                <div className="calc-monthly-section">
-                                    <h4>Per Month</h4>
-                                    <div className="calc-result-row">
-                                        <span>Subtotal:</span>
-                                        <span>€{monthlySubtotal.toFixed(1)}</span>
-                                    </div>
-                                    <div className="calc-result-row">
-                                        <span>Tax:</span>
-                                        <span>+ €{monthlyTaxAmount.toFixed(1)}</span>
-                                    </div>
-                                    <div className="calc-result-row">
-                                        <span>Total:</span>
-                                        <span>€{(monthlySubtotal + monthlyTaxAmount).toFixed(1)}</span>
-                                    </div>
-                                </div>
-                                <div className="calc-total-section">
-                                    <h4>Total</h4>
-                                    <div className="calc-result-row">
-                                        <span>Subtotal:</span>
-                                        <span>€{subtotal.toFixed(1)}</span>
-                                    </div>
-                                    <div className="calc-result-row">
-                                        <span>Tax:</span>
-                                        <span>+ €{taxAmount.toFixed(1)}</span>
-                                    </div>
-                                    <div className="calc-result-row">
-                                        <span>Total:</span>
-                                        <span>€{total.toFixed(1)}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
                     <div className="calculator-right">
                         <h2>Comparison</h2>
+
+                        <p>
+                            Data-Driven Decisions insights: Our data helps you sidestep the wrong opportunities and focus your valuable time when it's needed most. You'll gain a transparent view into the marketplace, which is crucial since many jobs are locked behind small portals.
+                        </p>
 
                         {/* Industry Job Statistics */}
                         <div className="industry-stats-section" style={{ marginBottom: '20px', padding: '16px', background: 'rgba(34, 34, 34)', borderRadius: '8px' }}>
@@ -2294,6 +2191,145 @@ export default function AutomationCompanies() {
                     </div>
                 </div>
             </div>
+
+            <div className="stats-card">
+
+
+                <div style={{
+                    marginBottom: '24px',
+                    // padding: '20px',
+                    // backgroundColor: '#f8fafc',
+                    // borderRadius: '12px',
+                    // border: '1px solid #e2e8f0'
+                }}>
+                    
+
+                    <p>
+                        A full overview of the marketplace: Make better, more informed decisions because you have a broader view of the marketplace.
+                    </p>
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '16px',
+                        marginTop: '20px'
+                    }}>
+                        <SearchBar value={searchTerm} onChange={setSearchTerm} />
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                            gap: '16px',
+                            alignItems: 'end'
+                        }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <label style={{
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    color: '#c0c0c0'
+                                }}>Paid/Free:</label>
+                                <select
+                                    value={modelFilter}
+                                    onChange={(e) => setModelFilter(e.target.value)}
+                                    style={{
+                                        padding: '8px 12px',
+                                        border: '1px solid #d1d5db',
+                                        borderRadius: '6px',
+                                        backgroundColor: '#fff',
+                                        fontSize: '14px',
+                                        color: '#374151',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <option value="all">All Models</option>
+                                    <option value="paid">Paid</option>
+                                    <option value="free">Free</option>
+                                </select>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <label style={{
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    color: '#c0c0c0'
+                                }}>Customer Type:</label>
+                                <select
+                                    value={customerFilter}
+                                    onChange={(e) => setCustomerFilter(e.target.value)}
+                                    style={{
+                                        padding: '8px 12px',
+                                        border: '1px solid #d1d5db',
+                                        borderRadius: '6px',
+                                        backgroundColor: '#fff',
+                                        fontSize: '14px',
+                                        color: '#374151',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <option value="all">All Types</option>
+                                    <option value="private">Private</option>
+                                    <option value="semi-gov">Semi-Gov</option>
+                                    <option value="government">Government</option>
+                                </select>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <label style={{
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    color: '#c0c0c0'
+                                }}>Pricing Model:</label>
+                                <select
+                                    value={pricingModelFilter}
+                                    onChange={(e) => setPricingModelFilter(e.target.value)}
+                                    style={{
+                                        padding: '8px 12px',
+                                        border: '1px solid #d1d5db',
+                                        borderRadius: '6px',
+                                        backgroundColor: '#fff',
+                                        fontSize: '14px',
+                                        color: '#374151',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <option value="all">All Models</option>
+                                    <option value="subscription">Subscription</option>
+                                    <option value="transaction">Transaction Fee</option>
+                                    <option value="percentage">Percentage</option>
+                                    <option value="hourly">Hourly Rate</option>
+                                    <option value="fixed">Fixed Price</option>
+                                </select>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <label style={{
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    color: '#c0c0c0'
+                                }}>Who pays:</label>
+                                <select
+                                    value={whoPaysFilter}
+                                    onChange={(e) => setWhoPaysFilter(e.target.value)}
+                                    style={{
+                                        padding: '8px 12px',
+                                        border: '1px solid #d1d5db',
+                                        borderRadius: '6px',
+                                        backgroundColor: '#fff',
+                                        fontSize: '14px',
+                                        color: '#374151',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <option value="all">All</option>
+                                    <option value="employer">Employer</option>
+                                    <option value="freelancer">Freelancer</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p className="stats-subtitle">
+                        {filteredCompanies.length} of {companies.length} companies
+                    </p>
+                    <hr></hr>
+            </div>
+
+            
 
             <div className="companies-grid">
                 {filteredCompanies.map((company) => (
