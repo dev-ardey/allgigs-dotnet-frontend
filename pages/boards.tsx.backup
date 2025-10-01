@@ -1,3 +1,6 @@
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Input } from "../components/ui/input";
 "use client"
 
 import React, { useState, useEffect } from 'react';
@@ -74,14 +77,13 @@ interface SourceJobStats {
 
 // Company Card Component
 const CompanyCard: React.FC<{
-    cardStyling: any;
     company: AutomationDetails;
     onClick: () => void;
     isSelected: boolean;
     onSelectionChange: (companyId: number, selected: boolean) => void;
     sourceJobStats: SourceJobStats;
     getIndustryColor: (industry: string) => string;
-}> = ({ company, onClick, isSelected, onSelectionChange, sourceJobStats, getIndustryColor, cardStyling }) => {
+}> = ({ company, onClick, isSelected, onSelectionChange, sourceJobStats, getIndustryColor }) => {
     const capitalizeFirstLetter = (str: string) => {
         if (!str) return '';
         return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -97,14 +99,18 @@ const CompanyCard: React.FC<{
 
 
     return (
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#ffffff' }}>Job Boards</h1>
         <div
             onClick={onClick}
-            className="company-card" style={cardStyling}>
+            style={{ backgroundColor: '#1a1a1a', border: '1px solid #333333', borderRadius: '8px', padding: '1rem', marginBottom: '1rem', cursor: 'pointer', color: '#ffffff' }}
+        >
             {/* Company Name */}
             <div className="company-name-container">
                 <div className="company-name-content" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div>
-                        <h3 className="company-name">
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '0.5rem' }}>
                             {capitalizeFirstLetter(company.Company_name)}
                             {(() => {
                                 const frenchSources = ['404Works', 'comet', 'Welcome to the Jungle', 'Freelance-Informatique', 'Codeur.com'];
@@ -112,9 +118,9 @@ const CompanyCard: React.FC<{
                                 return isFrench ? ' 🇫🇷' : '';
                             })()}
                         </h3>
-                        <div className="company-subtitle">
-                            <span className="subtitle-label">Pricing info:</span>
-                            <span className="subtitle-value">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}>
+                            <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Pricing info:</span>
+                            <span style={{ color: '#ffffff', fontSize: '0.875rem' }}>
                                 {company["Pricing info found?"] === true || company["Pricing info found?"] === 'yes' || company["Pricing info found?"] === 'Yes' ? 'Yes' :
                                     company["Pricing info found?"] === false || company["Pricing info found?"] === 'no' || company["Pricing info found?"] === 'No' ? (
                                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -144,7 +150,7 @@ const CompanyCard: React.FC<{
                     {/* Mini Pie Chart next to title */}
                     {sourceTotal > 0 && (
                         <div className="mini-pie-container" style={{ flexShrink: 0 }}>
-                            <div style={{ fontSize: '10px', color: '#6b7280', marginBottom: '4px', textAlign: 'center' }}>
+                            <div style={{ fontSize: '10px', color: '#9ca3af', marginBottom: '4px', textAlign: 'center' }}>
                                 {sourceTotal.toLocaleString()} jobs
                             </div>
                             <svg width="60" height="60" viewBox="0 0 60 60" style={{ display: 'block' }}>
@@ -174,11 +180,14 @@ const CompanyCard: React.FC<{
                                         currentAngle += sliceAngle;
 
                                         return (
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#ffffff' }}>Job Boards</h1>
                                             <path
                                                 key={industry}
                                                 d={pathData}
                                                 fill={getIndustryColor(industry)}
-                                                stroke="#fff"
+                                                stroke="#000"
                                                 strokeWidth="1"
                                                 style={{ cursor: 'pointer' }}
                                                 onMouseEnter={() => {
@@ -186,8 +195,8 @@ const CompanyCard: React.FC<{
                                                     tooltip.id = 'mini-pie-tooltip';
                                                     tooltip.style.cssText = `
                                                         position: absolute;
-                                                        background: #1f2937;
-                                                        color: white;
+                                                        background: #000000;
+                                                        color: #ffffff;
                                                         padding: 6px 8px;
                                                         border-radius: 4px;
                                                         font-size: 10px;
@@ -217,7 +226,9 @@ const CompanyCard: React.FC<{
                                                 }}
                                                 onClick={(e) => e.stopPropagation()}
                                             />
-                                        );
+                                                </div>
+        </div>
+    );
                                     });
                                 })()}
                             </svg>
@@ -228,7 +239,7 @@ const CompanyCard: React.FC<{
 
             {/* Selection Checkbox */}
             <div className="company-selection-box" onClick={(e) => e.stopPropagation()}>
-                <input
+                <Input
                     type="checkbox"
                     className="company-checkbox"
                     checked={isSelected}
@@ -247,7 +258,7 @@ const CompanyCard: React.FC<{
                     <div className={`company-description ${!isDescriptionExpanded ? 'description-truncated' : ''}`}>
                         {company["Company description"]}
                     </div>
-                    <button
+                    <Button
                         className="expand-description-btn"
                         onClick={(e) => {
                             e.stopPropagation();
@@ -255,7 +266,7 @@ const CompanyCard: React.FC<{
                         }}
                     >
                         {isDescriptionExpanded ? 'Show less' : 'Show more'}
-                    </button>
+                    </Button>
                 </div>
             )}
 
@@ -297,13 +308,21 @@ const CompanyCard: React.FC<{
 
                         if (!hasAnyCosts) {
                             return (
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#ffffff' }}>Job Boards</h1>
                                 <div className="charge-item">
                                     <span className="charge-value">Free</span>
                                 </div>
-                            );
+                                    </div>
+        </div>
+    );
                         }
 
                         return (
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#ffffff' }}>Job Boards</h1>
                             <>
                                 {hasSubscriptionFee && (
                                     <div className="charge-item">
@@ -336,7 +355,9 @@ const CompanyCard: React.FC<{
                                     </div>
                                 )}
                             </>
-                        );
+                                </div>
+        </div>
+    );
                     })()}
                 </div>
             </div>
@@ -369,7 +390,7 @@ const CompanyCard: React.FC<{
             {/* Visit Website Button */}
             {company.URL && (
                 <div className="website-button-container">
-                    <button
+                    <Button
                         className="website-button"
                         onClick={(e) => {
                             e.stopPropagation();
@@ -382,13 +403,15 @@ const CompanyCard: React.FC<{
                         }}
                     >
                         Visit Website
-                    </button>
+                    </Button>
                 </div>
             )}
 
             {/* Hover indicator */}
             <div className="hover-indicator">
                 Click for details →
+            </div>
+        </div>
             </div>
         </div>
     );
@@ -418,6 +441,9 @@ const CompanyDetailModal: React.FC<{
     const companyTypes = getCompanyTypes();
 
     return (
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#ffffff' }}>Job Boards</h1>
         <div className="modal-overlay">
             <div className="modal-content">
                 <div className="modal-body">
@@ -425,17 +451,17 @@ const CompanyDetailModal: React.FC<{
                         <div>
                             <h2 className="modal-title">
                                 {company.Company_name.charAt(0).toUpperCase() + company.Company_name.slice(1).toLowerCase()}
-                            </h2>
+                            </CardTitle></CardHeader>
                             {company["Parent company"] && (
                                 <p className="modal-subtitle">Parent: {company["Parent company"]}</p>
                             )}
                         </div>
-                        <button
+                        <Button
                             onClick={onClose}
                             className="modal-close-button"
                         >
                             ×
-                        </button>
+                        </Button>
                     </div>
 
                     {company["Company description"] && (
@@ -513,6 +539,9 @@ const CompanyDetailModal: React.FC<{
                                             });
 
                                             return (
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#ffffff' }}>Job Boards</h1>
                                                 <>
                                                     <div className="cost-line-chart">
                                                         <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -552,7 +581,7 @@ const CompanyDetailModal: React.FC<{
                                                         ))}
                                                         {company["Hourly rate"] !== undefined && company["Hourly rate"] !== null && hourlyData.map((point, index) => (
                                                             <div key={`hr-point-${index}`}>
-                                                                <div className="cost-point" style={{ left: `${point.x}%`, top: `${point.y}%`, backgroundColor: '#10b981' }} />
+                                                                <div className="cost-point" style={{ left: `${point.x}%`, top: `${point.y}%`, backgroundColor: '#8b5cf6' }} />
                                                                 <div className="cost-value-labels" style={{ left: `${point.x}%`, top: `${point.y - 10}%`, transform: 'translate(-50%, -50%)', color: '#10b981' }}>
                                                                     {point.cost === 0 ? "€0" : `€${point.cost.toFixed(1)}`}
                                                                 </div>
@@ -573,7 +602,9 @@ const CompanyDetailModal: React.FC<{
                                                         ))}
                                                     </div>
                                                 </>
-                                            );
+                                                    </div>
+        </div>
+    );
                                         })()}
                                     </div>
 
@@ -588,7 +619,9 @@ const CompanyDetailModal: React.FC<{
                                             c["subscription price/ month"] &&
                                             c["subscription price/ month"] > 0 &&
                                             c["subscription price/ month"] < 10000
-                                        );
+                                                </div>
+        </div>
+    );
                                         const subscriptionCosts = subscriptionModelCompanies
                                             .map(c => Number(c["subscription price/ month"]))
                                             .filter((cost): cost is number => !isNaN(cost) && cost > 0);
@@ -617,21 +650,24 @@ const CompanyDetailModal: React.FC<{
                                         }
 
                                         return (
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#ffffff' }}>Job Boards</h1>
                                             <div className="cost-summary-box">
                                                 <h4 className="cost-summary-title">Price Analysis & Cost Summary</h4>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                                     {company["subscription price/ month"] ? (
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
-                                                                <span style={{ color: '#6b7280' }}>Subscription Average:</span>
+                                                                <span style={{ color: '#9ca3af' }}>Subscription Average:</span>
                                                                 <span style={{ color: '#374151', fontWeight: '600' }}>{averageSubscription === 0 ? "No data" : `€${averageSubscription.toFixed(1)}/month`}</span>
                                                             </div>
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
-                                                                <span style={{ color: '#6b7280' }}>This Company:</span>
+                                                                <span style={{ color: '#9ca3af' }}>This Company:</span>
                                                                 <span style={{ color: '#374151', fontWeight: '600' }}>{currentSubscription === 0 ? "Free" : `€${(currentSubscription || 0).toFixed(1)}/month`}</span>
                                                             </div>
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
-                                                                <span style={{ color: '#6b7280' }}>Comparison:</span>
+                                                                <span style={{ color: '#9ca3af' }}>Comparison:</span>
                                                                 <span style={{ color: ratioColor, fontWeight: '600' }}>
                                                                     {percentageOfAverage > 100 ? 'Above Average' : percentageOfAverage < 100 ? 'Below Average' : 'Average'}
                                                                 </span>
@@ -677,7 +713,9 @@ const CompanyDetailModal: React.FC<{
                                                     </div>
                                                 </div>
                                             </div>
-                                        );
+                                                </div>
+        </div>
+    );
                                     })()}
                                 </div>
                             </div>
@@ -685,14 +723,16 @@ const CompanyDetailModal: React.FC<{
                     </div>
 
                     <div className="modal-footer">
-                        <button
+                        <Button
                             onClick={onClose}
                             className="modal-close-btn"
                         >
                             Close
-                        </button>
+                        </Button>
                     </div>
                 </div>
+            </div>
+        </div>
             </div>
         </div>
     );
@@ -705,7 +745,7 @@ const SearchBar: React.FC<{
 }> = ({ value, onChange }) => (
     <div className="search-container">
         <Search className="search-icon" />
-        <input
+        <Input
             type="text"
             placeholder="Search companies..."
             value={value}
@@ -1221,7 +1261,9 @@ export default function AutomationCompanies() {
             filtered = filtered.filter(company =>
                 company.Company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (company["Company description"] && company["Company description"].toLowerCase().includes(searchTerm.toLowerCase()))
-            );
+                    </div>
+        </div>
+    );
         }
 
         if (modelFilter !== 'all') {
@@ -1288,7 +1330,10 @@ export default function AutomationCompanies() {
             setUser(session?.user ?? null);
         });
 
-        return () => {
+        return (
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#ffffff' }}>Job Boards</h1>) => {
             authListener.subscription.unsubscribe();
         };
     }, []);
@@ -1314,7 +1359,10 @@ export default function AutomationCompanies() {
             document.addEventListener('click', handleClickOutside);
         }, 0);
 
-        return () => {
+        return (
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#ffffff' }}>Job Boards</h1>) => {
             clearTimeout(timeoutId);
             document.removeEventListener('click', handleClickOutside);
         };
@@ -1342,23 +1390,17 @@ export default function AutomationCompanies() {
     if (error) {
         return <div className="error">Error: {error}</div>;
     }
-    const cardStyling = {
-        backgroundColor: "rgba(34, 34, 34)",
-        background: "rgba(34, 34, 34)",
-        border: "2px solid rgba(255, 255, 255, 0.1)",
-        borderRadius: "12px",
-        padding: "1rem",
-        // color: "#fff"
-    };
 
     return (
-
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#ffffff' }}>Job Boards</h1>
         <div className="container">
-            <div className="stats-section" style={cardStyling}>
+            <div className="stats-section">
                 <div className="stats-card">
                     <div className="stats-content">
                         <div>
-                            <h2 className="stats-title">allGigs job boards</h2>
+                            <h2 className="stats-title">allGigs job boards</CardTitle></CardHeader>
                             <p className="stats-subtitle">
                                 {filteredCompanies.length} of {companies.length} companies
                             </p>
@@ -1368,9 +1410,9 @@ export default function AutomationCompanies() {
                     <div style={{
                         marginBottom: '24px',
                         padding: '20px',
-                        // backgroundColor: '#f8fafc',
-                        // borderRadius: '12px',
-                        // border: '1px solid #e2e8f0'
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '12px',
+                        border: '1px solid #e2e8f0'
                     }}>
                         <div style={{
                             display: 'flex',
@@ -1388,7 +1430,7 @@ export default function AutomationCompanies() {
                                     <label style={{
                                         fontSize: '14px',
                                         fontWeight: '500',
-                                        color: '#c0c0c0'
+                                        color: '#374151'
                                     }}>Paid/Free:</label>
                                     <select
                                         value={modelFilter}
@@ -1397,7 +1439,7 @@ export default function AutomationCompanies() {
                                             padding: '8px 12px',
                                             border: '1px solid #d1d5db',
                                             borderRadius: '6px',
-                                            backgroundColor: '#fff',
+                                            backgroundColor: '#1a1a1a',
                                             fontSize: '14px',
                                             color: '#374151',
                                             cursor: 'pointer'
@@ -1412,7 +1454,7 @@ export default function AutomationCompanies() {
                                     <label style={{
                                         fontSize: '14px',
                                         fontWeight: '500',
-                                        color: '#c0c0c0'
+                                        color: '#374151'
                                     }}>Customer Type:</label>
                                     <select
                                         value={customerFilter}
@@ -1421,7 +1463,7 @@ export default function AutomationCompanies() {
                                             padding: '8px 12px',
                                             border: '1px solid #d1d5db',
                                             borderRadius: '6px',
-                                            backgroundColor: '#fff',
+                                            backgroundColor: '#1a1a1a',
                                             fontSize: '14px',
                                             color: '#374151',
                                             cursor: 'pointer'
@@ -1437,7 +1479,7 @@ export default function AutomationCompanies() {
                                     <label style={{
                                         fontSize: '14px',
                                         fontWeight: '500',
-                                        color: '#c0c0c0'
+                                        color: '#374151'
                                     }}>Pricing Model:</label>
                                     <select
                                         value={pricingModelFilter}
@@ -1446,7 +1488,7 @@ export default function AutomationCompanies() {
                                             padding: '8px 12px',
                                             border: '1px solid #d1d5db',
                                             borderRadius: '6px',
-                                            backgroundColor: '#fff',
+                                            backgroundColor: '#1a1a1a',
                                             fontSize: '14px',
                                             color: '#374151',
                                             cursor: 'pointer'
@@ -1464,7 +1506,7 @@ export default function AutomationCompanies() {
                                     <label style={{
                                         fontSize: '14px',
                                         fontWeight: '500',
-                                        color: '#c0c0c0'
+                                        color: '#374151'
                                     }}>Who pays:</label>
                                     <select
                                         value={whoPaysFilter}
@@ -1473,7 +1515,7 @@ export default function AutomationCompanies() {
                                             padding: '8px 12px',
                                             border: '1px solid #d1d5db',
                                             borderRadius: '6px',
-                                            backgroundColor: '#fff',
+                                            backgroundColor: '#1a1a1a',
                                             fontSize: '14px',
                                             color: '#374151',
                                             cursor: 'pointer'
@@ -1490,11 +1532,11 @@ export default function AutomationCompanies() {
                 </div>
             </div>
 
-            <div className="calculator-section">
+            <Card style={{ backgroundColor: '#1a1a1a', border: '1px solid #333333', marginBottom: '2rem' }}>
                 <div className="calculator-split-container">
                     <div className="calculator-left">
                         <div className="calculator-header">
-                            <h2>Calculator</h2>
+                            <h2>Calculator</CardTitle></CardHeader>
                             <div className="info-tooltip-container">
                                 <Info size={14} className="info-icon" />
                                 <div className="info-tooltip calculator-tooltip">
@@ -1505,7 +1547,7 @@ export default function AutomationCompanies() {
                         <div className="calculation-inputs">
                             <div className="calc-input-group">
                                 <label className="calc-label">Rate (€/hour)</label>
-                                <input
+                                <Input
                                     type="number"
                                     className="calc-input"
                                     value={rate}
@@ -1515,7 +1557,7 @@ export default function AutomationCompanies() {
                             </div>
                             <div className="calc-input-group">
                                 <label className="calc-label">Hours per week</label>
-                                <input
+                                <Input
                                     type="number"
                                     className="calc-input"
                                     value={hours}
@@ -1525,7 +1567,7 @@ export default function AutomationCompanies() {
                             </div>
                             <div className="calc-input-group">
                                 <label className="calc-label">Weeks per month</label>
-                                <input
+                                <Input
                                     type="number"
                                     className="calc-input"
                                     value={weeksPerMonth}
@@ -1535,7 +1577,7 @@ export default function AutomationCompanies() {
                             </div>
                             <div className="calc-input-group">
                                 <label className="calc-label">Months</label>
-                                <input
+                                <Input
                                     type="number"
                                     className="calc-input"
                                     value={months}
@@ -1545,7 +1587,7 @@ export default function AutomationCompanies() {
                             </div>
                             <div className="calc-input-group">
                                 <label className="calc-label">Tax (%)</label>
-                                <input
+                                <Input
                                     type="number"
                                     className="calc-input"
                                     value={tax}
@@ -1590,18 +1632,18 @@ export default function AutomationCompanies() {
                         </div>
                     </div>
                     <div className="calculator-right">
-                        <h2>Comparison</h2>
+                        <h2>Comparison</CardTitle></CardHeader>
 
                         {/* Industry Job Statistics */}
-                        <div className="industry-stats-section" style={{ marginBottom: '20px', padding: '16px', background: 'rgba(34, 34, 34)', borderRadius: '8px' }}>
+                        <div className="industry-stats-section" style={{ marginBottom: '20px', padding: '16px', background: '#1a1a1a', borderRadius: '8px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                <h3 style={{ margin: '0', color: '#c0c0c0' }}>
+                                <h3 style={{ margin: '0', color: '#374151' }}>
                                     {showingSourceBreakdown
                                         ? `Freelance market - Source`
                                         : `Freelance market - Industry`
                                     }
                                 </h3>
-                                <button
+                                <Button
                                     onClick={() => {
                                         if (showingSourceBreakdown) {
                                             // Switch to industry view
@@ -1624,13 +1666,13 @@ export default function AutomationCompanies() {
                                     }}
                                 >
                                     {showingSourceBreakdown ? 'Show Industries' : 'Show Sources'}
-                                </button>
+                                </Button>
                             </div>
 
                             {/* Source Filter Custom Dropdown */}
                             {availableSources.length > 0 && (
                                 <div className="source-dropdown-container" style={{ marginBottom: '16px', position: 'relative' }}>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#c0c0c0', fontWeight: '500' }}>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#374151', fontWeight: '500' }}>
                                         Filter Sources ({selectedSources.size}/{availableSources.length} selected):
                                     </label>
 
@@ -1640,9 +1682,9 @@ export default function AutomationCompanies() {
                                         style={{
                                             width: '100%',
                                             padding: '8px 12px',
-                                            border: '1px solid #e5e7eb',
+                                            border: '1px solid #404040',
                                             borderRadius: '6px',
-                                            backgroundColor: '#fff',
+                                            backgroundColor: '#1a1a1a',
                                             fontSize: '13px',
                                             color: '#374151',
                                             cursor: 'pointer',
@@ -1670,8 +1712,8 @@ export default function AutomationCompanies() {
                                             top: '100%',
                                             left: 0,
                                             right: 0,
-                                            backgroundColor: '#fff',
-                                            border: '1px solid #e5e7eb',
+                                            backgroundColor: '#1a1a1a',
+                                            border: '1px solid #404040',
                                             borderRadius: '6px',
                                             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                                             zIndex: 1000,
@@ -1687,6 +1729,9 @@ export default function AutomationCompanies() {
                                                 const isFrench = frenchSources.includes(source);
 
                                                 return (
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#ffffff' }}>Job Boards</h1>
                                                     <div
                                                         key={source}
                                                         onClick={(e) => {
@@ -1704,50 +1749,52 @@ export default function AutomationCompanies() {
                                                             padding: '8px 12px',
                                                             cursor: 'pointer',
                                                             fontSize: '13px',
-                                                            backgroundColor: isSelected ? '#f0f9ff' : '#fff',
-                                                            borderBottom: '1px solid #f3f4f6',
+                                                            backgroundColor: isSelected ? '#2a2a2a' : '#1a1a1a',
+                                                            borderBottom: '1px solid #404040',
                                                             display: 'flex',
                                                             alignItems: 'center',
                                                             gap: '8px'
                                                         }}
                                                         onMouseEnter={(e) => {
-                                                            if (!isSelected) e.currentTarget.style.backgroundColor = '#f9fafb';
+                                                            if (!isSelected) e.currentTarget.style.backgroundColor = '#2a2a2a';
                                                         }}
                                                         onMouseLeave={(e) => {
-                                                            if (!isSelected) e.currentTarget.style.backgroundColor = '#fff';
+                                                            if (!isSelected) e.currentTarget.style.backgroundColor = '#1a1a1a';
                                                         }}
                                                     >
                                                         <span style={{
                                                             width: '16px',
                                                             height: '16px',
-                                                            border: '2px solid #d1d5db',
+                                                            border: '2px solid #404040',
                                                             borderRadius: '3px',
                                                             display: 'flex',
                                                             alignItems: 'center',
                                                             justifyContent: 'center',
-                                                            backgroundColor: isSelected ? '#3b82f6' : '#fff',
-                                                            borderColor: isSelected ? '#3b82f6' : '#d1d5db',
+                                                            backgroundColor: isSelected ? '#8b5cf6' : '#1a1a1a',
+                                                            borderColor: isSelected ? '#8b5cf6' : '#404040',
                                                             color: '#fff',
                                                             fontSize: '10px'
                                                         }}>
                                                             {isSelected ? '✓' : ''}
                                                         </span>
-                                                        <span style={{ color: '#000000' }}>
+                                                        <span style={{ color: '#ffffff' }}>
                                                             {source} ({sourceJobCount.toLocaleString()} jobs) {isFrench ? '🇫🇷' : ''}
                                                         </span>
                                                     </div>
-                                                );
+                                                        </div>
+        </div>
+    );
                                             })}
                                         </div>
                                     )}
 
                                     <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
-                                        <button
+                                        <Button
                                             onClick={() => setSelectedSources(new Set(availableSources))}
                                             style={{
                                                 padding: '4px 8px',
                                                 fontSize: '11px',
-                                                backgroundColor: '#10b981',
+                                                backgroundColor: '#8b5cf6',
                                                 color: 'white',
                                                 border: 'none',
                                                 borderRadius: '4px',
@@ -1755,13 +1802,13 @@ export default function AutomationCompanies() {
                                             }}
                                         >
                                             Select All
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
                                             onClick={() => setSelectedSources(new Set())}
                                             style={{
                                                 padding: '4px 8px',
                                                 fontSize: '11px',
-                                                backgroundColor: '#ef4444',
+                                                backgroundColor: '#dc2626',
                                                 color: 'white',
                                                 border: 'none',
                                                 borderRadius: '4px',
@@ -1769,7 +1816,7 @@ export default function AutomationCompanies() {
                                             }}
                                         >
                                             Clear All
-                                        </button>
+                                        </Button>
                                     </div>
                                 </div>
                             )}
@@ -1778,7 +1825,7 @@ export default function AutomationCompanies() {
                                 <>
                                     {/* Show message when no sources selected or no industries selected */}
                                     {(showingSourceBreakdown && selectedSources.size === 0) || (!showingSourceBreakdown && selectedIndustries.size === 0) ? (
-                                        <div style={{ textAlign: 'center', color: '#6b7280', padding: '40px', border: '1px solid #e5e7eb', borderRadius: '8px', marginBottom: '16px' }}>
+                                        <div style={{ textAlign: 'center', color: '#9ca3af', padding: '40px', border: '1px solid #404040', borderRadius: '8px', marginBottom: '16px' }}>
                                             <p style={{ fontSize: '16px', marginBottom: '8px' }}>
                                                 {showingSourceBreakdown ? 'No sources selected' : 'No industries selected'}
                                             </p>
@@ -1788,7 +1835,7 @@ export default function AutomationCompanies() {
                                         </div>
                                     ) : (
                                         <div className="pie-chart-container" style={{ textAlign: 'center', marginBottom: '16px' }}>
-                                            <svg width="400" height="400" viewBox="0 0 400 400" className="pie-chart" style={{ border: '1px solid #e5e7eb', borderRadius: '8px' }}>
+                                            <svg width="400" height="400" viewBox="0 0 400 400" className="pie-chart" style={{ border: '1px solid #404040', borderRadius: '8px' }}>
                                                 {(() => {
                                                     let currentAngle = 0;
 
@@ -1825,11 +1872,14 @@ export default function AutomationCompanies() {
                                                             currentAngle += sliceAngle;
 
                                                             return (
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#ffffff' }}>Job Boards</h1>
                                                                 <g key={item.source}>
                                                                     <path
                                                                         d={pathData}
                                                                         fill={getIndustryColor(item.source)}
-                                                                        stroke="#fff"
+                                                                        stroke="#000"
                                                                         strokeWidth="2"
                                                                         style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}
                                                                         onMouseEnter={(e) => {
@@ -1839,8 +1889,8 @@ export default function AutomationCompanies() {
                                                                             tooltip.id = 'pie-tooltip';
                                                                             tooltip.style.cssText = `
                                                                             position: absolute;
-                                                                            background: #1f2937;
-                                                                            color: white;
+                                                                            background: #000000;
+                                                                            color: #ffffff;
                                                                             padding: 8px 12px;
                                                                             border-radius: 6px;
                                                                             font-size: 12px;
@@ -1868,7 +1918,9 @@ export default function AutomationCompanies() {
                                                                         }}
                                                                     />
                                                                 </g>
-                                                            );
+                                                                    </div>
+        </div>
+    );
                                                         });
                                                     } else {
                                                         // Show industry breakdown - filter by selected industries AND sources
@@ -1927,11 +1979,14 @@ export default function AutomationCompanies() {
                                                             currentAngle += sliceAngle;
 
                                                             return (
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#ffffff' }}>Job Boards</h1>
                                                                 <g key={stat.industry}>
                                                                     <path
                                                                         d={pathData}
                                                                         fill={getIndustryColor(stat.industry)}
-                                                                        stroke="#fff"
+                                                                        stroke="#000"
                                                                         strokeWidth="2"
                                                                         style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}
                                                                         onMouseEnter={(e) => {
@@ -1941,8 +1996,8 @@ export default function AutomationCompanies() {
                                                                             tooltip.id = 'pie-tooltip';
                                                                             tooltip.style.cssText = `
                                                                         position: absolute;
-                                                                        background: #1f2937;
-                                                                        color: white;
+                                                                        background: #000000;
+                                                                        color: #ffffff;
                                                                         padding: 8px 12px;
                                                                         border-radius: 6px;
                                                                         font-size: 12px;
@@ -1970,7 +2025,9 @@ export default function AutomationCompanies() {
                                                                         }}
                                                                     />
                                                                 </g>
-                                                            );
+                                                                    </div>
+        </div>
+    );
                                                         });
                                                     }
                                                 })()}
@@ -1979,7 +2036,7 @@ export default function AutomationCompanies() {
                                     )}
                                     {/* Industry Filter Custom Dropdown */}
                                     <div className="industry-dropdown-container" style={{ position: 'relative', width: '100%' }}>
-                                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#c0c0c0', fontWeight: '500' }}>
+                                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#374151', fontWeight: '500' }}>
                                             Select Industries ({selectedIndustries.size}/{jobStats.length} selected):
                                         </label>
 
@@ -1989,9 +2046,9 @@ export default function AutomationCompanies() {
                                             style={{
                                                 width: '100%',
                                                 padding: '8px 12px',
-                                                border: '1px solid #e5e7eb',
+                                                border: '1px solid #404040',
                                                 borderRadius: '6px',
-                                                backgroundColor: '#fff',
+                                                backgroundColor: '#1a1a1a',
                                                 fontSize: '13px',
                                                 color: '#374151',
                                                 cursor: 'pointer',
@@ -2019,8 +2076,8 @@ export default function AutomationCompanies() {
                                                 top: '100%',
                                                 left: 0,
                                                 right: 0,
-                                                backgroundColor: '#fff',
-                                                border: '1px solid #e5e7eb',
+                                                backgroundColor: '#1a1a1a',
+                                                border: '1px solid #404040',
                                                 borderRadius: '6px',
                                                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                                                 zIndex: 1000,
@@ -2030,6 +2087,9 @@ export default function AutomationCompanies() {
                                                 {jobStats.map((stat) => {
                                                     const isSelected = selectedIndustries.has(stat.industry);
                                                     return (
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#ffffff' }}>Job Boards</h1>
                                                         <div
                                                             key={stat.industry}
                                                             onClick={(e) => {
@@ -2047,48 +2107,50 @@ export default function AutomationCompanies() {
                                                                 padding: '8px 12px',
                                                                 cursor: 'pointer',
                                                                 fontSize: '13px',
-                                                                backgroundColor: isSelected ? '#f0f9ff' : '#fff',
-                                                                borderBottom: '1px solid #f3f4f6',
+                                                                backgroundColor: isSelected ? '#2a2a2a' : '#1a1a1a',
+                                                                borderBottom: '1px solid #404040',
                                                                 display: 'flex',
                                                                 alignItems: 'center',
                                                                 gap: '8px'
                                                             }}
                                                             onMouseEnter={(e) => {
-                                                                if (!isSelected) e.currentTarget.style.backgroundColor = '#f9fafb';
+                                                                if (!isSelected) e.currentTarget.style.backgroundColor = '#2a2a2a';
                                                             }}
                                                             onMouseLeave={(e) => {
-                                                                if (!isSelected) e.currentTarget.style.backgroundColor = '#fff';
+                                                                if (!isSelected) e.currentTarget.style.backgroundColor = '#1a1a1a';
                                                             }}
                                                         >
                                                             <span style={{
                                                                 width: '16px',
                                                                 height: '16px',
-                                                                border: '2px solid #d1d5db',
+                                                                border: '2px solid #404040',
                                                                 borderRadius: '3px',
                                                                 display: 'flex',
                                                                 alignItems: 'center',
                                                                 justifyContent: 'center',
-                                                                backgroundColor: isSelected ? '#3b82f6' : '#fff',
-                                                                borderColor: isSelected ? '#3b82f6' : '#d1d5db',
+                                                                backgroundColor: isSelected ? '#8b5cf6' : '#1a1a1a',
+                                                                borderColor: isSelected ? '#8b5cf6' : '#404040',
                                                                 color: '#fff',
                                                                 fontSize: '10px'
                                                             }}>
                                                                 {isSelected ? '✓' : ''}
                                                             </span>
-                                                            <span style={{ color: '#000000' }}>{stat.industry}: {stat.count.toLocaleString()} jobs ({stat.percentage.toFixed(1)}%)</span>
+                                                            <span style={{ color: '#ffffff' }}>{stat.industry}: {stat.count.toLocaleString()} jobs ({stat.percentage.toFixed(1)}%)</span>
                                                         </div>
-                                                    );
+                                                            </div>
+        </div>
+    );
                                                 })}
                                             </div>
                                         )}
 
                                         <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
-                                            <button
+                                            <Button
                                                 onClick={() => setSelectedIndustries(new Set(jobStats.map(stat => stat.industry)))}
                                                 style={{
                                                     padding: '4px 8px',
                                                     fontSize: '11px',
-                                                    backgroundColor: '#10b981',
+                                                    backgroundColor: '#8b5cf6',
                                                     color: 'white',
                                                     border: 'none',
                                                     borderRadius: '4px',
@@ -2096,13 +2158,13 @@ export default function AutomationCompanies() {
                                                 }}
                                             >
                                                 Select All
-                                            </button>
-                                            <button
+                                            </Button>
+                                            <Button
                                                 onClick={() => setSelectedIndustries(new Set())}
                                                 style={{
                                                     padding: '4px 8px',
                                                     fontSize: '11px',
-                                                    backgroundColor: '#ef4444',
+                                                    backgroundColor: '#dc2626',
                                                     color: 'white',
                                                     border: 'none',
                                                     borderRadius: '4px',
@@ -2110,12 +2172,12 @@ export default function AutomationCompanies() {
                                                 }}
                                             >
                                                 Clear All
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
                                 </>
                             ) : (
-                                <div style={{ textAlign: 'center', color: '#6b7280', padding: '20px' }}>
+                                <div style={{ textAlign: 'center', color: '#9ca3af', padding: '20px' }}>
                                     <p>Loading job statistics...</p>
                                     <p style={{ fontSize: '12px', marginTop: '8px' }}>
                                         Debug: jobStats.length = {jobStats.length}, totalJobs = {totalJobs}
@@ -2130,10 +2192,15 @@ export default function AutomationCompanies() {
 
                                 if (selectedCompanyData.length === 0) {
                                     return (
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#ffffff' }}>Job Boards</h1>
                                         <div className="no-selection-message">
                                             <p>No companies selected. Select companies using the checkboxes to see their cost breakdown.</p>
                                         </div>
-                                    );
+                                            </div>
+        </div>
+    );
                                 }
 
                                 return selectedCompanyData.map((company) => {
@@ -2225,6 +2292,9 @@ export default function AutomationCompanies() {
                                     }
 
                                     return (
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#ffffff' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#ffffff' }}>Job Boards</h1>
                                         <div key={company.id} className="company-cost-card">
                                             <div className="company-cost-header">
                                                 <div className="company-cost-title-row">
@@ -2254,10 +2324,10 @@ export default function AutomationCompanies() {
                                                                 </span>
                                                             )}
                                                     </span>
-                                                    <button className="visit-website-btn" onClick={() => window.open(company.URL || '#', '_blank')}>
+                                                    <Button className="visit-website-btn" onClick={() => window.open(company.URL || '#', '_blank')}>
                                                         Visit Website
-                                                    </button>
-                                                    <button
+                                                    </Button>
+                                                    <Button
                                                         className="company-cost-remove-btn"
                                                         onClick={() => {
                                                             const newSelected = new Set(selectedCompanies);
@@ -2267,27 +2337,29 @@ export default function AutomationCompanies() {
                                                         title="Remove from selection"
                                                     >
                                                         ×
-                                                    </button>
+                                                    </Button>
                                                 </div>
                                             </div>
                                             <div className="company-cost-breakdown">
                                                 {costBreakdown.map((cost, index) => (
-                                                    <div key={index} className="cost-item">
-                                                        <span className="cost-label">{cost.label}</span>
-                                                        <span className="cost-value">
+                                                    <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.25rem 0', borderBottom: '1px solid #404040' }}>
+                                                        <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>{cost.label}</span>
+                                                        <span style={{ color: '#ffffff', fontSize: '0.875rem', fontWeight: '600' }}>
                                                             €{cost.monthly.toFixed(1)}/month
                                                         </span>
                                                     </div>
                                                 ))}
-                                                <div className="cost-total">
-                                                    <span className="cost-label">Total:</span>
-                                                    <span className="cost-value">
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0', borderTop: '2px solid #404040', marginTop: '0.5rem' }}>
+                                                    <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Total:</span>
+                                                    <span style={{ color: '#ffffff', fontSize: '0.875rem', fontWeight: '600' }}>
                                                         €{companyMonthlyCost.toFixed(1)}/month | €{companyQuarterlyCost.toFixed(1)}/quarter
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
-                                    );
+                                            </div>
+        </div>
+    );
                                 });
                             })()}
                         </div>
@@ -2295,7 +2367,7 @@ export default function AutomationCompanies() {
                 </div>
             </div>
 
-            <div className="companies-grid">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem', marginTop: '2rem' }}>
                 {filteredCompanies.map((company) => (
                     <CompanyCard
                         key={company.id}
@@ -2312,7 +2384,6 @@ export default function AutomationCompanies() {
                             setSelectedCompanies(newSelected);
                         }}
                         sourceJobStats={sourceJobStats}
-                        cardStyling={cardStyling}
                         getIndustryColor={getIndustryColor}
                     />
                 ))}
@@ -2323,12 +2394,14 @@ export default function AutomationCompanies() {
                     company={selectedCompany}
                     companies={companies}
                     onClose={() => setSelectedCompany(null)}
-                    calculatorHours={Number(hours) || 32}
-                    calculatorWeeksPerMonth={Number(weeksPerMonth) || 4}
+                    calculatorHours={typeof hours === 'number' ? hours : 32}
+                    calculatorWeeksPerMonth={typeof weeksPerMonth === 'number' ? weeksPerMonth : 4}
                     calculatorMonthlyTotal={monthlyTotal}
                     calculatorTotalWithTax={totalWithTax}
                 />
             )}
+        </div>
+            </div>
         </div>
     );
 } 

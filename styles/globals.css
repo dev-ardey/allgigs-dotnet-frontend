@@ -103,12 +103,18 @@ body {
 }
 
 .stats-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f3f4f6;
+  /* background: rgba(34, 34, 34); */
+  /* border-radius: 16px; */
+  /* padding: 24px; */
+  /* box-shadow: 0 1px 3px rgba(90, 90, 90); */
+  /* border: 1px solid #f3f4f6; */
+  
   margin-bottom: 16px;
+}
+
+.container {
+  padding: 2rem;
+  background: black;
 }
 
 .filters-container {
@@ -182,12 +188,12 @@ body {
 .stats-title {
   font-size: 18px;
   font-weight: 600;
-  color: #111827;
+  color: white;
   margin: 0;
 }
 
 .stats-subtitle {
-  color: #6b7280;
+  color: #c0c0c0;
   margin: 4px 0 0 0;
 }
 
@@ -231,12 +237,12 @@ body {
 .calculator-left,
 .calculator-right {
   flex: 1;
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
+  background: rgba(34, 34, 34);
+  border-radius: 12px;
+  padding: 1rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f3f4f6;
-}
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  }
 
 .graph-container {
   margin: 16px 0;
@@ -286,7 +292,7 @@ body {
 .calculator-section h2 {
   font-size: 18px;
   font-weight: 600;
-  color: #111827;
+  color: white;
   margin: 0 0 16px 0;
 }
 
@@ -336,7 +342,7 @@ body {
 .calc-result-row span:last-child {
   font-size: 14px;
   font-weight: 600;
-  color: #111827;
+  color: #c0c0c0;
 }
 
 .calculation-inputs {
@@ -360,7 +366,7 @@ body {
 .calc-label {
   font-size: 12px;
   font-weight: 600;
-  color: #374151;
+  color: #c0c0c0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -2218,7 +2224,7 @@ body {
 
 .no-selection-message {
   text-align: center;
-  color: #6b7280;
+  color: #c0c0c0;
   font-style: italic;
   padding: 20px;
 }
