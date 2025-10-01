@@ -542,7 +542,7 @@ const CompanyDetailModal: React.FC<{
                             <h3 className="modal-section-title">Cost Analysis</h3>
                             <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
                                 <div style={{ flex: 1 }}>
-                                    <h3 className="modal-section-title" style={{ marginTop: 0 }}>Chart</h3>
+                                    {/* <h3 className="modal-section-title" style={{ marginTop: 0 }}>Chart</h3> */}
                                     <div style={{ display: 'flex', gap: '16px' }}>
                                         <div className="cost-chart">
                                             {(() => {
