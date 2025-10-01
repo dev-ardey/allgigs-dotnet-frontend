@@ -144,7 +144,7 @@ const CompanyCard: React.FC<{
                     {/* Mini Pie Chart next to title */}
                     {sourceTotal > 0 && (
                         <div className="mini-pie-container" style={{ flexShrink: 0 }}>
-                            <div style={{ fontSize: '10px', color: '#6b7280', marginBottom: '4px', textAlign: 'center' }}>
+                            <div style={{ fontSize: '10px', color: 'white', marginBottom: '4px', textAlign: 'center' }}>
                                 {sourceTotal.toLocaleString()} jobs
                             </div>
                             <svg width="60" height="60" viewBox="0 0 60 60" style={{ display: 'block' }}>
@@ -1788,7 +1788,7 @@ export default function AutomationCompanies() {
                                         </div>
                                     ) : (
                                         <div className="pie-chart-container" style={{ textAlign: 'center', marginBottom: '16px' }}>
-                                            <svg width="400" height="400" viewBox="0 0 400 400" className="pie-chart" style={{ border: '1px solid #e5e7eb', borderRadius: '8px' }}>
+                                            <svg width="400" height="400" viewBox="0 0 400 400" className="pie-chart" style={{ borderRadius: '8px' }}>
                                                 {(() => {
                                                     let currentAngle = 0;
 
