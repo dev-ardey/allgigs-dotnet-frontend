@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import { Menu, X, Home, User, Search } from 'lucide-react';
+import { Menu, X, Home, User, Search, ChartPie } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 
 interface GlobalNavProps {
@@ -27,6 +27,8 @@ export default function GlobalNav({ currentPage = 'dashboard' }: GlobalNavProps)
             router.push('/Profile');
         } else if (page === 'leadSearch') {
             router.push('/leadSearch');
+        } else if (page === 'boards') {
+            router.push('/boards');
         }
     };
 
@@ -142,6 +144,29 @@ export default function GlobalNav({ currentPage = 'dashboard' }: GlobalNavProps)
                         >
                             <Search size={20} />
                             Lead Search
+                        </button>
+
+                        <button
+                            onClick={() => navigateTo('boards')}
+                            style={{
+                                background: currentPage === 'boards' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)',
+                                border: '1px solid rgba(255,255,255,0.15)',
+                                borderRadius: '12px',
+                                color: '#fff',
+                                fontWeight: '600',
+                                fontSize: '1.1rem',
+                                padding: '1rem 1.25rem',
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                transition: 'all 0.2s',
+                                boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.75rem'
+                            }}
+                        >
+                            <ChartPie size={20} />
+                            Job Boards
                         </button>
 
                         <button
