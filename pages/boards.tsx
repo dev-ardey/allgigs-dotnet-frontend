@@ -852,6 +852,7 @@ export default function AutomationCompanies() {
 
     // View toggle state
     const [showingSourceBreakdown, setShowingSourceBreakdown] = useState<boolean>(false);
+    const [showCalculator, setShowCalculator] = useState<boolean>(false);
 
     // Calculator state
     const [rate, setRate] = useState<number | ''>(75);
@@ -1456,7 +1457,7 @@ export default function AutomationCompanies() {
         <>
             <GlobalNav currentPage="boards" />
 
-            <div className="container">
+            <div className="container" style={{ paddingTop: '6rem' }}>
                 {/* Title Section with Icon */}
                 <div style={{ marginBottom: '2rem' }}>
                     <h1 style={{
@@ -1485,105 +1486,130 @@ export default function AutomationCompanies() {
 
 
                     {/* <div className="calculator-left"> */}
-                    <div className="calculator-header">
-                        <h2>Calculator</h2>
-                        <div className="info-tooltip-container">
-                            <Info size={14} className="info-icon" />
-                            <div className="info-tooltip calculator-tooltip">
-                                Some partners calculate costs based on a percentage of earnings or hours worked. To get the most accurate estimate, please enter your own calculation. We currently use a default.
-                            </div>
-                        </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+
+
                     </div>
                     <p style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '1rem' }}>
                         Welcome to the central hub for understanding the Dutch freelance landscape. We've brought together over 60 job boards, from government portals to private recruiters, into one, free platform. We don't just show you jobs; we are going to give you key insights into the freelancing world, so you can make key informed decisions about your next career move.
                     </p>
-                    <div className="calculation-inputs">
-                        <div className="calc-input-group">
-                            <label className="calc-label">Rate (€/hour)</label>
-                            <input
-                                type="number"
-                                className="calc-input"
-                                value={rate}
-                                onChange={(e) => setRate(e.target.value === '' ? '' : Number(e.target.value))}
-                                placeholder=""
-                            />
-                        </div>
-                        <div className="calc-input-group">
-                            <label className="calc-label">Hours per week</label>
-                            <input
-                                type="number"
-                                className="calc-input"
-                                value={hours}
-                                onChange={(e) => setHours(e.target.value === '' ? '' : Number(e.target.value))}
-                                placeholder=""
-                            />
-                        </div>
-                        <div className="calc-input-group">
-                            <label className="calc-label">Weeks per month</label>
-                            <input
-                                type="number"
-                                className="calc-input"
-                                value={weeksPerMonth}
-                                onChange={(e) => setWeeksPerMonth(e.target.value === '' ? '' : Number(e.target.value))}
-                                placeholder=""
-                            />
-                        </div>
-                        <div className="calc-input-group">
-                            <label className="calc-label">Months</label>
-                            <input
-                                type="number"
-                                className="calc-input"
-                                value={months}
-                                onChange={(e) => setMonths(e.target.value === '' ? '' : Number(e.target.value))}
-                                placeholder=""
-                            />
-                        </div>
-                        <div className="calc-input-group">
-                            <label className="calc-label">Tax (%)</label>
-                            <input
-                                type="number"
-                                className="calc-input"
-                                value={tax}
-                                onChange={(e) => setTax(Number(e.target.value))}
-                                placeholder=""
-                            />
-                        </div>
-                    </div>
-                    <div className="calculation-results">
-                        <div className="calc-results-simple">
-                            <div className="calc-monthly-section">
-                                <h4>Per Month</h4>
-                                <div className="calc-result-row">
-                                    <span>Subtotal:</span>
-                                    <span>€{monthlySubtotal.toFixed(1)}</span>
-                                </div>
-                                <div className="calc-result-row">
-                                    <span>Tax:</span>
-                                    <span>+ €{monthlyTaxAmount.toFixed(1)}</span>
-                                </div>
-                                <div className="calc-result-row">
-                                    <span>Total:</span>
-                                    <span>€{(monthlySubtotal + monthlyTaxAmount).toFixed(1)}</span>
+                    <button
+                        onClick={() => setShowCalculator(!showCalculator)}
+                        style={{
+                            padding: '6px 12px',
+                            background: 'rgba(139, 92, 246, 0.3)',
+                            color: '#fff',
+                            border: '1px solid rgba(139, 92, 246, 0.4)',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            backdropFilter: 'blur(8px)',
+                            transition: 'all 0.2s ease'
+                        }}
+                    >
+                        {showCalculator ? 'Hide rate calculator' : 'Show rate calculator'}
+                    </button>
+                    {showCalculator && (
+                        <>
+                            <div className="calculator-header" style={{ marginBottom: 0 }}>
+                                <h2>Rate calculator</h2>
+                                <div className="info-tooltip-container">
+                                    <Info size={14} className="info-icon" />
+                                    <div className="info-tooltip calculator-tooltip">
+                                        Some partners calculate costs based on a percentage of earnings or hours worked. To get the most accurate estimate, please enter your own calculation. We currently use a default.
+                                    </div>
                                 </div>
                             </div>
-                            <div className="calc-total-section">
-                                <h4>Total</h4>
-                                <div className="calc-result-row">
-                                    <span>Subtotal:</span>
-                                    <span>€{subtotal.toFixed(1)}</span>
+                            <div className="calculation-inputs">
+                                <div className="calc-input-group">
+                                    <label className="calc-label">Rate (€/hour)</label>
+                                    <input
+                                        type="number"
+                                        className="calc-input"
+                                        value={rate}
+                                        onChange={(e) => setRate(e.target.value === '' ? '' : Number(e.target.value))}
+                                        placeholder=""
+                                    />
                                 </div>
-                                <div className="calc-result-row">
-                                    <span>Tax:</span>
-                                    <span>+ €{taxAmount.toFixed(1)}</span>
+                                <div className="calc-input-group">
+                                    <label className="calc-label">Hours per week</label>
+                                    <input
+                                        type="number"
+                                        className="calc-input"
+                                        value={hours}
+                                        onChange={(e) => setHours(e.target.value === '' ? '' : Number(e.target.value))}
+                                        placeholder=""
+                                    />
                                 </div>
-                                <div className="calc-result-row">
-                                    <span>Total:</span>
-                                    <span>€{total.toFixed(1)}</span>
+                                <div className="calc-input-group">
+                                    <label className="calc-label">Weeks per month</label>
+                                    <input
+                                        type="number"
+                                        className="calc-input"
+                                        value={weeksPerMonth}
+                                        onChange={(e) => setWeeksPerMonth(e.target.value === '' ? '' : Number(e.target.value))}
+                                        placeholder=""
+                                    />
+                                </div>
+                                <div className="calc-input-group">
+                                    <label className="calc-label">Months</label>
+                                    <input
+                                        type="number"
+                                        className="calc-input"
+                                        value={months}
+                                        onChange={(e) => setMonths(e.target.value === '' ? '' : Number(e.target.value))}
+                                        placeholder=""
+                                    />
+                                </div>
+                                <div className="calc-input-group">
+                                    <label className="calc-label">Tax (%)</label>
+                                    <input
+                                        type="number"
+                                        className="calc-input"
+                                        value={tax}
+                                        onChange={(e) => setTax(Number(e.target.value))}
+                                        placeholder=""
+                                    />
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    {/* </div> */}
+                            <div className="calculation-results">
+                                <div className="calc-results-simple">
+                                    <div className="calc-monthly-section">
+                                        <h4>Per Month</h4>
+                                        <div className="calc-result-row">
+                                            <span>Subtotal:</span>
+                                            <span>€{monthlySubtotal.toFixed(1)}</span>
+                                        </div>
+                                        <div className="calc-result-row">
+                                            <span>Tax:</span>
+                                            <span>+ €{monthlyTaxAmount.toFixed(1)}</span>
+                                        </div>
+                                        <div className="calc-result-row">
+                                            <span>Total:</span>
+                                            <span>€{(monthlySubtotal + monthlyTaxAmount).toFixed(1)}</span>
+                                        </div>
+                                    </div>
+                                    <div className="calc-total-section">
+                                        <h4>Total</h4>
+                                        <div className="calc-result-row">
+                                            <span>Subtotal:</span>
+                                            <span>€{subtotal.toFixed(1)}</span>
+                                        </div>
+                                        <div className="calc-result-row">
+                                            <span>Tax:</span>
+                                            <span>+ €{taxAmount.toFixed(1)}</span>
+                                        </div>
+                                        <div className="calc-result-row">
+                                            <span>Total:</span>
+                                            <span>€{total.toFixed(1)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {/* </div> */}
+                        </>
+                    )}
                 </div>
 
                 <div className="calculator-section">
