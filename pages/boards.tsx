@@ -2377,9 +2377,13 @@ export default function AutomationCompanies() {
                                 display: 'flex',
                                 flexDirection: 'column',
                                 gap: '16px',
-                                marginTop: '20px'
+                                marginTop: '20px',
+                                width: '100%',
+                                overflow: 'hidden'
                             }}>
-                                <SearchBar value={searchTerm} onChange={setSearchTerm} />
+                                <div style={{ width: '100%', maxWidth: '100%' }}>
+                                    <SearchBar value={searchTerm} onChange={setSearchTerm} />
+                                </div>
                                 <div style={{
                                     display: 'grid',
                                     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
