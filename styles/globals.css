@@ -135,8 +135,15 @@ body {
 
 .search-container {
   position: relative;
-  width: 250px;
+  width: 100%;
+  max-width: 250px;
   flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .search-container {
+    max-width: 100%;
+  }
 }
 
 .filter-group {
