@@ -142,6 +142,7 @@ body {
 
 @media (max-width: 768px) {
   .search-container {
+    width: auto;
     max-width: 100%;
   }
 }
