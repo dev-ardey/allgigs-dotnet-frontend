@@ -148,11 +148,11 @@ const CompanyCard: React.FC<{
 
                     {/* Mini Pie Chart next to title */}
                     {sourceTotal > 0 && (
-                        <div className="mini-pie-container" style={{ flexShrink: 0 }}>
+                        <div className="mini-pie-container">
                             <div style={{ fontSize: '10px', color: 'white', marginBottom: '4px', textAlign: 'center' }}>
                                 {sourceTotal.toLocaleString()} jobs
                             </div>
-                            <svg width="60" height="60" viewBox="0 0 60 60" style={{ display: 'block' }}>
+                            <svg viewBox="0 0 60 60" style={{ display: 'block' }}>
                                 {(() => {
                                     let currentAngle = 0;
 

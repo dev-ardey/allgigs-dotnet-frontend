@@ -2466,3 +2466,20 @@ select option {
     max-width: 250px !important;
   }
 }
+
+/* Mini pie chart in company cards - responsive sizing */
+.mini-pie-container {
+  flex-shrink: 0;
+}
+
+.mini-pie-container svg {
+  width: 60px;
+  height: 60px;
+}
+
+@media (max-width: 768px) {
+  .mini-pie-container svg {
+    width: 250px !important;
+    height: 250px !important;
+  }
+}
