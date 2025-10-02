@@ -715,7 +715,14 @@ body {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+}
+
+.company-name-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
 }
 
 @media (max-width: 768px) {
@@ -728,9 +735,7 @@ body {
   
   .company-name-content {
     width: 100%;
-    display: flex;
     flex-direction: column;
-    align-items: center;
   }
 }
 
