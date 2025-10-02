@@ -1593,7 +1593,7 @@ body {
   left: 16px;
   top: 50%;
   transform: translateY(-50%);
-  color: #9ca3af;
+  color: rgba(255, 255, 255, 0.6);
   width: 20px;
   height: 20px;
 }
@@ -1601,18 +1601,22 @@ body {
 .search-input {
   width: 100%;
   padding: 12px 16px 12px 48px;
-  border: 1px solid #d1d5db;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
-  background: white;
-  color: #111827;
+  background: #000;
+  color: #fff;
   font-size: 16px;
   transition: all 0.2s ease;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.6);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
 }
 
 /* Auth Container Styles */
@@ -2431,4 +2435,11 @@ body {
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
+}
+
+/* Select dropdown options styling */
+select option {
+  background-color: #000;
+  color: #fff;
+  padding: 8px;
 }

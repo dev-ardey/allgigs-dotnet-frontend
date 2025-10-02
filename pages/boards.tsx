@@ -1670,11 +1670,11 @@ export default function AutomationCompanies() {
                                             style={{
                                                 width: '100%',
                                                 padding: '8px 12px',
-                                                border: '1px solid #e5e7eb',
+                                                border: '1px solid rgba(255, 255, 255, 0.2)',
                                                 borderRadius: '6px',
-                                                backgroundColor: '#fff',
+                                                backgroundColor: '#000',
                                                 fontSize: '13px',
-                                                color: '#374151',
+                                                color: '#fff',
                                                 cursor: 'pointer',
                                                 display: 'flex',
                                                 justifyContent: 'space-between',
@@ -1700,8 +1700,8 @@ export default function AutomationCompanies() {
                                                 top: '100%',
                                                 left: 0,
                                                 width: '100%',
-                                                backgroundColor: '#fff',
-                                                border: '1px solid #e5e7eb',
+                                                backgroundColor: '#000',
+                                                border: '1px solid rgba(255, 255, 255, 0.2)',
                                                 borderRadius: '6px',
                                                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                                                 zIndex: 1000,
@@ -1734,17 +1734,17 @@ export default function AutomationCompanies() {
                                                                 padding: '8px 12px',
                                                                 cursor: 'pointer',
                                                                 fontSize: '13px',
-                                                                backgroundColor: isSelected ? '#f0f9ff' : '#fff',
-                                                                borderBottom: '1px solid #f3f4f6',
+                                                                backgroundColor: isSelected ? 'rgba(139, 92, 246, 0.2)' : '#000',
+                                                                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
                                                                 display: 'flex',
                                                                 alignItems: 'center',
                                                                 gap: '8px'
                                                             }}
                                                             onMouseEnter={(e) => {
-                                                                if (!isSelected) e.currentTarget.style.backgroundColor = '#f9fafb';
+                                                                if (!isSelected) e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
                                                             }}
                                                             onMouseLeave={(e) => {
-                                                                if (!isSelected) e.currentTarget.style.backgroundColor = '#fff';
+                                                                if (!isSelected) e.currentTarget.style.backgroundColor = '#000';
                                                             }}
                                                         >
                                                             <span style={{
@@ -1755,14 +1755,14 @@ export default function AutomationCompanies() {
                                                                 display: 'flex',
                                                                 alignItems: 'center',
                                                                 justifyContent: 'center',
-                                                                backgroundColor: isSelected ? '#3b82f6' : '#fff',
-                                                                borderColor: isSelected ? '#3b82f6' : '#d1d5db',
+                                                                backgroundColor: isSelected ? 'rgba(139, 92, 246, 0.8)' : 'transparent',
+                                                                borderColor: isSelected ? 'rgba(139, 92, 246, 0.8)' : 'rgba(255, 255, 255, 0.3)',
                                                                 color: '#fff',
                                                                 fontSize: '10px'
                                                             }}>
                                                                 {isSelected ? '✓' : ''}
                                                             </span>
-                                                            <span style={{ color: '#000000' }}>
+                                                            <span style={{ color: '#fff' }}>
                                                                 {source} ({sourceJobCount.toLocaleString()} jobs) {isFrench ? '🇫🇷' : ''}
                                                             </span>
                                                         </div>
@@ -2025,11 +2025,11 @@ export default function AutomationCompanies() {
                                                 style={{
                                                     width: '100%',
                                                     padding: '8px 12px',
-                                                    border: '1px solid #e5e7eb',
+                                                    border: '1px solid rgba(255, 255, 255, 0.2)',
                                                     borderRadius: '6px',
-                                                    backgroundColor: '#fff',
+                                                    backgroundColor: '#000',
                                                     fontSize: '13px',
-                                                    color: '#374151',
+                                                    color: '#fff',
                                                     cursor: 'pointer',
                                                     display: 'flex',
                                                     justifyContent: 'space-between',
@@ -2055,8 +2055,8 @@ export default function AutomationCompanies() {
                                                     top: '100%',
                                                     left: 0,
                                                     width: '100%',
-                                                    backgroundColor: '#fff',
-                                                    border: '1px solid #e5e7eb',
+                                                    backgroundColor: '#000',
+                                                    border: '1px solid rgba(255, 255, 255, 0.2)',
                                                     borderRadius: '6px',
                                                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                                                     zIndex: 1000,
@@ -2083,17 +2083,17 @@ export default function AutomationCompanies() {
                                                                     padding: '8px 12px',
                                                                     cursor: 'pointer',
                                                                     fontSize: '13px',
-                                                                    backgroundColor: isSelected ? '#f0f9ff' : '#fff',
-                                                                    borderBottom: '1px solid #f3f4f6',
+                                                                    backgroundColor: isSelected ? 'rgba(139, 92, 246, 0.2)' : '#000',
+                                                                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
                                                                     display: 'flex',
                                                                     alignItems: 'center',
                                                                     gap: '8px'
                                                                 }}
                                                                 onMouseEnter={(e) => {
-                                                                    if (!isSelected) e.currentTarget.style.backgroundColor = '#f9fafb';
+                                                                    if (!isSelected) e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
                                                                 }}
                                                                 onMouseLeave={(e) => {
-                                                                    if (!isSelected) e.currentTarget.style.backgroundColor = '#fff';
+                                                                    if (!isSelected) e.currentTarget.style.backgroundColor = '#000';
                                                                 }}
                                                             >
                                                                 <span style={{
@@ -2104,14 +2104,14 @@ export default function AutomationCompanies() {
                                                                     display: 'flex',
                                                                     alignItems: 'center',
                                                                     justifyContent: 'center',
-                                                                    backgroundColor: isSelected ? '#3b82f6' : '#fff',
-                                                                    borderColor: isSelected ? '#3b82f6' : '#d1d5db',
+                                                                    backgroundColor: isSelected ? 'rgba(139, 92, 246, 0.8)' : 'transparent',
+                                                                    borderColor: isSelected ? 'rgba(139, 92, 246, 0.8)' : 'rgba(255, 255, 255, 0.3)',
                                                                     color: '#fff',
                                                                     fontSize: '10px'
                                                                 }}>
                                                                     {isSelected ? '✓' : ''}
                                                                 </span>
-                                                                <span style={{ color: '#000000' }}>{stat.industry}: {stat.count.toLocaleString()} jobs ({stat.percentage.toFixed(1)}%)</span>
+                                                                <span style={{ color: '#fff' }}>{stat.industry}: {stat.count.toLocaleString()} jobs ({stat.percentage.toFixed(1)}%)</span>
                                                             </div>
                                                         );
                                                     })}
@@ -2397,11 +2397,11 @@ export default function AutomationCompanies() {
                                             onChange={(e) => setModelFilter(e.target.value)}
                                             style={{
                                                 padding: '8px 12px',
-                                                border: '1px solid #d1d5db',
+                                                border: '1px solid rgba(255, 255, 255, 0.2)',
                                                 borderRadius: '6px',
-                                                backgroundColor: '#fff',
+                                                backgroundColor: '#000',
                                                 fontSize: '14px',
-                                                color: '#374151',
+                                                color: '#fff',
                                                 cursor: 'pointer'
                                             }}
                                         >
@@ -2421,11 +2421,11 @@ export default function AutomationCompanies() {
                                             onChange={(e) => setCustomerFilter(e.target.value)}
                                             style={{
                                                 padding: '8px 12px',
-                                                border: '1px solid #d1d5db',
+                                                border: '1px solid rgba(255, 255, 255, 0.2)',
                                                 borderRadius: '6px',
-                                                backgroundColor: '#fff',
+                                                backgroundColor: '#000',
                                                 fontSize: '14px',
-                                                color: '#374151',
+                                                color: '#fff',
                                                 cursor: 'pointer'
                                             }}
                                         >
@@ -2446,11 +2446,11 @@ export default function AutomationCompanies() {
                                             onChange={(e) => setPricingModelFilter(e.target.value)}
                                             style={{
                                                 padding: '8px 12px',
-                                                border: '1px solid #d1d5db',
+                                                border: '1px solid rgba(255, 255, 255, 0.2)',
                                                 borderRadius: '6px',
-                                                backgroundColor: '#fff',
+                                                backgroundColor: '#000',
                                                 fontSize: '14px',
-                                                color: '#374151',
+                                                color: '#fff',
                                                 cursor: 'pointer'
                                             }}
                                         >
@@ -2473,11 +2473,11 @@ export default function AutomationCompanies() {
                                             onChange={(e) => setWhoPaysFilter(e.target.value)}
                                             style={{
                                                 padding: '8px 12px',
-                                                border: '1px solid #d1d5db',
+                                                border: '1px solid rgba(255, 255, 255, 0.2)',
                                                 borderRadius: '6px',
-                                                backgroundColor: '#fff',
+                                                backgroundColor: '#000',
                                                 fontSize: '14px',
-                                                color: '#374151',
+                                                color: '#fff',
                                                 cursor: 'pointer'
                                             }}
                                         >
