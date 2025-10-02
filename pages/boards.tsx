@@ -1824,7 +1824,7 @@ export default function AutomationCompanies() {
                                             </div>
                                         ) : (
                                             <div className="pie-chart-container" style={{ textAlign: 'center', marginBottom: '16px' }}>
-                                                <svg width="400" height="400" viewBox="0 0 400 400" className="pie-chart" style={{ borderRadius: '8px' }}>
+                                                <svg className="pie-chart" viewBox="0 0 400 400" style={{ borderRadius: '8px', width: '100%', height: 'auto', maxWidth: '400px' }}>
                                                     {(() => {
                                                         let currentAngle = 0;
 
