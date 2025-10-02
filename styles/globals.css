@@ -136,8 +136,8 @@ body {
 .search-container {
   position: relative;
   width: 100%;
-  max-width: 250px;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 @media (max-width: 768px) {
