@@ -710,19 +710,21 @@ body {
 
 .company-name-container {
   margin-bottom: 8px;
-  padding-right: 80px;
+  padding-right: 0;
   min-height: 60px;
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+  flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
 }
 
 .company-name-content {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   gap: 12px;
+  width: 100%;
+  text-align: center;
 }
 
 @media (max-width: 768px) {
@@ -2491,16 +2493,26 @@ select option {
 /* Mini pie chart in company cards - responsive sizing */
 .mini-pie-container {
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .mini-pie-container svg {
-  width: 60px;
-  height: 60px;
+  width: 150px;
+  height: 150px;
 }
 
 @media (max-width: 768px) {
   .mini-pie-container svg {
     width: 250px !important;
     height: 250px !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  .mini-pie-container svg {
+    width: 180px !important;
+    height: 180px !important;
   }
 }
