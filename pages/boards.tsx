@@ -1659,7 +1659,7 @@ export default function AutomationCompanies() {
 
                                 {/* Source Filter Custom Dropdown */}
                                 {availableSources.length > 0 && (
-                                    <div className="source-dropdown-container" style={{ marginBottom: '16px', position: 'relative' }}>
+                                    <div className="source-dropdown-container" style={{ marginBottom: '16px', marginRight: '20px', position: 'relative' }}>
                                         <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#c0c0c0', fontWeight: '500' }}>
                                             Filter Sources ({selectedSources.size}/{availableSources.length} selected):
                                         </label>
@@ -2014,7 +2014,7 @@ export default function AutomationCompanies() {
                                             </div>
                                         )}
                                         {/* Industry Filter Custom Dropdown */}
-                                        <div className="industry-dropdown-container" style={{ position: 'relative', width: '100%' }}>
+                                        <div className="industry-dropdown-container" style={{ marginBottom: '16px', marginRight: '20px', position: 'relative' }}>
                                             <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#c0c0c0', fontWeight: '500' }}>
                                                 Select Industries ({selectedIndustries.size}/{jobStats.length} selected):
                                             </label>

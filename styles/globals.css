@@ -355,12 +355,26 @@ body {
   flex-wrap: wrap;
 }
 
+/* Responsive breakpoints for calculator inputs */
+@media (max-width: 768px) {
+  .calculation-inputs {
+    flex-direction: column;
+  }
+}
+
 .calc-input-group {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 1;
+  flex: 0 0 auto;
   min-width: 80px;
+}
+
+@media (max-width: 768px) {
+  .calc-input-group {
+    flex: 1 1 100%;
+    width: 95%;
+  }
 }
 
 .calc-label {
@@ -381,6 +395,12 @@ body {
   width: 80px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .calc-input {
+    width: 95%;
+  }
 }
 
 .calc-input:focus {
@@ -543,10 +563,35 @@ body {
 
 .companies-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 12px;
   max-width: 100%;
   margin: 0 auto;
+}
+
+/* Responsive breakpoints for companies grid */
+@media (min-width: 1400px) {
+  .companies-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1399px) {
+  .companies-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .companies-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 639px) {
+  .companies-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .company-card {
