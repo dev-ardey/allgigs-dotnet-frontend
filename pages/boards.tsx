@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from "../SupabaseClient";
 import CompleteProfileForm from "../components/ui/CompleteProfileForm";
 import GlobalNav from "../components/ui/GlobalNav";
+import { AuthGuard } from "../components/ui/AuthGuard";
 // import { useProfileCheck } from "../components/ui/useProfileCheck";
 import {
     Search,
@@ -815,6 +816,14 @@ const SearchBar: React.FC<{
 
 // Main Component
 export default function AutomationCompanies() {
+    return (
+        <AuthGuard allowedRoles={['admin', 'paidUser']}>
+            <AutomationCompaniesContent />
+        </AuthGuard>
+    );
+}
+
+function AutomationCompaniesContent() {
     const [companies, setCompanies] = useState<AutomationDetails[]>([]);
     const [filteredCompanies, setFilteredCompanies] = useState<AutomationDetails[]>([]);
     const [searchTerm, setSearchTerm] = useState('');

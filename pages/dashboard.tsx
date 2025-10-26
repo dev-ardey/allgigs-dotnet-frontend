@@ -9,6 +9,7 @@ import CompleteProfileForm from '../components/ui/CompleteProfileForm';
 import { useProfileCheck } from '../components/ui/useProfileCheck';
 import LeadsPipeline from '../components/ui/LeadsPipeline';
 import { useAuth } from '../components/ui/AuthProvider';
+import { AuthGuard } from '../components/ui/AuthGuard';
 
 // Qualified Leads Interfaces en Types
 import {
@@ -828,6 +829,14 @@ interface StatsDay {
 }
 
 export default function Dashboard() {
+  return (
+    <AuthGuard allowedRoles={['admin', 'paidUser']}>
+      <DashboardContent />
+    </AuthGuard>
+  );
+}
+
+function DashboardContent() {
   // const [isAvailable, setIsAvailable] = useState(true);
   // const [editKeywords, setEditKeywords] = useState(false);
   // const [newKeyword, setNewKeyword] = useState('');

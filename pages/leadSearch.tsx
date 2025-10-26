@@ -12,6 +12,7 @@ import { useProfileCheck } from "../components/ui/useProfileCheck";
 import { useRouter } from "next/router";
 import GlobalNav from "../components/ui/GlobalNav";
 import { useAuth } from "../components/ui/AuthProvider";
+import { AuthGuard } from "../components/ui/AuthGuard";
 import { Search, SearchCheck, Edit2, Plus, X, Building2, MapPin, Layers2, ChevronDown, Globe, CheckCircle, Tag } from "lucide-react";
 
 
@@ -59,6 +60,14 @@ interface FreelanceJob {
 }
 
 export default function JobBoard() {
+  return (
+    <AuthGuard allowedRoles={['admin', 'paidUser', 'freeUser']}>
+      <JobBoardContent />
+    </AuthGuard>
+  );
+}
+
+function JobBoardContent() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");

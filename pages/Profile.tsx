@@ -5,6 +5,7 @@ import GlobalNav from '../components/ui/GlobalNav';
 import CompleteProfileForm from '../components/ui/CompleteProfileForm';
 import { useProfileCheck } from '../components/ui/useProfileCheck';
 import { useAuth } from '../components/ui/AuthProvider';
+import { AuthGuard } from '../components/ui/AuthGuard';
 
 // Profile Interface (from dashboard)
 interface Profile {
@@ -40,6 +41,14 @@ interface Document {
 }
 
 export default function Profile() {
+  return (
+    <AuthGuard allowedRoles={['admin', 'paidUser', 'freeUser']}>
+      <ProfileContent />
+    </AuthGuard>
+  );
+}
+
+function ProfileContent() {
   // State variables (from dashboard)
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
