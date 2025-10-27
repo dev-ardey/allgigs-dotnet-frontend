@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../SupabaseClient";
 import { sanitizeInput } from "../../utils/sanitizeInput";
+import { apiClient } from "../../lib/apiClient";
 
 interface CompleteProfileFormProps {
   onComplete: () => void;
@@ -44,26 +45,58 @@ export default function CompleteProfileForm({ onComplete, initialValues }: Compl
         return;
       }
 
-      // Sanitize all fields before upsert
-      const sanitizedProfile = {
-        id: user.id,
-        first_name: sanitizeInput(firstName),
-        last_name: sanitizeInput(lastName),
-        linkedin_URL: sanitizeInput(linkedin),
+      // Get user session for API token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        apiClient.setToken(session.access_token);
+      }
+
+      // Sanitize all fields before update
+      const profileData = {
+        firstName: sanitizeInput(firstName),
+        lastName: sanitizeInput(lastName),
+        linkedinUrl: sanitizeInput(linkedin),
         industry: sanitizeInput(industry),
-        job_title: sanitizeInput(jobTitle),
+        jobTitle: sanitizeInput(jobTitle),
         location: sanitizeInput(location),
       };
 
-      const { error: updateError } = await supabase.from("profiles").upsert(sanitizedProfile);
+      // Update profile via backend API
+      await apiClient.updateProfile(profileData);
+      onComplete();
       
-      if (updateError) {
-        setError(`Profile update failed: ${updateError.message}`);
-      } else {
-        onComplete();
-      }
     } catch (err) {
-      setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      console.error('Error updating profile via API:', err);
+      
+      // Fallback to direct Supabase if API fails
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setError("No authenticated user found. Please log in again.");
+          return;
+        }
+
+        // Sanitize all fields before upsert
+        const sanitizedProfile = {
+          id: user.id,
+          first_name: sanitizeInput(firstName),
+          last_name: sanitizeInput(lastName),
+          linkedin_URL: sanitizeInput(linkedin),
+          industry: sanitizeInput(industry),
+          job_title: sanitizeInput(jobTitle),
+          location: sanitizeInput(location),
+        };
+
+        const { error: updateError } = await supabase.from("profiles").upsert(sanitizedProfile);
+        
+        if (updateError) {
+          setError(`Profile update failed: ${updateError.message}`);
+        } else {
+          onComplete();
+        }
+      } catch (fallbackError) {
+        setError(`Unexpected error: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}`);
+      }
     }
   };
 
