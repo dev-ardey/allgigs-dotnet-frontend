@@ -261,7 +261,7 @@ function JobBoardContent() {
         console.log('Fetched profile from API:', profileData);
       } catch (error) {
         console.error('Error fetching profile from API:', error);
-        
+
         // Fallback to direct Supabase
         supabase
           .from("profiles")
