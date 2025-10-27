@@ -31,15 +31,15 @@ export default function CompleteProfileForm({ onComplete, initialValues }: Compl
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
+
     try {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
+
       if (authError) {
         setError(`Authentication error: ${authError.message}`);
         return;
       }
-      
+
       if (!user) {
         setError("No authenticated user found. Please log in again.");
         return;
@@ -64,10 +64,10 @@ export default function CompleteProfileForm({ onComplete, initialValues }: Compl
       // Update profile via backend API
       await apiClient.updateProfile(profileData);
       onComplete();
-      
+
     } catch (err) {
       console.error('Error updating profile via API:', err);
-      
+
       // Fallback to direct Supabase if API fails
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -88,7 +88,7 @@ export default function CompleteProfileForm({ onComplete, initialValues }: Compl
         };
 
         const { error: updateError } = await supabase.from("profiles").upsert(sanitizedProfile);
-        
+
         if (updateError) {
           setError(`Profile update failed: ${updateError.message}`);
         } else {
@@ -159,7 +159,7 @@ export default function CompleteProfileForm({ onComplete, initialValues }: Compl
         width: '100%',
         marginTop: 16
       }}>Save Profile</button>
-      {error && <div style={{color: "#dc2626", fontFamily: "'Montserrat', Arial, sans-serif", fontSize: '0.95rem', marginTop: 8}}>{error}</div>}
+      {error && <div style={{ color: "#dc2626", fontFamily: "'Montserrat', Arial, sans-serif", fontSize: '0.95rem', marginTop: 8 }}>{error}</div>}
     </form>
   );
 }
