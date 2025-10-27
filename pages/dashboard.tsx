@@ -10,6 +10,7 @@ import { useProfileCheck } from '../components/ui/useProfileCheck';
 import LeadsPipeline from '../components/ui/LeadsPipeline';
 import { useAuth } from '../components/ui/AuthProvider';
 import { AuthGuard } from '../components/ui/AuthGuard';
+import { apiClient } from '../lib/apiClient';
 
 // Qualified Leads Interfaces en Types
 import {
@@ -1086,31 +1087,49 @@ function DashboardContent() {
     }
   };
 
-  // Optioneel: refresh stats wanneer er een nieuwe job click is
-  // Voeg dit toe aan je logJobClick functie:
+  // Log job click to backend API
   const logJobClick = async (job: Job) => {
     if (!user || !user.id) return;
+
     try {
-      await supabase.from("job_clicks").insert([
-        {
-          user_id: user.id,
-          job_id: job.UNIQUE_ID,
-          job_title: job.Title,
-          company: job.Company,
-          location: job.Location,
-          rate: job.rate,
-          date_posted: job.date,
-          summary: job.Summary,
-          url: job.URL,
-        },
-      ]);
-      console.log("Job click logged:", job.Title);
+      // Get user session for API token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        apiClient.setToken(session.access_token);
+      }
+
+      // Log job click via backend API
+      await apiClient.recordJobClick(job.UNIQUE_ID);
+      console.log("Job click logged successfully via API:", job.Title);
 
       // Refresh stats na nieuwe click
       fetchJobClicksStats();
 
-    } catch (err) {
-      console.error("Log job click failed:", err);
+    } catch (error) {
+      console.error("Error logging job click via API:", error);
+
+      // Fallback to direct Supabase if API fails
+      try {
+        await supabase.from("job_clicks").insert([
+          {
+            user_id: user.id,
+            job_id: job.UNIQUE_ID,
+            job_title: job.Title,
+            company: job.Company,
+            location: job.Location,
+            rate: job.rate,
+            date_posted: job.date,
+            summary: job.Summary,
+            url: job.URL,
+          },
+        ]);
+        console.log("Job click logged successfully via fallback:", job.Title);
+
+        // Refresh stats na nieuwe click
+        fetchJobClicksStats();
+      } catch (fallbackError) {
+        console.error("Error in fallback logging:", fallbackError);
+      }
     }
   };
 
