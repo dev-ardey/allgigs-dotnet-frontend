@@ -34,12 +34,8 @@ export default function Home() {
         // Map 'user' to 'freeUser' for compatibility
         const normalizedRole = role === 'user' ? 'freeUser' : role;
 
-        // Redirect based on role
-        if (normalizedRole === 'freeUser') {
-          router.push('/leadSearch'); // Free users go to leadSearch
-        } else {
-          router.push('/dashboard'); // Admin/paid users go to dashboard
-        }
+        // Redirect based on role - all users go to dashboard now
+        router.push('/dashboard');
       } else {
         // Error getting role - redirect to login
         router.push('/auth/login');

@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Edit2, Save, X, Users, DollarSign, Bell, LogOut } from 'lucide-react';
-import { apiClient } from '../lib/apiClient';
+import { apiClient, ProfileResponse } from '../lib/apiClient';
 import { supabase } from '../SupabaseClient';
 import GlobalNav from '../components/ui/GlobalNav';
-import CompleteProfileForm from '../components/ui/CompleteProfileForm';
-import { useProfileCheck } from '../components/ui/useProfileCheck';
 import { useAuth } from '../components/ui/AuthProvider';
 import { AuthGuard } from '../components/ui/AuthGuard';
 
@@ -258,10 +256,7 @@ function ProfileContent() {
     }
   };
 
-  // Add profile check
-  const { needsProfile, loading: profileLoading } = useProfileCheck(user);
 
-  // Auth state is now handled by AuthProvider
 
   // Fetch profile function (from dashboard)
   useEffect(() => {
@@ -277,7 +272,7 @@ function ProfileContent() {
         }
 
         // Fetch profile from backend API
-        const profileData = await apiClient.getProfile();
+        const profileData: ProfileResponse = await apiClient.getProfile();
 
         if (profileData) {
           const fetchedProfile: Profile = {
@@ -286,8 +281,8 @@ function ProfileContent() {
             industry: profileData.industry || '',
             location: profileData.location || '',
             job_title: profileData.jobTitle || '',
-            linkedin_URL: profileData.linkedinUrl || '',
-            linkedIn: profileData.linkedinUrl || '',
+            linkedin_URL: profileData.linkedInUrl || '',
+            linkedIn: profileData.linkedInUrl || '',
             // Map all available fields from API
             isAvailableForWork: profileData.availableToRecruiters ?? true,
             hourlyRate: profileData.rate ? parseInt(profileData.rate) : 75,
@@ -474,7 +469,7 @@ function ProfileContent() {
         const updateData = {
           firstName: editedProfile.firstName,
           lastName: editedProfile.lastName,
-          linkedinUrl: editedProfile.linkedin_URL,
+          linkedInUrl: editedProfile.linkedin_URL,
           industry: editedProfile.industry,
           jobTitle: editedProfile.job_title,
           location: editedProfile.location,
@@ -538,7 +533,7 @@ function ProfileContent() {
 
   // User auth is handled by AuthProvider, so user should always be available here
 
-  if (profileLoading || loading) {
+  if (loading) {
     return (
       <div style={{
         minHeight: '100vh',
@@ -558,9 +553,6 @@ function ProfileContent() {
     );
   }
 
-  if (needsProfile) {
-    return <CompleteProfileForm onComplete={() => window.location.reload()} />;
-  }
 
   return (
     <div style={{

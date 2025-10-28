@@ -89,7 +89,7 @@ const AccessDeniedModal: React.FC<AccessDeniedModalProps> = ({ onClose }) => {
             <div className="bg-white rounded-lg p-6 max-w-md mx-4">
                 <h2 className="text-xl font-bold text-red-600 mb-4">Access Denied</h2>
                 <p className="text-gray-700 mb-6">
-                    This page is not available for free users. Please upgrade your account to access this feature.
+                    This page is not available for your account type. Please contact support for access.
                 </p>
                 <div className="flex gap-3">
                     <button
@@ -99,10 +99,10 @@ const AccessDeniedModal: React.FC<AccessDeniedModalProps> = ({ onClose }) => {
                         Go Back
                     </button>
                     <button
-                        onClick={() => window.location.href = '/pricing'}
+                        onClick={() => window.location.href = '/contact'}
                         className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                     >
-                        Upgrade Account
+                        Contact Support
                     </button>
                 </div>
             </div>

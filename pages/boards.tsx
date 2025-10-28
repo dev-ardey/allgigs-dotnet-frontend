@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from "../SupabaseClient";
-import CompleteProfileForm from "../components/ui/CompleteProfileForm";
 import GlobalNav from "../components/ui/GlobalNav";
 import { AuthGuard } from "../components/ui/AuthGuard";
 // import { useProfileCheck } from "../components/ui/useProfileCheck";
@@ -817,7 +816,7 @@ const SearchBar: React.FC<{
 // Main Component
 export default function AutomationCompanies() {
     return (
-        <AuthGuard allowedRoles={['admin', 'paidUser']}>
+        <AuthGuard allowedRoles={['admin', 'paidUser', 'freeUser']}>
             <AutomationCompaniesContent />
         </AuthGuard>
     );
@@ -1435,12 +1434,6 @@ function AutomationCompaniesContent() {
         return <div className="loading">Loading...</div>;
     }
 
-    if (needsProfile) {
-        console.log('Showing profile form...');
-        return <CompleteProfileForm onComplete={() => {
-            checkUser();
-        }} />;
-    }
 
     if (loading) {
         console.log('Showing companies loading...');

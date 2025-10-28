@@ -5,8 +5,6 @@ import { supabase } from '../SupabaseClient';
 // import { useRouter } from 'next/router';
 import AddJobForm from '../components/ui/add-job-form';
 import GlobalNav from '../components/ui/GlobalNav';
-import CompleteProfileForm from '../components/ui/CompleteProfileForm';
-import { useProfileCheck } from '../components/ui/useProfileCheck';
 import LeadsPipeline from '../components/ui/LeadsPipeline';
 import { useAuth } from '../components/ui/AuthProvider';
 import { AuthGuard } from '../components/ui/AuthGuard';
@@ -831,7 +829,7 @@ interface StatsDay {
 
 export default function Dashboard() {
   return (
-    <AuthGuard allowedRoles={['admin', 'paidUser']}>
+    <AuthGuard allowedRoles={['admin', 'paidUser', 'freeUser']}>
       <DashboardContent />
     </AuthGuard>
   );
@@ -1135,8 +1133,6 @@ function DashboardContent() {
 
   console.log(logJobClick, "logJobClick");
 
-  // Add profile check
-  const { needsProfile, loading: profileLoading } = useProfileCheck(user);
 
   // useEffect(() => {
   //   const fetchProfile = async () => {
@@ -1446,7 +1442,7 @@ function DashboardContent() {
   // Authentication checks - exactly like leadSearch.tsx
   // User auth is handled by AuthProvider, so user should always be available here
 
-  if (profileLoading || loading) {
+  if (loading) {
     return (
       <div style={{
         minHeight: '100vh',
@@ -1466,9 +1462,6 @@ function DashboardContent() {
     );
   }
 
-  if (needsProfile) {
-    return <CompleteProfileForm onComplete={() => window.location.reload()} />;
-  }
 
   return (
     <div style={{

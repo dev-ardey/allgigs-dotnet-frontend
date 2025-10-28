@@ -1,4 +1,31 @@
 // API Client for backend communication
+
+// Profile interface matching backend response
+export interface ProfileResponse {
+    id: string;
+    firstName: string;
+    lastName: string;
+    linkedInUrl: string | null;
+    industry: string;
+    jobTitle: string;
+    location: string;
+    availableToRecruiters: boolean;
+    dateAvailableToRecruiters: string | null;
+    rate: string | null;
+    age: string | null;
+    lastYearsEarnings: number | null;
+    gender: string | null;
+    testimonials: string | null;
+    mainProblem: string | null;
+    interests: string | null;
+    links: string | null;
+    postponedInfo: number | null;
+    postponedTime: string | null;
+    updatedAt: string;
+    quickSearch: string[] | null;
+    linkedInFeedEnabled: boolean | null;
+}
+
 class ApiClient {
     private baseUrl: string;
     private token: string | null = null;
@@ -104,48 +131,48 @@ class ApiClient {
     }
 
     // Profiles API
-    async getProfile() {
-        return this.request('/api/profiles/me');
+    async getProfile(): Promise<ProfileResponse> {
+        return this.request<ProfileResponse>('/api/profiles/me');
     }
 
-    async updateProfile(profileData: any) {
-        return this.request('/api/profiles/me', {
+    async updateProfile(profileData: any): Promise<ProfileResponse> {
+        return this.request<ProfileResponse>('/api/profiles/me', {
             method: 'PUT',
             body: JSON.stringify(profileData),
         });
     }
 
-    async updateAvailability(availableToRecruiters: boolean) {
-        return this.request('/api/profiles/me/availability', {
+    async updateAvailability(availableToRecruiters: boolean): Promise<void> {
+        return this.request<void>('/api/profiles/me/availability', {
             method: 'PUT',
             body: JSON.stringify({ availableToRecruiters }),
         });
     }
 
-    async updateTestimonials(testimonials: string) {
-        return this.request('/api/profiles/me/testimonials', {
+    async updateTestimonials(testimonials: string): Promise<void> {
+        return this.request<void>('/api/profiles/me/testimonials', {
             method: 'PUT',
             body: JSON.stringify({ testimonials }),
         });
     }
 
-    async getQuickSearch() {
-        return this.request('/api/profiles/me/quicksearch');
+    async getQuickSearch(): Promise<string[]> {
+        return this.request<string[]>('/api/profiles/me/quicksearch');
     }
 
-    async updateQuickSearch(keywords: string[]) {
-        return this.request('/api/profiles/me/quicksearch', {
+    async updateQuickSearch(keywords: string[]): Promise<void> {
+        return this.request<void>('/api/profiles/me/quicksearch', {
             method: 'PUT',
             body: JSON.stringify({ keywords }),
         });
     }
 
-    async getLinkedInFeedEnabled() {
-        return this.request('/api/profiles/me/linkedin-feed');
+    async getLinkedInFeedEnabled(): Promise<boolean> {
+        return this.request<boolean>('/api/profiles/me/linkedin-feed');
     }
 
-    async updateLinkedInFeedEnabled(enabled: boolean) {
-        return this.request('/api/profiles/me/linkedin-feed', {
+    async updateLinkedInFeedEnabled(enabled: boolean): Promise<void> {
+        return this.request<void>('/api/profiles/me/linkedin-feed', {
             method: 'PUT',
             body: JSON.stringify({ enabled }),
         });

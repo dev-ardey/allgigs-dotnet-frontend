@@ -7,14 +7,12 @@ import Fuse from "fuse.js";
 // import { SpeedInsights } from "@vercel/speed-insights/next"
 // import { formatDate } from "../utils/formatDate";
 // import RecentlyClickedJobs from '../components/ui/RecentlyClickedJobs'; // Added import
-import CompleteProfileForm from "../components/ui/CompleteProfileForm";
-import { useProfileCheck } from "../components/ui/useProfileCheck";
 import { useRouter } from "next/router";
 import GlobalNav from "../components/ui/GlobalNav";
 import { useAuth } from "../components/ui/AuthProvider";
 import { AuthGuard } from "../components/ui/AuthGuard";
 import { Search, SearchCheck, Edit2, Plus, X, Building2, MapPin, Layers2, ChevronDown, Globe, CheckCircle, Tag } from "lucide-react";
-import { apiClient } from "../lib/apiClient";
+import { apiClient, ProfileResponse } from "../lib/apiClient";
 
 
 interface Job {
@@ -257,7 +255,7 @@ function JobBoardContent() {
         }
 
         // Fetch profile from backend API
-        const profileData = await apiClient.getProfile();
+        const profileData: ProfileResponse = await apiClient.getProfile();
         console.log('Fetched profile from API:', profileData);
       } catch (error) {
         console.error('Error fetching profile from API:', error);
@@ -1259,7 +1257,6 @@ function JobBoardContent() {
     }
   }, [debouncedSearchTerm, sortedJobs]);
 
-  const { needsProfile, loading: profileLoading } = useProfileCheck(user);
 
   useEffect(() => {
     let ticking = false;
@@ -1306,7 +1303,7 @@ function JobBoardContent() {
 
   // User auth is handled by AuthProvider, so user should always be available here
 
-  if (profileLoading || loading)
+  if (loading)
     return (
       <div style={{
         minHeight: '100vh',
@@ -1331,9 +1328,6 @@ function JobBoardContent() {
       </div>
     )
 
-  if (needsProfile) {
-    return <CompleteProfileForm onComplete={() => window.location.reload()} />;
-  }
 
   const menuButtonSharedStyle: React.CSSProperties = {
     background: "#0ccf83",
