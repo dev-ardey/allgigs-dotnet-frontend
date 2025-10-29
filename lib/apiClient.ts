@@ -26,6 +26,15 @@ export interface ProfileResponse {
     linkedInFeedEnabled: boolean | null;
 }
 
+export interface FutureFeaturesResponse {
+    userId: string;
+    marketing: boolean;
+    agent: boolean;
+    tooling: boolean;
+    interviewOptimisation: boolean;
+    valueProposition: boolean;
+}
+
 class ApiClient {
     private baseUrl: string;
     private token: string | null = null;
@@ -44,13 +53,17 @@ class ApiClient {
     ): Promise<T> {
         const url = `${this.baseUrl}${endpoint}`;
 
-        const headers: HeadersInit = {
+        const headers: Record<string, string> = {
             'Content-Type': 'application/json',
-            ...options.headers,
         };
 
         if (this.token) {
             headers['Authorization'] = `Bearer ${this.token}`;
+        }
+
+        // Merge with existing headers if they exist
+        if (options.headers) {
+            Object.assign(headers, options.headers);
         }
 
         const response = await fetch(url, {
@@ -156,6 +169,13 @@ class ApiClient {
         });
     }
 
+    async updateLinkedInFeedEnabled(enabled: boolean): Promise<void> {
+        return this.request<void>('/api/profiles/me/linkedin-feed', {
+            method: 'PUT',
+            body: JSON.stringify({ linkedInFeedEnabled: enabled }),
+        });
+    }
+
     async getQuickSearch(): Promise<string[]> {
         return this.request<string[]>('/api/profiles/me/quicksearch');
     }
@@ -171,10 +191,15 @@ class ApiClient {
         return this.request<boolean>('/api/profiles/me/linkedin-feed');
     }
 
-    async updateLinkedInFeedEnabled(enabled: boolean): Promise<void> {
-        return this.request<void>('/api/profiles/me/linkedin-feed', {
+    // Future Features API
+    async getFutureFeatures(): Promise<FutureFeaturesResponse> {
+        return this.request<FutureFeaturesResponse>('/api/futurefeatures/me');
+    }
+
+    async updateFutureFeatures(featuresData: any): Promise<FutureFeaturesResponse> {
+        return this.request<FutureFeaturesResponse>('/api/futurefeatures/me', {
             method: 'PUT',
-            body: JSON.stringify({ enabled }),
+            body: JSON.stringify(featuresData),
         });
     }
 }

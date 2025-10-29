@@ -8,7 +8,7 @@ import GlobalNav from '../components/ui/GlobalNav';
 import LeadsPipeline from '../components/ui/LeadsPipeline';
 import { useAuth } from '../components/ui/AuthProvider';
 import { AuthGuard } from '../components/ui/AuthGuard';
-import { apiClient } from '../lib/apiClient';
+import { apiClient, FutureFeaturesResponse } from '../lib/apiClient';
 
 // Qualified Leads Interfaces en Types
 import {
@@ -1001,7 +1001,7 @@ function DashboardContent() {
     }
   }, [user]);
 
-  // Fetch future features from Supabase
+  // Fetch future features from backend API
   useEffect(() => {
     const fetchFutureFeatures = async () => {
       if (!user) {
@@ -1012,16 +1012,39 @@ function DashboardContent() {
       console.log('Fetching future features for user:', user.id);
 
       try {
-        const { data, error } = await supabase
+        // Get user session for API token
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          apiClient.setToken(session.access_token);
+        }
+
+        // Fetch future features from backend API
+        const featuresData: FutureFeaturesResponse = await apiClient.getFutureFeatures();
+        console.log('Fetched future features from API:', featuresData);
+
+        if (featuresData) {
+          setFutureFeatures({
+            marketing: featuresData.marketing,
+            agent: featuresData.agent,
+            tooling: featuresData.tooling,
+            interview_optimisation: featuresData.interviewOptimisation,
+            value_proposition: featuresData.valueProposition
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching future features from API:', error);
+
+        // Fallback to direct Supabase
+        const { data, error: supabaseError } = await supabase
           .from('future_features')
           .select('marketing, agent, tooling, interview_optimisation, value_proposition')
           .eq('user_id', user.id)
           .single();
 
-        console.log('Future features query result:', { data, error });
+        console.log('Future features query result:', { data, error: supabaseError });
 
-        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-          console.error('Error fetching future features:', error);
+        if (supabaseError && supabaseError.code !== 'PGRST116') { // PGRST116 = no rows returned
+          console.error('Error fetching future features:', supabaseError);
         } else if (data) {
           console.log('Found future features data:', data);
           setFutureFeatures({
@@ -1044,15 +1067,13 @@ function DashboardContent() {
           setFutureFeatures(defaultFeatures);
           await saveFutureFeatures(defaultFeatures);
         }
-      } catch (error) {
-        console.error('Error fetching future features:', error);
       }
     };
 
     fetchFutureFeatures();
   }, [user]);
 
-  // Save future features to Supabase
+  // Save future features to backend API
   const saveFutureFeatures = async (newFeatures: typeof futureFeatures) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -1060,25 +1081,48 @@ function DashboardContent() {
         throw new Error('No authenticated user found');
       }
 
-      const featureData = {
-        user_id: user.id,
-        marketing: newFeatures.marketing,
-        agent: newFeatures.agent,
-        tooling: newFeatures.tooling,
-        interview_optimisation: newFeatures.interview_optimisation,
-        value_proposition: newFeatures.value_proposition
-      };
+      try {
+        // Get user session for API token
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          apiClient.setToken(session.access_token);
+        }
 
-      console.log('Saving future features:', featureData);
+        // Update future features via backend API
+        const updateData = {
+          marketing: newFeatures.marketing,
+          agent: newFeatures.agent,
+          tooling: newFeatures.tooling,
+          interviewOptimisation: newFeatures.interview_optimisation,
+          valueProposition: newFeatures.value_proposition
+        };
 
-      const { error } = await supabase
-        .from('future_features')
-        .upsert(featureData);
+        await apiClient.updateFutureFeatures(updateData);
+        console.log('Future features saved successfully via API');
+      } catch (error) {
+        console.error('Error saving future features via API:', error);
 
-      if (error) {
-        console.error('Error saving future features:', error);
-      } else {
-        console.log('Future features saved successfully');
+        // Fallback to direct Supabase
+        const featureData = {
+          user_id: user.id,
+          marketing: newFeatures.marketing,
+          agent: newFeatures.agent,
+          tooling: newFeatures.tooling,
+          interview_optimisation: newFeatures.interview_optimisation,
+          value_proposition: newFeatures.value_proposition
+        };
+
+        console.log('Saving future features:', featureData);
+
+        const { error: supabaseError } = await supabase
+          .from('future_features')
+          .upsert(featureData);
+
+        if (supabaseError) {
+          console.error('Error saving future features:', supabaseError);
+        } else {
+          console.log('Future features saved successfully');
+        }
       }
     } catch (error) {
       console.error('Error saving future features:', error);

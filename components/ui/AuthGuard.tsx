@@ -13,7 +13,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
     allowedRoles,
     fallbackPath = '/auth/login'
 }) => {
-    const [userRole, setUserRole] = useState<string | null>(null);
+    const [, setUserRole] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [showAccessDenied, setShowAccessDenied] = useState(false);
     const router = useRouter();

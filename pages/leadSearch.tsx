@@ -202,7 +202,7 @@ function JobBoardContent() {
         }
 
         // Fetch jobs from backend API
-        const response = await apiClient.getJobs(1, 1000); // Get first 1000 jobs
+        const response = await apiClient.getJobs(1, 1000) as { jobs: Job[] }; // Get first 1000 jobs
         if (response?.jobs) {
           console.log('Fetched jobs from API:', response.jobs.length, 'jobs');
           setJobs(response.jobs);
@@ -475,7 +475,7 @@ function JobBoardContent() {
         }
 
         // Fetch all jobs from backend API in one call
-        const response = await apiClient.getJobs(1, 10000); // Get all jobs
+        const response = await apiClient.getJobs(1, 10000) as { jobs: Job[] }; // Get all jobs
 
         if (response?.jobs) {
           console.log('✅ Jobs fetched from API:', response.jobs.length, 'jobs');
@@ -1163,8 +1163,7 @@ function JobBoardContent() {
       }
 
       // Use backend API for search
-      const searchQuery = keywords.join(' ');
-      const response = await apiClient.getJobs(1, 5); // Get first 5 jobs
+      const response = await apiClient.getJobs(1, 5) as { jobs: Job[] }; // Get first 5 jobs
 
       if (response?.jobs) {
         // Filter jobs locally based on keywords

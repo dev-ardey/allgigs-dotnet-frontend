@@ -29,11 +29,6 @@ export default function Home() {
       });
 
       if (response.ok) {
-        const { role } = await response.json();
-
-        // Map 'user' to 'freeUser' for compatibility
-        const normalizedRole = role === 'user' ? 'freeUser' : role;
-
         // Redirect based on role - all users go to dashboard now
         router.push('/dashboard');
       } else {
