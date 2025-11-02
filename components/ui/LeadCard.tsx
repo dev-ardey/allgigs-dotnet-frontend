@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 // import { Lead } from '../../types/leads';
 import { supabase } from '../../SupabaseClient';
+import { apiClient } from '../../lib/apiClient';
 import JobSummaryModal from './JobSummaryModal';
 
 interface JobClickWithApplying {
@@ -142,7 +143,8 @@ const LeadCard: React.FC<LeadCardProps> = ({
     onStageAction,
     onArchived,
     onStateChanged,
-    onLeadUpdate
+    onLeadUpdate,
+    index: _index // Index is required by interface but not used in component
 }) => {
     // Timer states
     const [timeLeft, setTimeLeft] = useState<string>('');
@@ -150,6 +152,19 @@ const LeadCard: React.FC<LeadCardProps> = ({
     const [foundTimeLeft, setFoundTimeLeft] = useState<string>('');
     const [foundIsOverdue, setFoundIsOverdue] = useState(false);
     const [notes, setNotes] = useState(lead.notes || '');
+
+    // Track the actual applying_id (updated when click-based lead gets converted)
+    const [currentApplyingId, setCurrentApplyingId] = useState<string>(lead.applying_id);
+
+    // Cache for applying record creation (to prevent multiple simultaneous creates)
+    const applyingRecordCreationPromise = React.useRef<Promise<string> | null>(null);
+
+    // Update currentApplyingId when lead.applying_id changes (e.g., after creating applying record)
+    useEffect(() => {
+        if (lead.applying_id && !lead.applying_id.startsWith('click_')) {
+            setCurrentApplyingId(lead.applying_id);
+        }
+    }, [lead.applying_id]);
 
     // Silent auto-save function (no visual feedback) - FIXED: separate timers per field
     const debouncedSave = useCallback(
@@ -164,36 +179,144 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 // Set a new timeout for this specific field
                 timeouts[field] = setTimeout(async () => {
                     try {
-                        // Skip for click-based leads
-                        if (isClickBasedLead()) {
-                            console.log(`[DEBUG] Skipping save ${field} for click-based lead`);
-                            return;
+                        // Use currentApplyingId (state) instead of lead.applying_id (prop) to get latest value
+                        let applyingId = currentApplyingId;
+                        if (isClickBasedLead() || applyingId.startsWith('click_')) {
+                            console.log(`[DEBUG] Need to create applying record for click-based lead before saving ${field}`);
+
+                            // If already creating, wait for that to finish
+                            if (applyingRecordCreationPromise.current) {
+                                console.log(`[DEBUG] Applying record creation in progress, waiting...`);
+                                try {
+                                    applyingId = await applyingRecordCreationPromise.current;
+                                    console.log(`[DEBUG] Got applying ID from existing creation: ${applyingId}`);
+                                } catch (createError) {
+                                    console.error(`[DEBUG] Error waiting for applying record creation:`, createError);
+                                    return; // Don't try to update if creation failed
+                                }
+                            } else {
+                                // Start creating applying record
+                                console.log(`[DEBUG] Starting applying record creation for click-based lead`);
+                                applyingRecordCreationPromise.current = (async () => {
+                                    try {
+                                        // Get user session for API token
+                                        const { data: { session } } = await supabase.auth.getSession();
+                                        if (session?.access_token) {
+                                            apiClient.setToken(session.access_token);
+                                        }
+
+                                        // Create applying record for this job
+                                        const newApplication = await apiClient.createApplication(
+                                            lead.unique_id_job,
+                                            false, // not applied yet, just tracking
+                                            false,
+                                            false,
+                                            false
+                                        );
+                                        const newApplyingId = newApplication.applyingId;
+                                        console.log(`[DEBUG] Created applying record: ${newApplyingId}`);
+
+                                        // Update state immediately so other debounced saves can use it
+                                        setCurrentApplyingId(newApplyingId);
+
+                                        // Update lead object with new applying_id
+                                        lead.applying_id = newApplyingId;
+
+                                        // Notify parent to refresh
+                                        if (onLeadUpdate) {
+                                            onLeadUpdate();
+                                        }
+
+                                        // Clear the promise so next time it creates again if needed
+                                        applyingRecordCreationPromise.current = null;
+
+                                        return newApplyingId;
+                                    } catch (createError) {
+                                        // Clear the promise on error so it can retry
+                                        applyingRecordCreationPromise.current = null;
+                                        throw createError;
+                                    }
+                                })();
+
+                                try {
+                                    applyingId = await applyingRecordCreationPromise.current;
+                                } catch (createError) {
+                                    console.error(`[DEBUG] Error creating applying record:`, createError);
+                                    return; // Don't try to update if creation failed
+                                }
+                            }
                         }
 
-                        console.log(`[DEBUG] Saving ${field}:`, value, 'for lead:', lead.applying_id);
-                        const { error } = await supabase
-                            .from('applying')
-                            .update({ [field]: value })
-                            .eq('applying_id', lead.applying_id);
-
-                        if (error) {
-                            console.error('Database error:', error);
-                        } else {
-                            console.log(`[SUCCESS] Saved ${field}:`, value);
+                        // Validate applyingId before making API call
+                        if (!applyingId || applyingId.startsWith('click_')) {
+                            console.error(`[DEBUG] Invalid applyingId for update: ${applyingId}. Cannot save ${field}.`);
+                            return; // Don't attempt update with invalid ID
                         }
-                        // Silent success - no user notification
+
+                        console.log(`[DEBUG] Saving ${field}:`, value, 'for lead:', applyingId);
+
+                        // Map field names from frontend (snake_case) to backend DTO (camelCase)
+                        const fieldMapping: Record<string, string> = {
+                            'application_time_minutes': 'applicationTimeMinutes',
+                            'match_confidence': 'matchConfidence',
+                            'received_confirmation': 'receivedConfirmation',
+                            'rejection_reasons_prediction': 'rejectionReasonsPrediction',
+                            'introduced_via_agency': 'introducedViaAgency',
+                            'follow_up_date': 'followUpDate',
+                            'interview_went_well': 'interviewWentWell',
+                            'interview_can_improve': 'interviewCanImprove',
+                            'offer_rate_alignment': 'offerRateAlignment',
+                            'prediction_accuracy': 'predictionAccuracy',
+                            'sent_thank_you_note': 'sentThankYouNote',
+                            'rejection_reason_mentioned': 'rejectionReasonMentioned',
+                            'why_got_interview': 'whyGotInterview',
+                            'job_start_date': 'jobStartDate',
+                            'contract_signing_date': 'contractSigningDate',
+                            'job_hourly_rate': 'jobHourlyRate',
+                            'hours_per_week': 'hoursPerWeek',
+                            'job_total_length': 'jobTotalLength',
+                            'client_rating': 'clientRating',
+                            'payment_interval': 'paymentInterval',
+                            'why_they_loved_you': 'whyTheyLovedYou',
+                            'notes': 'notes',
+                            'got_the_job': 'gotTheJob',
+                            'starting_date': 'startingDate',
+                            'follow_up_completed': 'followUpCompleted',
+                            'follow_up_completed_at': 'followUpCompletedAt',
+                            'follow_up_message': 'followUpMessage',
+                            'contacts': 'contacts',
+                            'interviews': 'interviews',
+                            'interview_prep_data': 'interviewPrepData',
+                            'collapsed_card': 'collapsedCard',
+                            'what_you_did_well': 'whatYouDidWell'
+                        };
+
+                        const backendFieldName = fieldMapping[field] || field;
+                        const updateData: any = { [backendFieldName]: value };
+
+                        // Get user session for API token
+                        const { data: { session } } = await supabase.auth.getSession();
+                        if (session?.access_token) {
+                            apiClient.setToken(session.access_token);
+                        }
+
+                        console.log(`[DEBUG] Calling updateApplication with applyingId: ${applyingId}, field: ${backendFieldName}, value:`, value);
+
+                        // Update via backend API
+                        await apiClient.updateApplication(applyingId, updateData);
+                        console.log(`[SUCCESS] Saved ${field} via backend:`, value);
 
                         // Clean up the timeout reference
                         delete timeouts[field];
                     } catch (err) {
                         // Silent error - just log, no user notification
-                        console.error('Auto-save failed:', err);
+                        console.error(`Error saving ${field} via backend:`, err);
                         delete timeouts[field];
                     }
                 }, 1500); // 1.5 second delay after user stops typing
             };
         })(),
-        [lead.applying_id]
+        [currentApplyingId, lead.unique_id_job, onLeadUpdate] // Use currentApplyingId state instead of lead.applying_id
     );
 
     // Debug: Log job stage and status
@@ -546,50 +669,105 @@ const LeadCard: React.FC<LeadCardProps> = ({
             // Show the "What did you send?" flow
             setShowWhatSentFlow(true);
         } else {
-            // Direct NO - remove job
+            // Direct NO - remove job (archive or just remove from view for click-based leads)
             try {
-                // Skip for click-based leads
+                // For click-based leads, just remove from view (no applying record to delete)
                 if (isClickBasedLead()) {
-                    console.log('Cannot delete click-based lead');
+                    console.log('[DEBUG] Removing click-based lead from view');
+                    // Notify parent to remove from view
+                    if (onArchived) {
+                        onArchived(lead.applying_id);
+                    }
                     return;
                 }
 
-                await supabase
-                    .from('applying')
-                    .delete()
-                    .eq('applying_id', lead.applying_id);
+                // For existing applying records, archive via backend
+                // Get user session for API token
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.access_token) {
+                    apiClient.setToken(session.access_token);
+                }
 
-                // Notify parent that lead was deleted (component will be removed)
+                // Archive via backend API (backend doesn't have delete, so we archive)
+                await apiClient.archiveApplication(lead.applying_id);
+
+                // Notify parent that lead was archived (component will be removed)
                 if (onArchived) {
                     onArchived(lead.applying_id);
                 }
             } catch (err) {
-                console.error('Error deleting job:', err);
+                console.error('Error archiving job via backend:', err);
             }
         }
     };
 
     const handleConfirmApplication = async () => {
         try {
-            // Skip for click-based leads (they need to create applying record first)
-            if (isClickBasedLead()) {
-                console.log('Cannot confirm application for click-based lead - create applying record first');
-                return;
-            }
+            let applyingId = lead.applying_id;
 
-            // Update database with sent items and mark as applied
-            await supabase
-                .from('applying')
-                .update({
-                    applied: true,
-                    sent_cv: sentCV,
-                    sent_portfolio: sentPortfolio,
-                    sent_cover_letter: sentCoverLetter
-                })
-                .eq('applying_id', lead.applying_id);
+            // For click-based leads, create applying record first
+            if (isClickBasedLead()) {
+                console.log('[DEBUG] Creating applying record for click-based lead');
+                try {
+                    // Get user session for API token
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session?.access_token) {
+                        apiClient.setToken(session.access_token);
+                    }
+
+                    // Create applying record with sent items
+                    const newApplication = await apiClient.createApplication(
+                        lead.unique_id_job,
+                        true, // applied = true
+                        sentCV,
+                        sentPortfolio,
+                        sentCoverLetter
+                    );
+                    applyingId = newApplication.applyingId;
+                    console.log(`[DEBUG] Created applying record: ${applyingId}`);
+
+                    // Update lead object with new applying_id
+                    lead.applying_id = applyingId;
+                    lead.applied = true;
+
+                    // Notify parent to refresh leads
+                    if (onLeadUpdate) {
+                        onLeadUpdate();
+                    }
+                } catch (createError) {
+                    console.error('[DEBUG] Error creating applying record:', createError);
+                    alert('Failed to create application record. Please try again.');
+                    return;
+                }
+            } else {
+                // For existing applying records, update via backend
+                try {
+                    // Get user session for API token
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session?.access_token) {
+                        apiClient.setToken(session.access_token);
+                    }
+
+                    // Update via backend API
+                    await apiClient.updateApplication(applyingId, {
+                        applied: true,
+                        sentCv: sentCV,
+                        sentPortfolio: sentPortfolio,
+                        sentCoverLetter: sentCoverLetter
+                    });
+                    console.log('[DEBUG] Updated applying record via backend');
+                } catch (updateError) {
+                    console.error('[DEBUG] Error updating applying record:', updateError);
+                    alert('Failed to update application. Please try again.');
+                    return;
+                }
+            }
 
             // Update local state immediately (optimistic update)
             lead.applied = true;
+            lead.sent_cv = sentCV;
+            lead.sent_portfolio = sentPortfolio;
+            lead.sent_cover_letter = sentCoverLetter;
             triggerRerender();
 
             // Notify parent that state changed (for column movement)
@@ -599,7 +777,8 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
             setShowWhatSentFlow(false);
         } catch (error) {
-            console.error('Error updating application:', error);
+            console.error('Error confirming application:', error);
+            alert('Failed to save application. Please try again.');
         }
     };
 
@@ -613,19 +792,36 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     const handleFollowUpComplete = async (completed: boolean) => {
         try {
-            // Skip for click-based leads
+            // For click-based leads, create applying record first
+            let applyingId = lead.applying_id;
             if (isClickBasedLead()) {
-                console.log('Cannot update follow-up for click-based lead');
-                return;
+                console.log('[DEBUG] Creating applying record for click-based lead before updating follow-up');
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session?.access_token) {
+                        apiClient.setToken(session.access_token);
+                    }
+                    const newApplication = await apiClient.createApplication(lead.unique_id_job, false);
+                    applyingId = newApplication.applyingId;
+                    lead.applying_id = applyingId;
+                    if (onLeadUpdate) onLeadUpdate();
+                } catch (createError) {
+                    console.error('[DEBUG] Error creating applying record:', createError);
+                    return;
+                }
             }
 
-            await supabase
-                .from('applying')
-                .update({
-                    follow_up_completed: completed,
-                    follow_up_completed_at: completed ? new Date().toISOString() : null
-                })
-                .eq('applying_id', lead.applying_id);
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
+
+            // Update via backend API
+            await apiClient.updateApplication(applyingId, {
+                followUpCompleted: completed,
+                followUpCompletedAt: completed ? new Date().toISOString() : null
+            });
 
             // Update local state immediately
             lead.follow_up_completed = completed;
@@ -636,29 +832,45 @@ const LeadCard: React.FC<LeadCardProps> = ({
             }
             triggerRerender();
         } catch (err) {
-            console.error('Error updating follow-up status:', err);
+            console.error('Error updating follow-up status via backend:', err);
         }
     };
 
     const handleGotJob = async (gotJob: boolean, startingDate?: string) => {
         try {
-            // Skip for click-based leads (they don't have applying records yet)
-            if (lead.applying_id?.startsWith('click_')) {
-                console.log('Cannot update got_the_job for click-based lead - create applying record first');
-                return;
+            // For click-based leads, create applying record first
+            let applyingId = lead.applying_id;
+            if (isClickBasedLead()) {
+                console.log('[DEBUG] Creating applying record for click-based lead before updating got_the_job');
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session?.access_token) {
+                        apiClient.setToken(session.access_token);
+                    }
+                    const newApplication = await apiClient.createApplication(lead.unique_id_job, lead.applied || false);
+                    applyingId = newApplication.applyingId;
+                    lead.applying_id = applyingId;
+                    if (onLeadUpdate) onLeadUpdate();
+                } catch (createError) {
+                    console.error('[DEBUG] Error creating applying record:', createError);
+                    return;
+                }
+            }
+
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
             }
 
             if (gotJob === false) {
                 // If "No" - only archive if this was an applied job (not Prospects stage)
                 if (lead.applied) {
-                    await supabase
-                        .from('applying')
-                        .update({
-                            is_archived: true,
-                            archived_at: new Date().toISOString(),
-                            got_the_job: false
-                        })
-                        .eq('applying_id', lead.applying_id);
+                    await apiClient.updateApplication(applyingId, {
+                        isArchived: true,
+                        archivedAt: new Date().toISOString(),
+                        gotTheJob: false
+                    });
 
                     // Update local state immediately
                     lead.got_the_job = false;
@@ -667,29 +879,23 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
                     // Notify parent that lead was archived
                     if (onArchived) {
-                        onArchived(lead.applying_id);
+                        onArchived(applyingId);
                     }
                 } else {
-                    // If not applied yet, just delete (don't archive)
-                    await supabase
-                        .from('applying')
-                        .delete()
-                        .eq('applying_id', lead.applying_id);
+                    // If not applied yet, archive (backend doesn't have delete, use archive)
+                    await apiClient.archiveApplication(applyingId);
 
                     // Notify parent that lead was deleted
                     if (onArchived) {
-                        onArchived(lead.applying_id);
+                        onArchived(applyingId);
                     }
                 }
             } else {
                 // If "Yes", update got_the_job but don't archive yet (show archive button)
-                await supabase
-                    .from('applying')
-                    .update({
-                        got_the_job: true,
-                        starting_date: startingDate || null
-                    })
-                    .eq('applying_id', lead.applying_id);
+                await apiClient.updateApplication(applyingId, {
+                    gotTheJob: true,
+                    startingDate: startingDate || null
+                });
 
                 // Update local state immediately
                 lead.got_the_job = true;
@@ -702,27 +908,40 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 }
             }
         } catch (err) {
-            console.error('Error updating got_the_job status:', err);
+            console.error('Error updating got_the_job status via backend:', err);
         }
     };
 
     const handleArchiveJob = async () => {
-        // Skip for click-based leads (they don't have applying records yet)
-        if (lead.applying_id?.startsWith('click_')) {
-            console.log('Cannot archive click-based lead - create applying record first');
-            return;
-        }
+        try {
+            // For click-based leads, create applying record first
+            let applyingId = lead.applying_id;
+            if (isClickBasedLead()) {
+                console.log('[DEBUG] Creating applying record for click-based lead before archiving');
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session?.access_token) {
+                        apiClient.setToken(session.access_token);
+                    }
+                    const newApplication = await apiClient.createApplication(lead.unique_id_job, lead.applied || false);
+                    applyingId = newApplication.applyingId;
+                    lead.applying_id = applyingId;
+                    if (onLeadUpdate) onLeadUpdate();
+                } catch (createError) {
+                    console.error('[DEBUG] Error creating applying record:', createError);
+                    return;
+                }
+            }
 
-        if (lead.applied) {
-            try {
+            if (lead.applied) {
+                // Get user session for API token
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.access_token) {
+                    apiClient.setToken(session.access_token);
+                }
+
                 // Only archive if job was actually applied to
-                await supabase
-                    .from('applying')
-                    .update({
-                        is_archived: true,
-                        archived_at: new Date().toISOString()
-                    })
-                    .eq('applying_id', lead.applying_id);
+                await apiClient.archiveApplication(applyingId);
 
                 // Update local state immediately
                 lead.is_archived = true;
@@ -730,11 +949,11 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
                 // Notify parent that lead was archived
                 if (onArchived) {
-                    onArchived(lead.applying_id);
+                    onArchived(applyingId);
                 }
-            } catch (err) {
-                console.error('Error archiving job:', err);
             }
+        } catch (err) {
+            console.error('Error archiving job via backend:', err);
         }
     };
 
@@ -742,51 +961,71 @@ const LeadCard: React.FC<LeadCardProps> = ({
     const handleSaveContact = async () => {
         if (!newContact.name.trim() || !lead.applying_id) return;
 
-        // Skip for click-based leads
-        if (isClickBasedLead()) {
-            console.log('Cannot save contact for click-based lead');
-            return;
-        }
-
         try {
-            // Get current contacts from lead object, or empty array
-            const currentContacts = lead.contacts || [];
-
-            let updatedContacts;
-            if (editingContact) {
-                // Edit existing contact
-                updatedContacts = currentContacts.map((contact: any) =>
-                    contact.id === editingContact
-                        ? { ...contact, ...newContact }
-                        : contact
-                );
-            } else {
-                // Add new contact with unique ID
-                const newContactWithId = {
-                    id: crypto.randomUUID(),
-                    ...newContact,
-                    created_at: new Date().toISOString()
-                };
-                updatedContacts = [...currentContacts, newContactWithId];
+            // For click-based leads, create applying record first
+            let applyingId = lead.applying_id;
+            if (isClickBasedLead()) {
+                console.log('[DEBUG] Creating applying record for click-based lead before saving contact');
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session?.access_token) {
+                        apiClient.setToken(session.access_token);
+                    }
+                    const newApplication = await apiClient.createApplication(lead.unique_id_job, lead.applied || false);
+                    applyingId = newApplication.applyingId;
+                    lead.applying_id = applyingId;
+                    if (onLeadUpdate) onLeadUpdate();
+                } catch (createError) {
+                    console.error('[DEBUG] Error creating applying record:', createError);
+                    return;
+                }
             }
 
-            // Update in database
-            const { error } = await supabase
-                .from('applying')
-                .update({ contacts: updatedContacts })
-                .eq('applying_id', lead.applying_id);
+            try {
+                // Get current contacts from lead object, or empty array
+                const currentContacts = lead.contacts || [];
 
-            if (error) throw error;
+                let updatedContacts;
+                if (editingContact) {
+                    // Edit existing contact
+                    updatedContacts = currentContacts.map((contact: any) =>
+                        contact.id === editingContact
+                            ? { ...contact, ...newContact }
+                            : contact
+                    );
+                } else {
+                    // Add new contact with unique ID
+                    const newContactWithId = {
+                        id: crypto.randomUUID(),
+                        ...newContact,
+                        created_at: new Date().toISOString()
+                    };
+                    updatedContacts = [...currentContacts, newContactWithId];
+                }
 
-            // Update local state
-            setContacts(updatedContacts);
+                // Get user session for API token
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.access_token) {
+                    apiClient.setToken(session.access_token);
+                }
 
-            // Reset form
-            setNewContact({ name: '', phone: '', email: '' });
-            setShowContactForm(false);
-            setEditingContact(null);
+                // Update via backend API
+                await apiClient.updateApplication(applyingId, {
+                    contacts: updatedContacts
+                });
+
+                // Update local state
+                lead.contacts = updatedContacts;
+
+                // Reset form
+                setNewContact({ name: '', phone: '', email: '' });
+                setShowContactForm(false);
+                setEditingContact(null);
+            } catch (err: any) {
+                console.error('Error saving contact via backend:', err);
+            }
         } catch (err: any) {
-            console.error('Error saving contact:', err);
+            console.error('Error in handleSaveContact:', err);
         }
     };
 
@@ -798,16 +1037,42 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     const handleDeleteContact = async (contactId: string) => {
         try {
-            const { error } = await supabase
-                .from('applying')
-                .update({ contacts: (lead.contacts || []).filter(c => c.id !== contactId) })
-                .eq('applying_id', lead.applying_id);
+            // For click-based leads, create applying record first
+            let applyingId = lead.applying_id;
+            if (isClickBasedLead()) {
+                console.log('[DEBUG] Creating applying record for click-based lead before deleting contact');
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session?.access_token) {
+                        apiClient.setToken(session.access_token);
+                    }
+                    const newApplication = await apiClient.createApplication(lead.unique_id_job, lead.applied || false);
+                    applyingId = newApplication.applyingId;
+                    lead.applying_id = applyingId;
+                    if (onLeadUpdate) onLeadUpdate();
+                } catch (createError) {
+                    console.error('[DEBUG] Error creating applying record:', createError);
+                    return;
+                }
+            }
 
-            if (error) throw error;
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
 
-            setContacts((lead.contacts || []).filter(contact => contact.id !== contactId));
+            // Update via backend API
+            const updatedContacts = (lead.contacts || []).filter(c => c.id !== contactId);
+            await apiClient.updateApplication(applyingId, {
+                contacts: updatedContacts
+            });
+
+            // Update local state
+            lead.contacts = updatedContacts;
+            triggerRerender();
         } catch (err: any) {
-            console.error('Error deleting contact:', err);
+            console.error('Error deleting contact via backend:', err);
         }
     };
 
@@ -821,29 +1086,41 @@ const LeadCard: React.FC<LeadCardProps> = ({
         });
 
         try {
-            // Always update both tables to ensure consistency
-            if (lead.applying_id) {
-                // Update applying table
-                console.log('Updating applying table for lead:', lead.applying_id);
-                const { error: applyingError } = await supabase
-                    .from('applying')
-                    .update({ collapsed_card: collapsed })
-                    .eq('applying_id', lead.applying_id);
-
-                if (applyingError) throw applyingError;
-                console.log('Successfully updated applying table');
+            // For click-based leads, create applying record first
+            let applyingId = lead.applying_id;
+            if (isClickBasedLead()) {
+                console.log('[DEBUG] Creating applying record for click-based lead before toggling collapse');
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session?.access_token) {
+                        apiClient.setToken(session.access_token);
+                    }
+                    const newApplication = await apiClient.createApplication(lead.unique_id_job, lead.applied || false);
+                    applyingId = newApplication.applyingId;
+                    lead.applying_id = applyingId;
+                    if (onLeadUpdate) onLeadUpdate();
+                } catch (createError) {
+                    console.error('[DEBUG] Error creating applying record:', createError);
+                    return;
+                }
             }
 
-            // Always update job_clicks table
-            console.log('Updating job_clicks table for lead:', lead.applying_id);
-            const { error: jobClicksError } = await supabase
-                .from('job_clicks')
-                .update({ collapsed_job_click_card: collapsed })
-                .eq('id', lead.applying_id)
-                .eq('user_id', lead.user_id);
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
 
-            if (jobClicksError) throw jobClicksError;
-            console.log('Successfully updated job_clicks table');
+            // Update via backend API (applying table)
+            if (applyingId) {
+                await apiClient.updateApplication(applyingId, {
+                    collapsedCard: collapsed
+                });
+                console.log('Successfully updated applying table via backend');
+            }
+
+            // Note: job_clicks table update is handled separately via job_clicks API if needed
+            // For now, we only update applying table via backend
 
             // Update local state immediately
             setLocalCollapsed(collapsed);
@@ -854,7 +1131,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 onStageAction('toggle_collapse', { collapsed });
             }
         } catch (err: any) {
-            console.error('Error toggling collapse:', err);
+            console.error('Error toggling collapse via backend:', err);
         }
     };
 
@@ -888,13 +1165,36 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     const handleSaveInterviewPrep = async () => {
         try {
-            await supabase
-                .from('applying')
-                .update({
-                    interview_prep_data: interviewPrepData,
-                    interview_prep_complete: true
-                })
-                .eq('applying_id', lead.applying_id);
+            // For click-based leads, create applying record first
+            let applyingId = lead.applying_id;
+            if (isClickBasedLead()) {
+                console.log('[DEBUG] Creating applying record for click-based lead before saving interview prep');
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session?.access_token) {
+                        apiClient.setToken(session.access_token);
+                    }
+                    const newApplication = await apiClient.createApplication(lead.unique_id_job, lead.applied || false);
+                    applyingId = newApplication.applyingId;
+                    lead.applying_id = applyingId;
+                    if (onLeadUpdate) onLeadUpdate();
+                } catch (createError) {
+                    console.error('[DEBUG] Error creating applying record:', createError);
+                    return;
+                }
+            }
+
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
+
+            // Update via backend API
+            await apiClient.updateApplication(applyingId, {
+                interviewPrepData: interviewPrepData,
+                interviewPrepComplete: true
+            });
 
             // Update local state
             setInterviewPrepComplete(true);
@@ -902,7 +1202,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
             lead.interview_prep_complete = true;
             triggerRerender();
         } catch (err) {
-            console.error('Error saving interview prep:', err);
+            console.error('Error saving interview prep via backend:', err);
         }
     };
 
@@ -997,19 +1297,37 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
                 console.log('[DEBUG] Updating interviews in database:', updatedInterviews);
 
-                // For JSONB: send array directly (PostgreSQL handles JSON conversion)
-                const { data, error } = await supabase
-                    .from('applying')
-                    .update({ interviews: updatedInterviews })
-                    .eq('applying_id', lead.applying_id)
-                    .select();
-
-                if (error) {
-                    console.error('[DEBUG] Database error:', error);
-                    throw error;
+                // For click-based leads, create applying record first
+                let applyingId = lead.applying_id;
+                if (isClickBasedLead()) {
+                    console.log('[DEBUG] Creating applying record for click-based lead before saving interview');
+                    try {
+                        const { data: { session } } = await supabase.auth.getSession();
+                        if (session?.access_token) {
+                            apiClient.setToken(session.access_token);
+                        }
+                        const newApplication = await apiClient.createApplication(lead.unique_id_job, lead.applied || false);
+                        applyingId = newApplication.applyingId;
+                        lead.applying_id = applyingId;
+                        if (onLeadUpdate) onLeadUpdate();
+                    } catch (createError) {
+                        console.error('[DEBUG] Error creating applying record:', createError);
+                        throw createError;
+                    }
                 }
 
-                console.log('[DEBUG] Interview date saved successfully, returned data:', data);
+                // Get user session for API token
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.access_token) {
+                    apiClient.setToken(session.access_token);
+                }
+
+                // Update via backend API
+                await apiClient.updateApplication(applyingId, {
+                    interviews: updatedInterviews
+                });
+
+                console.log('[DEBUG] Interview date saved successfully via backend');
 
                 // Update local state and refresh UI
                 lead.interviews = updatedInterviews;
@@ -1073,19 +1391,37 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
                 console.log('[DEBUG] Updating interviews in database:', updatedInterviews);
 
-                // For JSONB: send array directly (PostgreSQL handles JSON conversion)
-                const { data, error } = await supabase
-                    .from('applying')
-                    .update({ interviews: updatedInterviews })
-                    .eq('applying_id', lead.applying_id)
-                    .select();
-
-                if (error) {
-                    console.error('[DEBUG] Database error:', error);
-                    throw error;
+                // For click-based leads, create applying record first
+                let applyingId = lead.applying_id;
+                if (isClickBasedLead()) {
+                    console.log('[DEBUG] Creating applying record for click-based lead before saving interview rating');
+                    try {
+                        const { data: { session } } = await supabase.auth.getSession();
+                        if (session?.access_token) {
+                            apiClient.setToken(session.access_token);
+                        }
+                        const newApplication = await apiClient.createApplication(lead.unique_id_job, lead.applied || false);
+                        applyingId = newApplication.applyingId;
+                        lead.applying_id = applyingId;
+                        if (onLeadUpdate) onLeadUpdate();
+                    } catch (createError) {
+                        console.error('[DEBUG] Error creating applying record:', createError);
+                        throw createError;
+                    }
                 }
 
-                console.log('[DEBUG] Interview saved successfully, returned data:', data);
+                // Get user session for API token
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.access_token) {
+                    apiClient.setToken(session.access_token);
+                }
+
+                // Update via backend API
+                await apiClient.updateApplication(applyingId, {
+                    interviews: updatedInterviews
+                });
+
+                console.log('[DEBUG] Interview saved successfully via backend');
 
                 // Reset form
                 setShowNewInterview(false);

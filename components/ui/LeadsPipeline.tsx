@@ -455,21 +455,21 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     const jobPromises = allJobIds.map(jobId => apiClient.getJobById(jobId));
                     const jobDataArray = await Promise.allSettled(jobPromises);
 
-                        jobDataArray.forEach((result, index) => {
-                            if (result.status === 'fulfilled' && result.value) {
-                                const job = result.value as any; // Type assertion needed for Promise.allSettled
-                                jobDataMap[allJobIds[index]] = {
-                                    UNIQUE_ID: job.uniqueId || allJobIds[index],
-                                    Title: job.title,
-                                    Company: job.company,
-                                    Location: job.location,
-                                    rate: job.rate,
-                                    date: job.datePosted,
-                                    Summary: job.summary,
-                                    URL: job.url
-                                };
-                            }
-                        });
+                    jobDataArray.forEach((result, index) => {
+                        if (result.status === 'fulfilled' && result.value) {
+                            const job = result.value as any; // Type assertion needed for Promise.allSettled
+                            jobDataMap[allJobIds[index]] = {
+                                UNIQUE_ID: job.uniqueId || allJobIds[index],
+                                Title: job.title,
+                                Company: job.company,
+                                Location: job.location,
+                                rate: job.rate,
+                                date: job.datePosted,
+                                Summary: job.summary,
+                                URL: job.url
+                            };
+                        }
+                    });
                 } catch (jobError) {
                     console.error('Error fetching job data via API:', jobError);
                     // Fallback: fetch jobs via direct Supabase if API fails
@@ -586,7 +586,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         clickedAt,
                         jobDataExists: !!jobData.Title
                     });
-                    
+
                     return {
                         applying_id: `click_${clickId}`, // Unique ID for click-based leads
                         unique_id_job: jobId,

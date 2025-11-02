@@ -158,7 +158,20 @@ class ApiClient {
                 }
             } catch (e) {
                 // If response is not JSON, use status text
+                const textError = await response.text().catch(() => '');
+                if (textError) {
+                    errorMessage = `${errorMessage}: ${textError.substring(0, 200)}`;
+                }
             }
+
+            // Log detailed error info for debugging
+            console.error(`[API Client Error] ${options.method || 'GET'} ${url}`, {
+                status: response.status,
+                statusText: response.statusText,
+                errorMessage,
+                endpoint: url.replace(this.baseUrl, '')
+            });
+
             const error = new Error(errorMessage);
             (error as any).status = response.status;
             throw error;
@@ -218,6 +231,10 @@ class ApiClient {
     }
 
     async updateApplication(applyingId: string, updateData: any): Promise<ApplyingDto> {
+        // Validate applyingId is a valid UUID (not click_ prefixed)
+        if (!applyingId || applyingId.startsWith('click_')) {
+            throw new Error(`Invalid applyingId: ${applyingId}. Cannot update application with click-based ID.`);
+        }
         return this.request<ApplyingDto>(`/api/applying/${applyingId}`, {
             method: 'PUT',
             body: JSON.stringify(updateData)
