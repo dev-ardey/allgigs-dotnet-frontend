@@ -210,13 +210,9 @@ function JobBoardContent() {
         }
       } catch (error) {
         console.error('Error fetching jobs from API:', error);
-        // Fallback to direct Supabase if API fails
-        const { data } = await supabase.from("jobs").select("*");
-        if (data) {
-          console.log('Fallback: Fetched jobs from Supabase:', data.length);
-          setJobs(data);
-          setAllJobs(data);
-        }
+        // No fallback - rely on backend API only for security
+        setJobs([]);
+        setAllJobs([]);
       } finally {
         setLoading(false);
       }
@@ -259,16 +255,7 @@ function JobBoardContent() {
         console.log('Fetched profile from API:', profileData);
       } catch (error) {
         console.error('Error fetching profile from API:', error);
-
-        // Fallback to direct Supabase
-        supabase
-          .from("profiles")
-          .select("first_name, last_name, linkedin_URL, industry, job_title, location")
-          .eq("id", user.id)
-          .single()
-          .then(({ data, error }) => {
-            console.log('Fetched profile from Supabase:', data, 'Error:', error);
-          });
+        // No fallback - rely on backend API only for security
       }
     };
 
@@ -298,26 +285,7 @@ function JobBoardContent() {
 
     } catch (error) {
       console.error("❌ Error logging search term via API:", error);
-
-      // Fallback to direct Supabase if API fails
-      try {
-        const insertData = {
-          user_id: user.id,
-          search_term: searchTermToLog.trim(),
-        };
-        console.log("[logSearchTermActivity] Fallback: Insert data:", insertData);
-
-        const { data, error: supabaseError } = await supabase.from("search_logs").insert([insertData]);
-        console.log("[logSearchTermActivity] Fallback Supabase response - data:", data, "error:", supabaseError);
-
-        if (supabaseError) {
-          console.error("❌ Fallback error logging search term:", supabaseError);
-        } else {
-          console.log("✅ Search term logged successfully via fallback!");
-        }
-      } catch (fallbackError) {
-        console.error("❌ Exception in fallback logging:", fallbackError);
-      }
+      // No fallback - rely on backend API only for security
     }
   };
 
@@ -371,28 +339,8 @@ function JobBoardContent() {
       setLinkedinFeedEnabled(enabled);
     } catch (error) {
       console.error('[LINKEDIN] Error loading LinkedIn feed state from API:', error);
-
-      // Fallback to direct Supabase
-      const { data, error: supabaseError } = await supabase
-        .from('profiles')
-        .select('linkedin_feed_enabled')
-        .eq('id', user.id)
-        .single();
-
-      if (supabaseError) {
-        console.error('[LINKEDIN] Error loading LinkedIn feed state:', supabaseError);
-        return;
-      }
-
-      console.log('[LINKEDIN] Loaded data:', data);
-
-      if (data?.linkedin_feed_enabled !== undefined) {
-        console.log('[LINKEDIN] Setting LinkedIn feed enabled to:', data.linkedin_feed_enabled);
-        setLinkedinFeedEnabled(data.linkedin_feed_enabled);
-      } else {
-        console.log('[LINKEDIN] No linkedin_feed_enabled found, using default false');
-        setLinkedinFeedEnabled(false);
-      }
+      // No fallback - rely on backend API only for security
+      setLinkedinFeedEnabled(false); // Default to false on error
     }
   };
 
@@ -414,20 +362,8 @@ function JobBoardContent() {
       console.log('[LINKEDIN] Successfully saved LinkedIn feed state via API:', enabled);
     } catch (error) {
       console.error('[LINKEDIN] Error saving LinkedIn feed state via API:', error);
-
-      // Fallback to direct Supabase
-      const { error: supabaseError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          linkedin_feed_enabled: enabled
-        });
-
-      if (supabaseError) {
-        console.error('[LINKEDIN] Error saving LinkedIn feed state:', supabaseError);
-      } else {
-        console.log('[LINKEDIN] Successfully saved LinkedIn feed state via Supabase:', enabled);
-      }
+      // No fallback - rely on backend API only for security
+      throw error;
     }
   };
 
@@ -490,20 +426,10 @@ function JobBoardContent() {
         }
       } catch (error) {
         console.error('❌ Error fetching jobs from API:', error);
-
-        // Fallback to direct Supabase
-        const { data, error: supabaseError } = await supabase
-          .from("Allgigs_All_vacancies_NEW")
-          .select("*");
-
-        if (supabaseError) {
-          console.error('❌ Supabase fallback error:', supabaseError);
-        } else {
-          console.log('✅ Jobs fetched from Supabase fallback:', data?.length);
-          setAllJobs(data || []);
-          setJobs((data || []).slice(0, PAGE_SIZE));
-          setHasMore((data?.length || 0) > PAGE_SIZE);
-        }
+        // No fallback - rely on backend API only for security
+        setAllJobs([]);
+        setJobs([]);
+        setHasMore(false);
       } finally {
         setLoading(false);
       }
@@ -959,48 +885,43 @@ function JobBoardContent() {
       console.error("[LogJobClick] User not available for logging job click. Aborting.");
       return;
     }
-    console.log("[LogJobClick] Logging for user:", user.id, "Job ID:", job.UNIQUE_ID);
-    console.log("[LogJobClick] Job object:", {
-      UNIQUE_ID: job.UNIQUE_ID,
-      Title: job.Title,
-      displayTitle: job.displayTitle,
-      Company: job.Company,
-      displayCompany: job.displayCompany
-    });
+
+    if (!job || !job.UNIQUE_ID) {
+      console.error("[LogJobClick] Invalid job object or missing UNIQUE_ID:", job);
+      return;
+    }
+
+    console.log("[LogJobClick] Starting - User:", user.id, "Job ID:", job.UNIQUE_ID);
 
     try {
       // Get user session for API token
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.access_token) {
-        apiClient.setToken(session.access_token);
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        console.error("[LogJobClick] Session error:", sessionError);
+        return;
       }
+
+      if (!session?.access_token) {
+        console.error("[LogJobClick] No access token in session");
+        return;
+      }
+
+      apiClient.setToken(session.access_token);
+      console.log("[LogJobClick] Token set, calling API...");
 
       // Log job click via backend API
-      await apiClient.recordJobClick(job.UNIQUE_ID);
-      console.log("[LogJobClick] Job click logged successfully via API for job:", job.UNIQUE_ID);
+      const result = await apiClient.recordJobClick(job.UNIQUE_ID);
+      console.log("[LogJobClick] ✅ SUCCESS - API returned:", result);
+      console.log("[LogJobClick] Job click logged successfully for job:", job.UNIQUE_ID);
 
-    } catch (error) {
-      console.error("[LogJobClick] Error logging job click via API:", error);
-
-      // Fallback to direct Supabase if API fails
-      try {
-        const { error: supabaseError } = await supabase.from("applying").insert([
-          {
-            applying_id: crypto.randomUUID(),
-            user_id: user.id,
-            unique_id_job: job.UNIQUE_ID, // Only store the ID
-            applied: false, // This puts it in the Found column
-            created_at: new Date().toISOString(),
-          },
-        ]);
-        if (supabaseError) {
-          console.error("[LogJobClick] Fallback error logging job click:", supabaseError);
-        } else {
-          console.log("[LogJobClick] Job click logged successfully via fallback for job:", job.UNIQUE_ID);
-        }
-      } catch (fallbackError) {
-        console.error("[LogJobClick] Exception in fallback logging:", fallbackError);
-      }
+    } catch (error: any) {
+      console.error("[LogJobClick] ❌ ERROR logging job click:", error);
+      console.error("[LogJobClick] Error details:", {
+        message: error?.message,
+        status: (error as any)?.status,
+        stack: error?.stack
+      });
     }
   };
 
@@ -1079,20 +1000,8 @@ function JobBoardContent() {
       setKeywords(keywords || []);
     } catch (error) {
       console.error('Error loading keywords from API:', error);
-
-      // Fallback to direct Supabase
-      const { data, error: supabaseError } = await supabase
-        .from('profiles')
-        .select('quicksearch')
-        .eq('id', user.id)
-        .single();
-
-      if (supabaseError) {
-        console.error('Error loading keywords:', supabaseError);
-        return;
-      }
-
-      setKeywords(data?.quicksearch || []);
+      // No fallback - rely on backend API only for security
+      setKeywords([]); // Set empty keywords on error
     }
   };
 
@@ -1112,19 +1021,9 @@ function JobBoardContent() {
       setKeywords(newKeywords);
     } catch (error) {
       console.error('Error saving keywords via API:', error);
-
-      // Fallback to direct Supabase
-      const { error: supabaseError } = await supabase
-        .from('profiles')
-        .update({ quicksearch: newKeywords })
-        .eq('id', user.id);
-
-      if (supabaseError) {
-        console.error('Error saving keywords:', supabaseError);
-        return;
-      }
-
-      setKeywords(newKeywords);
+      // No fallback - rely on backend API only for security
+      // Keywords won't be saved if API fails - user should see error
+      throw error;
     }
   };
 
@@ -1178,25 +1077,8 @@ function JobBoardContent() {
       }
     } catch (error) {
       console.error('Error fetching recommended jobs from API:', error);
-
-      // Fallback to direct Supabase
-      try {
-        const keywordQuery = keywords.map(keyword => `Title.ilike.%${keyword}%,Summary.ilike.%${keyword}%`).join(',');
-        const { data, error: supabaseError } = await supabase
-          .from('Allgigs_All_vacancies_NEW')
-          .select('*')
-          .or(keywordQuery)
-          .limit(5);
-
-        if (supabaseError) {
-          console.error('Error fetching recommended jobs:', supabaseError);
-          return;
-        }
-
-        setRecommendedJobs(data || []);
-      } catch (fallbackError) {
-        console.error('Exception in fetchRecommendedJobs fallback:', fallbackError);
-      }
+      // No fallback - rely on backend API only for security
+      setRecommendedJobs([]); // Set empty recommended jobs on error
     }
   };
 

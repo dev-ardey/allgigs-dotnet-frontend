@@ -392,16 +392,41 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             // ALSO fetch job clicks to show in Prospects column (jobs clicked but not yet applied)
             let jobClicks: any[] = [];
             try {
+                console.log('[DEBUG] Fetching job clicks for user:', user.id);
                 const jobClicksResponse = await apiClient.getJobClicksWithDetails(1000); // Get enough to cover all clicks
-                if (jobClicksResponse && jobClicksResponse.clicks) {
-                    jobClicks = jobClicksResponse.clicks;
-                    console.log('[DEBUG] Fetched job clicks via API:', {
+                console.log('[DEBUG] Raw job clicks response:', JSON.stringify(jobClicksResponse, null, 2));
+
+                // Backend returns camelCase 'clicks' property (due to JSON serialization config)
+                const clicksArray = (jobClicksResponse as any)?.clicks || (jobClicksResponse as any)?.Clicks || [];
+
+                if (clicksArray && Array.isArray(clicksArray)) {
+                    jobClicks = clicksArray;
+                    console.log('[DEBUG] ✅ Fetched job clicks via API:', {
                         count: jobClicks.length,
-                        sample: jobClicks[0]
+                        sample: jobClicks[0],
+                        responseKeys: Object.keys(jobClicksResponse || {}),
+                        allClicks: jobClicks.map(c => ({
+                            id: c.id,
+                            jobId: c.jobId || c.job_id,
+                            userId: c.userId || c.user_id
+                        }))
+                    });
+                } else {
+                    console.warn('[DEBUG] ⚠️ Job clicks response is not an array or missing:', {
+                        response: jobClicksResponse,
+                        responseType: typeof jobClicksResponse,
+                        clicksProperty: (jobClicksResponse as any)?.clicks,
+                        ClicksProperty: (jobClicksResponse as any)?.Clicks,
+                        fullResponse: JSON.stringify(jobClicksResponse, null, 2)
                     });
                 }
             } catch (jobClicksError) {
-                console.error('[DEBUG] Error fetching job clicks (non-fatal):', jobClicksError);
+                console.error('[DEBUG] ❌ Error fetching job clicks (non-fatal):', jobClicksError);
+                console.error('[DEBUG] Job clicks error details:', {
+                    message: jobClicksError instanceof Error ? jobClicksError.message : 'Unknown error',
+                    status: (jobClicksError as any)?.status,
+                    stack: jobClicksError instanceof Error ? jobClicksError.stack : undefined
+                });
                 // Continue without job clicks if this fails
             }
 
@@ -412,8 +437,15 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
             // Get all unique job IDs from applying records AND job clicks
             const applyingJobIds = applyingRecords?.map(record => record.uniqueIdJob).filter(Boolean) || [];
-            const clickedJobIds = jobClicks?.map(click => click.jobId).filter(Boolean) || [];
+            const clickedJobIds = jobClicks?.map(click => click.jobId || click.job_id).filter(Boolean) || [];
             const allJobIds = [...new Set([...applyingJobIds, ...clickedJobIds])]; // Combine and deduplicate
+
+            console.log('[DEBUG] Job IDs for fetching:', {
+                applyingCount: applyingJobIds.length,
+                clickedCount: clickedJobIds.length,
+                totalUnique: allJobIds.length,
+                sampleClickedIds: clickedJobIds.slice(0, 5)
+            });
 
             // Fetch job data via backend API
             let jobDataMap: Record<string, any> = {};
@@ -523,16 +555,42 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
             // Create leads from job clicks that don't have applying records
             const appliedJobIds = new Set(applyingRecords?.map(r => r.uniqueIdJob) || []);
+            console.log('[DEBUG] Creating clicked leads:', {
+                totalClicks: jobClicks.length,
+                appliedJobIdsCount: appliedJobIds.size,
+                appliedJobIds: Array.from(appliedJobIds).slice(0, 5),
+                sampleClicks: jobClicks.slice(0, 3).map(c => ({
+                    id: c.id || c.Id,
+                    jobId: c.jobId || c.job_id,
+                    userId: c.userId || c.user_id
+                }))
+            });
+
             const clickedLeads = jobClicks
-                .filter(click => !appliedJobIds.has(click.jobId)) // Only clicks without applying record
+                .filter(click => {
+                    const jobId = click.jobId || click.job_id; // Handle both camelCase and snake_case
+                    return jobId && !appliedJobIds.has(jobId);
+                })
                 .map(click => {
-                    const jobData = jobDataMap[click.jobId] || {};
+                    const jobId = click.jobId || click.job_id; // Handle both camelCase and snake_case
+                    const userId = click.userId || click.user_id;
+                    const clickedAt = click.clickedAt || click.clicked_at;
+                    const clickId = click.id || click.Id;
+
+                    const jobData = jobDataMap[jobId] || {};
+                    console.log('[DEBUG] Processing click:', {
+                        jobId,
+                        userId,
+                        clickedAt,
+                        jobDataExists: !!jobData.Title
+                    });
+
                     return {
-                        applying_id: `click_${click.id}`, // Unique ID for click-based leads
-                        unique_id_job: click.jobId,
-                        user_id: click.userId,
+                        applying_id: `click_${clickId}`, // Unique ID for click-based leads
+                        unique_id_job: jobId,
+                        user_id: userId,
                         applied: false, // Not applied yet
-                        created_at: click.clickedAt || new Date().toISOString(),
+                        created_at: clickedAt ? (typeof clickedAt === 'string' ? clickedAt : clickedAt.toString()) : new Date().toISOString(),
                         sent_cv: false,
                         sent_portfolio: false,
                         sent_cover_letter: false,

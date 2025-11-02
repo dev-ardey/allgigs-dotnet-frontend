@@ -1326,47 +1326,9 @@ function AutomationCompaniesContent() {
         } catch (err) {
             console.error('Error fetching companies via API:', err);
             setError(err instanceof Error ? err.message : 'An error occurred');
-
-            // Fallback to direct Supabase if API fails
-            try {
-                const { data, error } = await supabase
-                    .from('automation_details')
-                    .select('*')
-                    .order('Company_name');
-
-                if (error) throw error;
-
-                const mergedCompanies = [];
-                const linkedInCompanies: any[] = [];
-                const otherCompanies: any[] = [];
-
-                (data || []).forEach(company => {
-                    const companyName = company.Company_name?.toLowerCase() || '';
-                    if (companyName.includes('linkedin') ||
-                        companyName.includes('linkedininterim') ||
-                        companyName.includes('linkedinzzp') ||
-                        companyName.includes('linked')) {
-                        linkedInCompanies.push(company);
-                    } else {
-                        otherCompanies.push(company);
-                    }
-                });
-
-                if (linkedInCompanies.length > 0) {
-                    mergedCompanies.push({
-                        ...linkedInCompanies[0],
-                        Company_name: 'LinkedIn',
-                        id: linkedInCompanies[0].id
-                    });
-                }
-
-                mergedCompanies.push(...otherCompanies);
-                setCompanies(mergedCompanies);
-                setFilteredCompanies(mergedCompanies);
-                setError(null); // Clear error if fallback succeeds
-            } catch (fallbackError) {
-                console.error('Fallback fetch companies failed:', fallbackError);
-            }
+            // No fallback - rely on backend API only for security
+            setCompanies([]);
+            setFilteredCompanies([]);
         } finally {
             setLoading(false);
         }

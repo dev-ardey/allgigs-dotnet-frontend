@@ -119,17 +119,17 @@ class ApiClient {
     ): Promise<T> {
         // Always refresh session before API calls to ensure token is not expired
         const { supabase } = await import('../SupabaseClient');
-        
+
         // Get current session (Supabase auto-refreshes expired tokens)
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
+
         if (sessionError || !session?.access_token) {
             throw new Error('No authentication token available. Please log in again.');
         }
-        
+
         // Always use the latest token from session
         const currentToken = session.access_token;
-        
+
         const url = `${this.baseUrl}${endpoint}`;
 
         const headers: Record<string, string> = {

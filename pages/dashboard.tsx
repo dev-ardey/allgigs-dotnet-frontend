@@ -973,48 +973,9 @@ function DashboardContent() {
 
     } catch (error) {
       console.error('Error in fetchJobClicksStats:', error);
-      // Fallback to direct Supabase if API fails
-      try {
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - 6);
-        startDate.setHours(0, 0, 0, 0);
-
-        const endDate = new Date();
-        endDate.setHours(23, 59, 59, 999);
-
-        const { data: clicks, error: supabaseError } = await supabase
-          .from('job_clicks')
-          .select('clicked_at')
-          .eq('user_id', user.id)
-          .gte('clicked_at', startDate.toISOString())
-          .lte('clicked_at', endDate.toISOString())
-          .order('clicked_at', { ascending: true });
-
-        if (supabaseError) {
-          console.error('Error fetching job clicks stats via fallback:', supabaseError);
-          return;
-        }
-
-        const last7Days = getLast7Days();
-        const clicksPerDay: { [key: string]: number } = {};
-        clicks?.forEach(click => {
-          if (click.clicked_at) {
-            const clickDate = new Date(click.clicked_at).toISOString().split('T')[0];
-            if (clickDate) {
-              clicksPerDay[clickDate] = (clicksPerDay[clickDate] || 0) + 1;
-            }
-          }
-        });
-
-        const updatedStats: StatsDay[] = last7Days.map(day => ({
-          ...day,
-          views: clicksPerDay[day.date] || 0
-        }));
-
-        setStatsData(updatedStats);
-      } catch (fallbackError) {
-        console.error('Error in fallback fetchJobClicksStats:', fallbackError);
-      }
+      // No fallback - rely on backend API only for security
+      // Set empty stats to prevent showing stale data
+      setStatsData(getLast7Days());
     } finally {
       setLoadingStats(false);
     }
@@ -1081,40 +1042,16 @@ function DashboardContent() {
         }
       } catch (error) {
         console.error('Error fetching future features from API:', error);
-
-        // Fallback to direct Supabase
-        const { data, error: supabaseError } = await supabase
-          .from('future_features')
-          .select('marketing, agent, tooling, interview_optimisation, value_proposition')
-          .eq('user_id', user.id)
-          .single();
-
-        console.log('Future features query result:', { data, error: supabaseError });
-
-        if (supabaseError && supabaseError.code !== 'PGRST116') { // PGRST116 = no rows returned
-          console.error('Error fetching future features:', supabaseError);
-        } else if (data) {
-          console.log('Found future features data:', data);
-          setFutureFeatures({
-            marketing: data.marketing ?? false,
-            agent: data.agent ?? false,
-            tooling: data.tooling ?? false,
-            interview_optimisation: data.interview_optimisation ?? false,
-            value_proposition: data.value_proposition ?? false
-          });
-        } else {
-          // No data found, create default record
-          console.log('No future features found, creating default record');
-          const defaultFeatures = {
-            marketing: false,
-            agent: false,
-            tooling: false,
-            interview_optimisation: false,
-            value_proposition: false
-          };
-          setFutureFeatures(defaultFeatures);
-          await saveFutureFeatures(defaultFeatures);
-        }
+        // No fallback - rely on backend API only for security
+        // Set default features on error
+        const defaultFeatures = {
+          marketing: false,
+          agent: false,
+          tooling: false,
+          interview_optimisation: false,
+          value_proposition: false
+        };
+        setFutureFeatures(defaultFeatures);
       }
     };
 
@@ -1149,28 +1086,8 @@ function DashboardContent() {
         console.log('Future features saved successfully via API');
       } catch (error) {
         console.error('Error saving future features via API:', error);
-
-        // Fallback to direct Supabase
-        const featureData = {
-          user_id: user.id,
-          marketing: newFeatures.marketing,
-          agent: newFeatures.agent,
-          tooling: newFeatures.tooling,
-          interview_optimisation: newFeatures.interview_optimisation,
-          value_proposition: newFeatures.value_proposition
-        };
-
-        console.log('Saving future features:', featureData);
-
-        const { error: supabaseError } = await supabase
-          .from('future_features')
-          .upsert(featureData);
-
-        if (supabaseError) {
-          console.error('Error saving future features:', supabaseError);
-        } else {
-          console.log('Future features saved successfully');
-        }
+        // No fallback - rely on backend API only for security
+        throw error; // Re-throw to show error to user
       }
     } catch (error) {
       console.error('Error saving future features:', error);
@@ -1369,36 +1286,8 @@ function DashboardContent() {
       setRecentlyClickedJobs(finalJobs);
     } catch (error) {
       console.error("fetchRecentlyClickedJobs error", error);
-
-      // Fallback to direct Supabase if API fails
-      try {
-        const { data: clicks } = await supabase
-          .from("job_clicks")
-          .select("job_id, clicked_at")
-          .eq("user_id", user.id)
-          .order("clicked_at", { ascending: false });
-
-        const jobIds = clicks?.map(c => c.job_id).filter(Boolean);
-        const uniqueJobIds = [...new Set(jobIds)];
-
-        if (!uniqueJobIds.length) return setRecentlyClickedJobs([]);
-
-        const { data: jobsData } = await supabase
-          .from("Allgigs_All_vacancies_NEW")
-          .select("UNIQUE_ID, Title, Company, URL, date, Location, Summary, rate")
-          .in("UNIQUE_ID", uniqueJobIds);
-
-        const finalJobs =
-          jobsData?.map(job => ({
-            ...job,
-            clicked_at: clicks?.find(c => c.job_id === job.UNIQUE_ID)?.clicked_at,
-          })) ?? [];
-
-        setRecentlyClickedJobs(finalJobs);
-      } catch (fallbackError) {
-        console.error("Error in fallback fetchRecentlyClickedJobs:", fallbackError);
-        setRecentlyClickedJobs([]);
-      }
+      // No fallback - rely on backend API only for security
+      setRecentlyClickedJobs([]);
     } finally {
       setLoadingRecentlyClicked(false);
       setLoading(false);

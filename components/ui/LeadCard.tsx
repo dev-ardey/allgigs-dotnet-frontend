@@ -164,6 +164,12 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 // Set a new timeout for this specific field
                 timeouts[field] = setTimeout(async () => {
                     try {
+                        // Skip for click-based leads
+                        if (isClickBasedLead()) {
+                            console.log(`[DEBUG] Skipping save ${field} for click-based lead`);
+                            return;
+                        }
+
                         console.log(`[DEBUG] Saving ${field}:`, value, 'for lead:', lead.applying_id);
                         const { error } = await supabase
                             .from('applying')
@@ -340,9 +346,20 @@ const LeadCard: React.FC<LeadCardProps> = ({
     // Follow-up state
     const [followUpMessage, setFollowUpMessage] = useState(lead.follow_up_message || '');
 
+    // Helper function to check if this is a click-based lead (no applying record yet)
+    const isClickBasedLead = () => {
+        return lead.applying_id?.startsWith('click_');
+    };
+
     // Auto-archive function
     const handleAutoArchive = async () => {
         try {
+            // Skip auto-archiving for click-based leads (they don't have applying records)
+            if (lead.applying_id?.startsWith('click_')) {
+                console.log('Skipping auto-archive for click-based lead:', lead.applying_id);
+                return;
+            }
+
             console.log('Auto-archiving expired job:', lead.applying_id);
 
             const { error } = await supabase
@@ -531,6 +548,12 @@ const LeadCard: React.FC<LeadCardProps> = ({
         } else {
             // Direct NO - remove job
             try {
+                // Skip for click-based leads
+                if (isClickBasedLead()) {
+                    console.log('Cannot delete click-based lead');
+                    return;
+                }
+
                 await supabase
                     .from('applying')
                     .delete()
@@ -548,6 +571,12 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     const handleConfirmApplication = async () => {
         try {
+            // Skip for click-based leads (they need to create applying record first)
+            if (isClickBasedLead()) {
+                console.log('Cannot confirm application for click-based lead - create applying record first');
+                return;
+            }
+
             // Update database with sent items and mark as applied
             await supabase
                 .from('applying')
@@ -584,6 +613,12 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     const handleFollowUpComplete = async (completed: boolean) => {
         try {
+            // Skip for click-based leads
+            if (isClickBasedLead()) {
+                console.log('Cannot update follow-up for click-based lead');
+                return;
+            }
+
             await supabase
                 .from('applying')
                 .update({
@@ -607,6 +642,12 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     const handleGotJob = async (gotJob: boolean, startingDate?: string) => {
         try {
+            // Skip for click-based leads (they don't have applying records yet)
+            if (lead.applying_id?.startsWith('click_')) {
+                console.log('Cannot update got_the_job for click-based lead - create applying record first');
+                return;
+            }
+
             if (gotJob === false) {
                 // If "No" - only archive if this was an applied job (not Prospects stage)
                 if (lead.applied) {
@@ -666,6 +707,12 @@ const LeadCard: React.FC<LeadCardProps> = ({
     };
 
     const handleArchiveJob = async () => {
+        // Skip for click-based leads (they don't have applying records yet)
+        if (lead.applying_id?.startsWith('click_')) {
+            console.log('Cannot archive click-based lead - create applying record first');
+            return;
+        }
+
         if (lead.applied) {
             try {
                 // Only archive if job was actually applied to
@@ -694,6 +741,12 @@ const LeadCard: React.FC<LeadCardProps> = ({
     // Contact handlers
     const handleSaveContact = async () => {
         if (!newContact.name.trim() || !lead.applying_id) return;
+
+        // Skip for click-based leads
+        if (isClickBasedLead()) {
+            console.log('Cannot save contact for click-based lead');
+            return;
+        }
 
         try {
             // Get current contacts from lead object, or empty array

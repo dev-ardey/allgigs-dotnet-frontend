@@ -121,21 +121,8 @@ function ProfileContent() {
         await apiClient.updateAvailability(newValue);
       } catch (error) {
         console.error('Error updating availability via API:', error);
-
-        // Fallback to direct Supabase
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          throw new Error('No authenticated user found');
-        }
-
-        const { error: supabaseError } = await supabase
-          .from('profiles')
-          .update({ available_to_recruiters: newValue })
-          .eq('id', user.id);
-
-        if (supabaseError) {
-          console.error('Error updating availability:', supabaseError);
-        }
+        // No fallback - rely on backend API only for security
+        throw error;
       }
     } catch (error) {
       console.error('Error updating availability:', error);
@@ -174,23 +161,9 @@ function ProfileContent() {
         alert('Testimonial saved successfully!');
       } catch (error) {
         console.error('Error saving testimonial via API:', error);
-
-        // Fallback to direct Supabase
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          throw new Error('No authenticated user found');
-        }
-
-        const { error: supabaseError } = await supabase
-          .from('profiles')
-          .update({ testimonials: testimonial })
-          .eq('id', user.id);
-
-        if (supabaseError) {
-          throw supabaseError;
-        }
-
-        alert('Testimonial saved successfully!');
+        // No fallback - rely on backend API only for security
+        alert('Failed to save testimonial. Please try again.');
+        throw error;
       }
     } finally {
       setTestimonialSending(false);
@@ -307,47 +280,10 @@ function ProfileContent() {
         }
       } catch (error) {
         console.error('Error fetching profile from API:', error);
-
-        // Fallback to direct Supabase
-        const { data, error: supabaseError } = await supabase
-          .from('profiles')
-          .select('first_name, last_name, linkedin_URL, industry, job_title, location, available_to_recruiters, date_available_to_recruiters, rate, age, last_years_earnings, gender, testimonials, main_problem, interests, links, postponed_info, postponed_time')
-          .eq('id', user.id)
-          .single();
-
-        if (supabaseError) {
-          console.error('Fout bij ophalen profiel:', supabaseError);
-        } else if (data) {
-          const fetchedProfile: Profile = {
-            firstName: data.first_name || '',
-            lastName: data.last_name || '',
-            industry: data.industry || '',
-            location: data.location || '',
-            job_title: data.job_title || '',
-            linkedin_URL: data.linkedin_URL || '',
-            linkedIn: data.linkedin_URL || '',
-            // Map all available fields from Supabase
-            isAvailableForWork: data.available_to_recruiters ?? true,
-            hourlyRate: data.rate ? parseInt(data.rate) : 75,
-            age: data.age ? new Date().getFullYear() - new Date(data.age).getFullYear() : 30,
-            lastYearEarnings: data.last_years_earnings || 100000,
-            gender: data.gender || 'Male',
-            interests: data.interests || 'Technology, Innovation, Problem Solving',
-            mainProblem: data.main_problem || 'Finding the right opportunities',
-            // All new fields from Supabase
-            dateAvailableToRecruiters: data.date_available_to_recruiters,
-            testimonials: data.testimonials,
-            links: data.links,
-            postponedInfo: data.postponed_info,
-            postponedTime: data.postponed_time
-          };
-          setProfile(fetchedProfile);
-          setEditedProfile(fetchedProfile);
-          // Sync testimonial state with profile data
-          setTestimonial(fetchedProfile.testimonials || '');
-          // Sync availability state with profile data
-          setIsAvailable(fetchedProfile.isAvailableForWork ?? true);
-        }
+        // No fallback - rely on backend API only for security
+        // Set empty profile on error
+        setProfile(emptyProfile);
+        setEditedProfile(emptyProfile);
       } finally {
         setLoading(false);
       }
@@ -494,21 +430,9 @@ function ProfileContent() {
         alert('Profile saved successfully!');
       } catch (error) {
         console.error('Error saving profile via API:', error);
-
-        // Fallback to direct Supabase
-        const { error: upsertError } = await supabase
-          .from('profiles')
-          .upsert(profileData);
-
-        if (upsertError) {
-          console.error('Error saving profile:', upsertError);
-          alert(`Profile update failed: ${upsertError.message}`);
-        } else {
-          console.log('Profile saved successfully');
-          setProfile(editedProfile);
-          setEditMode(false);
-          alert('Profile saved successfully!');
-        }
+        // No fallback - rely on backend API only for security
+        alert(`Profile update failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        throw error;
       }
     } catch (err) {
       console.error('Unexpected error:', err);
