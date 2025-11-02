@@ -916,12 +916,18 @@ function DashboardContent() {
   const [loadingStats, setLoadingStats] = useState<boolean>(false);
   console.log(loadingStats, "build error")
 
-  // Functie om job clicks per dag op te halen
+  // Functie om job clicks per dag op te halen via backend API
   const fetchJobClicksStats = async () => {
     if (!user || !user.id) return;
 
     setLoadingStats(true);
     try {
+      // Get user session for API token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        apiClient.setToken(session.access_token);
+      }
+
       // Haal de laatste 7 dagen op
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 6);
@@ -930,27 +936,27 @@ function DashboardContent() {
       const endDate = new Date();
       endDate.setHours(23, 59, 59, 999);
 
-      const { data: clicks, error } = await supabase
-        .from('job_clicks')
-        .select('clicked_at')
-        .eq('user_id', user.id)
-        .gte('clicked_at', startDate.toISOString())
-        .lte('clicked_at', endDate.toISOString())
-        .order('clicked_at', { ascending: true });
+      // Get all job clicks via backend API (we'll filter by date in frontend)
+      const clicksResponse = await apiClient.getJobClicksWithDetails(1000); // Get enough to cover 7 days
 
-      if (error) {
-        console.error('Error fetching job clicks stats:', error);
+      if (!clicksResponse || !clicksResponse.clicks) {
         return;
       }
+
+      // Filter clicks from last 7 days
+      const clicks = clicksResponse.clicks.filter(click => {
+        const clickDate = new Date(click.clickedAt);
+        return clickDate >= startDate && clickDate <= endDate;
+      });
 
       // Genereer de laatste 7 dagen
       const last7Days = getLast7Days();
 
       // Tel clicks per dag
       const clicksPerDay: { [key: string]: number } = {};
-      clicks?.forEach(click => {
-        if (click.clicked_at) {
-          const clickDate = new Date(click.clicked_at).toISOString().split('T')[0];
+      clicks.forEach(click => {
+        if (click.clickedAt) {
+          const clickDate = new Date(click.clickedAt).toISOString().split('T')[0];
           if (clickDate) {
             clicksPerDay[clickDate] = (clicksPerDay[clickDate] || 0) + 1;
           }
@@ -967,6 +973,48 @@ function DashboardContent() {
 
     } catch (error) {
       console.error('Error in fetchJobClicksStats:', error);
+      // Fallback to direct Supabase if API fails
+      try {
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 6);
+        startDate.setHours(0, 0, 0, 0);
+
+        const endDate = new Date();
+        endDate.setHours(23, 59, 59, 999);
+
+        const { data: clicks, error: supabaseError } = await supabase
+          .from('job_clicks')
+          .select('clicked_at')
+          .eq('user_id', user.id)
+          .gte('clicked_at', startDate.toISOString())
+          .lte('clicked_at', endDate.toISOString())
+          .order('clicked_at', { ascending: true });
+
+        if (supabaseError) {
+          console.error('Error fetching job clicks stats via fallback:', supabaseError);
+          return;
+        }
+
+        const last7Days = getLast7Days();
+        const clicksPerDay: { [key: string]: number } = {};
+        clicks?.forEach(click => {
+          if (click.clicked_at) {
+            const clickDate = new Date(click.clicked_at).toISOString().split('T')[0];
+            if (clickDate) {
+              clicksPerDay[clickDate] = (clicksPerDay[clickDate] || 0) + 1;
+            }
+          }
+        });
+
+        const updatedStats: StatsDay[] = last7Days.map(day => ({
+          ...day,
+          views: clicksPerDay[day.date] || 0
+        }));
+
+        setStatsData(updatedStats);
+      } catch (fallbackError) {
+        console.error('Error in fallback fetchJobClicksStats:', fallbackError);
+      }
     } finally {
       setLoadingStats(false);
     }
@@ -1149,29 +1197,7 @@ function DashboardContent() {
 
     } catch (error) {
       console.error("Error logging job click via API:", error);
-
-      // Fallback to direct Supabase if API fails
-      try {
-        await supabase.from("job_clicks").insert([
-          {
-            user_id: user.id,
-            job_id: job.UNIQUE_ID,
-            job_title: job.Title,
-            company: job.Company,
-            location: job.Location,
-            rate: job.rate,
-            date_posted: job.date,
-            summary: job.Summary,
-            url: job.URL,
-          },
-        ]);
-        console.log("Job click logged successfully via fallback:", job.Title);
-
-        // Refresh stats na nieuwe click
-        fetchJobClicksStats();
-      } catch (fallbackError) {
-        console.error("Error in fallback logging:", fallbackError);
-      }
+      // Note: Fallback removed - rely on backend API only
     }
   };
 
@@ -1318,32 +1344,61 @@ function DashboardContent() {
 
     setLoadingRecentlyClicked(true);
     try {
-      const { data: clicks } = await supabase
-        .from("job_clicks")
-        .select("job_id, clicked_at")
-        .eq("user_id", user.id)
-        .order("clicked_at", { ascending: false });
+      // Get user session for API token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        apiClient.setToken(session.access_token);
+      }
 
-      const jobIds = clicks?.map(c => c.job_id).filter(Boolean);
-      const uniqueJobIds = [...new Set(jobIds)];
+      // Fetch recently clicked jobs via backend API
+      const recentJobs = await apiClient.getRecentlyClickedJobs(50);
 
-      if (!uniqueJobIds.length) return setRecentlyClickedJobs([]);
-
-      const { data: jobsData } = await supabase
-        .from("Allgigs_All_vacancies_NEW")
-        .select("UNIQUE_ID, Title, Company, URL, date, Location, Summary, rate")
-        .in("UNIQUE_ID", uniqueJobIds);
-
-      const finalJobs =
-        jobsData?.map(job => ({
-          ...job,
-          clicked_at: clicks?.find(c => c.job_id === job.UNIQUE_ID)?.clicked_at,
-        })) ?? [];
+      // Transform to match existing Job interface
+      const finalJobs = recentJobs.map(item => ({
+        UNIQUE_ID: item.job.uniqueId || '',
+        Title: item.job.title || '',
+        Company: item.job.company || '',
+        URL: item.job.url || '',
+        date: item.job.date || '',
+        Location: item.job.location || '',
+        Summary: item.job.summary || '',
+        rate: item.job.rate || '',
+        clicked_at: item.clickedAt
+      }));
 
       setRecentlyClickedJobs(finalJobs);
-    } catch (e) {
-      console.error("fetchRecentlyClickedJobs error", e);
-      setRecentlyClickedJobs([]);
+    } catch (error) {
+      console.error("fetchRecentlyClickedJobs error", error);
+
+      // Fallback to direct Supabase if API fails
+      try {
+        const { data: clicks } = await supabase
+          .from("job_clicks")
+          .select("job_id, clicked_at")
+          .eq("user_id", user.id)
+          .order("clicked_at", { ascending: false });
+
+        const jobIds = clicks?.map(c => c.job_id).filter(Boolean);
+        const uniqueJobIds = [...new Set(jobIds)];
+
+        if (!uniqueJobIds.length) return setRecentlyClickedJobs([]);
+
+        const { data: jobsData } = await supabase
+          .from("Allgigs_All_vacancies_NEW")
+          .select("UNIQUE_ID, Title, Company, URL, date, Location, Summary, rate")
+          .in("UNIQUE_ID", uniqueJobIds);
+
+        const finalJobs =
+          jobsData?.map(job => ({
+            ...job,
+            clicked_at: clicks?.find(c => c.job_id === job.UNIQUE_ID)?.clicked_at,
+          })) ?? [];
+
+        setRecentlyClickedJobs(finalJobs);
+      } catch (fallbackError) {
+        console.error("Error in fallback fetchRecentlyClickedJobs:", fallbackError);
+        setRecentlyClickedJobs([]);
+      }
     } finally {
       setLoadingRecentlyClicked(false);
       setLoading(false);

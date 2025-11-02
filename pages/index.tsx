@@ -8,6 +8,20 @@ export default function Home() {
 
   useEffect(() => {
     checkUserAndRedirect();
+
+    // Listen for auth state changes to redirect after login
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        // User logged in - redirect to dashboard immediately
+        router.push('/dashboard');
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [router]);
 
   const checkUserAndRedirect = async () => {
@@ -16,29 +30,16 @@ export default function Home() {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
-        // Not logged in - redirect to login
-        router.push('/auth/login');
+        // Not logged in - AuthProvider will show login form automatically
+        setIsLoading(false);
         return;
       }
 
-      // Get user role from backend
-      const response = await fetch('http://localhost:5004/api/UserRole/me', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
-      });
-
-      if (response.ok) {
-        // Redirect based on role - all users go to dashboard now
-        router.push('/dashboard');
-      } else {
-        // Error getting role - redirect to login
-        router.push('/auth/login');
-      }
+      // User has session - redirect to dashboard immediately
+      // AuthGuard on dashboard will handle role checking if needed
+      router.push('/dashboard');
     } catch (error) {
       console.error('Auth check failed:', error);
-      router.push('/auth/login');
-    } finally {
       setIsLoading(false);
     }
   };

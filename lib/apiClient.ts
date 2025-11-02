@@ -35,12 +35,78 @@ export interface FutureFeaturesResponse {
     valueProposition: boolean;
 }
 
+// Interface for applying records
+export interface ApplyingDto {
+    applyingId: string;
+    userId: string;
+    uniqueIdJob: string;
+    applied: boolean;
+    createdAt?: string;
+    sentCv?: boolean;
+    sentPortfolio?: boolean;
+    sentCoverLetter?: boolean;
+    followUpDate?: string;
+    isArchived?: boolean;
+    jobTitle?: string;
+    company?: string;
+    location?: string;
+    rate?: string;
+    jobUrl?: string;
+    summary?: string;
+    // Add other fields as needed
+}
+
+export interface ApplyingListResponse {
+    applications: ApplyingDto[];
+    total: number;
+}
+
+export interface RecentJobClickDto {
+    job: {
+        uniqueId?: string;
+        title?: string;
+        company?: string;
+        location?: string;
+        rate?: string;
+        url?: string;
+        summary?: string;
+        date?: string;
+    };
+    clickedAt: string;
+}
+
+export interface JobClicksResponse {
+    clicks: Array<{
+        id: number;
+        userId: string;
+        jobId: string;
+        clickedAt: string;
+    }>;
+    total: number;
+}
+
+export interface AutomationDetailDto {
+    id: number;
+    companyName?: string;
+    industry?: string;
+    companySize?: string;
+    technologies?: string;
+    location?: string;
+    website?: string;
+    description?: string;
+}
+
+export interface AutomationDetailsResponse {
+    details: AutomationDetailDto[];
+    total: number;
+}
+
 class ApiClient {
     private baseUrl: string;
     private token: string | null = null;
 
-    constructor(baseUrl: string = 'http://localhost:5004') {
-        this.baseUrl = baseUrl;
+    constructor(baseUrl?: string) {
+        this.baseUrl = baseUrl || process.env.NEXT_PUBLIC_API_BASE_URL || 'https://allgigs-v3-backend-production.up.railway.app';
     }
 
     setToken(token: string) {
@@ -107,18 +173,44 @@ class ApiClient {
     }
 
     // Job Applications API
-    async createApplication(jobId: string, jobData: any) {
-        return this.request('/api/applying', {
+    async createApplication(jobId: string, applied: boolean = false, sentCv?: boolean, sentPortfolio?: boolean, sentCoverLetter?: boolean) {
+        return this.request<ApplyingDto>('/api/applying', {
             method: 'POST',
             body: JSON.stringify({
                 jobId,
-                jobData
+                applied,
+                sentCv,
+                sentPortfolio,
+                sentCoverLetter
             })
         });
     }
 
-    async getApplications(includeArchived: boolean = false) {
-        return this.request(`/api/applying?includeArchived=${includeArchived}`);
+    async getApplications(includeArchived: boolean = false): Promise<ApplyingListResponse> {
+        return this.request<ApplyingListResponse>(`/api/applying?includeArchived=${includeArchived}`);
+    }
+
+    async getApplicationById(applyingId: string): Promise<ApplyingDto> {
+        return this.request<ApplyingDto>(`/api/applying/${applyingId}`);
+    }
+
+    async updateApplication(applyingId: string, updateData: any): Promise<ApplyingDto> {
+        return this.request<ApplyingDto>(`/api/applying/${applyingId}`, {
+            method: 'PUT',
+            body: JSON.stringify(updateData)
+        });
+    }
+
+    async archiveApplication(applyingId: string): Promise<void> {
+        return this.request<void>(`/api/applying/${applyingId}/archive`, {
+            method: 'POST'
+        });
+    }
+
+    async unarchiveApplication(applyingId: string): Promise<void> {
+        return this.request<void>(`/api/applying/${applyingId}/unarchive`, {
+            method: 'POST'
+        });
     }
 
     // Job Clicks API
@@ -135,12 +227,16 @@ class ApiClient {
         return this.request(`/api/jobclicks?limit=${limit}`);
     }
 
-    async getRecentlyClickedJobs(limit: number = 10) {
-        return this.request(`/api/jobclicks/recent?limit=${limit}`);
+    async getRecentlyClickedJobs(limit: number = 10): Promise<RecentJobClickDto[]> {
+        return this.request<RecentJobClickDto[]>(`/api/jobclicks/recent?limit=${limit}`);
     }
 
-    async checkJobClick(jobId: string) {
-        return this.request(`/api/jobclicks/check/${jobId}`);
+    async getJobClicksWithDetails(limit: number = 50): Promise<JobClicksResponse> {
+        return this.request<JobClicksResponse>(`/api/jobclicks?limit=${limit}`);
+    }
+
+    async checkJobClick(jobId: string): Promise<{ hasClicked: boolean }> {
+        return this.request<{ hasClicked: boolean }>(`/api/jobclicks/check/${jobId}`);
     }
 
     // Profiles API
@@ -201,6 +297,33 @@ class ApiClient {
             method: 'PUT',
             body: JSON.stringify(featuresData),
         });
+    }
+
+    // Automation Details API
+    async getAutomationDetails(limit: number = 100): Promise<AutomationDetailsResponse> {
+        return this.request<AutomationDetailsResponse>(`/api/automationdetails?limit=${limit}`);
+    }
+
+    async getAutomationDetailById(id: number): Promise<AutomationDetailDto> {
+        return this.request<AutomationDetailDto>(`/api/automationdetails/${id}`);
+    }
+
+    async searchAutomationDetails(companyName: string): Promise<AutomationDetailsResponse> {
+        return this.request<AutomationDetailsResponse>(`/api/automationdetails/search?companyName=${encodeURIComponent(companyName)}`);
+    }
+
+    // Job Statistics API (for dashboard stats)
+    async getJobStatistics() {
+        return this.request('/api/jobs/stats');
+    }
+
+    // Get job clicks stats for chart (helper method)
+    async getJobClicksStats(startDate?: string, endDate?: string) {
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        const query = params.toString();
+        return this.request(`/api/jobclicks/stats${query ? `?${query}` : ''}`);
     }
 }
 

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { LeadStage } from '../../types/leads';
 import { supabase } from '../../SupabaseClient';
+import { apiClient, ApplyingListResponse, ApplyingDto } from '../../lib/apiClient';
 import LeadCard from './LeadCard';
 import ArchiveModal from './ArchiveModal';
 // import InterviewPrepModal from './InterviewPrepModal';
@@ -373,40 +374,70 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
         setLoading(true);
         setError(null);
         try {
-            // Fetch all applying records for this user (includes both prospects and applied jobs)
-            const { data: applyingRecords, error: applyingError } = await supabase
-                .from('applying')
-                .select('*')
-                .eq('user_id', user.id)
-                .eq('is_archived', false) // Only get non-archived leads
-                .order('created_at', { ascending: false });
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
 
-            if (applyingError) throw applyingError;
+            // Fetch all applying records via backend API
+            const applicationsResponse: ApplyingListResponse = await apiClient.getApplications(false);
 
-            console.log('[DEBUG] Fetched applying records:', {
+            if (!applicationsResponse || !applicationsResponse.applications) {
+                throw new Error('Invalid response from API');
+            }
+
+            const applyingRecords = applicationsResponse.applications;
+
+            console.log('[DEBUG] Fetched applying records via API:', {
                 count: applyingRecords.length,
                 sample: applyingRecords[0]
             });
 
             // Get all unique job IDs from applying records
-            const jobIds = applyingRecords?.map(record => record.unique_id_job) || [];
+            const jobIds = applyingRecords?.map(record => record.uniqueIdJob).filter(Boolean) || [];
 
-            // Fetch job data from Allgigs_All_vacancies_NEW table
+            // Fetch job data via backend API
             let jobDataMap: Record<string, any> = {};
             if (jobIds.length > 0) {
-                const { data: jobData, error: jobError } = await supabase
-                    .from('Allgigs_All_vacancies_NEW')
-                    .select('UNIQUE_ID, Title, Company, Location, rate, date, Summary, URL')
-                    .in('UNIQUE_ID', jobIds);
+                try {
+                    // Fetch jobs in batches if needed (backend may have limit)
+                    const jobPromises = jobIds.map(jobId => apiClient.getJobById(jobId));
+                    const jobDataArray = await Promise.allSettled(jobPromises);
 
-                if (jobError) {
-                    console.error('Error fetching job data:', jobError);
-                } else {
-                    // Create a map for quick lookup
-                    jobDataMap = jobData?.reduce((map: Record<string, any>, job) => {
-                        map[job.UNIQUE_ID] = job;
-                        return map;
-                    }, {} as Record<string, any>) || {};
+                    jobDataArray.forEach((result, index) => {
+                        if (result.status === 'fulfilled' && result.value) {
+                            const job = result.value;
+                            jobDataMap[jobIds[index]] = {
+                                UNIQUE_ID: job.uniqueId || jobIds[index],
+                                Title: job.title,
+                                Company: job.company,
+                                Location: job.location,
+                                rate: job.rate,
+                                date: job.datePosted,
+                                Summary: job.summary,
+                                URL: job.url
+                            };
+                        }
+                    });
+                } catch (jobError) {
+                    console.error('Error fetching job data via API:', jobError);
+                    // Fallback: fetch jobs via direct Supabase if API fails
+                    try {
+                        const { data: jobData, error: supabaseError } = await supabase
+                            .from('Allgigs_All_vacancies_NEW')
+                            .select('UNIQUE_ID, Title, Company, Location, rate, date, Summary, URL')
+                            .in('UNIQUE_ID', jobIds);
+
+                        if (!supabaseError && jobData) {
+                            jobDataMap = jobData.reduce((map: Record<string, any>, job) => {
+                                map[job.UNIQUE_ID] = job;
+                                return map;
+                            }, {} as Record<string, any>);
+                        }
+                    } catch (fallbackError) {
+                        console.error('Error in fallback job fetch:', fallbackError);
+                    }
                 }
             }
 
@@ -444,20 +475,31 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 }
 
                 // Get job data from the map
-                const jobData = jobDataMap[record.unique_id_job] || {};
+                const jobData = jobDataMap[record.uniqueIdJob] || {};
 
                 return {
                     ...record,
+                    // Map applyingId to applying_id for compatibility
+                    applying_id: record.applyingId,
+                    unique_id_job: record.uniqueIdJob,
+                    user_id: record.userId,
+                    applied: record.applied,
+                    created_at: record.createdAt,
+                    sent_cv: record.sentCv,
+                    sent_portfolio: record.sentPortfolio,
+                    sent_cover_letter: record.sentCoverLetter,
+                    follow_up_date: record.followUpDate,
+                    is_archived: record.isArchived,
                     interviews,
                     contacts,
                     // Add job data with _clicked suffix for compatibility
-                    job_title_clicked: jobData.Title || '',
-                    company_clicked: jobData.Company || '',
-                    location_clicked: jobData.Location || '',
-                    rate_clicked: jobData.rate || '',
+                    job_title_clicked: jobData.Title || record.jobTitle || '',
+                    company_clicked: jobData.Company || record.company || '',
+                    location_clicked: jobData.Location || record.location || '',
+                    rate_clicked: jobData.rate || record.rate || '',
                     date_posted_clicked: jobData.date || '',
-                    summary_clicked: jobData.Summary || '',
-                    url_clicked: jobData.URL || ''
+                    summary_clicked: jobData.Summary || record.summary || '',
+                    url_clicked: jobData.URL || record.jobUrl || ''
                 };
             }) || [];
 
@@ -474,27 +516,84 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             // Load archive count in background (silent, no blocking)
             setTimeout(async () => {
                 try {
-                    const { count: archivedCount, error: countError } = await supabase
-                        .from('applying')
-                        .select('*', { count: 'exact', head: true })
-                        .eq('user_id', user.id)
-                        .eq('is_archived', true);
-
-                    if (!countError) {
-                        setArchivedCount(archivedCount || 0);
-                    }
+                    const archivedResponse: ApplyingListResponse = await apiClient.getApplications(true);
+                    const archivedCount = archivedResponse.applications?.filter(app => app.isArchived).length || 0;
+                    setArchivedCount(archivedCount);
                 } catch (err) {
                     // Silent fail - no user notification needed
                     console.error('Background archive count failed:', err);
+                    // Fallback to direct Supabase
+                    try {
+                        const { count, error: countError } = await supabase
+                            .from('applying')
+                            .select('*', { count: 'exact', head: true })
+                            .eq('user_id', user.id)
+                            .eq('is_archived', true);
+
+                        if (!countError) {
+                            setArchivedCount(count || 0);
+                        }
+                    } catch (fallbackError) {
+                        console.error('Fallback archive count failed:', fallbackError);
+                    }
                 }
             }, 50); // Very short delay to ensure UI renders first
 
         } catch (err: any) {
-            setError(err.message || 'Error fetching leads');
-            setLeads([]);
-            setDatabaseAvailable(false);
-            console.error('[DEBUG] fetchLeads error:', err);
-            setLoading(false); // Ensure loading stops even on error
+            console.error('[DEBUG] fetchLeads error via API:', err);
+
+            // Fallback to direct Supabase if API fails
+            try {
+                const { data: applyingRecords, error: applyingError } = await supabase
+                    .from('applying')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('is_archived', false)
+                    .order('created_at', { ascending: false });
+
+                if (applyingError) throw applyingError;
+
+                const jobIds = applyingRecords?.map(record => record.unique_id_job) || [];
+                let jobDataMap: Record<string, any> = {};
+
+                if (jobIds.length > 0) {
+                    const { data: jobData } = await supabase
+                        .from('Allgigs_All_vacancies_NEW')
+                        .select('UNIQUE_ID, Title, Company, Location, rate, date, Summary, URL')
+                        .in('UNIQUE_ID', jobIds);
+
+                    if (jobData) {
+                        jobDataMap = jobData.reduce((map: Record<string, any>, job) => {
+                            map[job.UNIQUE_ID] = job;
+                            return map;
+                        }, {} as Record<string, any>);
+                    }
+                }
+
+                const processedRecords = applyingRecords?.map(record => {
+                    const jobData = jobDataMap[record.unique_id_job] || {};
+                    return {
+                        ...record,
+                        interviews: Array.isArray(record.interviews) ? record.interviews : (typeof record.interviews === 'string' ? JSON.parse(record.interviews || '[]') : []),
+                        contacts: Array.isArray(record.contacts) ? record.contacts : (typeof record.contacts === 'string' ? JSON.parse(record.contacts || '[]') : []),
+                        job_title_clicked: jobData.Title || '',
+                        company_clicked: jobData.Company || '',
+                        location_clicked: jobData.Location || '',
+                        rate_clicked: jobData.rate || '',
+                        date_posted_clicked: jobData.date || '',
+                        summary_clicked: jobData.Summary || '',
+                        url_clicked: jobData.URL || ''
+                    };
+                }) || [];
+
+                setLeads(processedRecords);
+                setDatabaseAvailable(true);
+            } catch (fallbackError: any) {
+                setError(fallbackError.message || 'Error fetching leads');
+                setLeads([]);
+                setDatabaseAvailable(false);
+            }
+            setLoading(false);
         }
     }, [user?.id]);
 
@@ -627,18 +726,33 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
         if (!user?.id) return;
 
         try {
-            // Count archived leads from database
-            const { count, error } = await supabase
-                .from('applying')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', user.id)
-                .eq('is_archived', true);
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
 
-            if (error) throw error;
-            setArchivedCount(count || 0);
+            // Get archived applications via backend API
+            const archivedResponse: ApplyingListResponse = await apiClient.getApplications(true);
+            const archivedCount = archivedResponse.applications?.filter(app => app.isArchived).length || 0;
+            setArchivedCount(archivedCount);
         } catch (err) {
             console.error('Error calculating archived count:', err);
-            setArchivedCount(0);
+            // Fallback to direct Supabase
+            try {
+                const { count, error } = await supabase
+                    .from('applying')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', user.id)
+                    .eq('is_archived', true);
+
+                if (!error) {
+                    setArchivedCount(count || 0);
+                }
+            } catch (fallbackError) {
+                console.error('Fallback archive count failed:', fallbackError);
+                setArchivedCount(0);
+            }
         }
     }, [user?.id]);
 
@@ -710,28 +824,34 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
         console.log('[DEBUG] handleApplyAction called:', { jobId, applied, userId: user.id });
 
         try {
-            if (applied) {
-                // Update existing applying record to set applied = true
-                const { error } = await supabase
-                    .from('applying')
-                    .update({ applied: true })
-                    .eq('unique_id_job', jobId)
-                    .eq('user_id', user.id);
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
 
-                if (error) throw error;
-                console.log('[DEBUG] Successfully updated applying record to applied = true');
+            // First, find the applying record
+            const applications = await apiClient.getApplications(false);
+            const existingApp = applications.applications?.find(app => app.uniqueIdJob === jobId);
+
+            if (applied) {
+                if (existingApp) {
+                    // Update existing applying record to set applied = true
+                    await apiClient.updateApplication(existingApp.applyingId, { applied: true });
+                    console.log('[DEBUG] Successfully updated applying record to applied = true');
+                } else {
+                    // Create new application if it doesn't exist
+                    await apiClient.createApplication(jobId, true);
+                    console.log('[DEBUG] Successfully created applying record with applied = true');
+                }
             } else {
                 // If applied = false, remove the applying record entirely
-                console.log('[DEBUG] Removing applying record for jobId:', jobId);
-
-                const { error } = await supabase
-                    .from('applying')
-                    .delete()
-                    .eq('unique_id_job', jobId)
-                    .eq('user_id', user.id);
-
-                if (error) throw error;
-                console.log('[DEBUG] Successfully removed applying record');
+                if (existingApp) {
+                    // Note: Backend doesn't have delete endpoint, so we'll archive instead
+                    // Or we can update applied to false
+                    await apiClient.updateApplication(existingApp.applyingId, { applied: false });
+                    console.log('[DEBUG] Successfully updated applying record to applied = false');
+                }
             }
 
             // Refresh leads
@@ -739,6 +859,28 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
         } catch (err: any) {
             console.error('Error applying to job:', err);
             setError(err.message || 'Error applying to job');
+
+            // Fallback to direct Supabase if API fails
+            try {
+                if (applied) {
+                    const { error } = await supabase
+                        .from('applying')
+                        .update({ applied: true })
+                        .eq('unique_id_job', jobId)
+                        .eq('user_id', user.id);
+                    if (error) throw error;
+                } else {
+                    const { error } = await supabase
+                        .from('applying')
+                        .delete()
+                        .eq('unique_id_job', jobId)
+                        .eq('user_id', user.id);
+                    if (error) throw error;
+                }
+                await fetchLeads();
+            } catch (fallbackError) {
+                console.error('Fallback apply action failed:', fallbackError);
+            }
         }
     };
 
@@ -789,18 +931,34 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     // ==========================================
     const handleUpdateApplying = async (applyingId: string, updateData: any) => {
         try {
-            const { error } = await supabase
-                .from('applying')
-                .update(updateData)
-                .eq('applying_id', applyingId);
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
 
-            if (error) throw error;
+            // Update via backend API
+            await apiClient.updateApplication(applyingId, updateData);
 
             // Refresh leads
             await fetchLeads();
         } catch (err: any) {
             console.error('Error updating applying record:', err);
             setError(err.message || 'Error updating record');
+
+            // Fallback to direct Supabase if API fails
+            try {
+                const { error } = await supabase
+                    .from('applying')
+                    .update(updateData)
+                    .eq('applying_id', applyingId);
+
+                if (!error) {
+                    await fetchLeads();
+                }
+            } catch (fallbackError) {
+                console.error('Fallback update failed:', fallbackError);
+            }
         }
     };
 

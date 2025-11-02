@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from "../SupabaseClient";
+import { apiClient, AutomationDetailsResponse } from "../lib/apiClient";
 import GlobalNav from "../components/ui/GlobalNav";
 import { AuthGuard } from "../components/ui/AuthGuard";
 // import { useProfileCheck } from "../components/ui/useProfileCheck";
@@ -1043,22 +1044,26 @@ function AutomationCompaniesContent() {
             console.log('=== STARTING JOB STATS FETCH ===');
             console.log('Supabase client:', supabase);
 
-            // First, let's test if we can connect to Supabase at all
-            console.log('Testing basic Supabase connection...');
-            const { data: testData, error: testError } = await supabase
-                .from('automation_details')
-                .select('Company_name')
-                .limit(1);
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
 
-            console.log('=== CONNECTION TEST ===');
-            console.log('Test data:', testData);
-            console.log('Test error:', testError);
+            // Fetch job statistics via backend API
+            console.log('=== FETCHING JOB STATS VIA API ===');
+            const jobStatsData = await apiClient.getJobStatistics();
 
-            if (testError) {
-                console.error('Basic connection failed:', testError);
+            if (!jobStatsData) {
+                console.warn('No job statistics data returned from API');
                 return;
             }
 
+            // The backend should return structured stats
+            // If it returns raw data, we'll process it
+            console.log('Job stats from API:', jobStatsData);
+
+            // Fallback: If API doesn't return processed stats, fetch directly
             // Test permissions on the job table specifically
             console.log('=== TESTING JOB TABLE PERMISSIONS ===');
             const { data: permTest, error: permError, count } = await supabase
@@ -1251,19 +1256,34 @@ function AutomationCompaniesContent() {
         try {
             console.log('=== STARTING COMPANIES FETCH ===');
             setLoading(true);
-            const { data, error } = await supabase
-                .from('automation_details')
-                .select('*')
-                .order('Company_name');
+
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
+
+            // Fetch automation details via backend API
+            const response: AutomationDetailsResponse = await apiClient.getAutomationDetails(1000);
 
             console.log('=== COMPANIES QUERY RESULT ===');
-            console.log('Companies data:', data);
-            console.log('Companies error:', error);
-            console.log('Companies count:', data?.length);
+            console.log('Companies data:', response.details);
+            console.log('Companies count:', response.details?.length);
 
-            if (error) {
-                throw error;
+            if (!response || !response.details) {
+                throw new Error('Invalid response from API');
             }
+
+            const data = response.details.map(detail => ({
+                id: detail.id,
+                Company_name: detail.companyName,
+                Industry: detail.industry,
+                Company_size: detail.companySize,
+                Technologies: detail.technologies,
+                Location: detail.location,
+                Website: detail.website,
+                Description: detail.description
+            }));
 
             // Merge LinkedIn companies into one
             const mergedCompanies = [];
@@ -1304,7 +1324,49 @@ function AutomationCompaniesContent() {
             setCompanies(mergedCompanies);
             setFilteredCompanies(mergedCompanies);
         } catch (err) {
+            console.error('Error fetching companies via API:', err);
             setError(err instanceof Error ? err.message : 'An error occurred');
+
+            // Fallback to direct Supabase if API fails
+            try {
+                const { data, error } = await supabase
+                    .from('automation_details')
+                    .select('*')
+                    .order('Company_name');
+
+                if (error) throw error;
+
+                const mergedCompanies = [];
+                const linkedInCompanies: any[] = [];
+                const otherCompanies: any[] = [];
+
+                (data || []).forEach(company => {
+                    const companyName = company.Company_name?.toLowerCase() || '';
+                    if (companyName.includes('linkedin') ||
+                        companyName.includes('linkedininterim') ||
+                        companyName.includes('linkedinzzp') ||
+                        companyName.includes('linked')) {
+                        linkedInCompanies.push(company);
+                    } else {
+                        otherCompanies.push(company);
+                    }
+                });
+
+                if (linkedInCompanies.length > 0) {
+                    mergedCompanies.push({
+                        ...linkedInCompanies[0],
+                        Company_name: 'LinkedIn',
+                        id: linkedInCompanies[0].id
+                    });
+                }
+
+                mergedCompanies.push(...otherCompanies);
+                setCompanies(mergedCompanies);
+                setFilteredCompanies(mergedCompanies);
+                setError(null); // Clear error if fallback succeeds
+            } catch (fallbackError) {
+                console.error('Fallback fetch companies failed:', fallbackError);
+            }
         } finally {
             setLoading(false);
         }

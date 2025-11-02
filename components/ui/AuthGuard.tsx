@@ -5,17 +5,16 @@ import { supabase } from '../../SupabaseClient';
 interface AuthGuardProps {
     children: React.ReactNode;
     allowedRoles: string[];
-    fallbackPath?: string;
 }
 
 export const AuthGuard: React.FC<AuthGuardProps> = ({
     children,
-    allowedRoles,
-    fallbackPath = '/auth/login'
+    allowedRoles
 }) => {
     const [, setUserRole] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [showAccessDenied, setShowAccessDenied] = useState(false);
+    const [hasSession, setHasSession] = useState<boolean | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -28,13 +27,20 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
             const { data: { session } } = await supabase.auth.getSession();
 
             if (!session) {
-                // Not logged in - redirect to login
-                router.push(fallbackPath);
+                // Not logged in - AuthProvider will show login form automatically
+                // Don't render children, let AuthProvider handle authentication
+                setHasSession(false);
+                setIsLoading(false);
                 return;
             }
 
+            setHasSession(true);
+
+            // Get API base URL from environment variable
+            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://allgigs-v3-backend-production.up.railway.app';
+
             // Get user role from backend
-            const response = await fetch('http://localhost:5004/api/UserRole/me', {
+            const response = await fetch(`${apiBaseUrl}/api/UserRole/me`, {
                 headers: {
                     'Authorization': `Bearer ${session.access_token}`
                 }
@@ -52,12 +58,12 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
                     setShowAccessDenied(true);
                 }
             } else {
-                // Error getting role - redirect to login
-                router.push(fallbackPath);
+                // Error getting role - let AuthProvider handle it
+                setIsLoading(false);
             }
         } catch (error) {
             console.error('Auth check failed:', error);
-            router.push(fallbackPath);
+            setIsLoading(false);
         } finally {
             setIsLoading(false);
         }
@@ -69,6 +75,11 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
                 <div className="text-lg">Loading...</div>
             </div>
         );
+    }
+
+    // If no session, don't render children - AuthProvider will show login
+    if (hasSession === false) {
+        return null;
     }
 
     if (showAccessDenied) {
