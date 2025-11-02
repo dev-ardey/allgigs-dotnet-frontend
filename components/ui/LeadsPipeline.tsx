@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { LeadStage } from '../../types/leads';
 import { supabase } from '../../SupabaseClient';
-import { apiClient, ApplyingListResponse, ApplyingDto } from '../../lib/apiClient';
+import { apiClient, ApplyingListResponse } from '../../lib/apiClient';
 import LeadCard from './LeadCard';
 import ArchiveModal from './ArchiveModal';
 // import InterviewPrepModal from './InterviewPrepModal';
@@ -455,21 +455,21 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     const jobPromises = allJobIds.map(jobId => apiClient.getJobById(jobId));
                     const jobDataArray = await Promise.allSettled(jobPromises);
 
-                    jobDataArray.forEach((result, index) => {
-                        if (result.status === 'fulfilled' && result.value) {
-                            const job = result.value;
-                            jobDataMap[allJobIds[index]] = {
-                                UNIQUE_ID: job.uniqueId || allJobIds[index],
-                                Title: job.title,
-                                Company: job.company,
-                                Location: job.location,
-                                rate: job.rate,
-                                date: job.datePosted,
-                                Summary: job.summary,
-                                URL: job.url
-                            };
-                        }
-                    });
+                        jobDataArray.forEach((result, index) => {
+                            if (result.status === 'fulfilled' && result.value) {
+                                const job = result.value as any; // Type assertion needed for Promise.allSettled
+                                jobDataMap[allJobIds[index]] = {
+                                    UNIQUE_ID: job.uniqueId || allJobIds[index],
+                                    Title: job.title,
+                                    Company: job.company,
+                                    Location: job.location,
+                                    rate: job.rate,
+                                    date: job.datePosted,
+                                    Summary: job.summary,
+                                    URL: job.url
+                                };
+                            }
+                        });
                 } catch (jobError) {
                     console.error('Error fetching job data via API:', jobError);
                     // Fallback: fetch jobs via direct Supabase if API fails
@@ -492,35 +492,37 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             }
 
             // Parse JSON fields if they are strings (for json column) or keep as-is (for jsonb)
-            const processedRecords = applyingRecords?.map(record => {
+            const processedRecords = applyingRecords?.map((record: any) => {
                 let interviews = [];
                 let contacts = [];
 
                 // Handle interviews field
-                if (record.interviews) {
-                    if (typeof record.interviews === 'string') {
+                if ((record as any).interviews) {
+                    const interviewsData = (record as any).interviews;
+                    if (typeof interviewsData === 'string') {
                         try {
-                            interviews = JSON.parse(record.interviews);
+                            interviews = JSON.parse(interviewsData);
                         } catch (e) {
                             console.warn('Failed to parse interviews JSON:', e);
                             interviews = [];
                         }
-                    } else if (Array.isArray(record.interviews)) {
-                        interviews = record.interviews;
+                    } else if (Array.isArray(interviewsData)) {
+                        interviews = interviewsData;
                     }
                 }
 
                 // Handle contacts field  
-                if (record.contacts) {
-                    if (typeof record.contacts === 'string') {
+                if ((record as any).contacts) {
+                    const contactsData = (record as any).contacts;
+                    if (typeof contactsData === 'string') {
                         try {
-                            contacts = JSON.parse(record.contacts);
+                            contacts = JSON.parse(contactsData);
                         } catch (e) {
                             console.warn('Failed to parse contacts JSON:', e);
                             contacts = [];
                         }
-                    } else if (Array.isArray(record.contacts)) {
-                        contacts = record.contacts;
+                    } else if (Array.isArray(contactsData)) {
+                        contacts = contactsData;
                     }
                 }
 
@@ -584,7 +586,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         clickedAt,
                         jobDataExists: !!jobData.Title
                     });
-
+                    
                     return {
                         applying_id: `click_${clickId}`, // Unique ID for click-based leads
                         unique_id_job: jobId,
@@ -594,10 +596,10 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         sent_cv: false,
                         sent_portfolio: false,
                         sent_cover_letter: false,
-                        follow_up_date: null,
+                        follow_up_date: null as string | null,
                         is_archived: false,
-                        interviews: [],
-                        contacts: [],
+                        interviews: [] as any[],
+                        contacts: [] as any[],
                         // Add job data with _clicked suffix
                         job_title_clicked: jobData.Title || '',
                         company_clicked: jobData.Company || '',

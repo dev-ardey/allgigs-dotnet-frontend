@@ -1059,7 +1059,9 @@ function DashboardContent() {
   }, [user]);
 
   // Save future features to backend API
-  const saveFutureFeatures = async (newFeatures: typeof futureFeatures) => {
+  // Note: Function is kept for potential future use, currently not called directly
+  // @ts-expect-error - Function kept for future use
+  const _saveFutureFeatures = async (newFeatures: typeof futureFeatures) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {

@@ -103,14 +103,15 @@ export interface AutomationDetailsResponse {
 
 class ApiClient {
     private baseUrl: string;
-    private token: string | null = null;
 
     constructor(baseUrl?: string) {
         this.baseUrl = baseUrl || process.env.NEXT_PUBLIC_API_BASE_URL || 'https://allgigs-v3-backend-production.up.railway.app';
     }
 
-    setToken(token: string) {
-        this.token = token;
+    // Deprecated: Token is always fetched fresh from Supabase session in request() method
+    // Kept for backward compatibility but does nothing
+    setToken(_token: string) {
+        // Token is always fetched fresh from session, this method does nothing
     }
 
     private async request<T>(
