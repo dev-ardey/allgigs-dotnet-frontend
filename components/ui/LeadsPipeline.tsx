@@ -530,28 +530,76 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 const jobData = jobDataMap[record.uniqueIdJob] || {};
 
                 return {
-                    ...record,
-                    // Map applyingId to applying_id for compatibility
+                    // Map all fields from camelCase (backend) to snake_case (frontend)
                     applying_id: record.applyingId,
                     unique_id_job: record.uniqueIdJob,
                     user_id: record.userId,
-                    applied: record.applied,
-                    created_at: record.createdAt,
-                    sent_cv: record.sentCv,
-                    sent_portfolio: record.sentPortfolio,
-                    sent_cover_letter: record.sentCoverLetter,
-                    follow_up_date: record.followUpDate,
-                    is_archived: record.isArchived,
+                    applied: record.applied ?? false,
+                    created_at: record.createdAt || new Date().toISOString(),
+
+                    // Prospects Column Features
+                    sent_cv: record.sentCv ?? false,
+                    sent_portfolio: record.sentPortfolio ?? false,
+                    sent_cover_letter: record.sentCoverLetter ?? false,
+
+                    // Lead Column Features
+                    application_time_minutes: record.applicationTimeMinutes || '',
+                    match_confidence: record.matchConfidence ?? null,
+                    received_confirmation: record.receivedConfirmation ?? null,
+                    rejection_reasons_prediction: record.rejectionReasonsPrediction || '',
+                    introduced_via_agency: record.introducedViaAgency ?? null,
+
+                    // Opportunity Column Features
+                    follow_up_date: record.followUpDate || null,
+                    interview_went_well: record.interviewWentWell || '',
+                    interview_can_improve: record.interviewCanImprove || '',
+                    offer_rate_alignment: record.offerRateAlignment || '',
+                    prediction_accuracy: record.predictionAccuracy || '',
+                    sent_thank_you_note: record.sentThankYouNote ?? null,
+                    rejection_reason_mentioned: record.rejectionReasonMentioned || '',
+                    why_got_interview: record.whyGotInterview || '',
+
+                    // Deal Column Features
+                    job_start_date: record.jobStartDate || null,
+                    contract_signing_date: record.contractSigningDate || null,
+                    job_hourly_rate: record.jobHourlyRate || '',
+                    hours_per_week: record.hoursPerWeek || '',
+                    job_total_length: record.jobTotalLength || null,
+                    client_rating: record.clientRating ?? null,
+                    payment_interval: record.paymentInterval || '',
+                    why_they_loved_you: record.whyTheyLovedYou || '',
+                    what_you_did_well: record.whatYouDidWell || '',
+
+                    // Additional features
+                    interview_prep_data: record.interviewPrepData || {},
+                    interview_prep_complete: record.interviewPrepComplete ?? false,
+                    is_archived: record.isArchived ?? false,
+                    archived_at: record.archivedAt || null,
+                    follow_up_completed: record.followUpCompleted ?? false,
+                    follow_up_completed_at: record.followUpCompletedAt || null,
+                    follow_up_message: record.followUpMessage || '',
+                    got_the_job: record.gotTheJob ?? null,
+                    starting_date: record.startingDate || null,
+                    notes: record.notes || '',
                     interviews,
                     contacts,
-                    // Add job data with _clicked suffix for compatibility
-                    job_title_clicked: jobData.Title || record.jobTitle || '',
-                    company_clicked: jobData.Company || record.company || '',
-                    location_clicked: jobData.Location || record.location || '',
-                    rate_clicked: jobData.rate || record.rate || '',
-                    date_posted_clicked: jobData.date || '',
-                    summary_clicked: jobData.Summary || record.summary || '',
-                    url_clicked: jobData.URL || record.jobUrl || ''
+                    collapsed_card: record.collapsedCard ?? false,
+
+                    // Job details - prioritize _clicked suffix fields from backend, fallback to jobData, then legacy fields
+                    job_title_clicked: record.jobTitleClicked || jobData.Title || record.jobTitle || '',
+                    company_clicked: record.companyClicked || jobData.Company || record.company || '',
+                    location_clicked: record.locationClicked || jobData.Location || record.location || '',
+                    rate_clicked: record.rateClicked || jobData.rate || record.rate || '',
+                    date_posted_clicked: record.datePostedClicked || jobData.date || '',
+                    summary_clicked: record.summaryClicked || jobData.Summary || record.summary || '',
+                    url_clicked: record.urlClicked || jobData.URL || record.jobUrl || '',
+
+                    // Default values for calculated fields
+                    priority: 'normal',
+                    match_percentage: 0,
+                    possible_earnings: 0,
+                    above_normal_rate: false,
+                    follow_up_overdue: false
                 };
             }) || [];
 

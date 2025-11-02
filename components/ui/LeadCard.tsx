@@ -306,6 +306,11 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         await apiClient.updateApplication(applyingId, updateData);
                         console.log(`[SUCCESS] Saved ${field} via backend:`, value);
 
+                        // Note: We do NOT call onLeadUpdate() here for debounced saves
+                        // because it causes constant page refreshes. The data is saved correctly
+                        // and will be visible on the next manual refresh or when the parent
+                        // component naturally refreshes (e.g., on page load, after important actions).
+
                         // Clean up the timeout reference
                         delete timeouts[field];
                     } catch (err) {
@@ -615,6 +620,19 @@ const LeadCard: React.FC<LeadCardProps> = ({
         });
         setLocalCollapsed(newCollapsed);
     }, [lead.collapsed_card]);
+
+    // Sync local state with lead prop changes (only when prop actually changes, not on every render)
+    useEffect(() => {
+        if (lead.application_time_minutes !== undefined && lead.application_time_minutes !== applicationTimeMinutes) {
+            setApplicationTimeMinutes(lead.application_time_minutes || '');
+        }
+        if (lead.match_confidence !== undefined && lead.match_confidence !== matchConfidence) {
+            setMatchConfidence(lead.match_confidence);
+        }
+        if (lead.received_confirmation !== undefined && lead.received_confirmation !== receivedConfirmation) {
+            setReceivedConfirmation(lead.received_confirmation);
+        }
+    }, [lead.application_time_minutes, lead.match_confidence, lead.received_confirmation, lead.applying_id]);
 
     const isCollapsed = localCollapsed;
 

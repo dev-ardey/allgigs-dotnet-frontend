@@ -35,25 +35,92 @@ export interface FutureFeaturesResponse {
     valueProposition: boolean;
 }
 
-// Interface for applying records
+// Interface for applying records - matches Supabase applying table structure
 export interface ApplyingDto {
+    // Primary fields
     applyingId: string;
     userId: string;
     uniqueIdJob: string;
     applied: boolean;
     createdAt?: string;
+
+    // Found/Prospects Column Features
     sentCv?: boolean;
     sentPortfolio?: boolean;
     sentCoverLetter?: boolean;
+
+    // Lead Column Features
+    applicationTimeMinutes?: string;
+    matchConfidence?: boolean;
+    receivedConfirmation?: boolean;
+    rejectionReasonsPrediction?: string;
+    introducedViaAgency?: boolean;
+
+    // Opportunity Column Features
     followUpDate?: string;
+    interviewWentWell?: string;
+    interviewCanImprove?: string;
+    offerRateAlignment?: string;
+    predictionAccuracy?: string;
+    sentThankYouNote?: boolean;
+    rejectionReasonMentioned?: string;
+    whyGotInterview?: string;
+
+    // Deal Column Features
+    jobStartDate?: string;
+    contractSigningDate?: string;
+    jobHourlyRate?: string;
+    hoursPerWeek?: string;
+    jobTotalLength?: string;
+    clientRating?: number;
+    paymentInterval?: string;
+    whyTheyLovedYou?: string;
+    whatYouDidWell?: string;
+
+    // Additional features
+    interviewPrepData?: any; // JSONB
+    interviewPrepComplete?: boolean;
     isArchived?: boolean;
+    archivedAt?: string;
+    followUpCompleted?: boolean;
+    followUpCompletedAt?: string;
+    followUpMessage?: string;
+    gotTheJob?: boolean;
+    startingDate?: string;
+    notes?: string;
+    contacts?: Array<{
+        id: string;
+        name: string;
+        phone?: string;
+        email?: string;
+        created_at?: string;
+    }>; // JSONB
+    interviews?: Array<{
+        id?: string;
+        type: string;
+        date: string;
+        rating?: boolean | null;
+        completed?: boolean;
+        created_at?: string;
+    }>; // JSONB
+    collapsedCard?: boolean;
+
+    // Job details (from applying table _clicked suffix fields)
+    jobTitleClicked?: string;
+    companyClicked?: string;
+    locationClicked?: string;
+    rateClicked?: string;
+    summaryClicked?: string;
+    urlClicked?: string;
+    datePostedClicked?: string;
+
+    // Legacy job detail fields (for compatibility)
     jobTitle?: string;
     company?: string;
     location?: string;
     rate?: string;
     jobUrl?: string;
     summary?: string;
-    // Add other fields as needed
 }
 
 export interface ApplyingListResponse {
