@@ -117,15 +117,25 @@ class ApiClient {
         endpoint: string,
         options: RequestInit = {}
     ): Promise<T> {
+        // Always refresh session before API calls to ensure token is not expired
+        const { supabase } = await import('../SupabaseClient');
+        
+        // Get current session (Supabase auto-refreshes expired tokens)
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !session?.access_token) {
+            throw new Error('No authentication token available. Please log in again.');
+        }
+        
+        // Always use the latest token from session
+        const currentToken = session.access_token;
+        
         const url = `${this.baseUrl}${endpoint}`;
 
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentToken}`,
         };
-
-        if (this.token) {
-            headers['Authorization'] = `Bearer ${this.token}`;
-        }
 
         // Merge with existing headers if they exist
         if (options.headers) {
@@ -138,7 +148,19 @@ class ApiClient {
         });
 
         if (!response.ok) {
-            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+            // Try to get error details from response
+            let errorMessage = `API request failed: ${response.status} ${response.statusText}`;
+            try {
+                const errorData = await response.json();
+                if (errorData.error || errorData.message) {
+                    errorMessage = errorData.error || errorData.message || errorMessage;
+                }
+            } catch (e) {
+                // If response is not JSON, use status text
+            }
+            const error = new Error(errorMessage);
+            (error as any).status = response.status;
+            throw error;
         }
 
         return response.json();
