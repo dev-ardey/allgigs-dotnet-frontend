@@ -835,11 +835,16 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 apiClient.setToken(session.access_token);
             }
 
-            // Update via backend API
-            await apiClient.updateApplication(applyingId, {
+            // Update via backend API - also save followUpMessage if it exists
+            const updateData: any = {
                 followUpCompleted: completed,
                 followUpCompletedAt: completed ? new Date().toISOString() : null
-            });
+            };
+            // Include followUpMessage if it exists on the lead
+            if (lead.follow_up_message !== undefined) {
+                updateData.followUpMessage = lead.follow_up_message;
+            }
+            await apiClient.updateApplication(applyingId, updateData);
 
             // Update local state immediately
             lead.follow_up_completed = completed;
@@ -849,6 +854,11 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 (lead as any).follow_up_completed_at = null;
             }
             triggerRerender();
+
+            // Notify parent that state changed
+            if (onStateChanged) {
+                onStateChanged();
+            }
         } catch (err) {
             console.error('Error updating follow-up status via backend:', err);
         }
@@ -1032,13 +1042,21 @@ const LeadCard: React.FC<LeadCardProps> = ({
                     contacts: updatedContacts
                 });
 
-                // Update local state
-                lead.contacts = updatedContacts;
+                // Update local state - ensure we have a valid array
+                const validContacts = Array.isArray(updatedContacts) ? updatedContacts : [];
+                lead.contacts = validContacts;
+                setContacts(validContacts);
+                triggerRerender();
 
                 // Reset form
                 setNewContact({ name: '', phone: '', email: '' });
                 setShowContactForm(false);
                 setEditingContact(null);
+
+                // Notify parent that state changed
+                if (onStateChanged) {
+                    onStateChanged();
+                }
             } catch (err: any) {
                 console.error('Error saving contact via backend:', err);
             }
@@ -1086,9 +1104,16 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 contacts: updatedContacts
             });
 
-            // Update local state
-            lead.contacts = updatedContacts;
+            // Update local state - ensure we have a valid array
+            const validContacts = Array.isArray(updatedContacts) ? updatedContacts : [];
+            lead.contacts = validContacts;
+            setContacts(validContacts);
             triggerRerender();
+
+            // Notify parent that state changed
+            if (onStateChanged) {
+                onStateChanged();
+            }
         } catch (err: any) {
             console.error('Error deleting contact via backend:', err);
         }
@@ -1153,15 +1178,21 @@ const LeadCard: React.FC<LeadCardProps> = ({
         }
     };
 
-    // Load contacts on component mount
+    // Load contacts on component mount and sync with lead changes
     useEffect(() => {
         // Load contacts directly from lead object
-        if (lead.contacts) {
-            setContacts(lead.contacts);
-        } else {
-            setContacts([]);
+        const contactsArray = Array.isArray(lead.contacts) ? lead.contacts : [];
+        if (JSON.stringify(contactsArray) !== JSON.stringify(contacts)) {
+            setContacts(contactsArray);
         }
     }, [lead.contacts, lead.applying_id]);
+
+    // Sync notes with lead prop changes
+    useEffect(() => {
+        if (lead.notes !== undefined && lead.notes !== notes) {
+            setNotes(lead.notes || '');
+        }
+    }, [lead.notes, lead.applying_id]);
 
     // Update canRateInterview when interview type and date change
     useEffect(() => {
@@ -1268,9 +1299,17 @@ const LeadCard: React.FC<LeadCardProps> = ({
             return type ? type.label : key.charAt(0).toUpperCase() + key.slice(1);
         };
 
-        // Sla interview data op bij datum selectie (zonder rating)
+        // Sla interview data op bij datum selectie (zonder rating) - alleen voor "Upcoming" button
         const handleSaveInterviewDate = async () => {
-            if (!lead.applying_id || !selectedInterviewType || !interviewDate) return;
+            if (!lead.applying_id) {
+                alert('Error: Cannot save interview - applying ID missing');
+                return;
+            }
+
+            if (!selectedInterviewType || !interviewDate) {
+                alert('Error: Please select interview type and date first');
+                return;
+            }
 
             console.log('[DEBUG] Saving interview date:', {
                 applying_id: lead.applying_id,
@@ -1282,24 +1321,34 @@ const LeadCard: React.FC<LeadCardProps> = ({
             try {
                 const currentInterviews = Array.isArray(lead.interviews) ? lead.interviews : [];
 
-                // Check if interview of this type already exists
+                // Check if interview of this type already exists (completed or not)
                 const existingInterviewIndex = currentInterviews.findIndex((interview: any) =>
-                    interview.type === selectedInterviewType && !interview.completed
+                    interview.type === selectedInterviewType
                 );
 
                 let updatedInterviews;
                 if (existingInterviewIndex >= 0) {
-                    // Update existing interview with new date
+                    // Update existing interview with new date (only if date changed or it's not completed yet)
                     updatedInterviews = [...currentInterviews];
                     const existingInterview = updatedInterviews[existingInterviewIndex]!;
-                    updatedInterviews[existingInterviewIndex] = {
-                        type: existingInterview.type,
-                        date: interviewDate,
-                        rating: existingInterview.rating,
-                        completed: existingInterview.completed,
-                        id: existingInterview.id,
-                        created_at: existingInterview.created_at
-                    };
+                    const existingDate = existingInterview.date;
+                    const isDateChanged = existingDate !== interviewDate;
+
+                    // Only update if date changed or interview is not completed yet
+                    if (isDateChanged || !existingInterview.completed) {
+                        updatedInterviews[existingInterviewIndex] = {
+                            type: existingInterview.type,
+                            date: interviewDate,
+                            rating: existingInterview.rating,
+                            completed: existingInterview.completed,
+                            id: existingInterview.id,
+                            created_at: existingInterview.created_at
+                        };
+                    } else {
+                        // Date hasn't changed and interview is already completed - no update needed
+                        console.log('[DEBUG] Interview already exists with same date and completed - skipping update');
+                        return;
+                    }
                 } else {
                     // Create new interview object (without rating)
                     const newInterview = {
@@ -1340,6 +1389,13 @@ const LeadCard: React.FC<LeadCardProps> = ({
                     apiClient.setToken(session.access_token);
                 }
 
+                // Ensure we have a valid interviews array to update
+                if (!updatedInterviews || updatedInterviews.length === 0) {
+                    console.error('[DEBUG] Cannot save: interviews array is empty');
+                    alert('Error: Cannot save empty interview data');
+                    return;
+                }
+
                 // Update via backend API
                 await apiClient.updateApplication(applyingId, {
                     interviews: updatedInterviews
@@ -1363,7 +1419,16 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
         // Sla interview data en rating op na klikken Good/Bad
         const handleRating = async (rating: boolean) => {
-            if (!lead.applying_id || !selectedInterviewType || !interviewDate) return;
+            // Use state values (for form buttons) or fallback to error
+            if (!lead.applying_id) {
+                alert('Error: Cannot save interview - applying ID missing');
+                return;
+            }
+
+            if (!selectedInterviewType || !interviewDate) {
+                alert('Error: Please select interview type and date first');
+                return;
+            }
 
             console.log('[DEBUG] Saving interview rating:', {
                 applying_id: lead.applying_id,
@@ -1376,7 +1441,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
             try {
                 const currentInterviews = Array.isArray(lead.interviews) ? lead.interviews : [];
 
-                // Find existing interview of this type
+                // Find existing interview of this type that is not completed
                 const existingInterviewIndex = currentInterviews.findIndex((interview: any) =>
                     interview.type === selectedInterviewType && !interview.completed
                 );
@@ -1395,7 +1460,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         created_at: existingInterview.created_at
                     };
                 } else {
-                    // Create new interview object (fallback)
+                    // Create new interview object
                     const newInterview = {
                         id: crypto.randomUUID(),
                         type: selectedInterviewType,
@@ -1405,6 +1470,13 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         created_at: new Date().toISOString()
                     };
                     updatedInterviews = [...currentInterviews, newInterview];
+                }
+
+                // Ensure we have a valid interviews array
+                if (!updatedInterviews || updatedInterviews.length === 0) {
+                    console.error('[DEBUG] Cannot save rating: interviews array is empty');
+                    alert('Error: Cannot save rating - interview data is missing');
+                    return;
                 }
 
                 console.log('[DEBUG] Updating interviews in database:', updatedInterviews);
@@ -1456,7 +1528,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 }
             } catch (err: any) {
                 console.error('[DEBUG] Error saving interview:', err);
-                alert('Error saving interview: ' + err.message);
+                alert('Error saving interview: ' + (err.message || 'Unknown error'));
             }
         };
 
@@ -1529,11 +1601,73 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         {!interview.completed && (
                             <div style={{ display: 'flex', gap: 8 }}>
                                 <button
-                                    onClick={(e) => {
+                                    onClick={async (e) => {
                                         e.stopPropagation();
-                                        setSelectedInterviewType(interview.type);
-                                        setInterviewDate(interview.date);
-                                        handleRating(true);
+                                        // Use interview object directly, don't rely on state
+                                        try {
+                                            const currentInterviews = Array.isArray(lead.interviews) ? lead.interviews : [];
+                                            const interviewIndex = currentInterviews.findIndex((i: any) =>
+                                                (i.id && i.id === interview.id) ||
+                                                (i.type === interview.type && i.date === interview.date && !i.completed)
+                                            );
+
+                                            let updatedInterviews;
+                                            if (interviewIndex >= 0) {
+                                                updatedInterviews = [...currentInterviews];
+                                                const existingInterview = updatedInterviews[interviewIndex]!;
+                                                updatedInterviews[interviewIndex] = {
+                                                    ...existingInterview,
+                                                    rating: true,
+                                                    completed: true
+                                                };
+                                            } else {
+                                                const newInterview = {
+                                                    id: interview.id || crypto.randomUUID(),
+                                                    type: interview.type,
+                                                    date: interview.date,
+                                                    rating: true,
+                                                    completed: true,
+                                                    created_at: interview.created_at || new Date().toISOString()
+                                                };
+                                                updatedInterviews = [...currentInterviews, newInterview];
+                                            }
+
+                                            // For click-based leads, create applying record first
+                                            let applyingId = lead.applying_id;
+                                            if (isClickBasedLead()) {
+                                                const { data: { session } } = await supabase.auth.getSession();
+                                                if (session?.access_token) {
+                                                    apiClient.setToken(session.access_token);
+                                                }
+                                                const newApplication = await apiClient.createApplication(lead.unique_id_job, lead.applied || false);
+                                                applyingId = newApplication.applyingId;
+                                                lead.applying_id = applyingId;
+                                                if (onLeadUpdate) onLeadUpdate();
+                                            }
+
+                                            // Get user session for API token
+                                            const { data: { session } } = await supabase.auth.getSession();
+                                            if (session?.access_token) {
+                                                apiClient.setToken(session.access_token);
+                                            }
+
+                                            // Update via backend API
+                                            await apiClient.updateApplication(applyingId, {
+                                                interviews: updatedInterviews
+                                            });
+
+                                            // Update local state
+                                            lead.interviews = updatedInterviews;
+                                            triggerRerender();
+
+                                            // Notify parent that state changed
+                                            if (onStateChanged) {
+                                                onStateChanged();
+                                            }
+                                        } catch (err: any) {
+                                            console.error('[DEBUG] Error saving interview rating:', err);
+                                            alert('Error saving interview: ' + (err.message || 'Unknown error'));
+                                        }
                                     }}
                                     style={{
                                         padding: '6px 12px',
@@ -1549,11 +1683,73 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                     Good
                                 </button>
                                 <button
-                                    onClick={(e) => {
+                                    onClick={async (e) => {
                                         e.stopPropagation();
-                                        setSelectedInterviewType(interview.type);
-                                        setInterviewDate(interview.date);
-                                        handleRating(false);
+                                        // Use interview object directly, don't rely on state
+                                        try {
+                                            const currentInterviews = Array.isArray(lead.interviews) ? lead.interviews : [];
+                                            const interviewIndex = currentInterviews.findIndex((i: any) =>
+                                                (i.id && i.id === interview.id) ||
+                                                (i.type === interview.type && i.date === interview.date && !i.completed)
+                                            );
+
+                                            let updatedInterviews;
+                                            if (interviewIndex >= 0) {
+                                                updatedInterviews = [...currentInterviews];
+                                                const existingInterview = updatedInterviews[interviewIndex]!;
+                                                updatedInterviews[interviewIndex] = {
+                                                    ...existingInterview,
+                                                    rating: false,
+                                                    completed: true
+                                                };
+                                            } else {
+                                                const newInterview = {
+                                                    id: interview.id || crypto.randomUUID(),
+                                                    type: interview.type,
+                                                    date: interview.date,
+                                                    rating: false,
+                                                    completed: true,
+                                                    created_at: interview.created_at || new Date().toISOString()
+                                                };
+                                                updatedInterviews = [...currentInterviews, newInterview];
+                                            }
+
+                                            // For click-based leads, create applying record first
+                                            let applyingId = lead.applying_id;
+                                            if (isClickBasedLead()) {
+                                                const { data: { session } } = await supabase.auth.getSession();
+                                                if (session?.access_token) {
+                                                    apiClient.setToken(session.access_token);
+                                                }
+                                                const newApplication = await apiClient.createApplication(lead.unique_id_job, lead.applied || false);
+                                                applyingId = newApplication.applyingId;
+                                                lead.applying_id = applyingId;
+                                                if (onLeadUpdate) onLeadUpdate();
+                                            }
+
+                                            // Get user session for API token
+                                            const { data: { session } } = await supabase.auth.getSession();
+                                            if (session?.access_token) {
+                                                apiClient.setToken(session.access_token);
+                                            }
+
+                                            // Update via backend API
+                                            await apiClient.updateApplication(applyingId, {
+                                                interviews: updatedInterviews
+                                            });
+
+                                            // Update local state
+                                            lead.interviews = updatedInterviews;
+                                            triggerRerender();
+
+                                            // Notify parent that state changed
+                                            if (onStateChanged) {
+                                                onStateChanged();
+                                            }
+                                        } catch (err: any) {
+                                            console.error('[DEBUG] Error saving interview rating:', err);
+                                            alert('Error saving interview: ' + (err.message || 'Unknown error'));
+                                        }
                                     }}
                                     style={{
                                         padding: '6px 12px',
@@ -1581,10 +1777,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                                 <select value={selectedInterviewType} onChange={e => {
                                     setSelectedInterviewType(e.target.value);
-                                    // Auto-save when type is selected and date exists
-                                    if (e.target.value && interviewDate) {
-                                        setTimeout(() => handleSaveInterviewDate(), 100);
-                                    }
+                                    // Don't auto-save - let user click Good/Bad/Upcoming to save
                                 }} style={{
                                     padding: '6px 12px',
                                     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -1602,10 +1795,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 </select>
                                 <input type="date" value={interviewDate} onChange={e => {
                                     setInterviewDate(e.target.value);
-                                    // Auto-save when date is selected
-                                    if (e.target.value && selectedInterviewType) {
-                                        setTimeout(() => handleSaveInterviewDate(), 100);
-                                    }
+                                    // Don't auto-save - let user click Good/Bad/Upcoming to save
                                 }} style={{
                                     padding: '6px 12px',
                                     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -1631,7 +1821,15 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                         cursor: 'pointer',
                                         fontSize: '11px'
                                     }}
-                                    onClick={() => handleRating(true)}
+                                    onClick={async (e) => {
+                                        e.stopPropagation();
+                                        // Direct save using current form state
+                                        if (!selectedInterviewType || !interviewDate) {
+                                            alert('Please select interview type and date first');
+                                            return;
+                                        }
+                                        await handleRating(true);
+                                    }}
                                 >Good</button>
                                 <button
                                     style={{
@@ -1644,7 +1842,15 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                         cursor: 'pointer',
                                         fontSize: '11px'
                                     }}
-                                    onClick={() => handleRating(false)}
+                                    onClick={async (e) => {
+                                        e.stopPropagation();
+                                        // Direct save using current form state
+                                        if (!selectedInterviewType || !interviewDate) {
+                                            alert('Please select interview type and date first');
+                                            return;
+                                        }
+                                        await handleRating(false);
+                                    }}
                                 >Bad</button>
                                 <button
                                     style={{
