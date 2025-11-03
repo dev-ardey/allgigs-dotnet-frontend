@@ -202,7 +202,7 @@ function JobBoardContent() {
         }
 
         // Fetch jobs from backend API
-        const response = await apiClient.getJobs(1, 1000) as { jobs: Job[] }; // Get first 1000 jobs
+        const response = await apiClient.getJobs(1, 10000) as { jobs: Job[] }; // Get up to 10000 jobs
         if (response?.jobs) {
           console.log('Fetched jobs from API:', response.jobs.length, 'jobs');
           setJobs(response.jobs);
