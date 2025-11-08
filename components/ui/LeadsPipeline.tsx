@@ -397,26 +397,37 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 console.log('[DEBUG] Raw job clicks response:', JSON.stringify(jobClicksResponse, null, 2));
 
                 // Backend returns camelCase 'clicks' property (due to JSON serialization config)
-                const clicksArray = (jobClicksResponse as any)?.clicks || (jobClicksResponse as any)?.Clicks || [];
+                // Handle both camelCase and PascalCase, and also direct array response
+                let clicksArray: any[] = [];
+                if (Array.isArray(jobClicksResponse)) {
+                    // Direct array response
+                    clicksArray = jobClicksResponse;
+                } else if (jobClicksResponse && typeof jobClicksResponse === 'object') {
+                    // Object with clicks property
+                    clicksArray = (jobClicksResponse as any)?.clicks || (jobClicksResponse as any)?.Clicks || [];
+                }
 
-                if (clicksArray && Array.isArray(clicksArray)) {
+                if (clicksArray && Array.isArray(clicksArray) && clicksArray.length > 0) {
                     jobClicks = clicksArray;
                     console.log('[DEBUG] ✅ Fetched job clicks via API:', {
                         count: jobClicks.length,
                         sample: jobClicks[0],
                         responseKeys: Object.keys(jobClicksResponse || {}),
                         allClicks: jobClicks.map(c => ({
-                            id: c.id,
-                            jobId: c.jobId || c.job_id,
-                            userId: c.userId || c.user_id
+                            id: c.id || c.Id,
+                            jobId: c.jobId || c.job_id || c.JobId,
+                            userId: c.userId || c.user_id || c.UserId,
+                            clickedAt: c.clickedAt || c.clicked_at || c.ClickedAt
                         }))
                     });
                 } else {
-                    console.warn('[DEBUG] ⚠️ Job clicks response is not an array or missing:', {
+                    console.warn('[DEBUG] ⚠️ Job clicks response is empty or invalid:', {
                         response: jobClicksResponse,
                         responseType: typeof jobClicksResponse,
+                        isArray: Array.isArray(jobClicksResponse),
                         clicksProperty: (jobClicksResponse as any)?.clicks,
                         ClicksProperty: (jobClicksResponse as any)?.Clicks,
+                        clicksArrayLength: clicksArray?.length,
                         fullResponse: JSON.stringify(jobClicksResponse, null, 2)
                     });
                 }
@@ -437,57 +448,62 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
             // Get all unique job IDs from applying records AND job clicks
             const applyingJobIds = applyingRecords?.map(record => record.uniqueIdJob).filter(Boolean) || [];
-            const clickedJobIds = jobClicks?.map(click => click.jobId || click.job_id).filter(Boolean) || [];
+            const clickedJobIds = jobClicks?.map(click => click.jobId || click.job_id || click.JobId).filter(Boolean) || [];
             const allJobIds = [...new Set([...applyingJobIds, ...clickedJobIds])]; // Combine and deduplicate
 
             console.log('[DEBUG] Job IDs for fetching:', {
                 applyingCount: applyingJobIds.length,
                 clickedCount: clickedJobIds.length,
                 totalUnique: allJobIds.length,
-                sampleClickedIds: clickedJobIds.slice(0, 5)
+                sampleClickedIds: clickedJobIds.slice(0, 5),
+                sampleJobClicks: jobClicks.slice(0, 3).map(c => ({
+                    id: c.id || c.Id,
+                    jobId: c.jobId || c.job_id || c.JobId,
+                    hasJobId: !!(c.jobId || c.job_id || c.JobId)
+                }))
             });
 
             // Fetch job data via backend API
             let jobDataMap: Record<string, any> = {};
             if (allJobIds.length > 0) {
                 try {
+                    console.log('[DEBUG] Fetching job data for', allJobIds.length, 'jobs');
                     // Fetch jobs in batches if needed (backend may have limit)
                     const jobPromises = allJobIds.map(jobId => apiClient.getJobById(jobId));
                     const jobDataArray = await Promise.allSettled(jobPromises);
 
+                    let successCount = 0;
+                    let failCount = 0;
                     jobDataArray.forEach((result, index) => {
                         if (result.status === 'fulfilled' && result.value) {
                             const job = result.value as any; // Type assertion needed for Promise.allSettled
                             jobDataMap[allJobIds[index]] = {
-                                UNIQUE_ID: job.uniqueId || allJobIds[index],
-                                Title: job.title,
-                                Company: job.company,
-                                Location: job.location,
-                                rate: job.rate,
-                                date: job.datePosted,
-                                Summary: job.summary,
-                                URL: job.url
+                                UNIQUE_ID: job.uniqueId || job.UNIQUE_ID || allJobIds[index],
+                                Title: job.title || job.Title || '',
+                                Company: job.company || job.Company || '',
+                                Location: job.location || job.Location || '',
+                                rate: job.rate || job.Rate || '',
+                                date: job.datePosted || job.date || job.Date || '',
+                                Summary: job.summary || job.Summary || '',
+                                URL: job.url || job.URL || job.jobUrl || ''
                             };
+                            successCount++;
+                        } else {
+                            failCount++;
+                            if (result.status === 'rejected') {
+                                console.warn(`[DEBUG] Failed to fetch job ${allJobIds[index]}:`, result.reason);
+                            }
                         }
                     });
+                    console.log('[DEBUG] Job data fetched:', {
+                        total: allJobIds.length,
+                        success: successCount,
+                        failed: failCount,
+                        sampleJob: Object.keys(jobDataMap).length > 0 ? jobDataMap[Object.keys(jobDataMap)[0]] : null
+                    });
                 } catch (jobError) {
-                    console.error('Error fetching job data via API:', jobError);
-                    // Fallback: fetch jobs via direct Supabase if API fails
-                    try {
-                        const { data: jobData, error: supabaseError } = await supabase
-                            .from('Allgigs_All_vacancies_NEW')
-                            .select('UNIQUE_ID, Title, Company, Location, rate, date, Summary, URL')
-                            .in('UNIQUE_ID', allJobIds);
-
-                        if (!supabaseError && jobData) {
-                            jobDataMap = jobData.reduce((map: Record<string, any>, job) => {
-                                map[job.UNIQUE_ID] = job;
-                                return map;
-                            }, {} as Record<string, any>);
-                        }
-                    } catch (fallbackError) {
-                        console.error('Error in fallback job fetch:', fallbackError);
-                    }
+                    console.error('[DEBUG] Error fetching job data via API:', jobError);
+                    // No fallback - rely on backend API only for security
                 }
             }
 
@@ -609,72 +625,98 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 totalClicks: jobClicks.length,
                 appliedJobIdsCount: appliedJobIds.size,
                 appliedJobIds: Array.from(appliedJobIds).slice(0, 5),
-                sampleClicks: jobClicks.slice(0, 3).map(c => ({
-                    id: c.id || c.Id,
-                    jobId: c.jobId || c.job_id,
-                    userId: c.userId || c.user_id
+                sampleClicks: jobClicks.slice(0, 3).map(c => {
+                    const jobId = c.jobId || c.job_id || c.JobId;
+                    return {
+                        id: c.id || c.Id,
+                        jobId: jobId,
+                        userId: c.userId || c.user_id || c.UserId,
+                        isApplied: appliedJobIds.has(jobId)
+                    };
+                })
+            });
+
+            const filteredClicks = jobClicks.filter(click => {
+                const jobId = click.jobId || click.job_id || click.JobId; // Handle both camelCase and snake_case
+                const hasJobId = !!jobId;
+                const isNotApplied = !appliedJobIds.has(jobId);
+                return hasJobId && isNotApplied;
+            });
+
+            console.log('[DEBUG] Filtered job clicks for Prospects:', {
+                totalClicks: jobClicks.length,
+                filteredCount: filteredClicks.length,
+                filteredOut: jobClicks.length - filteredClicks.length,
+                sampleFiltered: filteredClicks.slice(0, 3).map(c => ({
+                    jobId: c.jobId || c.job_id || c.JobId,
+                    id: c.id || c.Id
                 }))
             });
 
-            const clickedLeads = jobClicks
-                .filter(click => {
-                    const jobId = click.jobId || click.job_id; // Handle both camelCase and snake_case
-                    return jobId && !appliedJobIds.has(jobId);
-                })
-                .map(click => {
-                    const jobId = click.jobId || click.job_id; // Handle both camelCase and snake_case
-                    const userId = click.userId || click.user_id;
-                    const clickedAt = click.clickedAt || click.clicked_at;
-                    const clickId = click.id || click.Id;
+            const clickedLeads = filteredClicks.map(click => {
+                const jobId = click.jobId || click.job_id || click.JobId; // Handle both camelCase and snake_case
+                const userId = click.userId || click.user_id || click.UserId;
+                const clickedAt = click.clickedAt || click.clicked_at || click.ClickedAt;
+                const clickId = click.id || click.Id;
 
-                    const jobData = jobDataMap[jobId] || {};
-                    console.log('[DEBUG] Processing click:', {
-                        jobId,
-                        userId,
-                        clickedAt,
-                        jobDataExists: !!jobData.Title
-                    });
-
-                    return {
-                        applying_id: `click_${clickId}`, // Unique ID for click-based leads
-                        unique_id_job: jobId,
-                        user_id: userId,
-                        applied: false, // Not applied yet
-                        created_at: clickedAt ? (typeof clickedAt === 'string' ? clickedAt : clickedAt.toString()) : new Date().toISOString(),
-                        sent_cv: false,
-                        sent_portfolio: false,
-                        sent_cover_letter: false,
-                        follow_up_date: null as string | null,
-                        is_archived: false,
-                        interviews: [] as any[],
-                        contacts: [] as any[],
-                        // Add job data with _clicked suffix
-                        job_title_clicked: jobData.Title || '',
-                        company_clicked: jobData.Company || '',
-                        location_clicked: jobData.Location || '',
-                        rate_clicked: jobData.rate || '',
-                        date_posted_clicked: jobData.date || '',
-                        summary_clicked: jobData.Summary || '',
-                        url_clicked: jobData.URL || '',
-                        // Default values for other fields
-                        collapsed_card: false,
-                        priority: 'normal',
-                        match_percentage: 0,
-                        possible_earnings: 0,
-                        above_normal_rate: false,
-                        follow_up_overdue: false
-                    };
+                const jobData = jobDataMap[jobId] || {};
+                console.log('[DEBUG] Processing click:', {
+                    jobId,
+                    userId,
+                    clickedAt,
+                    clickId,
+                    jobDataExists: !!jobData.Title,
+                    jobDataKeys: Object.keys(jobData),
+                    jobDataTitle: jobData.Title
                 });
+
+                return {
+                    applying_id: `click_${clickId}`, // Unique ID for click-based leads
+                    unique_id_job: jobId,
+                    user_id: userId,
+                    applied: false, // Not applied yet
+                    created_at: clickedAt ? (typeof clickedAt === 'string' ? clickedAt : clickedAt.toString()) : new Date().toISOString(),
+                    sent_cv: false,
+                    sent_portfolio: false,
+                    sent_cover_letter: false,
+                    follow_up_date: null as string | null,
+                    is_archived: false,
+                    interviews: [] as any[],
+                    contacts: [] as any[],
+                    // Add job data with _clicked suffix - use jobData from map
+                    job_title_clicked: jobData.Title || '',
+                    company_clicked: jobData.Company || '',
+                    location_clicked: jobData.Location || '',
+                    rate_clicked: jobData.rate || '',
+                    date_posted_clicked: jobData.date || '',
+                    summary_clicked: jobData.Summary || '',
+                    url_clicked: jobData.URL || '',
+                    // Default values for other fields
+                    collapsed_card: false,
+                    priority: 'normal',
+                    match_percentage: 0,
+                    possible_earnings: 0,
+                    above_normal_rate: false,
+                    follow_up_overdue: false
+                };
+            });
 
             // Combine applying records with clicked leads
             const allLeads = [...processedRecords, ...clickedLeads];
 
-            console.log('[DEBUG] Processed records with parsed JSON:', {
-                count: processedRecords.length,
+            console.log('[DEBUG] ✅ Final leads summary:', {
+                processedRecordsCount: processedRecords.length,
                 clickedLeadsCount: clickedLeads.length,
                 totalLeads: allLeads.length,
-                sampleInterviews: processedRecords[0]?.interviews,
-                sampleContacts: processedRecords[0]?.contacts
+                clickedLeadsSample: clickedLeads.length > 0 ? {
+                    applying_id: clickedLeads[0].applying_id,
+                    unique_id_job: clickedLeads[0].unique_id_job,
+                    applied: clickedLeads[0].applied,
+                    job_title_clicked: clickedLeads[0].job_title_clicked,
+                    company_clicked: clickedLeads[0].company_clicked
+                } : null,
+                allLeadsWithAppliedFalse: allLeads.filter(l => !l.applied).length,
+                allLeadsWithAppliedTrue: allLeads.filter(l => l.applied).length
             });
 
             setLeads(allLeads);
