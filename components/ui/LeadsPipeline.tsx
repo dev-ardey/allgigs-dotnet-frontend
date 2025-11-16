@@ -610,6 +610,17 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     summary_clicked: record.summaryClicked || jobData.Summary || record.summary || '',
                     url_clicked: record.urlClicked || jobData.URL || record.jobUrl || '',
 
+                    // Required interview fields (legacy - may not be in backend response)
+                    recruiter_interview: null as string | null,
+                    interview_rating_recruiter: null as boolean | null,
+                    hiringmanager_interview: null as string | null,
+                    interview_rating_hiringmanager: null as boolean | null,
+                    technical_interview: null as string | null,
+                    interview_rating_technical: null as boolean | null,
+                    value_rate: null as number | null,
+                    value_hour_per_week: null as string | null,
+                    value_weeks: null as number | null,
+
                     // Default values for calculated fields
                     priority: 'normal',
                     match_percentage: 0,
@@ -691,6 +702,19 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     date_posted_clicked: jobData.date || '',
                     summary_clicked: jobData.Summary || '',
                     url_clicked: jobData.URL || '',
+                    // Required interview fields
+                    recruiter_interview: null as string | null,
+                    interview_rating_recruiter: null as boolean | null,
+                    hiringmanager_interview: null as string | null,
+                    interview_rating_hiringmanager: null as boolean | null,
+                    technical_interview: null as string | null,
+                    interview_rating_technical: null as boolean | null,
+                    got_the_job: null as boolean | null,
+                    starting_date: null as string | null,
+                    notes: null as string | null,
+                    value_rate: null as number | null,
+                    value_hour_per_week: null as string | null,
+                    value_weeks: null as number | null,
                     // Default values for other fields
                     collapsed_card: false,
                     priority: 'normal',
@@ -1656,7 +1680,6 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     padding: '3rem',
                     color: 'rgba(255, 255, 255, 0.7)'
                 }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📋</div>
                     <h3 style={{ marginBottom: '0.5rem' }}>No leads yet</h3>
                     <p>
                         Click on some jobs in the search page to see them here as leads
