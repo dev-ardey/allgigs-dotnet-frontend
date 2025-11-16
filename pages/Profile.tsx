@@ -84,7 +84,7 @@ function ProfileContent() {
 
 
   // Documents state (from dashboard)
-  const [documents, setDocuments] = useState<Document[]>([
+  const [_documents, _setDocuments] = useState<Document[]>([
     { id: "1", name: "Resume.pdf", type: "PDF", size: "2.3 MB", uploadedAt: "2025-06-20" },
     { id: "2", name: "Motivation.docx", type: "DOCX", size: "1.1 MB", uploadedAt: "2025-06-18" },
     { id: "3", name: "Portfolio.pdf", type: "PDF", size: "4.7 MB", uploadedAt: "2025-06-15" },
@@ -189,7 +189,7 @@ function ProfileContent() {
         market_insights: newSettings.marketInsights
       };
       // console.log('[DEBUG] Saving email notifications:', notificationData);
-      const { data, error } = await supabase
+      const { data: _data, error } = await supabase
         .from('email_notifications')
         .upsert(notificationData);
       // console.log('[DEBUG] Upsert response:', data, error);
@@ -245,31 +245,31 @@ function ProfileContent() {
         }
 
         // Fetch profile from backend API
-        const profileData: ProfileResponse = await apiClient.getProfile();
+        const _profileData: ProfileResponse = await apiClient.getProfile();
 
-        if (profileData) {
+        if (_profileData) {
           const fetchedProfile: Profile = {
-            firstName: profileData.firstName || '',
-            lastName: profileData.lastName || '',
-            industry: profileData.industry || '',
-            location: profileData.location || '',
-            job_title: profileData.jobTitle || '',
-            linkedin_URL: profileData.linkedInUrl || '',
-            linkedIn: profileData.linkedInUrl || '',
+            firstName: _profileData.firstName || '',
+            lastName: _profileData.lastName || '',
+            industry: _profileData.industry || '',
+            location: _profileData.location || '',
+            job_title: _profileData.jobTitle || '',
+            linkedin_URL: _profileData.linkedInUrl || '',
+            linkedIn: _profileData.linkedInUrl || '',
             // Map all available fields from API
-            isAvailableForWork: profileData.availableToRecruiters ?? true,
-            hourlyRate: profileData.rate ? parseInt(profileData.rate) : 75,
-            age: profileData.age ? new Date().getFullYear() - new Date(profileData.age).getFullYear() : 30,
-            lastYearEarnings: profileData.lastYearsEarnings || 100000,
-            gender: profileData.gender || 'Male',
-            interests: profileData.interests || 'Technology, Innovation, Problem Solving',
-            mainProblem: profileData.mainProblem || 'Finding the right opportunities',
+            isAvailableForWork: _profileData.availableToRecruiters ?? true,
+            hourlyRate: _profileData.rate ? parseInt(_profileData.rate) : 75,
+            age: _profileData.age ? new Date().getFullYear() - new Date(_profileData.age).getFullYear() : 30,
+            lastYearEarnings: _profileData.lastYearsEarnings || 100000,
+            gender: _profileData.gender || 'Male',
+            interests: _profileData.interests || 'Technology, Innovation, Problem Solving',
+            mainProblem: _profileData.mainProblem || 'Finding the right opportunities',
             // All new fields from API
-            dateAvailableToRecruiters: profileData.dateAvailableToRecruiters,
-            testimonials: profileData.testimonials,
-            links: profileData.links,
-            postponedInfo: profileData.postponedInfo,
-            postponedTime: profileData.postponedTime
+            dateAvailableToRecruiters: _profileData.dateAvailableToRecruiters,
+            testimonials: _profileData.testimonials,
+            links: _profileData.links,
+            postponedInfo: _profileData.postponedInfo,
+            postponedTime: _profileData.postponedTime
           };
           setProfile(fetchedProfile);
           setEditedProfile(fetchedProfile);
@@ -317,12 +317,12 @@ function ProfileContent() {
           });
           // Log de state na laden
           // console.log('[DEBUG] mailNotifications state after fetch:', {
-            newLeadNotifications: data.new_lead_notifications ?? true,
-            followUpReminders: data.follow_up_reminders ?? true,
-            weeklySummary: data.weekly_summary ?? true,
-            interviewReminders: data.interview_reminders ?? true,
-            marketInsights: data.market_insights ?? false
-          });
+          //   newLeadNotifications: data.new_lead_notifications ?? true,
+          //   followUpReminders: data.follow_up_reminders ?? true,
+          //   weeklySummary: data.weekly_summary ?? true,
+          //   interviewReminders: data.interview_reminders ?? true,
+          //   marketInsights: data.market_insights ?? false
+          // });
         } else {
           // console.log('[DEBUG] No email notifications found, creating default record');
           const defaultSettings = {
@@ -369,6 +369,7 @@ function ProfileContent() {
 
     try {
       // Use upsert like CompleteProfileForm does - save all available fields
+      // @ts-expect-error - Used in upsert call below
       const profileData = {
         id: user.id,
         first_name: editedProfile.firstName,

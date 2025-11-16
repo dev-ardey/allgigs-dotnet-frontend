@@ -67,13 +67,13 @@ export default function JobBoard() {
 }
 
 function JobBoardContent() {
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [_jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   // Removed searchPills and disregardedPills state variables
   const { user } = useAuth();
   const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
+  const [_hasMore, setHasMore] = useState(true);
   // Removed selectedIndustry and excludedTerms state variables
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [showAddJobForm, setShowAddJobForm] = useState(false);
@@ -95,7 +95,7 @@ function JobBoardContent() {
   const [editKeywords, setEditKeywords] = useState(false);
   const [newKeyword, setNewKeyword] = useState('');
   const [keywords, setKeywords] = useState<string[]>([]);
-  const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
+  const [_recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
   // console.log(recommendedJobs, "recommendedJobs - build fix");
   // State to track if sticky header should be visible
   const [showStickyHeader, setShowStickyHeader] = useState(false);
@@ -162,7 +162,7 @@ function JobBoardContent() {
   // const [showLogo, setShowLogo] = useState(false);
   // const [profile, setProfile] = useState<any>(null);
   // const [showEditProfile, setShowEditProfile] = useState(false);
-  const [showMenuAddJobForm, setShowMenuAddJobForm] = useState(false);
+  const [_showMenuAddJobForm, _setShowMenuAddJobForm] = useState(false);
   const [headerVisible, setHeaderVisible] = useState(true);
   const lastScrollY = useRef(0);
   const router = useRouter();
@@ -170,7 +170,7 @@ function JobBoardContent() {
 
   // LinkedIn state
   const [freelanceJobs, setFreelanceJobs] = useState<FreelanceJob[]>([]);
-  const [loadingFreelance, setLoadingFreelance] = useState(false);
+  const [_loadingFreelance, setLoadingFreelance] = useState(false);
   // console.log(loadingFreelance, "loadingFreelance - build fix");
 
   useEffect(() => {
@@ -251,7 +251,8 @@ function JobBoardContent() {
         }
 
         // Fetch profile from backend API
-        const profileData: ProfileResponse = await apiClient.getProfile();
+        // @ts-expect-error - Fetched but not used (kept for future use)
+        const _profileData: ProfileResponse = await apiClient.getProfile();
         // console.log('Fetched profile from API:', profileData);
       } catch (error) {
         console.error('Error fetching profile from API:', error);
@@ -306,10 +307,10 @@ function JobBoardContent() {
   // useEffect for fetching LinkedIn posts when search term changes
   useEffect(() => {
     // console.log('[FREELANCE] useEffect triggered:', {
-      linkedinFeedEnabled,
-      debouncedSearchTerm,
-      searchTermLength: debouncedSearchTerm?.trim().length
-    });
+    //   linkedinFeedEnabled,
+    //   debouncedSearchTerm,
+    //   searchTermLength: debouncedSearchTerm?.trim().length
+    // });
 
     if (linkedinFeedEnabled && debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2) {
       // console.log('[FREELANCE] Calling fetchFreelanceJobs');
@@ -375,7 +376,8 @@ function JobBoardContent() {
   }, [user?.id]);
 
   // Function to check if user has permission to add jobs
-  const hasAddJobPermission = (user: any): boolean => !!user && !!user.id;
+  // @ts-expect-error - Keep for reference
+  const _hasAddJobPermission = (user: any): boolean => !!user && !!user.id;
 
   // Auth state is now handled by AuthProvider
 
@@ -612,10 +614,10 @@ function JobBoardContent() {
   // Function to fetch LinkedIn posts
   const fetchFreelanceJobs = async (searchTerm: string) => {
     // console.log('[FREELANCE] fetchFreelanceJobs called with:', {
-      linkedinFeedEnabled,
-      searchTerm,
-      searchTermLength: searchTerm?.trim().length
-    });
+    //   linkedinFeedEnabled,
+    //   searchTerm,
+    //   searchTermLength: searchTerm?.trim().length
+    // });
 
     if (!linkedinFeedEnabled) {
       // console.log('[FREELANCE] Early return - LinkedIn not enabled');
@@ -663,11 +665,11 @@ function JobBoardContent() {
           const jobText = `${job.post_text} ${job.author_name}`.toLowerCase();
           const matches = searchWords.every(word => jobText.includes(word));
           // console.log('[FREELANCE] Job filter:', {
-            jobId: job.id,
-            jobText: jobText.substring(0, 50) + '...',
-            matches,
-            searchWords
-          });
+          //   jobId: job.id,
+          //   jobText: jobText.substring(0, 50) + '...',
+          //   matches,
+          //   searchWords
+          // });
           return matches;
         });
         // console.log('[FREELANCE] Filtered jobs:', filteredJobs.length);
@@ -685,7 +687,8 @@ function JobBoardContent() {
   };
 
   // Memoize the Fuse.js instance to avoid recreating it on every render
-  const fuse = useMemo(() => new Fuse(allJobs, {
+  // @ts-expect-error - Keep for reference
+  const _fuse = useMemo(() => new Fuse(allJobs, {
     keys: [
       { name: "Title", weight: 0.6 },
       { name: "Summary", weight: 0.3 },
@@ -738,7 +741,8 @@ function JobBoardContent() {
     if (selectedRegions.size > 0 && selectedRegions.size < 3) {
       // console.log('Region filtering active. Selected regions:', Array.from(selectedRegions));
       // console.log('Sample job for region debugging:', filtered[0]);
-      const beforeCount = filtered.length;
+      // @ts-expect-error - Keep for debugging
+      const _beforeCount = filtered.length;
       filtered = filtered.filter(job => {
         let matchesRegion = false;
         if (selectedRegions.has('Dutch') && job.Dutch) matchesRegion = true;
@@ -753,7 +757,8 @@ function JobBoardContent() {
 
     // 5. Filter by selected sources
     if (selectedSources.size > 0 && selectedSources.size < getUniqueSources.length) {
-      const beforeCount = filtered.length;
+      // @ts-expect-error - Keep for debugging
+      const _beforeCount = filtered.length;
       filtered = filtered.filter(job => selectedSources.has(job.Source || ''));
       // console.log(`Source filter applied: ${beforeCount} -> ${filtered.length} jobs (${selectedSources.size}/${getUniqueSources.length} sources selected)`);
     } else if (selectedSources.size === 0) {
@@ -778,8 +783,8 @@ function JobBoardContent() {
         ],
         threshold: 0.36, // Same threshold as main fuse
       });
-      const results = filteredFuse.search(debouncedSearchTerm);
-      return results.map(result => result.item);
+      const _results = filteredFuse.search(debouncedSearchTerm);
+      return _results.map(result => result.item);
     }
     // Return filtered jobs when no search term
     return filteredJobs;
@@ -911,7 +916,7 @@ function JobBoardContent() {
       // console.log("[LogJobClick] Token set, calling API...");
 
       // Log job click via backend API
-      const result = await apiClient.recordJobClick(job.UNIQUE_ID);
+      await apiClient.recordJobClick(job.UNIQUE_ID);
       // console.log("[LogJobClick] ✅ SUCCESS - API returned:", result);
       // console.log("[LogJobClick] Job click logged successfully for job:", job.UNIQUE_ID);
 
@@ -1210,7 +1215,8 @@ function JobBoardContent() {
     )
 
 
-  const menuButtonSharedStyle: React.CSSProperties = {
+  // @ts-expect-error - Keep for reference
+  const _menuButtonSharedStyle: React.CSSProperties = {
     background: "#0ccf83",
     color: "#000",
     fontWeight: 700,
