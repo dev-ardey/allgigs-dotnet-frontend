@@ -1244,11 +1244,16 @@ function DashboardContent() {
 
   useEffect(() => {
     if (!user) return;
-    setLoading(true);
+    // Don't block dashboard loading - fetch recently clicked jobs in background
     if (user && user.id) {
       // console.log("[Effect] Fetching recently clicked jobs...");
-      fetchRecentlyClickedJobs();
+      // Non-blocking: don't wait for this to finish
+      fetchRecentlyClickedJobs().catch(err => {
+        console.error("Background fetchRecentlyClickedJobs error:", err);
+      });
     }
+    // Dashboard can render immediately, don't wait for recent jobs
+    setLoading(false);
   }, [user]);
 
   const fetchRecentlyClickedJobs = async () => {
@@ -1262,7 +1267,8 @@ function DashboardContent() {
         apiClient.setToken(session.access_token);
       }
 
-      // Fetch recently clicked jobs via backend API
+      // Fetch recently clicked jobs via backend API (can be slow - 6+ seconds)
+      // This runs in background, doesn't block dashboard render
       const recentJobs = await apiClient.getRecentlyClickedJobs(50);
 
       // Transform to match existing Job interface
@@ -1285,7 +1291,6 @@ function DashboardContent() {
       setRecentlyClickedJobs([]);
     } finally {
       setLoadingRecentlyClicked(false);
-      setLoading(false);
     }
   };
 

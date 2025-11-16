@@ -380,8 +380,16 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 apiClient.setToken(session.access_token);
             }
 
-            // Fetch all applying records via backend API
-            const applicationsResponse: ApplyingListResponse = await apiClient.getApplications(false);
+            // 🚀 PARALLEL FETCH: Fetch applying records AND job clicks simultaneously
+            // This reduces total wait time from ~6s to ~4s (longest call wins)
+            const [applicationsResponse, jobClicksResponse] = await Promise.all([
+                apiClient.getApplications(false),
+                apiClient.getJobClicksWithDetails(1000).catch((err: any): null => {
+                    // Non-fatal: continue without job clicks if this fails
+                    console.error('[DEBUG] ❌ Error fetching job clicks (non-fatal):', err);
+                    return null;
+                })
+            ]);
 
             if (!applicationsResponse || !applicationsResponse.applications) {
                 throw new Error('Invalid response from API');
@@ -389,12 +397,11 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
             const applyingRecords = applicationsResponse.applications;
 
-            // ALSO fetch job clicks to show in Prospects column (jobs clicked but not yet applied)
+            // Process job clicks response
             let jobClicks: any[] = [];
-            try {
-                console.log('[DEBUG] Fetching job clicks for user:', user.id);
-                const jobClicksResponse = await apiClient.getJobClicksWithDetails(1000); // Get enough to cover all clicks
-                console.log('[DEBUG] Raw job clicks response:', JSON.stringify(jobClicksResponse, null, 2));
+            if (jobClicksResponse) {
+                try {
+                    console.log('[DEBUG] Raw job clicks response:', JSON.stringify(jobClicksResponse, null, 2));
 
                 // Backend returns camelCase 'clicks' property (due to JSON serialization config)
                 // Handle both camelCase and PascalCase, and also direct array response
@@ -431,14 +438,10 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         fullResponse: JSON.stringify(jobClicksResponse, null, 2)
                     });
                 }
-            } catch (jobClicksError) {
-                console.error('[DEBUG] ❌ Error fetching job clicks (non-fatal):', jobClicksError);
-                console.error('[DEBUG] Job clicks error details:', {
-                    message: jobClicksError instanceof Error ? jobClicksError.message : 'Unknown error',
-                    status: (jobClicksError as any)?.status,
-                    stack: jobClicksError instanceof Error ? jobClicksError.stack : undefined
-                });
-                // Continue without job clicks if this fails
+                } catch (parseError) {
+                    console.error('[DEBUG] Error parsing job clicks response:', parseError);
+                    // Continue without job clicks
+                }
             }
 
             console.log('[DEBUG] Fetched applying records via API:', {
@@ -1052,9 +1055,9 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
             if (applied) {
                 if (existingApp) {
-                    // Update existing applying record to set applied = true
+                // Update existing applying record to set applied = true
                     await apiClient.updateApplication(existingApp.applyingId, { applied: true });
-                    console.log('[DEBUG] Successfully updated applying record to applied = true');
+                console.log('[DEBUG] Successfully updated applying record to applied = true');
                 } else {
                     // Create new application if it doesn't exist
                     await apiClient.createApplication(jobId, true);
