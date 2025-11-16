@@ -467,34 +467,43 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             let jobDataMap: Record<string, any> = {};
             if (allJobIds.length > 0) {
                 try {
-                    console.log('[DEBUG] Fetching job data for', allJobIds.length, 'jobs');
-                    // Fetch jobs in batches if needed (backend may have limit)
-                    const jobPromises = allJobIds.map(jobId => apiClient.getJobById(jobId));
-                    const jobDataArray = await Promise.allSettled(jobPromises);
-
-                    let successCount = 0;
-                    let failCount = 0;
-                    jobDataArray.forEach((result, index) => {
-                        if (result.status === 'fulfilled' && result.value) {
-                            const job = result.value as any; // Type assertion needed for Promise.allSettled
-                            jobDataMap[allJobIds[index]] = {
-                                UNIQUE_ID: job.uniqueId || job.UNIQUE_ID || allJobIds[index],
-                                Title: job.title || job.Title || '',
-                                Company: job.company || job.Company || '',
-                                Location: job.location || job.Location || '',
-                                rate: job.rate || job.Rate || '',
-                                date: job.datePosted || job.date || job.Date || '',
-                                Summary: job.summary || job.Summary || '',
-                                URL: job.url || job.URL || job.jobUrl || ''
-                            };
-                            successCount++;
-                        } else {
-                            failCount++;
-                            if (result.status === 'rejected') {
-                                console.warn(`[DEBUG] Failed to fetch job ${allJobIds[index]}:`, result.reason);
-                            }
-                        }
+                    console.log('[DEBUG] 🚀 Batch fetching', allJobIds.length, 'jobs in ONE request');
+                    const startTime = performance.now();
+                    
+                    // NEW: Batch fetch all jobs in 1 API call (was 80+ calls!)
+                    const batchResponse = await apiClient.getJobsByIds(allJobIds);
+                    
+                    const endTime = performance.now();
+                    console.log('[DEBUG] ✅ Batch fetch complete in', Math.round(endTime - startTime), 'ms');
+                    console.log('[DEBUG] Batch result:', {
+                        found: batchResponse.jobs.length,
+                        notFound: batchResponse.notFound.length,
+                        total: allJobIds.length
                     });
+
+                    // Convert batch response to jobDataMap (same format as before for compatibility)
+                    let successCount = 0;
+                    let failCount = batchResponse.notFound.length;
+                    
+                    batchResponse.jobs.forEach(job => {
+                        jobDataMap[job.uniqueId] = {
+                            UNIQUE_ID: job.uniqueId || '',
+                            Title: job.title || '',
+                            Company: job.company || '',
+                            Location: job.location || '',
+                            rate: job.rate || '',
+                            date: job.date || '',
+                            Summary: job.summary || '',
+                            URL: job.url || ''
+                        };
+                        successCount++;
+                    });
+
+                    // Log any not found jobs (for debugging)
+                    if (failCount > 0) {
+                        console.warn('[DEBUG] ⚠️ Jobs not found:', batchResponse.notFound.slice(0, 5));
+                    }
+                    
                     console.log('[DEBUG] Job data fetched:', {
                         total: allJobIds.length,
                         success: successCount,

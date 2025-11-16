@@ -202,6 +202,37 @@ export interface AutomationDetailsResponse {
     total: number;
 }
 
+// Batch Job Fetching Interfaces
+export interface BatchJobRequest {
+    jobIds: string[];
+}
+
+export interface BatchJobResponse {
+    jobs: JobDto[];
+    total: number;
+    notFound: string[];
+}
+
+export interface JobDto {
+    uniqueId: string;
+    title?: string;
+    company?: string;
+    location?: string;
+    rate?: string;
+    date?: string;
+    summary?: string;
+    url?: string;
+    source?: string;
+    tags?: string;
+    posterName?: string;
+    addedBy?: string;
+    addedByEmail?: string;
+    createdAt?: string;
+    dutch?: boolean;
+    eu?: boolean;
+    restOfWorld?: boolean;
+}
+
 class ApiClient {
     private baseUrl: string;
 
@@ -292,6 +323,14 @@ class ApiClient {
 
     async getJobById(jobId: string) {
         return this.request(`/api/jobs/${jobId}`);
+    }
+
+    // Batch Jobs API - fetch multiple jobs in one request
+    async getJobsByIds(jobIds: string[]): Promise<BatchJobResponse> {
+        return this.request<BatchJobResponse>('/api/jobs/batch', {
+            method: 'POST',
+            body: JSON.stringify({ jobIds })
+        });
     }
 
     // Search Logs API
