@@ -209,13 +209,13 @@ interface QualifiedLeadsSectionProps {
 }
 
 // Original QualifiedLeadsSection (kept for reference but not used)
-const QualifiedLeadsSectionOriginal: React.FC<QualifiedLeadsSectionProps> = ({
+// @ts-expect-error - Component kept for reference
+const _QualifiedLeadsSectionOriginal: React.FC<QualifiedLeadsSectionProps> = ({
   leads,
   onStatusChange,
   onLogClick,
   statsData
 }) => {
-  console.log('QualifiedLeadsSectionOriginal - unused component for reference');
   // Calculate dynamic KPIs based on actual leads
   const salesKPIs = useMemo(() => {
     const totalLeads = leads.length;
@@ -242,12 +242,9 @@ const QualifiedLeadsSectionOriginal: React.FC<QualifiedLeadsSectionProps> = ({
       average_response_time: 4.2 // Static for now
     };
   }, [leads]);
-  console.log('salesKPIs - build fix:', salesKPIs);
   // Popup state for locked features
-  const [showFeatureModal, setShowFeatureModal] = useState<null | string>(null);
-  const [notifyMe, setNotifyMe] = useState<{ [key: string]: boolean }>({});
-  console.log('QualifiedLeadsSectionOriginal variables:', { showFeatureModal, notifyMe, setShowFeatureModal, setNotifyMe });
-  console.log(QualifiedLeadsSectionOriginal, "build")
+  const [_showFeatureModal, setShowFeatureModal] = useState<null | string>(null);
+  const [_notifyMe, _setNotifyMe] = useState<{ [key: string]: boolean }>({});
   // Timer functie voor dagen sinds actie
   const calculateDaysSinceAction = useCallback((lead: Lead): number => {
     if (!lead.applied_at && !lead.follow_up_date) return 0;
@@ -265,7 +262,6 @@ const QualifiedLeadsSectionOriginal: React.FC<QualifiedLeadsSectionProps> = ({
     // Auto-start timer voor follow-up
     if (newStatus === LeadStatus.APPLIED) {
       // Hier zou je de follow_up_date kunnen instellen
-      console.log(`Timer started for lead ${leadId} - follow up in 3 days`);
     }
   }, [onStatusChange]);
 
@@ -353,7 +349,7 @@ const QualifiedLeadsSectionOriginal: React.FC<QualifiedLeadsSectionProps> = ({
                 </button>
 
                 {/* Balloon Tooltip */}
-                {showFeatureModal === feature.label && (
+                {_showFeatureModal === feature.label && (
                   <div style={{
                     position: 'absolute',
                     top: '100%',
@@ -422,7 +418,7 @@ const QualifiedLeadsSectionOriginal: React.FC<QualifiedLeadsSectionProps> = ({
 
                       <button
                         onClick={() => {
-                          setNotifyMe((prev) => ({ ...prev, [feature.label]: !prev[feature.label] }));
+                          _setNotifyMe((prev: any) => ({ ...prev, [feature.label]: !prev[feature.label] }));
                           setShowFeatureModal(null);
                         }}
                         style={{
@@ -443,7 +439,7 @@ const QualifiedLeadsSectionOriginal: React.FC<QualifiedLeadsSectionProps> = ({
                           backdropFilter: 'blur(8px)'
                         }}
                       >
-                        {notifyMe[feature.label] ? '✓ Notify me when ready' : 'Notify me when ready'}
+                        {_notifyMe[feature.label] ? '✓ Notify me when ready' : 'Notify me when ready'}
                       </button>
                     </div>
 
@@ -843,9 +839,7 @@ function DashboardContent() {
   // const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
   const [recentlyClickedJobs, setRecentlyClickedJobs] = useState<Job[]>([]);
   const [showRecentlyClicked] = useState(false);
-  const [loadingRecentlyClicked, setLoadingRecentlyClicked] = useState(false);
-  console.log(loadingRecentlyClicked, "loadingRecentlyClicked");
-  console.log(showRecentlyClicked, "showRecentlyClicked - build fix");
+  const [_loadingRecentlyClicked, setLoadingRecentlyClicked] = useState(false);
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   // const router = useRouter();
@@ -913,8 +907,7 @@ function DashboardContent() {
   // Voeg deze state toe aan je component:
   const [statsData, setStatsData] = useState<StatsDay[]>(getLast7Days());
   // const [loadingStats, setLoadingStats] = useState<boolean>(false);
-  const [loadingStats, setLoadingStats] = useState<boolean>(false);
-  console.log(loadingStats, "build error")
+  const [_loadingStats, setLoadingStats] = useState<boolean>(false);
 
   // Functie om job clicks per dag op te halen via backend API
   const fetchJobClicksStats = async () => {
@@ -1097,7 +1090,8 @@ function DashboardContent() {
   };
 
   // Log job click to backend API
-  const logJobClick = async (job: Job) => {
+  // @ts-expect-error - Function kept for reference
+  const _logJobClick = async (job: Job) => {
     if (!user || !user.id) return;
 
     try {
@@ -1120,7 +1114,6 @@ function DashboardContent() {
     }
   };
 
-  console.log(logJobClick, "logJobClick");
 
 
   // useEffect(() => {
@@ -1368,7 +1361,7 @@ function DashboardContent() {
 
 
 
-  const [qualifiedLeads, setQualifiedLeads] = useState<Lead[]>([]);
+  const [_qualifiedLeads, setQualifiedLeads] = useState<Lead[]>([]);
   // Removed showPipeline state - always show pipeline now
 
   // Map recentlyClickedJobs to Lead objects with status and CRM fields
@@ -1400,9 +1393,8 @@ function DashboardContent() {
         }))
     );
   }, [recentlyClickedJobs]);
-  console.log(qualifiedLeads, "qualifiedLeads - build fix");
   // Update status in Supabase and local state
-  const handleLeadStatusChange = async (leadId: string, newStatus: LeadStatus) => {
+  const _handleLeadStatusChange = async (leadId: string, newStatus: LeadStatus) => {
     if (!user || !user.id) return;
     try {
       // Update status in Supabase job_clicks for this user/job
@@ -1423,12 +1415,13 @@ function DashboardContent() {
     }
   };
 
-  const handleLeadLogClick = (lead: Lead) => {
+  const _handleLeadLogClick = (_lead: Lead) => {
     // hier jouw logica bij click
-    console.log('Lead aangeklikt:', lead);
+    // console.log('Lead aangeklikt:', _lead);
   };
-  console.log(handleLeadStatusChange, "handleLeadStatusChange - build fix");
-  console.log(handleLeadLogClick, "handleLeadLogClick - build fix");
+  // Functions kept for potential future use
+  void _handleLeadStatusChange;
+  void _handleLeadLogClick;
   // Authentication checks - exactly like leadSearch.tsx
   // User auth is handled by AuthProvider, so user should always be available here
 
