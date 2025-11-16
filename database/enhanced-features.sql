@@ -1,0 +1,39 @@
+-- Enhanced Features for Leads Pipeline
+-- Add all new columns to applying table
+
+-- Found Column Features
+ALTER TABLE applying 
+ADD COLUMN IF NOT EXISTS sent_cv BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS sent_portfolio BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS sent_cover_letter BOOLEAN DEFAULT FALSE;
+
+-- Lead Column Features  
+ALTER TABLE applying
+ADD COLUMN IF NOT EXISTS application_time_minutes TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS match_confidence BOOLEAN DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS received_confirmation BOOLEAN DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS rejection_reasons_prediction TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS introduced_via_agency BOOLEAN DEFAULT NULL;
+
+-- Opportunity Column Features
+ALTER TABLE applying
+ADD COLUMN IF NOT EXISTS follow_up_date DATE DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS interview_went_well TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS interview_can_improve TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS offer_rate_alignment TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS prediction_accuracy TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS sent_thank_you_note BOOLEAN DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS rejection_reason_mentioned TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS why_got_interview TEXT DEFAULT NULL;
+
+-- Deal Column Features
+ALTER TABLE applying
+ADD COLUMN IF NOT EXISTS job_start_date DATE DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS contract_signing_date DATE DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS job_hourly_rate TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS hours_per_week TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS job_total_length DATE DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS client_rating INTEGER DEFAULT NULL CHECK (client_rating >= 1 AND client_rating <= 5),
+ADD COLUMN IF NOT EXISTS payment_interval TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS why_they_loved_you TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS what_you_did_well TEXT DEFAULT NULL; 

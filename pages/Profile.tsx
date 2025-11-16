@@ -1,0 +1,1535 @@
+import React, { useState, useEffect } from 'react';
+import { Edit2, Save, X, Users, DollarSign, Bell, LogOut } from 'lucide-react';
+import { apiClient, ProfileResponse } from '../lib/apiClient';
+import { supabase } from '../SupabaseClient';
+import GlobalNav from '../components/ui/GlobalNav';
+import { useAuth } from '../components/ui/AuthProvider';
+import { AuthGuard } from '../components/ui/AuthGuard';
+
+// Profile Interface (from dashboard)
+interface Profile {
+  firstName: string;
+  lastName: string;
+  job_title: string;
+  location: string;
+  linkedIn?: string;
+  industry: string;
+  linkedin_URL: string;
+  isAvailableForWork?: boolean;
+  hourlyRate?: number;
+  age?: number;
+  lastYearEarnings?: number;
+  gender?: string;
+  interests?: string;
+  mainProblem?: string;
+  // New fields from Supabase profiles table
+  dateAvailableToRecruiters?: string;
+  testimonials?: string;
+  links?: string;
+  postponedInfo?: number;
+  postponedTime?: string;
+}
+
+// Document Interface (from dashboard)
+interface Document {
+  id: string;
+  name: string;
+  type: string;
+  size: string;
+  uploadedAt: string;
+}
+
+export default function Profile() {
+  return (
+    <AuthGuard allowedRoles={['admin', 'paidUser', 'freeUser']}>
+      <ProfileContent />
+    </AuthGuard>
+  );
+}
+
+function ProfileContent() {
+  // State variables (from dashboard)
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  console.log(user)
+  const [isAvailable, setIsAvailable] = useState(true);
+  const emptyProfile: Profile = {
+    firstName: '',
+    lastName: '',
+    job_title: '',
+    location: '',
+    linkedIn: '',
+    industry: '',
+    linkedin_URL: '',
+    isAvailableForWork: true,
+    hourlyRate: 75,
+    age: 30,
+    lastYearEarnings: 75000,
+    gender: 'Male',
+    interests: 'Technology, Innovation, Problem Solving',
+    mainProblem: 'Finding the right opportunities',
+  };
+  const [profile, setProfile] = useState<Profile>(emptyProfile);
+  const [editedProfile, setEditedProfile] = useState<Profile>(emptyProfile);
+  const [editMode, setEditMode] = useState(false);
+
+  // Mail notification settings - connected to email_notifications table
+  const [mailNotifications, setMailNotifications] = useState({
+    newLeadNotifications: true,
+    followUpReminders: true,
+    weeklySummary: true,
+    interviewReminders: true,
+    marketInsights: false
+  });
+
+
+  // Documents state (from dashboard)
+  const [documents, setDocuments] = useState<Document[]>([
+    { id: "1", name: "Resume.pdf", type: "PDF", size: "2.3 MB", uploadedAt: "2025-06-20" },
+    { id: "2", name: "Motivation.docx", type: "DOCX", size: "1.1 MB", uploadedAt: "2025-06-18" },
+    { id: "3", name: "Portfolio.pdf", type: "PDF", size: "4.7 MB", uploadedAt: "2025-06-15" },
+  ]);
+
+  console.log(documents, setDocuments)
+  // Testimonial state - now connected to profile data
+  const [testimonial, setTestimonial] = useState('');
+  const [testimonialSending, setTestimonialSending] = useState(false);
+
+  // Feedback state
+  const [feedback, setFeedback] = useState('');
+  const [feedbackSending, setFeedbackSending] = useState(false);
+
+  // Toggle available to recruiters function - now connected to profile data
+  const toggleAvailable = async () => {
+    const newValue = !isAvailable;
+    setIsAvailable(newValue);
+
+    // Update profile data
+    const updatedProfile = { ...editedProfile, isAvailableForWork: newValue };
+    setEditedProfile(updatedProfile);
+
+    // Save to Supabase
+    try {
+      try {
+        // Get user session for API token
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          apiClient.setToken(session.access_token);
+        }
+
+        // Update availability via backend API
+        await apiClient.updateAvailability(newValue);
+      } catch (error) {
+        console.error('Error updating availability via API:', error);
+        // No fallback - rely on backend API only for security
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error updating availability:', error);
+    }
+  };
+
+  // Remove document function (from dashboard)
+  // const removeDocument = (id: string) => {
+  //   setDocuments(documents.filter(doc => doc.id !== id));
+  // };
+
+  // Send testimonial function - now saves to profile
+  const sendTestimonial = async () => {
+    if (!testimonial.trim()) {
+      alert('Please enter a testimonial before sending.');
+      return;
+    }
+
+    setTestimonialSending(true);
+
+    try {
+      // Save testimonial to profile
+      const updatedProfile = { ...editedProfile, testimonials: testimonial };
+      setEditedProfile(updatedProfile);
+
+      // Save to Supabase
+      try {
+        // Get user session for API token
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          apiClient.setToken(session.access_token);
+        }
+
+        // Update testimonials via backend API
+        await apiClient.updateTestimonials(testimonial);
+        alert('Testimonial saved successfully!');
+      } catch (error) {
+        console.error('Error saving testimonial via API:', error);
+        // No fallback - rely on backend API only for security
+        alert('Failed to save testimonial. Please try again.');
+        throw error;
+      }
+    } finally {
+      setTestimonialSending(false);
+    }
+  };
+
+
+
+  // Save email notification settings to Supabase
+  const saveEmailNotifications = async (newSettings: typeof mailNotifications) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('No authenticated user found');
+      }
+      const notificationData = {
+        user_id: user.id,
+        email_id: user.id, // <-- fix: gebruik user.id als email_id (uuid)
+        new_lead_notifications: newSettings.newLeadNotifications,
+        follow_up_reminders: newSettings.followUpReminders,
+        weekly_summary: newSettings.weeklySummary,
+        interview_reminders: newSettings.interviewReminders,
+        market_insights: newSettings.marketInsights
+      };
+      console.log('[DEBUG] Saving email notifications:', notificationData);
+      const { data, error } = await supabase
+        .from('email_notifications')
+        .upsert(notificationData);
+      console.log('[DEBUG] Upsert response:', data, error);
+      if (error) {
+        console.error('[DEBUG] Error saving email notifications:', error);
+      } else {
+        console.log('[DEBUG] Email notifications saved successfully');
+      }
+      // Log de state na opslaan
+      console.log('[DEBUG] mailNotifications state after save:', newSettings);
+    } catch (error) {
+      console.error('[DEBUG] Error saving email notifications:', error);
+    }
+  };
+
+  // Send feedback function (placeholder for future Supabase integration)
+  const sendFeedback = async () => {
+    if (!feedback.trim()) {
+      alert('Please enter feedback before sending.');
+      return;
+    }
+
+    setFeedbackSending(true);
+
+    try {
+      // TODO: Send feedback to Supabase when ready
+      // For now, just simulate sending
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      alert('Feedback sent successfully!');
+      setFeedback(''); // Clear the textarea after sending
+    } catch (error) {
+      console.error('Error sending feedback:', error);
+      alert('Failed to send feedback. Please try again.');
+    } finally {
+      setFeedbackSending(false);
+    }
+  };
+
+
+
+  // Fetch profile function (from dashboard)
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      setLoading(true);
+
+      try {
+        // Get user session for API token
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          apiClient.setToken(session.access_token);
+        }
+
+        // Fetch profile from backend API
+        const profileData: ProfileResponse = await apiClient.getProfile();
+
+        if (profileData) {
+          const fetchedProfile: Profile = {
+            firstName: profileData.firstName || '',
+            lastName: profileData.lastName || '',
+            industry: profileData.industry || '',
+            location: profileData.location || '',
+            job_title: profileData.jobTitle || '',
+            linkedin_URL: profileData.linkedInUrl || '',
+            linkedIn: profileData.linkedInUrl || '',
+            // Map all available fields from API
+            isAvailableForWork: profileData.availableToRecruiters ?? true,
+            hourlyRate: profileData.rate ? parseInt(profileData.rate) : 75,
+            age: profileData.age ? new Date().getFullYear() - new Date(profileData.age).getFullYear() : 30,
+            lastYearEarnings: profileData.lastYearsEarnings || 100000,
+            gender: profileData.gender || 'Male',
+            interests: profileData.interests || 'Technology, Innovation, Problem Solving',
+            mainProblem: profileData.mainProblem || 'Finding the right opportunities',
+            // All new fields from API
+            dateAvailableToRecruiters: profileData.dateAvailableToRecruiters,
+            testimonials: profileData.testimonials,
+            links: profileData.links,
+            postponedInfo: profileData.postponedInfo,
+            postponedTime: profileData.postponedTime
+          };
+          setProfile(fetchedProfile);
+          setEditedProfile(fetchedProfile);
+          // Sync testimonial state with profile data
+          setTestimonial(fetchedProfile.testimonials || '');
+          // Sync availability state with profile data
+          setIsAvailable(fetchedProfile.isAvailableForWork ?? true);
+        }
+      } catch (error) {
+        console.error('Error fetching profile from API:', error);
+        // No fallback - rely on backend API only for security
+        // Set empty profile on error
+        setProfile(emptyProfile);
+        setEditedProfile(emptyProfile);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+
+  // Fetch email notification settings from Supabase
+  useEffect(() => {
+    const fetchEmailNotifications = async () => {
+      if (!user) return;
+      try {
+        const { data, error } = await supabase
+          .from('email_notifications')
+          .select('new_lead_notifications, follow_up_reminders, weekly_summary, interview_reminders, market_insights')
+          .eq('user_id', user.id)
+          .single();
+        console.log('[DEBUG] Fetch email_notifications for user_id:', user.id);
+        console.log('[DEBUG] Fetch response:', data, error);
+        if (error && error.code !== 'PGRST116') {
+          console.error('[DEBUG] Error fetching email notifications:', error);
+        } else if (data) {
+          console.log('[DEBUG] Found email notifications data:', data);
+          setMailNotifications({
+            newLeadNotifications: data.new_lead_notifications ?? true,
+            followUpReminders: data.follow_up_reminders ?? true,
+            weeklySummary: data.weekly_summary ?? true,
+            interviewReminders: data.interview_reminders ?? true,
+            marketInsights: data.market_insights ?? false
+          });
+          // Log de state na laden
+          console.log('[DEBUG] mailNotifications state after fetch:', {
+            newLeadNotifications: data.new_lead_notifications ?? true,
+            followUpReminders: data.follow_up_reminders ?? true,
+            weeklySummary: data.weekly_summary ?? true,
+            interviewReminders: data.interview_reminders ?? true,
+            marketInsights: data.market_insights ?? false
+          });
+        } else {
+          console.log('[DEBUG] No email notifications found, creating default record');
+          const defaultSettings = {
+            newLeadNotifications: true,
+            followUpReminders: true,
+            weeklySummary: true,
+            interviewReminders: true,
+            marketInsights: false
+          };
+          setMailNotifications(defaultSettings);
+          await saveEmailNotifications(defaultSettings);
+        }
+      } catch (error) {
+        console.error('[DEBUG] Error fetching email notifications:', error);
+      }
+    };
+    fetchEmailNotifications();
+  }, [user]);
+
+  // Save profile function (fixed to use upsert like CompleteProfileForm)
+  const saveProfile = async () => {
+    console.log('Save profile clicked');
+    if (!editedProfile) {
+      console.error('No edited profile data');
+      return;
+    }
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError) {
+      console.error('Authentication error:', authError);
+      alert(`Authentication error: ${authError.message}`);
+      return;
+    }
+
+    if (!user) {
+      console.error('No authenticated user found');
+      alert('No authenticated user found. Please log in again.');
+      return;
+    }
+
+    console.log('User found:', user.id);
+    console.log('Edited profile data:', editedProfile);
+
+    try {
+      // Use upsert like CompleteProfileForm does - save all available fields
+      const profileData = {
+        id: user.id,
+        first_name: editedProfile.firstName,
+        last_name: editedProfile.lastName,
+        linkedin_URL: editedProfile.linkedin_URL,
+        industry: editedProfile.industry,
+        location: editedProfile.location,
+        job_title: editedProfile.job_title,
+        // Map all available fields to Supabase columns
+        available_to_recruiters: editedProfile.isAvailableForWork,
+        date_available_to_recruiters: editedProfile.dateAvailableToRecruiters,
+        rate: editedProfile.hourlyRate?.toString(),
+        age: editedProfile.age ? new Date(new Date().getFullYear() - editedProfile.age, 0, 1).toISOString().split('T')[0] : null,
+        last_years_earnings: editedProfile.lastYearEarnings,
+        gender: editedProfile.gender,
+        testimonials: editedProfile.testimonials,
+        main_problem: editedProfile.mainProblem,
+        interests: editedProfile.interests,
+        links: editedProfile.links,
+        postponed_info: editedProfile.postponedInfo,
+        postponed_time: editedProfile.postponedTime
+      };
+
+      console.log('Profile data to be upserted:', profileData);
+
+      try {
+        // Get user session for API token
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          apiClient.setToken(session.access_token);
+        }
+
+        // Update profile via backend API
+        const updateData = {
+          firstName: editedProfile.firstName,
+          lastName: editedProfile.lastName,
+          linkedInUrl: editedProfile.linkedin_URL,
+          industry: editedProfile.industry,
+          jobTitle: editedProfile.job_title,
+          location: editedProfile.location,
+          availableToRecruiters: editedProfile.isAvailableForWork,
+          dateAvailableToRecruiters: editedProfile.dateAvailableToRecruiters,
+          rate: editedProfile.hourlyRate?.toString(),
+          age: editedProfile.age ? new Date(new Date().getFullYear() - editedProfile.age, 0, 1) : null,
+          lastYearsEarnings: editedProfile.lastYearEarnings,
+          gender: editedProfile.gender,
+          testimonials: editedProfile.testimonials,
+          mainProblem: editedProfile.mainProblem,
+          interests: editedProfile.interests,
+          links: editedProfile.links,
+          postponedInfo: editedProfile.postponedInfo,
+          postponedTime: editedProfile.postponedTime
+        };
+
+        await apiClient.updateProfile(updateData);
+        console.log('Profile saved successfully');
+        setProfile(editedProfile);
+        setEditMode(false);
+        alert('Profile saved successfully!');
+      } catch (error) {
+        console.error('Error saving profile via API:', error);
+        // No fallback - rely on backend API only for security
+        alert(`Profile update failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        throw error;
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      alert(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  };
+
+  // Cancel edit function (from dashboard)
+  const cancelEdit = () => {
+    setEditedProfile(profile);
+    setEditMode(false);
+  };
+
+  // Logout function
+  const handleLogout = async () => {
+    const confirmed = window.confirm("Are you sure you want to logout?");
+    if (!confirmed) return;
+
+    await supabase.auth.signOut();
+    // AuthProvider will handle the user state change
+  };
+
+  // User auth is handled by AuthProvider, so user should always be available here
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'black',
+        fontFamily: "'Montserrat', Arial, sans-serif",
+        color: '#fff',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          textAlign: 'center',
+          paddingTop: '20vh'
+        }}>
+          {/* Loading indicator can be added here if needed */}
+        </div>
+      </div>
+    );
+  }
+
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: 'black',
+      fontFamily: "'Montserrat', Arial, sans-serif",
+      color: '#fff',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      <GlobalNav currentPage="profile" />
+
+      {/* Main Content */}
+      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '6rem 2rem 2rem 2rem', position: 'relative', zIndex: 5 }}>
+
+        {/* Profile Dashboard */}
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h2 style={{
+              fontSize: '2rem',
+              fontWeight: '700',
+              margin: '0 0 0.5rem 0',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem'
+            }}>
+              <Users style={{ width: '32px', height: '32px' }} />
+              Profile Dashboard
+            </h2>
+            <p style={{
+              fontSize: '1.1rem',
+              opacity: 0.9,
+              margin: 0
+            }}>
+              Manage your professional profile and preferences
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem 1.25rem',
+                fontSize: '0.875rem',
+                background: 'rgba(220, 38, 38, 0.2)',
+                color: '#fff',
+                borderRadius: '12px',
+                border: '1px solid rgba(220, 38, 38, 0.3)',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(220, 38, 38, 0.3)';
+                e.currentTarget.style.borderColor = 'rgba(220, 38, 38, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(220, 38, 38, 0.2)';
+                e.currentTarget.style.borderColor = 'rgba(220, 38, 38, 0.3)';
+              }}
+            >
+              <LogOut style={{ width: '16px', height: '16px' }} />
+              Logout
+            </button>
+
+
+          </div>
+        </div>
+
+        {/* Horizontal Rule */}
+        <hr style={{
+          border: 'none',
+          height: '1px',
+          background: 'rgba(255, 255, 255, 0.2)',
+          margin: '1.5rem 0'
+        }} />
+
+        {/* Available to Recruiters Toggle - Always Visible */}
+        <div style={{
+          marginTop: '1.5rem'
+        }}>
+          <label onClick={toggleAvailable} style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}>
+            <div style={{
+              width: '52px',
+              height: '28px',
+              borderRadius: '14px',
+              background: isAvailable
+                ? 'rgba(107, 114, 128, 0.3)'
+                : 'rgba(255, 255, 255, 0.15)',
+              border: isAvailable
+                ? '1px solid rgba(107, 114, 128, 0.4)'
+                : '1px solid rgba(255, 255, 255, 0.3)',
+              backdropFilter: 'blur(8px)',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+            }}>
+              <div style={{
+                width: '22px',
+                height: '22px',
+                background: isAvailable
+                  ? 'rgba(255, 255, 255, 0.95)'
+                  : 'rgba(255, 255, 255, 0.8)',
+                borderRadius: '50%',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                transform: isAvailable ? 'translateX(26px)' : 'translateX(2px)',
+                transition: 'all 0.3s ease',
+                marginTop: '2px',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(4px)'
+              }} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div>
+                <span style={{ fontSize: '1rem', fontWeight: '600', color: '#fff', display: 'block' }}>
+                  Available to recruiters
+                </span>
+                <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+                  Make your profile visible to recruiters
+                </span>
+              </div>
+              <span style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '999px',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                background: isAvailable ? 'rgba(107, 114, 128, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                color: isAvailable ? '#9333ea' : 'rgba(255, 255, 255, 0.8)',
+                border: isAvailable ? '1px solid rgba(107, 114, 128, 0.3)' : '1px solid rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(8px)'
+              }}>
+                {isAvailable ? 'Active' : 'Hidden'}
+              </span>
+            </div>
+          </label>
+        </div>
+
+        {/* Horizontal Rule */}
+        <hr style={{
+          border: 'none',
+          height: '1px',
+          background: 'rgba(255, 255, 255, 0.2)',
+          margin: '1.5rem 0'
+        }} />
+
+        {/* Testimonial Section */}
+        <div style={{ marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Users style={{ width: '18px', height: '18px', color: 'white' }} />
+              Testimonial
+            </h3>
+            <button
+              onClick={sendTestimonial}
+              disabled={testimonialSending || !testimonial.trim()}
+              style={{
+                padding: '0.75rem 1.5rem',
+                fontSize: '0.875rem',
+                background: testimonialSending || !testimonial.trim()
+                  ? 'rgba(255, 255, 255, 0.1)'
+                  : 'rgba(147, 51, 234, 0.2)',
+                color: testimonialSending || !testimonial.trim()
+                  ? 'rgba(255, 255, 255, 0.5)'
+                  : '#fff',
+                borderRadius: '8px',
+                border: testimonialSending || !testimonial.trim()
+                  ? '1px solid rgba(255, 255, 255, 0.2)'
+                  : '1px solid rgba(147, 51, 234, 0.3)',
+                fontWeight: '600',
+                cursor: testimonialSending || !testimonial.trim()
+                  ? 'not-allowed'
+                  : 'pointer',
+                transition: 'all 0.3s ease',
+                backdropFilter: 'blur(8px)'
+              }}
+            >
+              {testimonialSending ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+            <div>
+              <textarea
+                value={testimonial}
+                onChange={(e) => setTestimonial(e.target.value)}
+                className="testimonial-textarea"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid rgba(107, 114, 128, 0.3)',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  boxSizing: 'border-box',
+                  background: 'rgba(107, 114, 128, 0.1)',
+                  color: '#fff',
+                  backdropFilter: 'blur(8px)',
+                  minHeight: '80px',
+                  resize: 'vertical'
+                }}
+                placeholder="Enter your testimonial"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Horizontal Rule */}
+        <hr style={{
+          border: 'none',
+          height: '1px',
+          background: 'rgba(255, 255, 255, 0.2)',
+          margin: '1.5rem 0'
+        }} />
+
+        {/* Feedback Section */}
+        <div style={{ marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Users style={{ width: '18px', height: '18px', color: 'white' }} />
+              Feedback
+            </h3>
+            <button
+              onClick={sendFeedback}
+              disabled={feedbackSending || !feedback.trim()}
+              style={{
+                padding: '0.75rem 1.5rem',
+                fontSize: '0.875rem',
+                background: feedbackSending || !feedback.trim()
+                  ? 'rgba(255, 255, 255, 0.1)'
+                  : 'rgba(147, 51, 234, 0.2)',
+                color: feedbackSending || !feedback.trim()
+                  ? 'rgba(255, 255, 255, 0.5)'
+                  : '#fff',
+                borderRadius: '8px',
+                border: feedbackSending || !feedback.trim()
+                  ? '1px solid rgba(255, 255, 255, 0.2)'
+                  : '1px solid rgba(147, 51, 234, 0.3)',
+                fontWeight: '600',
+                cursor: feedbackSending || !feedback.trim()
+                  ? 'not-allowed'
+                  : 'pointer',
+                transition: 'all 0.3s ease',
+                backdropFilter: 'blur(8px)'
+              }}
+            >
+              {feedbackSending ? 'Sending...' : 'Send'}
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+            <div>
+              <textarea
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                className="feedback-textarea"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid rgba(107, 114, 128, 0.3)',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  boxSizing: 'border-box',
+                  background: 'rgba(107, 114, 128, 0.1)',
+                  color: '#fff',
+                  backdropFilter: 'blur(8px)',
+                  minHeight: '80px',
+                  resize: 'vertical'
+                }}
+                placeholder="Enter your feedback"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Horizontal Rule */}
+        <hr style={{
+          border: 'none',
+          height: '1px',
+          background: 'rgba(255, 255, 255, 0.2)',
+          margin: '1.5rem 0'
+        }} />
+
+        {/* Personal Information Section */}
+        <div style={{ marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Users style={{ width: '18px', height: '18px', color: 'white' }} />
+              Personal Information
+            </h3>
+
+            {/* Edit Profile Buttons */}
+            {!editMode ? (
+              <button
+                onClick={() => setEditMode(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.75rem 1.25rem',
+                  fontSize: '0.875rem',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  color: '#fff',
+                  borderRadius: '12px',
+                  border: 'none',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <Edit2 style={{ width: '16px', height: '16px' }} />
+                Edit Profile
+              </button>
+            ) : (
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={saveProfile}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    padding: '0.75rem 1.25rem',
+                    fontSize: '0.875rem',
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    color: '#fff',
+                    borderRadius: '12px',
+                    border: 'none',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <Save style={{ width: '16px', height: '16px' }} />
+                  Save
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    padding: '0.75rem 1.25rem',
+                    fontSize: '0.875rem',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    borderRadius: '12px',
+                    border: 'none',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <X style={{ width: '16px', height: '16px' }} />
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+
+          {editMode ? (
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>First Name</label>
+                  <input
+                    type="text"
+                    value={editedProfile.firstName}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, firstName: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid rgba(107, 114, 128, 0.3)',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      background: 'rgba(107, 114, 128, 0.1)',
+                      color: '#fff',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                    placeholder="For example John"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Last Name</label>
+                  <input
+                    type="text"
+                    value={editedProfile.lastName}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, lastName: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid rgba(107, 114, 128, 0.3)',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      background: 'rgba(107, 114, 128, 0.1)',
+                      color: '#fff',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                    placeholder="For example Doe"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Job Title</label>
+                  <input
+                    type="text"
+                    value={editedProfile.job_title}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, job_title: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid rgba(107, 114, 128, 0.3)',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      background: 'rgba(107, 114, 128, 0.1)',
+                      color: '#fff',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                    placeholder="For example Senior Developer"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Location</label>
+                  <input
+                    type="text"
+                    value={editedProfile.location}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, location: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid rgba(107, 114, 128, 0.3)',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      background: 'rgba(107, 114, 128, 0.1)',
+                      color: '#fff',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                    placeholder="For example Amsterdam, Netherlands"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>LinkedIn URL</label>
+                  <input
+                    type="url"
+                    value={editedProfile.linkedin_URL}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, linkedin_URL: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid rgba(107, 114, 128, 0.3)',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      background: 'rgba(107, 114, 128, 0.1)',
+                      color: '#fff',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                    placeholder="For example https://linkedin.com/in/johndoe"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Industry</label>
+                  <input
+                    type="text"
+                    value={editedProfile.industry}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, industry: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid rgba(107, 114, 128, 0.3)',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      background: 'rgba(107, 114, 128, 0.1)',
+                      color: '#fff',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                    placeholder="For example Technology"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Birth Date</label>
+                  <input
+                    type="date"
+                    value={editedProfile.age ? new Date(new Date().getFullYear() - editedProfile.age, 0, 1).toISOString().split('T')[0] : ''}
+                    onChange={(e) => {
+                      const birthDate = new Date(e.target.value);
+                      const age = new Date().getFullYear() - birthDate.getFullYear();
+                      setEditedProfile({ ...editedProfile, age: age });
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid rgba(107, 114, 128, 0.3)',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      background: 'rgba(107, 114, 128, 0.1)',
+                      color: '#fff',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Last Year Earnings (€)</label>
+                  <input
+                    type="number"
+                    value={editedProfile.lastYearEarnings || ''}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, lastYearEarnings: parseInt(e.target.value) || 0 })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid rgba(107, 114, 128, 0.3)',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      background: 'rgba(107, 114, 128, 0.1)',
+                      color: '#fff',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                    placeholder="For example 75000"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Gender</label>
+                  <select
+                    value={editedProfile.gender || ''}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, gender: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid rgba(107, 114, 128, 0.3)',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      background: 'rgba(107, 114, 128, 0.1)',
+                      color: '#fff',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                  >
+                    <option value="">Select gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Non-binary">Non-binary</option>
+                    <option value="Prefer not to say">Prefer not to say</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Hourly Rate (€)</label>
+                  <input
+                    type="number"
+                    value={editedProfile.hourlyRate || ''}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, hourlyRate: parseInt(e.target.value) || 0 })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid rgba(107, 114, 128, 0.3)',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      background: 'rgba(107, 114, 128, 0.1)',
+                      color: '#fff',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                    placeholder="For example 75"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Interests</label>
+                  <textarea
+                    value={editedProfile.interests || ''}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, interests: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid rgba(107, 114, 128, 0.3)',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      background: 'rgba(107, 114, 128, 0.1)',
+                      color: '#fff',
+                      backdropFilter: 'blur(8px)',
+                      minHeight: '80px',
+                      resize: 'vertical'
+                    }}
+                    placeholder="For example Technology, Innovation, Problem Solving"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>What is your main problem?</label>
+                  <textarea
+                    value={editedProfile.mainProblem || ''}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, mainProblem: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid rgba(107, 114, 128, 0.3)',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      background: 'rgba(107, 114, 128, 0.1)',
+                      color: '#fff',
+                      backdropFilter: 'blur(8px)',
+                      minHeight: '80px',
+                      resize: 'vertical'
+                    }}
+                    placeholder="For example Finding the right opportunities"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Available to Recruiters Date</label>
+                  <input
+                    type="date"
+                    value={editedProfile.dateAvailableToRecruiters || ''}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, dateAvailableToRecruiters: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid rgba(107, 114, 128, 0.3)',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      background: 'rgba(107, 114, 128, 0.1)',
+                      color: '#fff',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>Links</label>
+                  <input
+                    type="text"
+                    value={editedProfile.links || ''}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, links: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid rgba(107, 114, 128, 0.3)',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      background: 'rgba(107, 114, 128, 0.1)',
+                      color: '#fff',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                    placeholder="Portfolio, website, etc."
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.75rem', background: 'rgba(107, 114, 128, 0.1)', borderRadius: '8px', border: '1px solid rgba(107, 114, 128, 0.3)', backdropFilter: 'blur(8px)', marginTop: '1.5rem' }}>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="checkbox"
+                        checked={editedProfile.isAvailableForWork || false}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, isAvailableForWork: e.target.checked })}
+                        style={{ display: 'none' }}
+                      />
+                      <div style={{
+                        width: '44px',
+                        height: '24px',
+                        borderRadius: '12px',
+                        background: editedProfile.isAvailableForWork
+                          ? 'rgba(107, 114, 128, 0.3)'
+                          : 'rgba(255, 255, 255, 0.15)',
+                        border: editedProfile.isAvailableForWork
+                          ? '1px solid rgba(107, 114, 128, 0.4)'
+                          : '1px solid rgba(255, 255, 255, 0.3)',
+                        backdropFilter: 'blur(8px)',
+                        transition: 'all 0.3s ease'
+                      }}>
+                        <div style={{
+                          width: '18px',
+                          height: '18px',
+                          background: editedProfile.isAvailableForWork
+                            ? 'rgba(255, 255, 255, 0.95)'
+                            : 'rgba(255, 255, 255, 0.8)',
+                          borderRadius: '50%',
+                          transform: editedProfile.isAvailableForWork ? 'translateX(22px)' : 'translateX(2px)',
+                          transition: 'all 0.3s ease',
+                          marginTop: '2px',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          backdropFilter: 'blur(4px)'
+                        }} />
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)' }}>
+                      Available for work
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+              <div style={{
+                background: 'rgba(107, 114, 128, 0.1)',
+                borderRadius: '12px',
+                padding: '1rem',
+                border: '1px solid rgba(107, 114, 128, 0.3)'
+              }}>
+                <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Name</span>
+                <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.firstName} {profile.lastName}</p>
+              </div>
+              <div style={{
+                background: 'rgba(107, 114, 128, 0.1)',
+                borderRadius: '12px',
+                padding: '1rem',
+                border: '1px solid rgba(107, 114, 128, 0.3)'
+              }}>
+                <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Location</span>
+                <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.location}</p>
+              </div>
+              <div style={{
+                background: 'rgba(107, 114, 128, 0.1)',
+                borderRadius: '12px',
+                padding: '1rem',
+                border: '1px solid rgba(107, 114, 128, 0.3)'
+              }}>
+                <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Job title</span>
+                <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.job_title}</p>
+              </div>
+              <div style={{
+                background: 'rgba(107, 114, 128, 0.1)',
+                borderRadius: '12px',
+                padding: '1rem',
+                border: '1px solid rgba(107, 114, 128, 0.3)'
+              }}>
+                <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>LinkedIn</span>
+                <a href={profile.linkedin_URL} style={{ fontWeight: '600', color: '#fff', textDecoration: 'none', display: 'block', marginTop: '0.25rem' }} target="_blank" rel="noopener noreferrer">
+                  {profile.linkedin_URL || 'Not specified'}
+                </a>
+              </div>
+              <div style={{
+                background: 'rgba(107, 114, 128, 0.1)',
+                borderRadius: '12px',
+                padding: '1rem',
+                border: '1px solid rgba(107, 114, 128, 0.3)'
+              }}>
+                <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Hourly Rate</span>
+                <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <DollarSign style={{ width: '16px', height: '16px' }} />
+                  €{profile.hourlyRate || 75}/hour
+                </p>
+              </div>
+              <div style={{
+                background: 'rgba(107, 114, 128, 0.1)',
+                borderRadius: '12px',
+                padding: '1rem',
+                border: '1px solid rgba(107, 114, 128, 0.3)'
+              }}>
+                <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Availability</span>
+                <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: profile.isAvailableForWork ? '#9333ea' : 'rgba(255, 255, 255, 0.6)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {profile.isAvailableForWork ? '✓ Available for work' : '✗ Not available'}
+                </p>
+              </div>
+              <div style={{
+                background: 'rgba(107, 114, 128, 0.1)',
+                borderRadius: '12px',
+                padding: '1rem',
+                border: '1px solid rgba(107, 114, 128, 0.3)'
+              }}>
+                <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Age</span>
+                <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.age || 'Not specified'} years old</p>
+              </div>
+              <div style={{
+                background: 'rgba(107, 114, 128, 0.1)',
+                borderRadius: '12px',
+                padding: '1rem',
+                border: '1px solid rgba(107, 114, 128, 0.3)'
+              }}>
+                <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Last Year Earnings</span>
+                <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <DollarSign style={{ width: '16px', height: '16px' }} />
+                  €{(profile.lastYearEarnings || 0).toLocaleString()}
+                </p>
+              </div>
+              <div style={{
+                background: 'rgba(107, 114, 128, 0.1)',
+                borderRadius: '12px',
+                padding: '1rem',
+                border: '1px solid rgba(107, 114, 128, 0.3)'
+              }}>
+                <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Gender</span>
+                <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.gender || 'Not specified'}</p>
+              </div>
+              <div style={{
+                background: 'rgba(107, 114, 128, 0.1)',
+                borderRadius: '12px',
+                padding: '1rem',
+                border: '1px solid rgba(107, 114, 128, 0.3)'
+              }}>
+                <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Interests</span>
+                <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.interests || 'Not specified'}</p>
+              </div>
+              <div style={{
+                background: 'rgba(107, 114, 128, 0.1)',
+                borderRadius: '12px',
+                padding: '1rem',
+                border: '1px solid rgba(107, 114, 128, 0.3)'
+              }}>
+                <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Main Problem</span>
+                <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.mainProblem || 'Not specified'}</p>
+              </div>
+              <div style={{
+                background: 'rgba(107, 114, 128, 0.1)',
+                borderRadius: '12px',
+                padding: '1rem',
+                border: '1px solid rgba(107, 114, 128, 0.3)'
+              }}>
+                <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Available to Recruiters Date</span>
+                <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.dateAvailableToRecruiters ? new Date(profile.dateAvailableToRecruiters).toLocaleDateString() : 'Not specified'}</p>
+              </div>
+              <div style={{
+                background: 'rgba(107, 114, 128, 0.1)',
+                borderRadius: '12px',
+                padding: '1rem',
+                border: '1px solid rgba(107, 114, 128, 0.3)'
+              }}>
+                <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>Links</span>
+                <p style={{ fontWeight: '600', margin: '0.25rem 0 0 0', color: '#fff' }}>{profile.links || 'Not specified'}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Horizontal Rule */}
+        <hr style={{
+          border: 'none',
+          height: '1px',
+          background: 'rgba(255, 255, 255, 0.2)',
+          margin: '1.5rem 0'
+        }} />
+
+        {/* Mail Notifications Section */}
+        <div style={{ marginBottom: '2rem' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Bell style={{ width: '18px', height: '18px', color: 'white' }} />
+            Mail Notifications
+          </h3>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Notification Toggles */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+              {[
+                { key: 'newLeadNotifications', label: 'New Lead Notifications', desc: 'Get notified when new leads are added' },
+                { key: 'followUpReminders', label: 'Follow-up Reminders', desc: 'Reminders to follow up on leads after a few days' },
+                { key: 'weeklySummary', label: 'Weekly Summary', desc: 'Weekly overview of your activity' },
+                { key: 'interviewReminders', label: 'Interview Reminders', desc: 'Reminders for upcoming interviews' },
+                { key: 'marketInsights', label: 'Market Insights', desc: 'Industry trends and salary updates' }
+              ].map((notification) => (
+                <div key={notification.key} style={{
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#fff', marginBottom: '0.25rem' }}>
+                      {notification.label}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+                      {notification.desc}
+                    </div>
+                  </div>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={mailNotifications[notification.key as keyof typeof mailNotifications]}
+                      onChange={async (e) => {
+                        const newSettings = {
+                          ...mailNotifications,
+                          [notification.key]: e.target.checked
+                        };
+                        setMailNotifications(newSettings);
+                        await saveEmailNotifications(newSettings);
+                      }}
+                      style={{ display: 'none' }}
+                    />
+                    <div style={{
+                      width: '36px',
+                      height: '18px',
+                      borderRadius: '9px',
+                      background: mailNotifications[notification.key as keyof typeof mailNotifications]
+                        ? 'rgba(107, 114, 128, 0.3)'
+                        : 'rgba(255, 255, 255, 0.15)',
+                      border: mailNotifications[notification.key as keyof typeof mailNotifications]
+                        ? '1px solid rgba(107, 114, 128, 0.4)'
+                        : '1px solid rgba(255, 255, 255, 0.3)',
+                      transition: 'all 0.3s ease'
+                    }}>
+                      <div style={{
+                        width: '14px',
+                        height: '14px',
+                        background: 'rgba(255, 255, 255, 0.9)',
+                        borderRadius: '50%',
+                        transform: mailNotifications[notification.key as keyof typeof mailNotifications] ? 'translateX(18px)' : 'translateX(2px)',
+                        transition: 'all 0.3s ease',
+                        marginTop: '1px'
+                      }} />
+                    </div>
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Horizontal Rule */}
+        {/* <hr style={{
+          border: 'none',
+          height: '1px',
+          background: 'rgba(255, 255, 255, 0.2)',
+          margin: '1.5rem 0'
+        }} /> */}
+
+        {/* Documents Section
+      
+        <div style={{ marginBottom: '2rem' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <FileText style={{ width: '18px', height: '18px' }} />
+            Documents
+          </h3>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            Documents List
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '12px',
+              padding: '1rem',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#fff', marginBottom: '1rem' }}>Your Documents</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {documents.map((doc) => (
+                  <div key={doc.id} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '1rem',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '12px',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(8px)'
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontWeight: '600', color: '#fff', margin: '0 0 0.25rem 0', fontSize: '0.875rem' }}>{doc.name}</p>
+                      <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)', margin: 0 }}>{doc.type} • {doc.size}</p>
+                    </div>
+                    <button
+                      onClick={() => removeDocument(doc.id)}
+                      style={{
+                        color: '#dc2626',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '0.25rem'
+                      }}
+                    >
+                      <Trash2 style={{ width: '16px', height: '16px' }} />
+                    </button>
+                  </div>
+                ))}
+                {documents.length === 0 && (
+                  <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center', padding: '1rem' }}>
+                    No documents uploaded yet
+                  </p>
+                )}
+              </div>
+            </div>
+
+            Drag & Drop Upload
+            <div
+              style={{
+                border: '2px dashed rgba(255, 255, 255, 0.3)',
+                borderRadius: '12px',
+                padding: '1.5rem',
+                textAlign: 'center',
+                transition: 'border-color 0.3s',
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(8px)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '200px'
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.6)';
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                alert('Files uploaded (mock)');
+              }}
+            >
+              <Upload style={{ width: '32px', height: '32px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '0.5rem' }} />
+              <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', margin: '0.25rem 0' }}>
+                Drag your files or <span style={{ color: '#fff', fontWeight: '600', cursor: 'pointer' }}>browse files</span>
+              </p>
+              <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>Max 10MB per file</p>
+            </div>
+          </div>
+        </div>*/}
+
+
+      </div >
+
+      {/* CSS Styles for white placeholder text */}
+      < style jsx > {`
+        .testimonial-textarea::placeholder,
+        .feedback-textarea::placeholder {
+          color: rgba(255, 255, 255, 0.7) !important;
+          opacity: 1;
+        }
+        
+        .testimonial-textarea::-webkit-input-placeholder,
+        .feedback-textarea::-webkit-input-placeholder {
+          color: rgba(255, 255, 255, 0.7) !important;
+        }
+        
+        .testimonial-textarea::-moz-placeholder,
+        .feedback-textarea::-moz-placeholder {
+          color: rgba(255, 255, 255, 0.7) !important;
+          opacity: 1;
+        }
+        
+        .testimonial-textarea:-ms-input-placeholder,
+        .feedback-textarea:-ms-input-placeholder {
+          color: rgba(255, 255, 255, 0.7) !important;
+        }
+      `}</style>
+    </div>
+  );
+}

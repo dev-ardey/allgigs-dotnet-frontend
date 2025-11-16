@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useRouter } from "next/router";
 import { supabase } from "../../SupabaseClient";
 import { sanitizeInput } from "../../utils/sanitizeInput";
 
 export default function LoginForm() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -40,6 +42,8 @@ export default function LoginForm() {
         }
       }
       setMessage("Logged in!");
+      // Redirect to dashboard after successful login
+      router.push('/dashboard');
     } else if (mode === "signup") {
       await supabase.auth.signUp({ email: sanitizedEmail, password });
       setSignedUp(true);

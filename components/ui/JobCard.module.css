@@ -1,0 +1,81 @@
+.card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  position: relative;
+  background-color: white;
+  min-height: 150px;
+  max-height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.groupBadge {
+  background-color: #d1fae5;
+  color: #065f46;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.company {
+  color: #4b5563;
+  margin: 0.25rem 0;
+}
+
+.description {
+  color: #6b7280;
+  overflow: hidden;
+  position: relative;
+  max-height: 3.6em; /* Approx 3 lines */
+  line-height: 1.2em;
+  margin-top: 0.5rem;
+}
+
+.descriptionExpanded {
+   composes: description;
+   max-height: none;
+}
+
+.fadeout {
+    position: absolute;
+    bottom: 50px;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(to bottom, transparent, white);
+    pointer-events: none;
+}
+
+.moreButton {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+    margin-top: 0.5rem;
+    align-self: flex-start;
+}
+
+/* Highlight styles for search terms */
+.card :global(.highlight) {
+  background-color: #fef3c7;
+  font-weight: bold;
+  color: #92400e;
+}

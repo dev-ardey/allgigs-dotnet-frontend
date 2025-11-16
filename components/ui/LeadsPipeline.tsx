@@ -1,0 +1,2000 @@
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+
+import {
+    Search,
+    Archive,
+    Bell,
+    Target,
+    CheckCircle,
+    Users,
+    CircleCheckBig,
+    BarChart3,
+    Mail,
+    Zap,
+    Sparkles,
+    Brain,
+    Lock,
+    Minimize2,
+    Maximize2,
+    RefreshCw
+} from 'lucide-react';
+import { LeadStage } from '../../types/leads';
+import { supabase } from '../../SupabaseClient';
+import { apiClient, ApplyingListResponse } from '../../lib/apiClient';
+import LeadCard from './LeadCard';
+import ArchiveModal from './ArchiveModal';
+// import InterviewPrepModal from './InterviewPrepModal';
+import StatisticsModal from './StatisticsModal';
+
+interface LeadsPipelineProps {
+    user?: any;
+    statsData?: any[];
+}
+
+// Extended interface for our combined data
+interface JobClickWithApplying {
+    applying_id: string;
+    user_id: string;
+    unique_id_job: string;
+    applied: boolean;
+    created_at: string;
+    // Job details (now stored in applying table with _clicked suffix)
+    job_title_clicked: string;
+    company_clicked: string;
+    location_clicked: string;
+    rate_clicked: string;
+    date_posted_clicked: string;
+    summary_clicked: string;
+    url_clicked: string;
+    // Interview fields
+    recruiter_interview: string | null;
+    interview_rating_recruiter: boolean | null;
+    hiringmanager_interview: string | null;
+    interview_rating_hiringmanager: boolean | null;
+    technical_interview: string | null;
+    interview_rating_technical: boolean | null;
+    got_the_job: boolean | null;
+    starting_date: string | null;
+    notes: string | null;
+    value_rate: number | null;
+    value_hour_per_week: string | null;
+    value_weeks: number | null;
+    priority: string;
+    match_percentage: number;
+    possible_earnings: number;
+    above_normal_rate: boolean;
+    follow_up_overdue: boolean;
+    collapsed_card?: boolean;
+    // Additional fields
+    receive_confirmation?: boolean;
+    collapsed_job_click_card?: boolean;
+    // Follow-up fields
+    follow_up_completed?: boolean;
+    follow_up_completed_at?: string;
+    follow_up_message?: string;
+    // Archive fields
+    is_archived?: boolean;
+    archived_at?: string;
+    // Contacts stored as JSON array
+    contacts?: Array<{
+        id: string;
+        name: string;
+        phone?: string;
+        email?: string;
+        created_at: string;
+    }>;
+    // Interviews stored as JSON array
+    interviews?: Array<{
+        type: string;
+        date: string;
+        rating: boolean | null;
+        completed: boolean | undefined;
+        id: string | undefined;
+        created_at: string | undefined;
+    }>;
+    // Enhanced Features - Prospects Column
+    sent_cv?: boolean;
+    sent_portfolio?: boolean;
+    sent_cover_letter?: boolean;
+    // Enhanced Features - Lead Column
+    application_time_minutes?: string;
+    match_confidence?: boolean;
+    received_confirmation?: boolean;
+    rejection_reasons_prediction?: string;
+    introduced_via_agency?: boolean;
+    // Enhanced Features - Opportunity Column
+    follow_up_date?: string;
+    interview_went_well?: string;
+    interview_can_improve?: string;
+    offer_rate_alignment?: string;
+    prediction_accuracy?: string;
+    sent_thank_you_note?: boolean;
+    rejection_reason_mentioned?: string;
+    why_got_interview?: string;
+    // Enhanced Features - Deal Column
+    job_start_date?: string;
+    contract_signing_date?: string;
+    job_hourly_rate?: string;
+    hours_per_week?: string;
+    job_total_length?: string;
+    client_rating?: number;
+    payment_interval?: string;
+    why_they_loved_you?: string;
+    what_you_did_well?: string;
+}
+
+const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) => {
+    // ==========================================
+    // STATE MANAGEMENT
+    // ==========================================
+    const [leads, setLeads] = useState<JobClickWithApplying[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [databaseAvailable, setDatabaseAvailable] = useState(false);
+
+    // Modal states
+    const [showArchiveModal, setShowArchiveModal] = useState(false);
+    const [showPrepModal, setShowPrepModal] = useState(false);
+    console.log(showPrepModal, setShowPrepModal, "showPrepModal - build fix");
+    const [showStatisticsModal, setShowStatisticsModal] = useState(false);
+
+    // Feature states
+    const [futureFeatures, setFutureFeatures] = useState({
+        marketing: false,
+        tooling: false,
+        agent: false,
+        interview_optimisation: false,
+        value_proposition: false
+    });
+
+    // Feature popup state
+    const [showFeaturePopup, setShowFeaturePopup] = useState(false);
+    const [selectedFeature, setSelectedFeature] = useState<string>('');
+
+    // Filter states
+    const [searchTerm, setSearchTerm] = useState('');
+    const [allCollapsed, setAllCollapsed] = useState(false);
+    const [showFollowUpOnly, setShowFollowUpOnly] = useState(false);
+
+    console.log('build', allCollapsed, setAllCollapsed, "allCollapsed - build fix");
+    // Collapse/Expand all handlers
+    const handleCollapseAll = async () => {
+        try {
+            // Update all leads in applying table
+            const { error: applyingError } = await supabase
+                .from('applying')
+                .update({ collapsed_card: true })
+                .eq('user_id', user?.id);
+
+            if (applyingError) throw applyingError;
+
+            // Update local state
+            setLeads(prevLeads =>
+                prevLeads.map(lead => ({
+                    ...lead,
+                    collapsed_card: true
+                }))
+            );
+
+            setAllCollapsed(true);
+        } catch (err: any) {
+            console.error('Error collapsing all:', err);
+        }
+    };
+
+    const handleExpandAll = async () => {
+        try {
+            // Update all leads in applying table
+            const { error: applyingError } = await supabase
+                .from('applying')
+                .update({ collapsed_card: false })
+                .eq('user_id', user?.id);
+
+            if (applyingError) throw applyingError;
+
+            // Update local state
+            setLeads(prevLeads =>
+                prevLeads.map(lead => ({
+                    ...lead,
+                    collapsed_card: false
+                }))
+            );
+
+            setAllCollapsed(false);
+        } catch (err: any) {
+            console.error('Error expanding all:', err);
+        }
+    };
+
+    // Follow-up notifications
+    const [followUpNotifications, setFollowUpNotifications] = useState<JobClickWithApplying[]>([]);
+
+    // Archive stats
+    const [archivedCount, setArchivedCount] = useState(0);
+    console.log(archivedCount, setArchivedCount, "archivedCount - build fix");
+
+    // ==========================================
+    // STAGE CONFIGURATION (AANGEPAST VOOR NIEUWE DATA)
+    // ==========================================
+    const stageConfig = useMemo(() => ({
+        found: {
+            title: 'Prospects',
+            icon: <Target style={{ width: '16px', height: '16px' }} />,
+            color: 'rgba(59, 130, 246, 0.2)',
+            borderColor: 'rgba(59, 130, 246, 0.4)',
+            description: 'Recently clicked jobs to pursue'
+        },
+        lead: {
+            title: 'Lead',
+            icon: <Users style={{ width: '16px', height: '16px' }} />,
+            color: 'rgba(147, 51, 234, 0.2)',
+            borderColor: 'rgba(147, 51, 234, 0.4)',
+            description: 'Jobs you have applied to'
+        },
+        opportunity: {
+            title: 'Opportunity',
+            icon: <Zap style={{ width: '16px', height: '16px' }} />,
+            color: 'rgba(245, 158, 11, 0.2)',
+            borderColor: 'rgba(245, 158, 11, 0.4)',
+            description: 'Jobs with interviews in process'
+        },
+        deal: {
+            title: 'Deal',
+            icon: <CircleCheckBig style={{ width: '16px', height: '16px' }} />,
+            color: 'rgba(16, 185, 129, 0.2)',
+            borderColor: 'rgba(16, 185, 129, 0.4)',
+            description: 'Jobs where you got the job'
+        }
+    }), []);
+
+    // ==========================================
+    // ORGANIZE LEADS INTO COLUMNS (NIEUWE LOGICA)
+    // ==========================================
+    const organizedColumns = useMemo(() => {
+
+        // Don't organize columns if still loading or no leads
+        if (loading || leads.length === 0) {
+            return [
+                {
+                    id: 'found' as LeadStage,
+                    title: 'Prospects',
+                    leads: [],
+                    color: stageConfig.found.color,
+                    icon: stageConfig.found.icon
+                },
+                {
+                    id: 'lead' as LeadStage,
+                    title: 'Lead',
+                    leads: [],
+                    color: stageConfig.lead.color,
+                    icon: stageConfig.lead.icon
+                },
+                {
+                    id: 'opportunity' as LeadStage,
+                    title: 'Opportunity',
+                    leads: [],
+                    color: stageConfig.opportunity.color,
+                    icon: stageConfig.opportunity.icon
+                },
+                {
+                    id: 'deal' as LeadStage,
+                    title: 'Deal',
+                    leads: [],
+                    color: stageConfig.deal.color,
+                    icon: stageConfig.deal.icon
+                }
+            ];
+        }
+
+        // Filter leads based on search term and follow-up filter
+        let filteredLeads = leads.filter(lead => {
+            if (!searchTerm && !showFollowUpOnly) return true;
+
+            // Search filter
+            const matchesSearch = !searchTerm || (
+                lead.job_title_clicked?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                lead.company_clicked?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                lead.location_clicked?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            // Follow-up filter
+            if (showFollowUpOnly) {
+                // Only show applied jobs that need follow-up (2+ days old, not completed, not got job)
+                if (!lead.applied || lead.got_the_job === true || lead.follow_up_completed) {
+                    return false;
+                }
+
+                const appliedDate = new Date(lead.created_at);
+                const now = new Date();
+                const daysSinceApplied = (now.getTime() - appliedDate.getTime()) / (1000 * 60 * 60 * 24);
+
+                return matchesSearch && daysSinceApplied >= 2;
+            }
+
+            return matchesSearch;
+        });
+
+        // Prospects column: job_clicks without applying record (or applied = false)
+        const foundLeads = filteredLeads.filter(lead => !lead.applied);
+
+        // Lead column: applied = true, but no interviews yet
+        const leadLeads = filteredLeads.filter(lead =>
+            lead.applied && lead.got_the_job !== true && (!lead.interviews || lead.interviews.length === 0)
+        );
+
+        // Opportunity column: applied = true, has interviews, but not got the job yet
+        const opportunityLeads = filteredLeads.filter(lead =>
+            lead.applied && lead.got_the_job !== true && lead.interviews && lead.interviews.length > 0
+        );
+
+        // Deal column: jobs where got_the_job is true
+        const dealLeads = filteredLeads.filter(lead =>
+            lead.applied && lead.got_the_job === true
+        );
+
+        return [
+            {
+                id: 'found' as LeadStage,
+                title: 'Prospects',
+                leads: foundLeads,
+                color: stageConfig.found.color,
+                icon: stageConfig.found.icon
+            },
+            {
+                id: 'lead' as LeadStage,
+                title: 'Lead',
+                leads: leadLeads,
+                color: stageConfig.lead.color,
+                icon: stageConfig.lead.icon
+            },
+            {
+                id: 'opportunity' as LeadStage,
+                title: 'Opportunity',
+                leads: opportunityLeads,
+                color: stageConfig.opportunity.color,
+                icon: stageConfig.opportunity.icon
+            },
+            {
+                id: 'deal' as LeadStage,
+                title: 'Deal',
+                leads: dealLeads,
+                color: stageConfig.deal.color,
+                icon: stageConfig.deal.icon
+            }
+        ];
+    }, [leads, searchTerm, stageConfig, loading, showFollowUpOnly]);
+
+    // ==========================================
+    // DATA FETCHING (NIEUW: job_clicks + applying)
+    // ==========================================
+    const fetchLeads = useCallback(async () => {
+        if (!user?.id) {
+            return;
+        }
+        setLoading(true);
+        setError(null);
+        try {
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
+
+            // Fetch all applying records via backend API
+            const applicationsResponse: ApplyingListResponse = await apiClient.getApplications(false);
+
+            if (!applicationsResponse || !applicationsResponse.applications) {
+                throw new Error('Invalid response from API');
+            }
+
+            const applyingRecords = applicationsResponse.applications;
+
+            // ALSO fetch job clicks to show in Prospects column (jobs clicked but not yet applied)
+            let jobClicks: any[] = [];
+            try {
+                console.log('[DEBUG] Fetching job clicks for user:', user.id);
+                const jobClicksResponse = await apiClient.getJobClicksWithDetails(1000); // Get enough to cover all clicks
+                console.log('[DEBUG] Raw job clicks response:', JSON.stringify(jobClicksResponse, null, 2));
+
+                // Backend returns camelCase 'clicks' property (due to JSON serialization config)
+                // Handle both camelCase and PascalCase, and also direct array response
+                let clicksArray: any[] = [];
+                if (Array.isArray(jobClicksResponse)) {
+                    // Direct array response
+                    clicksArray = jobClicksResponse;
+                } else if (jobClicksResponse && typeof jobClicksResponse === 'object') {
+                    // Object with clicks property
+                    clicksArray = (jobClicksResponse as any)?.clicks || (jobClicksResponse as any)?.Clicks || [];
+                }
+
+                if (clicksArray && Array.isArray(clicksArray) && clicksArray.length > 0) {
+                    jobClicks = clicksArray;
+                    console.log('[DEBUG] ✅ Fetched job clicks via API:', {
+                        count: jobClicks.length,
+                        sample: jobClicks[0],
+                        responseKeys: Object.keys(jobClicksResponse || {}),
+                        allClicks: jobClicks.map(c => ({
+                            id: c.id || c.Id,
+                            jobId: c.jobId || c.job_id || c.JobId,
+                            userId: c.userId || c.user_id || c.UserId,
+                            clickedAt: c.clickedAt || c.clicked_at || c.ClickedAt
+                        }))
+                    });
+                } else {
+                    console.warn('[DEBUG] ⚠️ Job clicks response is empty or invalid:', {
+                        response: jobClicksResponse,
+                        responseType: typeof jobClicksResponse,
+                        isArray: Array.isArray(jobClicksResponse),
+                        clicksProperty: (jobClicksResponse as any)?.clicks,
+                        ClicksProperty: (jobClicksResponse as any)?.Clicks,
+                        clicksArrayLength: clicksArray?.length,
+                        fullResponse: JSON.stringify(jobClicksResponse, null, 2)
+                    });
+                }
+            } catch (jobClicksError) {
+                console.error('[DEBUG] ❌ Error fetching job clicks (non-fatal):', jobClicksError);
+                console.error('[DEBUG] Job clicks error details:', {
+                    message: jobClicksError instanceof Error ? jobClicksError.message : 'Unknown error',
+                    status: (jobClicksError as any)?.status,
+                    stack: jobClicksError instanceof Error ? jobClicksError.stack : undefined
+                });
+                // Continue without job clicks if this fails
+            }
+
+            console.log('[DEBUG] Fetched applying records via API:', {
+                count: applyingRecords.length,
+                sample: applyingRecords[0]
+            });
+
+            // Get all unique job IDs from applying records AND job clicks
+            const applyingJobIds = applyingRecords?.map(record => record.uniqueIdJob).filter(Boolean) || [];
+            const clickedJobIds = jobClicks?.map(click => click.jobId || click.job_id || click.JobId).filter(Boolean) || [];
+            const allJobIds = [...new Set([...applyingJobIds, ...clickedJobIds])]; // Combine and deduplicate
+
+            console.log('[DEBUG] Job IDs for fetching:', {
+                applyingCount: applyingJobIds.length,
+                clickedCount: clickedJobIds.length,
+                totalUnique: allJobIds.length,
+                sampleClickedIds: clickedJobIds.slice(0, 5),
+                sampleJobClicks: jobClicks.slice(0, 3).map(c => ({
+                    id: c.id || c.Id,
+                    jobId: c.jobId || c.job_id || c.JobId,
+                    hasJobId: !!(c.jobId || c.job_id || c.JobId)
+                }))
+            });
+
+            // Fetch job data via backend API
+            let jobDataMap: Record<string, any> = {};
+            if (allJobIds.length > 0) {
+                try {
+                    console.log('[DEBUG] Fetching job data for', allJobIds.length, 'jobs');
+                    // Fetch jobs in batches if needed (backend may have limit)
+                    const jobPromises = allJobIds.map(jobId => apiClient.getJobById(jobId));
+                    const jobDataArray = await Promise.allSettled(jobPromises);
+
+                    let successCount = 0;
+                    let failCount = 0;
+                    jobDataArray.forEach((result, index) => {
+                        if (result.status === 'fulfilled' && result.value) {
+                            const job = result.value as any; // Type assertion needed for Promise.allSettled
+                            jobDataMap[allJobIds[index]] = {
+                                UNIQUE_ID: job.uniqueId || job.UNIQUE_ID || allJobIds[index],
+                                Title: job.title || job.Title || '',
+                                Company: job.company || job.Company || '',
+                                Location: job.location || job.Location || '',
+                                rate: job.rate || job.Rate || '',
+                                date: job.datePosted || job.date || job.Date || '',
+                                Summary: job.summary || job.Summary || '',
+                                URL: job.url || job.URL || job.jobUrl || ''
+                            };
+                            successCount++;
+                        } else {
+                            failCount++;
+                            if (result.status === 'rejected') {
+                                console.warn(`[DEBUG] Failed to fetch job ${allJobIds[index]}:`, result.reason);
+                            }
+                        }
+                    });
+                    console.log('[DEBUG] Job data fetched:', {
+                        total: allJobIds.length,
+                        success: successCount,
+                        failed: failCount,
+                        sampleJob: Object.keys(jobDataMap).length > 0 ? jobDataMap[Object.keys(jobDataMap)[0]] : null
+                    });
+                } catch (jobError) {
+                    console.error('[DEBUG] Error fetching job data via API:', jobError);
+                    // No fallback - rely on backend API only for security
+                }
+            }
+
+            // Parse JSON fields if they are strings (for json column) or keep as-is (for jsonb)
+            const processedRecords = applyingRecords?.map((record: any) => {
+                let interviews = [];
+                let contacts = [];
+
+                // Handle interviews field
+                if ((record as any).interviews) {
+                    const interviewsData = (record as any).interviews;
+                    if (typeof interviewsData === 'string') {
+                        try {
+                            interviews = JSON.parse(interviewsData);
+                        } catch (e) {
+                            console.warn('Failed to parse interviews JSON:', e);
+                            interviews = [];
+                        }
+                    } else if (Array.isArray(interviewsData)) {
+                        interviews = interviewsData;
+                    }
+                }
+
+                // Handle contacts field  
+                if ((record as any).contacts) {
+                    const contactsData = (record as any).contacts;
+                    if (typeof contactsData === 'string') {
+                        try {
+                            contacts = JSON.parse(contactsData);
+                        } catch (e) {
+                            console.warn('Failed to parse contacts JSON:', e);
+                            contacts = [];
+                        }
+                    } else if (Array.isArray(contactsData)) {
+                        contacts = contactsData;
+                    }
+                }
+
+                // Get job data from the map
+                const jobData = jobDataMap[record.uniqueIdJob] || {};
+
+                return {
+                    // Map all fields from camelCase (backend) to snake_case (frontend)
+                    applying_id: record.applyingId,
+                    unique_id_job: record.uniqueIdJob,
+                    user_id: record.userId,
+                    applied: record.applied ?? false,
+                    created_at: record.createdAt || new Date().toISOString(),
+
+                    // Prospects Column Features
+                    sent_cv: record.sentCv ?? false,
+                    sent_portfolio: record.sentPortfolio ?? false,
+                    sent_cover_letter: record.sentCoverLetter ?? false,
+
+                    // Lead Column Features
+                    application_time_minutes: record.applicationTimeMinutes || '',
+                    match_confidence: record.matchConfidence ?? null,
+                    received_confirmation: record.receivedConfirmation ?? null,
+                    rejection_reasons_prediction: record.rejectionReasonsPrediction || '',
+                    introduced_via_agency: record.introducedViaAgency ?? null,
+
+                    // Opportunity Column Features
+                    follow_up_date: record.followUpDate || null,
+                    interview_went_well: record.interviewWentWell || '',
+                    interview_can_improve: record.interviewCanImprove || '',
+                    offer_rate_alignment: record.offerRateAlignment || '',
+                    prediction_accuracy: record.predictionAccuracy || '',
+                    sent_thank_you_note: record.sentThankYouNote ?? null,
+                    rejection_reason_mentioned: record.rejectionReasonMentioned || '',
+                    why_got_interview: record.whyGotInterview || '',
+
+                    // Deal Column Features
+                    job_start_date: record.jobStartDate || null,
+                    contract_signing_date: record.contractSigningDate || null,
+                    job_hourly_rate: record.jobHourlyRate || '',
+                    hours_per_week: record.hoursPerWeek || '',
+                    job_total_length: record.jobTotalLength || null,
+                    client_rating: record.clientRating ?? null,
+                    payment_interval: record.paymentInterval || '',
+                    why_they_loved_you: record.whyTheyLovedYou || '',
+                    what_you_did_well: record.whatYouDidWell || '',
+
+                    // Additional features
+                    interview_prep_data: record.interviewPrepData || {},
+                    interview_prep_complete: record.interviewPrepComplete ?? false,
+                    is_archived: record.isArchived ?? false,
+                    archived_at: record.archivedAt || null,
+                    follow_up_completed: record.followUpCompleted ?? false,
+                    follow_up_completed_at: record.followUpCompletedAt || null,
+                    follow_up_message: record.followUpMessage || '',
+                    got_the_job: record.gotTheJob ?? null,
+                    starting_date: record.startingDate || null,
+                    notes: record.notes || '',
+                    interviews,
+                    contacts,
+                    collapsed_card: record.collapsedCard ?? false,
+
+                    // Job details - prioritize _clicked suffix fields from backend, fallback to jobData, then legacy fields
+                    job_title_clicked: record.jobTitleClicked || jobData.Title || record.jobTitle || '',
+                    company_clicked: record.companyClicked || jobData.Company || record.company || '',
+                    location_clicked: record.locationClicked || jobData.Location || record.location || '',
+                    rate_clicked: record.rateClicked || jobData.rate || record.rate || '',
+                    date_posted_clicked: record.datePostedClicked || jobData.date || '',
+                    summary_clicked: record.summaryClicked || jobData.Summary || record.summary || '',
+                    url_clicked: record.urlClicked || jobData.URL || record.jobUrl || '',
+
+                    // Required interview fields (legacy - may not be in backend response)
+                    recruiter_interview: null as string | null,
+                    interview_rating_recruiter: null as boolean | null,
+                    hiringmanager_interview: null as string | null,
+                    interview_rating_hiringmanager: null as boolean | null,
+                    technical_interview: null as string | null,
+                    interview_rating_technical: null as boolean | null,
+                    value_rate: null as number | null,
+                    value_hour_per_week: null as string | null,
+                    value_weeks: null as number | null,
+
+                    // Default values for calculated fields
+                    priority: 'normal',
+                    match_percentage: 0,
+                    possible_earnings: 0,
+                    above_normal_rate: false,
+                    follow_up_overdue: false
+                };
+            }) || [];
+
+            // Create leads from job clicks that don't have applying records
+            const appliedJobIds = new Set(applyingRecords?.map(r => r.uniqueIdJob) || []);
+            console.log('[DEBUG] Creating clicked leads:', {
+                totalClicks: jobClicks.length,
+                appliedJobIdsCount: appliedJobIds.size,
+                appliedJobIds: Array.from(appliedJobIds).slice(0, 5),
+                sampleClicks: jobClicks.slice(0, 3).map(c => {
+                    const jobId = c.jobId || c.job_id || c.JobId;
+                    return {
+                        id: c.id || c.Id,
+                        jobId: jobId,
+                        userId: c.userId || c.user_id || c.UserId,
+                        isApplied: appliedJobIds.has(jobId)
+                    };
+                })
+            });
+
+            const filteredClicks = jobClicks.filter(click => {
+                const jobId = click.jobId || click.job_id || click.JobId; // Handle both camelCase and snake_case
+                const hasJobId = !!jobId;
+                const isNotApplied = !appliedJobIds.has(jobId);
+                return hasJobId && isNotApplied;
+            });
+
+            console.log('[DEBUG] Filtered job clicks for Prospects:', {
+                totalClicks: jobClicks.length,
+                filteredCount: filteredClicks.length,
+                filteredOut: jobClicks.length - filteredClicks.length,
+                sampleFiltered: filteredClicks.slice(0, 3).map(c => ({
+                    jobId: c.jobId || c.job_id || c.JobId,
+                    id: c.id || c.Id
+                }))
+            });
+
+            const clickedLeads = filteredClicks.map(click => {
+                const jobId = click.jobId || click.job_id || click.JobId; // Handle both camelCase and snake_case
+                const userId = click.userId || click.user_id || click.UserId;
+                const clickedAt = click.clickedAt || click.clicked_at || click.ClickedAt;
+                const clickId = click.id || click.Id;
+
+                const jobData = jobDataMap[jobId] || {};
+                console.log('[DEBUG] Processing click:', {
+                    jobId,
+                    userId,
+                    clickedAt,
+                    clickId,
+                    jobDataExists: !!jobData.Title,
+                    jobDataKeys: Object.keys(jobData),
+                    jobDataTitle: jobData.Title
+                });
+
+                return {
+                    applying_id: `click_${clickId}`, // Unique ID for click-based leads
+                    unique_id_job: jobId,
+                    user_id: userId,
+                    applied: false, // Not applied yet
+                    created_at: clickedAt ? (typeof clickedAt === 'string' ? clickedAt : clickedAt.toString()) : new Date().toISOString(),
+                    sent_cv: false,
+                    sent_portfolio: false,
+                    sent_cover_letter: false,
+                    follow_up_date: null as string | null,
+                    is_archived: false,
+                    interviews: [] as any[],
+                    contacts: [] as any[],
+                    // Add job data with _clicked suffix - use jobData from map
+                    job_title_clicked: jobData.Title || '',
+                    company_clicked: jobData.Company || '',
+                    location_clicked: jobData.Location || '',
+                    rate_clicked: jobData.rate || '',
+                    date_posted_clicked: jobData.date || '',
+                    summary_clicked: jobData.Summary || '',
+                    url_clicked: jobData.URL || '',
+                    // Required interview fields
+                    recruiter_interview: null as string | null,
+                    interview_rating_recruiter: null as boolean | null,
+                    hiringmanager_interview: null as string | null,
+                    interview_rating_hiringmanager: null as boolean | null,
+                    technical_interview: null as string | null,
+                    interview_rating_technical: null as boolean | null,
+                    got_the_job: null as boolean | null,
+                    starting_date: null as string | null,
+                    notes: null as string | null,
+                    value_rate: null as number | null,
+                    value_hour_per_week: null as string | null,
+                    value_weeks: null as number | null,
+                    // Default values for other fields
+                    collapsed_card: false,
+                    priority: 'normal',
+                    match_percentage: 0,
+                    possible_earnings: 0,
+                    above_normal_rate: false,
+                    follow_up_overdue: false
+                };
+            });
+
+            // Combine applying records with clicked leads
+            const allLeads = [...processedRecords, ...clickedLeads];
+
+            console.log('[DEBUG] ✅ Final leads summary:', {
+                processedRecordsCount: processedRecords.length,
+                clickedLeadsCount: clickedLeads.length,
+                totalLeads: allLeads.length,
+                clickedLeadsSample: clickedLeads.length > 0 ? {
+                    applying_id: clickedLeads[0].applying_id,
+                    unique_id_job: clickedLeads[0].unique_id_job,
+                    applied: clickedLeads[0].applied,
+                    job_title_clicked: clickedLeads[0].job_title_clicked,
+                    company_clicked: clickedLeads[0].company_clicked
+                } : null,
+                allLeadsWithAppliedFalse: allLeads.filter(l => !l.applied).length,
+                allLeadsWithAppliedTrue: allLeads.filter(l => l.applied).length
+            });
+
+            setLeads(allLeads);
+            setDatabaseAvailable(true);
+            setLoading(false); // Show dashboard immediately
+
+            // Load archive count in background (silent, no blocking)
+            setTimeout(async () => {
+                try {
+                    const archivedResponse: ApplyingListResponse = await apiClient.getApplications(true);
+                    const archivedCount = archivedResponse.applications?.filter(app => app.isArchived).length || 0;
+                    setArchivedCount(archivedCount);
+                } catch (err) {
+                    // Silent fail - no user notification needed
+                    console.error('Background archive count failed:', err);
+                    // No fallback - rely on backend API only for security
+                    setArchivedCount(0);
+                }
+            }, 50); // Very short delay to ensure UI renders first
+
+        } catch (err: any) {
+            console.error('[DEBUG] fetchLeads error via API:', err);
+            // No fallback - rely on backend API only for security
+            const errorMessage = err.message || 'Error fetching leads';
+            if (err.status === 500) {
+                setError(`Backend error (500): ${errorMessage}. Check Railway logs.`);
+            } else {
+                setError(errorMessage);
+            }
+            setLeads([]);
+            setDatabaseAvailable(false);
+            setLoading(false);
+        }
+    }, [user?.id]);
+
+    // ==========================================
+    // USE EFFECT: FETCH LEADS BIJ LOAD
+    // ==========================================
+    useEffect(() => {
+        fetchLeads();
+    }, [fetchLeads]);
+
+    // ==========================================
+    // CALCULATE FOLLOW-UP NOTIFICATIONS
+    // ==========================================
+    const calculateFollowUpNotifications = useCallback(() => {
+        const now = new Date();
+        const notifications = leads.filter(lead => {
+            // Only applied jobs need follow-up
+            if (!lead.applied) return false;
+
+            // Skip if already got the job
+            if (lead.got_the_job === true) return false;
+
+            // Skip if follow-up already completed
+            if (lead.follow_up_completed) return false;
+
+            // Calculate days since applied (use created_at as apply date for now)
+            const appliedDate = new Date(lead.created_at);
+            const daysSinceApplied = (now.getTime() - appliedDate.getTime()) / (1000 * 60 * 60 * 24);
+
+            // Follow-up due after 2 days
+            return daysSinceApplied >= 2;
+        });
+
+        setFollowUpNotifications(notifications);
+    }, [leads]);
+
+    // Update follow-up notifications when leads change
+    useEffect(() => {
+        calculateFollowUpNotifications();
+    }, [calculateFollowUpNotifications]);
+
+    // ==========================================
+    // FUTURE FEATURES DATABASE FUNCTIONS
+    // ==========================================
+    const loadFutureFeatures = useCallback(async () => {
+        if (!user?.id) return;
+
+        console.log('Loading future features for user:', user.id);
+
+        try {
+            const { data, error } = await supabase
+                .from('future_features')
+                .select('*')
+                .eq('user_id', user.id)
+                .single();
+
+            console.log('Database response:', { data, error });
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('Error loading future features:', error);
+            } else if (data) {
+                console.log('Setting future features:', data);
+                setFutureFeatures({
+                    marketing: data.marketing ?? false,
+                    tooling: data.tooling ?? false,
+                    agent: data.agent ?? false,
+                    interview_optimisation: data.interview_optimisation ?? false,
+                    value_proposition: data.value_proposition ?? false
+                });
+            } else {
+                console.log('No data found, using defaults');
+            }
+        } catch (error) {
+            console.error('Error loading future features:', error);
+        }
+    }, [user?.id]);
+
+    const saveFutureFeatures = useCallback(async (features: any) => {
+        if (!user?.id) return;
+
+        console.log('Saving future features:', features);
+
+        try {
+            const { data, error } = await supabase
+                .from('future_features')
+                .upsert({
+                    user_id: user.id,
+                    ...features
+                });
+
+            console.log('Save response:', { data, error });
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error saving future features:', error);
+        }
+    }, [user?.id]);
+
+    // ==========================================
+    // USE EFFECT: LOAD FUTURE FEATURES
+    // ==========================================
+    useEffect(() => {
+        console.log('useEffect triggered, user:', user?.id);
+        if (user?.id) {
+            loadFutureFeatures();
+        }
+    }, [user?.id, loadFutureFeatures]);
+
+    const handleFeatureToggle = async (feature: string) => {
+        console.log('Toggle clicked for feature:', feature);
+        console.log('Current state:', futureFeatures);
+
+        const newFeatures = { ...futureFeatures, [feature]: !futureFeatures[feature as keyof typeof futureFeatures] };
+        console.log('New state:', newFeatures);
+
+        setFutureFeatures(newFeatures);
+        await saveFutureFeatures(newFeatures);
+
+        // Show popup for new feature
+        if (newFeatures[feature as keyof typeof futureFeatures]) {
+            setSelectedFeature(feature);
+            setShowFeaturePopup(true);
+        }
+    };
+
+    // ==========================================
+    // CALCULATE ARCHIVED COUNT
+    // ==========================================
+    const calculateArchivedCount = useCallback(async () => {
+        if (!user?.id) return;
+
+        try {
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
+
+            // Get archived applications via backend API
+            const archivedResponse: ApplyingListResponse = await apiClient.getApplications(true);
+            const archivedCount = archivedResponse.applications?.filter(app => app.isArchived).length || 0;
+            setArchivedCount(archivedCount);
+        } catch (err) {
+            console.error('Error calculating archived count:', err);
+            // No fallback - rely on backend API only for security
+            setArchivedCount(0);
+        }
+    }, [user?.id]);
+
+
+
+    // ==========================================
+    // EVENT HANDLERS
+    // ==========================================
+    const handleLeadUpdate = async (updatedLead: JobClickWithApplying) => {
+        setLeads(prevLeads =>
+            prevLeads.map(l => l.applying_id === updatedLead.applying_id ? updatedLead : l)
+        );
+
+        if (databaseAvailable) {
+            await fetchLeads(); // Refresh to get latest data
+        }
+    };
+    console.log(handleLeadUpdate, "handleLeadUpdate - build fix");
+
+    const handleArchiveClick = () => {
+        setShowArchiveModal(true);
+    };
+
+    const markFollowUpComplete = async (leadId: string) => {
+        if (databaseAvailable) {
+            try {
+                const { data: session } = await supabase.auth.getSession();
+                if (!session?.session?.access_token) return;
+
+                const response = await fetch('/api/leads', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${session.session.access_token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: leadId,
+                        follow_up_completed: true
+                    })
+                });
+
+                if (response.ok) {
+                    setFollowUpNotifications(prev => prev.filter(lead => lead.applying_id !== leadId));
+                    await fetchLeads();
+                }
+            } catch (error) {
+                console.error('Error marking follow-up complete:', error);
+            }
+        } else {
+            // Local only
+            setFollowUpNotifications(prev => prev.filter(lead => lead.applying_id !== leadId));
+            setLeads(prevLeads =>
+                prevLeads.map(l =>
+                    l.applying_id === leadId ? { ...l, follow_up_completed: true } : l
+                )
+            );
+        }
+    };
+
+
+    console.log(markFollowUpComplete, "markFollowUpComplete - build fix");
+
+    // ==========================================
+    // APPLY ACTION HANDLER (NIEUWE LOGICA)
+    // ==========================================
+    const handleApplyAction = async (jobId: string, applied: boolean) => {
+        if (!user?.id) return;
+
+        console.log('[DEBUG] handleApplyAction called:', { jobId, applied, userId: user.id });
+
+        try {
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
+
+            // First, find the applying record
+            const applications = await apiClient.getApplications(false);
+            const existingApp = applications.applications?.find(app => app.uniqueIdJob === jobId);
+
+            if (applied) {
+                if (existingApp) {
+                    // Update existing applying record to set applied = true
+                    await apiClient.updateApplication(existingApp.applyingId, { applied: true });
+                    console.log('[DEBUG] Successfully updated applying record to applied = true');
+                } else {
+                    // Create new application if it doesn't exist
+                    await apiClient.createApplication(jobId, true);
+                    console.log('[DEBUG] Successfully created applying record with applied = true');
+                }
+            } else {
+                // If applied = false, remove the applying record entirely
+                if (existingApp) {
+                    // Note: Backend doesn't have delete endpoint, so we'll archive instead
+                    // Or we can update applied to false
+                    await apiClient.updateApplication(existingApp.applyingId, { applied: false });
+                    console.log('[DEBUG] Successfully updated applying record to applied = false');
+                }
+            }
+
+            // Refresh leads
+            await fetchLeads();
+        } catch (err: any) {
+            console.error('Error applying to job:', err);
+            setError(err.message || 'Error applying to job');
+            // No fallback - rely on backend API only for security
+        }
+    };
+
+    // ==========================================
+    // INTERVIEW ACTION HANDLER (NIEUWE LOGICA)
+    // ==========================================
+    const handleInterviewAction = async (applyingId: string, interviewData: {
+        type: 'recruiter' | 'technical' | 'hiringmanager';
+        date: string;
+        rating: boolean;
+    }) => {
+        try {
+            const updateData: any = {};
+
+            // Set the appropriate fields based on interview type
+            switch (interviewData.type) {
+                case 'recruiter':
+                    updateData.recruiter_interview = interviewData.date;
+                    updateData.interview_rating_recruiter = interviewData.rating;
+                    break;
+                case 'technical':
+                    updateData.technical_interview = interviewData.date;
+                    updateData.interview_rating_technical = interviewData.rating;
+                    break;
+                case 'hiringmanager':
+                    updateData.hiringmanager_interview = interviewData.date;
+                    updateData.interview_rating_hiringmanager = interviewData.rating;
+                    break;
+            }
+
+            const { error } = await supabase
+                .from('applying')
+                .update(updateData)
+                .eq('applying_id', applyingId);
+
+            if (error) throw error;
+
+            // Refresh leads
+            await fetchLeads();
+        } catch (err: any) {
+            console.error('Error updating interview:', err);
+            setError(err.message || 'Error updating interview');
+        }
+    };
+
+    // ==========================================
+    // UPDATE APPLYING RECORD (NIEUWE LOGICA)
+    // ==========================================
+    const handleUpdateApplying = async (applyingId: string, updateData: any) => {
+        try {
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
+
+            // Update via backend API
+            await apiClient.updateApplication(applyingId, updateData);
+
+            // Refresh leads
+            await fetchLeads();
+        } catch (err: any) {
+            console.error('Error updating applying record:', err);
+            setError(err.message || 'Error updating record');
+            // No fallback - rely on backend API only for security
+        }
+    };
+
+    const handleFollowUpComplete = async (applyingId: string, followUpMessage: string) => {
+        try {
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
+
+            // Update via backend API
+            await apiClient.updateApplication(applyingId, {
+                followUpCompleted: true,
+                followUpCompletedAt: new Date().toISOString(),
+                followUpMessage: followUpMessage
+            });
+
+            // Refresh leads
+            await fetchLeads();
+        } catch (err: any) {
+            console.error('Error marking follow-up complete:', err);
+            setError(err.message || 'Error updating follow-up status');
+        }
+    };
+
+    const handleGotJob = async (applyingId: string, gotJob: boolean, startingDate?: string) => {
+        try {
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
+
+            // Update via backend API
+            const updateData: any = { gotTheJob: gotJob };
+            if (gotJob && startingDate) {
+                updateData.startingDate = startingDate;
+            }
+
+            await apiClient.updateApplication(applyingId, updateData);
+
+            // Refresh leads
+            await fetchLeads();
+        } catch (err: any) {
+            console.error('Error updating got the job status:', err);
+            setError(err.message || 'Error updating job status');
+        }
+    };
+
+    const handleArchiveJob = async (applyingId: string) => {
+        try {
+            // Get the job to archive
+            const jobToArchive = leads.find(lead => lead.applying_id === applyingId);
+            if (!jobToArchive) return;
+
+            // Only archive jobs that were actually applied to
+            if (!jobToArchive.applied) {
+                console.log('Cannot archive: Job was not applied to');
+                return;
+            }
+
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
+
+            // Archive via backend API
+            await apiClient.archiveApplication(applyingId);
+
+            // Refresh leads to remove archived job from view
+            await fetchLeads();
+        } catch (err: any) {
+            console.error('Error archiving job:', err);
+            setError(err.message || 'Error archiving job');
+        }
+    };
+
+    const handleRestoreLead = async (archivedApplyingId: string) => {
+        try {
+            // Get user session for API token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                apiClient.setToken(session.access_token);
+            }
+
+            // Unarchive via backend API
+            await apiClient.unarchiveApplication(archivedApplyingId);
+
+            // Refresh leads and archived count
+            await fetchLeads();
+            await calculateArchivedCount();
+        } catch (err: any) {
+            console.error('Error restoring lead:', err);
+        }
+    };
+
+    const handleDeleteArchivedLead = async (archivedApplyingId: string) => {
+        try {
+            // Simply delete the archived applying record
+            const { error: deleteError } = await supabase
+                .from('applying')
+                .delete()
+                .eq('applying_id', archivedApplyingId);
+
+            if (deleteError) throw deleteError;
+
+            // Refresh archived count
+            await calculateArchivedCount();
+        } catch (err: any) {
+            console.error('Error deleting archived lead:', err);
+        }
+    };
+
+    // ==========================================
+    // RENDER LOADING STATE
+    // ==========================================
+    if (loading) {
+        return (
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '400px',
+                color: '#fff'
+            }}>
+                <div>Loading your pipeline...</div>
+            </div>
+        );
+    }
+
+    // ==========================================
+    // RENDER NO USER STATE
+    // ==========================================
+    if (!user) {
+        return (
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '400px',
+                color: '#fff'
+            }}>
+                <div>No user found. Please log in.</div>
+            </div>
+        );
+    }
+
+    // ==========================================
+    // RENDER ERROR STATE
+    // ==========================================
+    if (error) {
+        return (
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '400px',
+                color: '#fff',
+                textAlign: 'center'
+            }}>
+                <div style={{ marginBottom: '1rem', color: '#ef4444' }}>
+                    Error loading pipeline: {error}
+                </div>
+                <button
+                    onClick={fetchLeads}
+                    style={{
+                        padding: '0.5rem 1rem',
+                        background: 'rgba(59, 130, 246, 0.2)',
+                        border: '1px solid rgba(59, 130, 246, 0.4)',
+                        borderRadius: '8px',
+                        color: '#fff',
+                        cursor: 'pointer'
+                    }}
+                >
+                    Retry
+                </button>
+            </div>
+        );
+    }
+
+    // ==========================================
+    // MAIN RENDER
+    // ==========================================
+    return (
+        <div style={{
+            padding: '0',
+            minHeight: '100vh',
+            color: '#fff',
+            overflow: 'hidden' // Hide scrollbars
+        }}>
+            {/* Header */}
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '2rem'
+            }}>
+                <div>
+                    <h1 style={{
+                        fontSize: '2rem',
+                        fontWeight: '700',
+                        margin: '0 0 0.5rem 0',
+                        marginLeft: '70px',
+                        color: '#fff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem'
+                    }}>
+                        <Target style={{ width: '32px', height: '32px' }} />
+                        allGigs CRM
+                    </h1>
+                    <p style={{ margin: 0, marginLeft: '70px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Manage your job applications through each stage
+                    </p>
+                </div>
+
+                <div style={{
+                    display: 'flex',
+                    gap: '1rem',
+                    alignItems: 'center',
+                    flexWrap: 'wrap'
+                }}>
+                    {/* Feature Buttons */}
+                    <button
+                        onClick={() => handleFeatureToggle('marketing')}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: futureFeatures.marketing ? 'rgba(147, 51, 234, 0.2)' : 'rgba(147, 51, 234, 0.1)',
+                            border: '1px solid rgba(147, 51, 234, 0.3)',
+                            borderRadius: '8px',
+                            color: '#9333ea',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!futureFeatures.marketing) {
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.2)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!futureFeatures.marketing) {
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.1)';
+                            }
+                        }}
+                    >
+                        <Mail style={{ width: '16px', height: '16px' }} />
+                        Marketing
+                        <Lock style={{ width: '14px', height: '14px' }} />
+                        {futureFeatures.marketing && <CheckCircle style={{ width: '14px', height: '14px' }} />}
+                    </button>
+                    <button
+                        onClick={() => handleFeatureToggle('tooling')}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: futureFeatures.tooling ? 'rgba(147, 51, 234, 0.2)' : 'rgba(147, 51, 234, 0.1)',
+                            border: '1px solid rgba(147, 51, 234, 0.3)',
+                            borderRadius: '8px',
+                            color: '#9333ea',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!futureFeatures.tooling) {
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.2)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!futureFeatures.tooling) {
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.1)';
+                            }
+                        }}
+                    >
+                        <Zap style={{ width: '16px', height: '16px' }} />
+                        Tooling
+                        <Lock style={{ width: '14px', height: '14px' }} />
+                        {futureFeatures.tooling && <CheckCircle style={{ width: '14px', height: '14px' }} />}
+                    </button>
+                    <button
+                        onClick={() => handleFeatureToggle('agent')}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: futureFeatures.agent ? 'rgba(147, 51, 234, 0.2)' : 'rgba(147, 51, 234, 0.1)',
+                            border: '1px solid rgba(147, 51, 234, 0.3)',
+                            borderRadius: '8px',
+                            color: '#9333ea',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!futureFeatures.agent) {
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.2)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!futureFeatures.agent) {
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.1)';
+                            }
+                        }}
+                    >
+                        <Sparkles style={{ width: '16px', height: '16px' }} />
+                        AI Agent
+                        <Lock style={{ width: '14px', height: '14px' }} />
+                        {futureFeatures.agent && <CheckCircle style={{ width: '14px', height: '14px' }} />}
+                    </button>
+                    <button
+                        onClick={() => handleFeatureToggle('interview_optimisation')}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: futureFeatures.interview_optimisation ? 'rgba(147, 51, 234, 0.2)' : 'rgba(147, 51, 234, 0.1)',
+                            border: '1px solid rgba(147, 51, 234, 0.3)',
+                            borderRadius: '8px',
+                            color: '#9333ea',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!futureFeatures.interview_optimisation) {
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.2)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!futureFeatures.interview_optimisation) {
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.1)';
+                            }
+                        }}
+                    >
+                        <Brain style={{ width: '16px', height: '16px' }} />
+                        Interview Prep
+                        <Lock style={{ width: '14px', height: '14px' }} />
+                        {futureFeatures.interview_optimisation && <CheckCircle style={{ width: '14px', height: '16px' }} />}
+                    </button>
+                    <button
+                        onClick={() => handleFeatureToggle('value_proposition')}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: futureFeatures.value_proposition ? 'rgba(147, 51, 234, 0.2)' : 'rgba(147, 51, 234, 0.1)',
+                            border: '1px solid rgba(147, 51, 234, 0.3)',
+                            borderRadius: '8px',
+                            color: '#9333ea',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!futureFeatures.value_proposition) {
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.2)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!futureFeatures.value_proposition) {
+                                e.currentTarget.style.background = 'rgba(147, 51, 234, 0.1)';
+                            }
+                        }}
+                    >
+                        <Users style={{ width: '16px', height: '16px' }} />
+                        Value Prop
+                        <Lock style={{ width: '14px', height: '14px' }} />
+                        {futureFeatures.value_proposition && <CheckCircle style={{ width: '14px', height: '14px' }} />}
+                    </button>
+
+                </div>
+            </div>
+
+
+
+            {/* Search and Filter Bar */}
+            <div style={{
+                display: 'flex',
+                gap: '2rem',
+                marginBottom: '2rem',
+                alignItems: 'center',
+                justifyContent: 'space-between' // Space between search and buttons
+            }}>
+                <div style={{ position: 'relative', flex: '1', minWidth: '200px' }}>
+                    <Search style={{
+                        position: 'absolute',
+                        left: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        width: '16px',
+                        height: '16px',
+                        color: 'rgba(255, 255, 255, 0.5)'
+                    }} />
+                    <input
+                        type="text"
+                        placeholder="Search leads..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem 0.75rem 0.75rem 2.5rem',
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            borderRadius: '8px',
+                            color: '#fff',
+                            fontSize: '0.875rem'
+                        }}
+                    />
+                </div>
+
+                <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                        onClick={handleArchiveClick}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            borderRadius: '8px',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease',
+                            marginLeft: '2.5rem' // ~1cm spacing from search bar
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                        }}
+                    >
+                        <Archive style={{ width: '16px', height: '16px' }} />
+                        Archive ({archivedCount})
+                    </button>
+                    <button
+                        onClick={() => setShowStatisticsModal(true)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            borderRadius: '8px',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                        }}
+                    >
+                        <BarChart3 style={{ width: '16px', height: '16px' }} />
+                        Statistics
+                    </button>
+                    <button
+                        onClick={() => setShowFollowUpOnly(!showFollowUpOnly)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: showFollowUpOnly ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                            border: showFollowUpOnly ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)',
+                            borderRadius: '8px',
+                            color: showFollowUpOnly ? '#f59e0b' : '#fff',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!showFollowUpOnly) {
+                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!showFollowUpOnly) {
+                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                            }
+                        }}
+                    >
+                        <Bell style={{ width: '16px', height: '16px' }} />
+                        Follow-up
+                        {showFollowUpOnly && <CheckCircle style={{ width: '14px', height: '14px' }} />}
+                    </button>
+                    <button
+                        onClick={handleCollapseAll}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            borderRadius: '8px',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                        }}
+                    >
+                        <Minimize2 style={{ width: '16px', height: '16px' }} />
+                        Collapse All
+                    </button>
+                    <button
+                        onClick={handleExpandAll}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            borderRadius: '8px',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                        }}
+                    >
+                        <Maximize2 style={{ width: '16px', height: '16px' }} />
+                        Expand All
+                    </button>
+                    <button
+                        onClick={fetchLeads}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1rem',
+                            background: 'rgba(59, 130, 246, 0.2)',
+                            border: '1px solid rgba(59, 130, 246, 0.4)',
+                            borderRadius: '8px',
+                            color: '#3b82f6',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
+                        }}
+                    >
+                        <RefreshCw style={{ width: '16px', height: '16px' }} />
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            {/* Empty State */}
+            {leads.length === 0 && !loading && (
+                <div style={{
+                    textAlign: 'center',
+                    padding: '3rem',
+                    color: 'rgba(255, 255, 255, 0.7)'
+                }}>
+                    <h3 style={{ marginBottom: '0.5rem' }}>No leads yet</h3>
+                    <p>
+                        Click on some jobs in the search page to see them here as leads
+                    </p>
+
+                </div>
+            )}
+
+            {/* Kanban Board */}
+            <style jsx>{`
+                /* Hide scrollbars for WebKit browsers */
+                ::-webkit-scrollbar {
+                    display: none;
+                }
+            `}</style>
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: '1.5rem',
+                alignItems: 'start'
+            }}>
+                {organizedColumns.map(column => {
+                    const config = stageConfig[column.id as LeadStage];
+                    return (
+                        <div
+                            key={column.id}
+                            style={{
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                border: '2px solid rgba(255, 255, 255, 0.1)',
+                                borderRadius: '12px',
+                                padding: '1rem',
+                                minHeight: '600px',
+                                height: 'calc(100vh - 250px)',
+                                overflowY: 'auto',
+                                scrollbarWidth: 'none', // Firefox
+                                msOverflowStyle: 'none', // IE/Edge
+                                transition: 'all 0.2s ease',
+                                backdropFilter: 'blur(8px)'
+                            }}
+                        >
+                            {/* Column Header */}
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                marginBottom: '1rem',
+                                padding: '0.75rem',
+                                background: config.color,
+                                border: `1px solid ${config.borderColor}`,
+                                borderRadius: '8px'
+                            }}>
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                }}>
+                                    {config.icon}
+                                    <span style={{
+                                        fontWeight: '600',
+                                        fontSize: '0.875rem'
+                                    }}>
+                                        {config.title}
+                                    </span>
+                                </div>
+                                <div style={{
+                                    background: 'rgba(255, 255, 255, 0.2)',
+                                    borderRadius: '12px',
+                                    padding: '0.25rem 0.5rem',
+                                    fontSize: '0.75rem',
+                                    fontWeight: '600'
+                                }}>
+                                    {column.leads.length}
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {column.leads.map((lead, index) => (
+                                    <LeadCard
+                                        key={lead.applying_id}
+                                        lead={lead}
+                                        index={index}
+                                        isDragging={false}
+                                        hasFollowUp={followUpNotifications.some(fu => fu.applying_id === lead.applying_id)}
+                                        onClick={() => { }} // Empty function for now
+                                        onArchived={(leadId) => {
+                                            // Remove the archived/deleted lead from the leads array
+                                            setLeads(prevLeads => prevLeads.filter(l => l.applying_id !== leadId));
+                                            // Recalculate archived count
+                                            calculateArchivedCount();
+                                        }}
+                                        onStateChanged={() => {
+                                            // Force refresh of leads when important state changes
+                                            fetchLeads();
+                                        }}
+                                        onLeadUpdate={() => {
+                                            // Refresh leads when auto-archived
+                                            fetchLeads();
+                                            calculateArchivedCount();
+                                        }}
+                                        onStageAction={(action, data) => {
+                                            if (action === 'apply') {
+                                                handleApplyAction(lead.unique_id_job, data.applied);
+                                            } else if (action === 'interview_date') {
+                                                handleInterviewAction(lead.applying_id, data.interviewData);
+                                            } else if (action === 'interview_rating') {
+                                                handleInterviewAction(lead.applying_id, data.interviewData);
+                                            } else if (action === 'update_notes') {
+                                                handleUpdateApplying(lead.applying_id, { notes: data.notes });
+                                            } else if (action === 'follow_up_complete') {
+                                                handleFollowUpComplete(lead.applying_id, data.followUpMessage);
+                                            } else if (action === 'got_job') {
+                                                handleGotJob(lead.applying_id, data.gotJob, data.startingDate);
+                                            } else if (action === 'archive_job') {
+                                                handleArchiveJob(data.applying_id);
+                                            } else if (action === 'interview_added') {
+                                                // Refresh leads when interview is added
+                                                fetchLeads();
+                                            } else if (action === 'toggle_collapse') {
+                                                console.log('toggle_collapse action received:', {
+                                                    leadId: lead.applying_id,
+                                                    collapsed: data.collapsed,
+                                                    currentCollapsed: lead.collapsed_card
+                                                });
+
+                                                // Update local state for immediate UI feedback
+                                                setLeads(prevLeads => {
+                                                    const updatedLeads = prevLeads.map(l =>
+                                                        l.applying_id === lead.applying_id
+                                                            ? {
+                                                                ...l,
+                                                                collapsed_card: data.collapsed, // Update applying collapsed_card
+                                                            }
+                                                            : l
+                                                    );
+
+                                                    console.log('Updated leads state:', updatedLeads.find(l => l.applying_id === lead.applying_id));
+                                                    return updatedLeads;
+                                                });
+                                            } else if (action === 'archive') {
+                                                handleArchiveJob(lead.applying_id);
+                                            }
+                                        }}
+                                    />
+                                ))}
+
+                                {/* Empty state for follow-up filter */}
+                                {showFollowUpOnly && (column.id === 'lead' || column.id === 'opportunity') && column.leads.length === 0 && (
+                                    <div style={{
+                                        padding: '2rem 1rem',
+                                        textAlign: 'center',
+                                        color: 'rgba(255, 255, 255, 0.6)',
+                                        fontSize: '0.875rem'
+                                    }}>
+                                        <Bell style={{
+                                            width: '24px',
+                                            height: '24px',
+                                            margin: '0 auto 0.5rem auto',
+                                            display: 'block',
+                                            opacity: 0.5
+                                        }} />
+                                        <div>No follow-up reminders needed</div>
+                                        <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.7 }}>
+                                            All applied jobs are up to date
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Feature Interest Popup */}
+            {showFeaturePopup && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.8)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 10000,
+                    backdropFilter: 'blur(8px)'
+                }}>
+                    <div style={{
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        backdropFilter: 'blur(16px)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '16px',
+                        padding: '2rem',
+                        maxWidth: '500px',
+                        width: '90%',
+                        position: 'relative'
+                    }}>
+                        {/* Close button */}
+                        <button
+                            onClick={() => setShowFeaturePopup(false)}
+                            style={{
+                                position: 'absolute',
+                                top: '1rem',
+                                right: '1rem',
+                                background: 'none',
+                                border: 'none',
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                fontSize: '1.5rem',
+                                cursor: 'pointer',
+                                padding: '0.5rem',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                                e.currentTarget.style.color = 'white';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'none';
+                                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+                            }}
+                        >
+                            ×
+                        </button>
+
+                        {/* Content */}
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{
+                                fontSize: '3rem',
+                                marginBottom: '1rem'
+                            }}>
+                                {selectedFeature === 'marketing' && '📧'}
+                                {selectedFeature === 'tooling' && '⚡'}
+                                {selectedFeature === 'agent' && '✨'}
+                                {selectedFeature === 'interview_optimisation' && '🧠'}
+                                {selectedFeature === 'value_proposition' && '👥'}
+                            </div>
+
+                            <h3 style={{
+                                fontSize: '1.5rem',
+                                fontWeight: '600',
+                                color: 'white',
+                                marginBottom: '1rem'
+                            }}>
+                                {selectedFeature === 'marketing' && 'Marketing Automation'}
+                                {selectedFeature === 'tooling' && 'Advanced Tooling'}
+                                {selectedFeature === 'agent' && 'AI Agent'}
+                                {selectedFeature === 'interview_optimisation' && 'Interview Prep'}
+                                {selectedFeature === 'value_proposition' && 'Value Proposition'}
+                            </h3>
+
+                            <p style={{
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                fontSize: '1rem',
+                                lineHeight: '1.6',
+                                marginBottom: '2rem'
+                            }}>
+                                Amazing! We are just as excited as you are for this feature,
+                                <br />
+                                We will let you know when this feature is ready
+                            </p>
+
+                            <button
+                                onClick={() => setShowFeaturePopup(false)}
+                                style={{
+                                    padding: '0.75rem 2rem',
+                                    background: 'rgba(16, 185, 129, 0.2)',
+                                    border: '1px solid rgba(16, 185, 129, 0.4)',
+                                    borderRadius: '8px',
+                                    color: '#10b981',
+                                    cursor: 'pointer',
+                                    fontSize: '1rem',
+                                    fontWeight: '500',
+                                    transition: 'all 0.2s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = 'rgba(16, 185, 129, 0.3)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = 'rgba(16, 185, 129, 0.2)';
+                                }}
+                            >
+                                Got it!
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modals */}
+            {showArchiveModal && (
+                <ArchiveModal
+                    onClose={() => setShowArchiveModal(false)}
+                    user={user}
+                    onRestoreLead={(leadId) => {
+                        handleRestoreLead(leadId);
+                    }}
+                    onDeleteLead={(leadId) => {
+                        handleDeleteArchivedLead(leadId);
+                    }}
+                />
+            )}
+
+            {showStatisticsModal && (
+                <StatisticsModal
+                    onClose={() => setShowStatisticsModal(false)}
+                    leads={leads}
+                    statsData={statsData}
+                />
+            )}
+        </div>
+    );
+};
+
+export default LeadsPipeline; 
