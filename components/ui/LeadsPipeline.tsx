@@ -472,7 +472,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
                     // NEW: Batch fetch all jobs in 1 API call (was 80+ calls!)
                     const batchResponse = await apiClient.getJobsByIds(allJobIds);
-                    
+
                     const endTime = performance.now();
                     console.log('[DEBUG] ✅ Batch fetch complete in', Math.round(endTime - startTime), 'ms');
                     console.log('[DEBUG] Batch result:', {
@@ -480,7 +480,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         notFound: batchResponse.notFound.length,
                         total: allJobIds.length
                     });
-                    
+
                     // DEBUG: Log first job to see exact structure
                     if (batchResponse.jobs.length > 0) {
                         console.log('[DEBUG] 🔍 First job from batch:', batchResponse.jobs[0]);
@@ -502,15 +502,24 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     let failCount = batchResponse.notFound.length;
 
                     batchResponse.jobs.forEach(job => {
-                        jobDataMap[job.uniqueId] = {
-                            UNIQUE_ID: job.uniqueId || '',
-                            Title: job.title || '',
-                            Company: job.company || '',
-                            Location: job.location || '',
-                            rate: job.rate || '',
-                            date: job.date || '',
-                            Summary: job.summary || '',
-                            URL: job.url || ''
+                        // Backend sends PascalCase/UPPERCASE, so read those properties
+                        const jobAny = job as any;
+                        const uniqueId = jobAny.UNIQUE_ID || jobAny.UniqueId || job.uniqueId || '';
+                        
+                        if (!uniqueId) {
+                            console.warn('[DEBUG] ⚠️ Job without UNIQUE_ID, skipping:', job);
+                            return;
+                        }
+                        
+                        jobDataMap[uniqueId] = {
+                            UNIQUE_ID: uniqueId,
+                            Title: jobAny.Title || job.title || '',
+                            Company: jobAny.Company || job.company || '',
+                            Location: jobAny.Location || job.location || '',
+                            rate: jobAny.rate || job.rate || '',
+                            date: jobAny.date || job.date || '',
+                            Summary: jobAny.Summary || job.summary || '',
+                            URL: jobAny.URL || job.url || ''
                         };
                         successCount++;
                     });
@@ -519,7 +528,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     if (failCount > 0) {
                         console.warn('[DEBUG] ⚠️ Jobs not found:', batchResponse.notFound.slice(0, 5));
                     }
-                    
+
                     console.log('[DEBUG] Job data fetched:', {
                         total: allJobIds.length,
                         success: successCount,
@@ -528,7 +537,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         sampleJobId: Object.keys(jobDataMap)[0],
                         sampleJob: Object.keys(jobDataMap).length > 0 ? jobDataMap[Object.keys(jobDataMap)[0]] : null
                     });
-                    
+
                     // DEBUG: Log what we mapped
                     if (Object.keys(jobDataMap).length > 0) {
                         const firstJobId = Object.keys(jobDataMap)[0];
@@ -704,7 +713,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 const clickId = click.id || click.Id;
 
                 const jobData = jobDataMap[jobId] || {};
-                
+
                 // DEBUG: Log FIRST click processing in detail
                 if (index === 0) {
                     console.log('[DEBUG] 🔍 Processing FIRST click:', {
