@@ -1267,11 +1267,19 @@ function AutomationCompaniesContent() {
             const response: AutomationDetailsResponse = await apiClient.getAutomationDetails(1000);
 
             console.log('=== COMPANIES QUERY RESULT ===');
-            console.log('Companies data:', response.details);
-            console.log('Companies count:', response.details?.length);
+            console.log('Full response:', response);
+            console.log('Response.details:', response.details);
+            console.log('Response.details type:', typeof response.details);
+            console.log('Response.details length:', response.details?.length);
+            console.log('Response.total:', response.total);
 
-            if (!response || !response.details) {
-                throw new Error('Invalid response from API');
+            if (!response) {
+                throw new Error('No response from API');
+            }
+
+            if (!response.details || !Array.isArray(response.details)) {
+                console.error('❌ Invalid response.details:', response.details);
+                throw new Error(`Invalid response from API: details is ${typeof response.details}, expected array`);
             }
 
             const data = response.details.map(detail => ({
@@ -1321,16 +1329,28 @@ function AutomationCompaniesContent() {
             // Add all other companies
             mergedCompanies.push(...otherCompanies);
 
+            console.log('✅ Successfully processed companies:', mergedCompanies.length);
+            console.log('✅ LinkedIn companies:', linkedInCompanies.length);
+            console.log('✅ Other companies:', otherCompanies.length);
+
             setCompanies(mergedCompanies);
             setFilteredCompanies(mergedCompanies);
+
+            console.log('✅ Companies state updated:', mergedCompanies.length);
         } catch (err) {
-            console.error('Error fetching companies via API:', err);
+            console.error('❌ Error fetching companies via API:', err);
+            console.error('❌ Error details:', {
+                message: err instanceof Error ? err.message : 'Unknown error',
+                stack: err instanceof Error ? err.stack : undefined,
+                response: (err as any)?.response
+            });
             setError(err instanceof Error ? err.message : 'An error occurred');
             // No fallback - rely on backend API only for security
             setCompanies([]);
             setFilteredCompanies([]);
         } finally {
             setLoading(false);
+            console.log('=== COMPANIES FETCH COMPLETE ===');
         }
     };
 
