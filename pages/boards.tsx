@@ -1285,6 +1285,18 @@ function AutomationCompaniesContent() {
             const data = response.details.map(detail => ({
                 id: detail.id,
                 Company_name: detail.companyName,
+                "Parent company": detail.parentCompany,
+                "Company description": detail.description,
+                URL: detail.website,
+                "paid/free": detail.paidFree,
+                "subscription price/ month": detail.subscriptionPrice,
+                "transaction %": detail.transactionPercentage,
+                "paid by employer": detail.paidByEmployer,
+                "job board": detail.jobBoard,
+                "recruitment company": detail.recruitmentCompany,
+                government: detail.government,
+                "private company": detail.privateCompany,
+                // Legacy fields for backwards compatibility
                 Industry: detail.industry,
                 Company_size: detail.companySize,
                 Technologies: detail.technologies,
@@ -1332,10 +1344,11 @@ function AutomationCompaniesContent() {
             console.log('✅ Successfully processed companies:', mergedCompanies.length);
             console.log('✅ LinkedIn companies:', linkedInCompanies.length);
             console.log('✅ Other companies:', otherCompanies.length);
-
+            console.log('✅ Sample company data:', mergedCompanies[0]);
+            
             setCompanies(mergedCompanies);
             setFilteredCompanies(mergedCompanies);
-
+            
             console.log('✅ Companies state updated:', mergedCompanies.length);
         } catch (err) {
             console.error('❌ Error fetching companies via API:', err);
