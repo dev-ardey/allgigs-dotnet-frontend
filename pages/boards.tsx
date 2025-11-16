@@ -1267,16 +1267,60 @@ function AutomationCompaniesContent() {
             const response: AutomationDetailsResponse = await apiClient.getAutomationDetails(1000);
 
             console.log('=== COMPANIES QUERY RESULT ===');
-            console.log('Companies data:', response.details);
-            console.log('Companies count:', response.details?.length);
+            console.log('Full response:', response);
+            console.log('Response.details:', response.details);
+            console.log('Response.details type:', typeof response.details);
+            console.log('Response.details length:', response.details?.length);
+            console.log('Response.total:', response.total);
 
-            if (!response || !response.details) {
-                throw new Error('Invalid response from API');
+            if (!response) {
+                throw new Error('No response from API');
+            }
+
+            if (!response.details || !Array.isArray(response.details)) {
+                console.error('❌ Invalid response.details:', response.details);
+                throw new Error(`Invalid response from API: details is ${typeof response.details}, expected array`);
             }
 
             const data = response.details.map(detail => ({
                 id: detail.id,
                 Company_name: detail.companyName,
+                "Parent company": detail.parentCompany,
+                "Company description": detail.description,
+                URL: detail.website,
+                created_at: detail.createdAt,
+                // Additional info fields
+                Task_ID: detail.taskId,
+                Type: detail.type,
+                API: detail.api,
+                language: detail.language,
+                "has perm partner": detail.hasPermPartner,
+                "does not work with allgigs?": detail.doesNotWorkWithAllgigs,
+                // Pricing fields
+                "paid/free": detail.paidFree,
+                "pay to access": detail.payToAccess,
+                "Pay to reply": detail.payToReply,
+                "Pricing info found?": detail.pricingInfoFound,
+                subscription: detail.subscription,
+                "subscription price/ month": detail.subscriptionPrice,
+                "transaction fees": detail.transactionFees,
+                "transaction %": detail.transactionPercentage,
+                percentage: detail.percentage,
+                "percentage fee": detail.percentageFee,
+                "Hourly rate": detail.hourlyRate,
+                "Fixed price": detail.fixedPrice,
+                "paid by employer": detail.paidByEmployer,
+                // Type fields
+                "job board": detail.jobBoard,
+                "recruitment company": detail.recruitmentCompany,
+                "recruitment tech": detail.recruitmentTech,
+                government: detail.government,
+                "private company": detail.privateCompany,
+                "semi government": detail.semiGovernment,
+                broker: detail.broker,
+                "procurement tool": detail.procurementTool,
+                "End customer": detail.endCustomer,
+                // Legacy fields for backwards compatibility
                 Industry: detail.industry,
                 Company_size: detail.companySize,
                 Technologies: detail.technologies,
@@ -1321,16 +1365,29 @@ function AutomationCompaniesContent() {
             // Add all other companies
             mergedCompanies.push(...otherCompanies);
 
+            console.log('✅ Successfully processed companies:', mergedCompanies.length);
+            console.log('✅ LinkedIn companies:', linkedInCompanies.length);
+            console.log('✅ Other companies:', otherCompanies.length);
+            console.log('✅ Sample company data:', mergedCompanies[0]);
+
             setCompanies(mergedCompanies);
             setFilteredCompanies(mergedCompanies);
+
+            console.log('✅ Companies state updated:', mergedCompanies.length);
         } catch (err) {
-            console.error('Error fetching companies via API:', err);
+            console.error('❌ Error fetching companies via API:', err);
+            console.error('❌ Error details:', {
+                message: err instanceof Error ? err.message : 'Unknown error',
+                stack: err instanceof Error ? err.stack : undefined,
+                response: (err as any)?.response
+            });
             setError(err instanceof Error ? err.message : 'An error occurred');
             // No fallback - rely on backend API only for security
             setCompanies([]);
             setFilteredCompanies([]);
         } finally {
             setLoading(false);
+            console.log('=== COMPANIES FETCH COMPLETE ===');
         }
     };
 
