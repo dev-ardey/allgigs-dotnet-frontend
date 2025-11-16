@@ -1288,14 +1288,38 @@ function AutomationCompaniesContent() {
                 "Parent company": detail.parentCompany,
                 "Company description": detail.description,
                 URL: detail.website,
+                created_at: detail.createdAt,
+                // Additional info fields
+                Task_ID: detail.taskId,
+                Type: detail.type,
+                API: detail.api,
+                language: detail.language,
+                "has perm partner": detail.hasPermPartner,
+                "does not work with allgigs?": detail.doesNotWorkWithAllgigs,
+                // Pricing fields
                 "paid/free": detail.paidFree,
+                "pay to access": detail.payToAccess,
+                "Pay to reply": detail.payToReply,
+                "Pricing info found?": detail.pricingInfoFound,
+                subscription: detail.subscription,
                 "subscription price/ month": detail.subscriptionPrice,
+                "transaction fees": detail.transactionFees,
                 "transaction %": detail.transactionPercentage,
+                percentage: detail.percentage,
+                "percentage fee": detail.percentageFee,
+                "Hourly rate": detail.hourlyRate,
+                "Fixed price": detail.fixedPrice,
                 "paid by employer": detail.paidByEmployer,
+                // Type fields
                 "job board": detail.jobBoard,
                 "recruitment company": detail.recruitmentCompany,
+                "recruitment tech": detail.recruitmentTech,
                 government: detail.government,
                 "private company": detail.privateCompany,
+                "semi government": detail.semiGovernment,
+                broker: detail.broker,
+                "procurement tool": detail.procurementTool,
+                "End customer": detail.endCustomer,
                 // Legacy fields for backwards compatibility
                 Industry: detail.industry,
                 Company_size: detail.companySize,
@@ -1345,10 +1369,10 @@ function AutomationCompaniesContent() {
             console.log('✅ LinkedIn companies:', linkedInCompanies.length);
             console.log('✅ Other companies:', otherCompanies.length);
             console.log('✅ Sample company data:', mergedCompanies[0]);
-            
+
             setCompanies(mergedCompanies);
             setFilteredCompanies(mergedCompanies);
-            
+
             console.log('✅ Companies state updated:', mergedCompanies.length);
         } catch (err) {
             console.error('❌ Error fetching companies via API:', err);

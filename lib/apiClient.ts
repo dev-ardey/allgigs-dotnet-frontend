@@ -155,12 +155,46 @@ export interface JobClicksResponse {
 export interface AutomationDetailDto {
     id: number;
     companyName?: string;
+    parentCompany?: string;
+    description?: string;
+    website?: string;
+    createdAt?: string;
+    // Additional info
+    taskId?: string;
+    type?: string;
+    api?: string;
+    language?: string;
+    hasPermPartner?: string;
+    doesNotWorkWithAllgigs?: string;
+    // Pricing fields
+    paidFree?: string;
+    payToAccess?: string;
+    payToReply?: string;
+    pricingInfoFound?: string;
+    subscription?: string;
+    subscriptionPrice?: number;
+    transactionFees?: number;
+    transactionPercentage?: number;
+    percentage?: string;
+    percentageFee?: number;
+    hourlyRate?: number;
+    fixedPrice?: number;
+    paidByEmployer?: string;
+    // Type fields
+    jobBoard?: string;
+    recruitmentCompany?: string;
+    recruitmentTech?: string;
+    government?: string;
+    privateCompany?: string;
+    semiGovernment?: string;
+    broker?: string;
+    procurementTool?: string;
+    endCustomer?: string;
+    // Legacy fields for backwards compatibility
     industry?: string;
     companySize?: string;
     technologies?: string;
     location?: string;
-    website?: string;
-    description?: string;
 }
 
 export interface AutomationDetailsResponse {
