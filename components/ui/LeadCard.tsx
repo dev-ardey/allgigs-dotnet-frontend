@@ -182,21 +182,21 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         // Use currentApplyingId (state) instead of lead.applying_id (prop) to get latest value
                         let applyingId = currentApplyingId;
                         if (isClickBasedLead() || applyingId.startsWith('click_')) {
-                            // console.log(`[DEBUG] Need to create applying record for click-based lead before saving ${field}`);
+                            console.log(`[DEBUG] Need to create applying record for click-based lead before saving ${field}`);
 
                             // If already creating, wait for that to finish
                             if (applyingRecordCreationPromise.current) {
-                                // console.log(`[DEBUG] Applying record creation in progress, waiting...`);
+                                console.log(`[DEBUG] Applying record creation in progress, waiting...`);
                                 try {
                                     applyingId = await applyingRecordCreationPromise.current;
-                                    // console.log(`[DEBUG] Got applying ID from existing creation: ${applyingId}`);
+                                    console.log(`[DEBUG] Got applying ID from existing creation: ${applyingId}`);
                                 } catch (createError) {
                                     console.error(`[DEBUG] Error waiting for applying record creation:`, createError);
                                     return; // Don't try to update if creation failed
                                 }
                             } else {
                                 // Start creating applying record
-                                // console.log(`[DEBUG] Starting applying record creation for click-based lead`);
+                                console.log(`[DEBUG] Starting applying record creation for click-based lead`);
                                 applyingRecordCreationPromise.current = (async () => {
                                     try {
                                         // Get user session for API token
@@ -214,7 +214,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                             false
                                         );
                                         const newApplyingId = newApplication.applyingId;
-                                        // console.log(`[DEBUG] Created applying record: ${newApplyingId}`);
+                                        console.log(`[DEBUG] Created applying record: ${newApplyingId}`);
 
                                         // Update state immediately so other debounced saves can use it
                                         setCurrentApplyingId(newApplyingId);
@@ -253,7 +253,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                             return; // Don't attempt update with invalid ID
                         }
 
-                        // console.log(`[DEBUG] Saving ${field}:`, value, 'for lead:', applyingId);
+                        console.log(`[DEBUG] Saving ${field}:`, value, 'for lead:', applyingId);
 
                         // Map field names from frontend (snake_case) to backend DTO (camelCase)
                         const fieldMapping: Record<string, string> = {
@@ -300,11 +300,11 @@ const LeadCard: React.FC<LeadCardProps> = ({
                             apiClient.setToken(session.access_token);
                         }
 
-                        // console.log(`[DEBUG] Calling updateApplication with applyingId: ${applyingId}, field: ${backendFieldName}, value:`, value);
+                        console.log(`[DEBUG] Calling updateApplication with applyingId: ${applyingId}, field: ${backendFieldName}, value:`, value);
 
                         // Update via backend API
                         await apiClient.updateApplication(applyingId, updateData);
-                        // console.log(`[SUCCESS] Saved ${field} via backend:`, value);
+                        console.log(`[SUCCESS] Saved ${field} via backend:`, value);
 
                         // Note: We do NOT call onLeadUpdate() here for debounced saves
                         // because it causes constant page refreshes. The data is saved correctly
@@ -331,7 +331,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 (lead.applied && lead.got_the_job !== true && lead.interviews && lead.interviews.length > 0) ? 'Opportunity' :
                     (lead.applied && lead.got_the_job === true) ? 'Deal' : 'Unknown';
 
-        // console.log('[JOB STAGE DEBUG]', {
+        console.log('[JOB STAGE DEBUG]', {
             applying_id: lead.applying_id,
             job_title: lead.job_title_clicked,
             applied: lead.applied,
@@ -470,7 +470,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
     const [interviewDate, setInterviewDate] = useState('');
     const [showNewInterview, setShowNewInterview] = useState(false);
     const [canRateInterview, setCanRateInterview] = useState(false);
-    // console.log(canRateInterview, "canRateInterview - build fix");
+    console.log(canRateInterview, "canRateInterview - build fix");
     // Follow-up state
     const [followUpMessage, setFollowUpMessage] = useState(lead.follow_up_message || '');
 
@@ -484,11 +484,11 @@ const LeadCard: React.FC<LeadCardProps> = ({
         try {
             // Skip auto-archiving for click-based leads (they don't have applying records)
             if (lead.applying_id?.startsWith('click_')) {
-                // console.log('Skipping auto-archive for click-based lead:', lead.applying_id);
+                console.log('Skipping auto-archive for click-based lead:', lead.applying_id);
                 return;
             }
 
-            // console.log('Auto-archiving expired job:', lead.applying_id);
+            console.log('Auto-archiving expired job:', lead.applying_id);
 
             const { error } = await supabase
                 .from('applying')
@@ -501,7 +501,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
             if (error) {
                 console.error('Error auto-archiving job:', error);
             } else {
-                // console.log('Job auto-archived successfully');
+                console.log('Job auto-archived successfully');
                 // Trigger parent component to refresh
                 if (onLeadUpdate) {
                     onLeadUpdate();
@@ -562,7 +562,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
         }
     };
 
-    // console.log(getPriorityColor(), "getPriorityColor - build fix");
+    console.log(getPriorityColor(), "getPriorityColor - build fix");
 
     // Check if card should be collapsed
     // Check collapse state from applying record or job_clicks record
@@ -611,7 +611,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
     useEffect(() => {
         // Prioritize job_clicks.collapsed_job_click_card since it's always updated
         const newCollapsed = lead.collapsed_card !== undefined ? lead.collapsed_card : false;
-        // console.log('LeadCard useEffect - updating local state:', {
+        console.log('LeadCard useEffect - updating local state:', {
             leadId: lead.applying_id,
             applyingCollapsed: lead.collapsed_card,
             jobClicksCollapsed: lead.collapsed_job_click_card,
@@ -637,7 +637,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
     const isCollapsed = localCollapsed;
 
     // Debug log for collapse state
-    // console.log('LeadCard collapse state:', {
+    console.log('LeadCard collapse state:', {
         leadId: lead.applying_id,
         applyingCollapsed: lead.collapsed_card,
         jobClicksCollapsed: lead.collapsed_job_click_card,
@@ -691,7 +691,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
             try {
                 // For click-based leads, just remove from view (no applying record to delete)
                 if (isClickBasedLead()) {
-                    // console.log('[DEBUG] Removing click-based lead from view');
+                    console.log('[DEBUG] Removing click-based lead from view');
                     // Notify parent to remove from view
                     if (onArchived) {
                         onArchived(lead.applying_id);
@@ -725,7 +725,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
             // For click-based leads, create applying record first
             if (isClickBasedLead()) {
-                // console.log('[DEBUG] Creating applying record for click-based lead');
+                console.log('[DEBUG] Creating applying record for click-based lead');
                 try {
                     // Get user session for API token
                     const { data: { session } } = await supabase.auth.getSession();
@@ -742,7 +742,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         sentCoverLetter
                     );
                     applyingId = newApplication.applyingId;
-                    // console.log(`[DEBUG] Created applying record: ${applyingId}`);
+                    console.log(`[DEBUG] Created applying record: ${applyingId}`);
 
                     // Update lead object with new applying_id
                     lead.applying_id = applyingId;
@@ -773,7 +773,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         sentPortfolio: sentPortfolio,
                         sentCoverLetter: sentCoverLetter
                     });
-                    // console.log('[DEBUG] Updated applying record via backend');
+                    console.log('[DEBUG] Updated applying record via backend');
                 } catch (updateError) {
                     console.error('[DEBUG] Error updating applying record:', updateError);
                     alert('Failed to update application. Please try again.');
@@ -813,7 +813,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
             // For click-based leads, create applying record first
             let applyingId = lead.applying_id;
             if (isClickBasedLead()) {
-                // console.log('[DEBUG] Creating applying record for click-based lead before updating follow-up');
+                console.log('[DEBUG] Creating applying record for click-based lead before updating follow-up');
                 try {
                     const { data: { session } } = await supabase.auth.getSession();
                     if (session?.access_token) {
@@ -869,7 +869,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
             // For click-based leads, create applying record first
             let applyingId = lead.applying_id;
             if (isClickBasedLead()) {
-                // console.log('[DEBUG] Creating applying record for click-based lead before updating got_the_job');
+                console.log('[DEBUG] Creating applying record for click-based lead before updating got_the_job');
                 try {
                     const { data: { session } } = await supabase.auth.getSession();
                     if (session?.access_token) {
@@ -945,7 +945,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
             // For click-based leads, create applying record first
             let applyingId = lead.applying_id;
             if (isClickBasedLead()) {
-                // console.log('[DEBUG] Creating applying record for click-based lead before archiving');
+                console.log('[DEBUG] Creating applying record for click-based lead before archiving');
                 try {
                     const { data: { session } } = await supabase.auth.getSession();
                     if (session?.access_token) {
@@ -993,7 +993,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
             // For click-based leads, create applying record first
             let applyingId = lead.applying_id;
             if (isClickBasedLead()) {
-                // console.log('[DEBUG] Creating applying record for click-based lead before saving contact');
+                console.log('[DEBUG] Creating applying record for click-based lead before saving contact');
                 try {
                     const { data: { session } } = await supabase.auth.getSession();
                     if (session?.access_token) {
@@ -1076,7 +1076,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
             // For click-based leads, create applying record first
             let applyingId = lead.applying_id;
             if (isClickBasedLead()) {
-                // console.log('[DEBUG] Creating applying record for click-based lead before deleting contact');
+                console.log('[DEBUG] Creating applying record for click-based lead before deleting contact');
                 try {
                     const { data: { session } } = await supabase.auth.getSession();
                     if (session?.access_token) {
@@ -1121,7 +1121,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
     // Collapse/Expand handler
     const handleToggleCollapse = async (collapsed: boolean) => {
-        // console.log('handleToggleCollapse called:', {
+        console.log('handleToggleCollapse called:', {
             leadId: lead.applying_id,
             collapsed,
             hasApplying: !!lead.applying_id,
@@ -1132,7 +1132,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
             // For click-based leads, create applying record first
             let applyingId = lead.applying_id;
             if (isClickBasedLead()) {
-                // console.log('[DEBUG] Creating applying record for click-based lead before toggling collapse');
+                console.log('[DEBUG] Creating applying record for click-based lead before toggling collapse');
                 try {
                     const { data: { session } } = await supabase.auth.getSession();
                     if (session?.access_token) {
@@ -1159,7 +1159,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 await apiClient.updateApplication(applyingId, {
                     collapsedCard: collapsed
                 });
-                // console.log('Successfully updated applying table via backend');
+                console.log('Successfully updated applying table via backend');
             }
 
             // Note: job_clicks table update is handled separately via job_clicks API if needed
@@ -1170,7 +1170,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
             // Update parent state
             if (onStageAction) {
-                // console.log('Calling onStageAction with collapsed:', collapsed);
+                console.log('Calling onStageAction with collapsed:', collapsed);
                 onStageAction('toggle_collapse', { collapsed });
             }
         } catch (err: any) {
@@ -1217,7 +1217,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
             // For click-based leads, create applying record first
             let applyingId = lead.applying_id;
             if (isClickBasedLead()) {
-                // console.log('[DEBUG] Creating applying record for click-based lead before saving interview prep');
+                console.log('[DEBUG] Creating applying record for click-based lead before saving interview prep');
                 try {
                     const { data: { session } } = await supabase.auth.getSession();
                     if (session?.access_token) {
@@ -1261,7 +1261,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
     //     }
     // };
 
-    // console.log(handleOpenPrepModal, "handleOpenPrepModal - build fix");
+    console.log(handleOpenPrepModal, "handleOpenPrepModal - build fix");
 
     const [startingDate, setStartingDate] = React.useState(lead.starting_date || '');
 
@@ -1288,7 +1288,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
         // Verzamel welke interviews al zijn ingevuld
         const currentInterviews = lead.interviews || [];
         const doneTypes = currentInterviews.map((interview: any) => interview.type);
-        // console.log(doneTypes, "doneTypes - build fix");
+        console.log(doneTypes, "doneTypes - build fix");
         // All types are always available (don't filter out done types)
         const availableTypes = INTERVIEW_TYPES;
 
@@ -1311,7 +1311,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 return;
             }
 
-            // console.log('[DEBUG] Saving interview date:', {
+            console.log('[DEBUG] Saving interview date:', {
                 applying_id: lead.applying_id,
                 selectedInterviewType,
                 interviewDate,
@@ -1346,7 +1346,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                         };
                     } else {
                         // Date hasn't changed and interview is already completed - no update needed
-                        // console.log('[DEBUG] Interview already exists with same date and completed - skipping update');
+                        console.log('[DEBUG] Interview already exists with same date and completed - skipping update');
                         return;
                     }
                 } else {
@@ -1362,12 +1362,12 @@ const LeadCard: React.FC<LeadCardProps> = ({
                     updatedInterviews = [...currentInterviews, newInterview];
                 }
 
-                // console.log('[DEBUG] Updating interviews in database:', updatedInterviews);
+                console.log('[DEBUG] Updating interviews in database:', updatedInterviews);
 
                 // For click-based leads, create applying record first
                 let applyingId = lead.applying_id;
                 if (isClickBasedLead()) {
-                    // console.log('[DEBUG] Creating applying record for click-based lead before saving interview');
+                    console.log('[DEBUG] Creating applying record for click-based lead before saving interview');
                     try {
                         const { data: { session } } = await supabase.auth.getSession();
                         if (session?.access_token) {
@@ -1401,7 +1401,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                     interviews: updatedInterviews
                 });
 
-                // console.log('[DEBUG] Interview date saved successfully via backend');
+                console.log('[DEBUG] Interview date saved successfully via backend');
 
                 // Update local state and refresh UI
                 lead.interviews = updatedInterviews;
@@ -1430,7 +1430,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                 return;
             }
 
-            // console.log('[DEBUG] Saving interview rating:', {
+            console.log('[DEBUG] Saving interview rating:', {
                 applying_id: lead.applying_id,
                 selectedInterviewType,
                 interviewDate,
@@ -1479,12 +1479,12 @@ const LeadCard: React.FC<LeadCardProps> = ({
                     return;
                 }
 
-                // console.log('[DEBUG] Updating interviews in database:', updatedInterviews);
+                console.log('[DEBUG] Updating interviews in database:', updatedInterviews);
 
                 // For click-based leads, create applying record first
                 let applyingId = lead.applying_id;
                 if (isClickBasedLead()) {
-                    // console.log('[DEBUG] Creating applying record for click-based lead before saving interview rating');
+                    console.log('[DEBUG] Creating applying record for click-based lead before saving interview rating');
                     try {
                         const { data: { session } } = await supabase.auth.getSession();
                         if (session?.access_token) {
@@ -1511,7 +1511,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                     interviews: updatedInterviews
                 });
 
-                // console.log('[DEBUG] Interview saved successfully via backend');
+                console.log('[DEBUG] Interview saved successfully via backend');
 
                 // Reset form
                 setShowNewInterview(false);
@@ -2131,7 +2131,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
 
         // Check if job has interviews (for Opportunity stage)
         const hasInterviews = lead.interviews && lead.interviews.length > 0;
-        // console.log(hasInterviews, "hasInterviews - build fix");
+        console.log(hasInterviews, "hasInterviews - build fix");
 
         // Lead stage: applied but no interviews yet
         if (lead.applied && lead.got_the_job !== true && !hasInterviews) {
@@ -2737,7 +2737,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 type="date"
                                 value={followUpDate}
                                 onChange={(e) => {
-                                    // console.log('[TYPING] follow_up_date:', e.target.value);
+                                    console.log('[TYPING] follow_up_date:', e.target.value);
                                     setFollowUpDate(e.target.value);
                                     debouncedSave('follow_up_date', e.target.value);
                                 }}
@@ -2762,7 +2762,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 placeholder="e.g. great chemistry with team..."
                                 value={interviewWentWell}
                                 onChange={(e) => {
-                                    // console.log('[TYPING] interview_went_well:', e.target.value);
+                                    console.log('[TYPING] interview_went_well:', e.target.value);
                                     setInterviewWentWell(e.target.value);
                                     debouncedSave('interview_went_well', e.target.value);
                                 }}
@@ -2790,7 +2790,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 placeholder="e.g. speak more confidently about pricing..."
                                 value={interviewCanImprove}
                                 onChange={(e) => {
-                                    // console.log('[TYPING] interview_can_improve:', e.target.value);
+                                    console.log('[TYPING] interview_can_improve:', e.target.value);
                                     setInterviewCanImprove(e.target.value);
                                     debouncedSave('interview_can_improve', e.target.value);
                                 }}
@@ -2818,7 +2818,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 placeholder="e.g. yes, exactly what I asked for..."
                                 value={offerRateAlignment}
                                 onChange={(e) => {
-                                    // console.log('[TYPING] offer_rate_alignment:', e.target.value);
+                                    console.log('[TYPING] offer_rate_alignment:', e.target.value);
                                     setOfferRateAlignment(e.target.value);
                                     debouncedSave('offer_rate_alignment', e.target.value);
                                 }}
@@ -2846,7 +2846,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 placeholder="Only fill if you didn't get the job..."
                                 value={predictionAccuracy}
                                 onChange={(e) => {
-                                    // console.log('[TYPING] prediction_accuracy:', e.target.value);
+                                    console.log('[TYPING] prediction_accuracy:', e.target.value);
                                     setPredictionAccuracy(e.target.value);
                                     debouncedSave('prediction_accuracy', e.target.value);
                                 }}
@@ -2874,7 +2874,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        // console.log('[CLICK] sent_thank_you_note: true');
+                                        console.log('[CLICK] sent_thank_you_note: true');
                                         setSentThankYouNote(true);
                                         debouncedSave('sent_thank_you_note', true);
                                     }}
@@ -2894,7 +2894,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        // console.log('[CLICK] sent_thank_you_note: false');
+                                        console.log('[CLICK] sent_thank_you_note: false');
                                         setSentThankYouNote(false);
                                         debouncedSave('sent_thank_you_note', false);
                                     }}
@@ -2921,7 +2921,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 placeholder="Only fill if you didn't get the job..."
                                 value={rejectionReasonMentioned}
                                 onChange={(e) => {
-                                    // console.log('[TYPING] rejection_reason_mentioned:', e.target.value);
+                                    console.log('[TYPING] rejection_reason_mentioned:', e.target.value);
                                     setRejectionReasonMentioned(e.target.value);
                                     debouncedSave('rejection_reason_mentioned', e.target.value);
                                 }}
@@ -2949,7 +2949,7 @@ const LeadCard: React.FC<LeadCardProps> = ({
                                 placeholder="e.g. perfect experience match, portfolio impressed them..."
                                 value={whyGotInterview}
                                 onChange={(e) => {
-                                    // console.log('[TYPING] why_got_interview:', e.target.value);
+                                    console.log('[TYPING] why_got_interview:', e.target.value);
                                     setWhyGotInterview(e.target.value);
                                     debouncedSave('why_got_interview', e.target.value);
                                 }}
