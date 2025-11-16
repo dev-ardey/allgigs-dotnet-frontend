@@ -96,7 +96,7 @@ function JobBoardContent() {
   const [newKeyword, setNewKeyword] = useState('');
   const [keywords, setKeywords] = useState<string[]>([]);
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
-  console.log(recommendedJobs, "recommendedJobs - build fix");
+  // console.log(recommendedJobs, "recommendedJobs - build fix");
   // State to track if sticky header should be visible
   const [showStickyHeader, setShowStickyHeader] = useState(false);
   const leadSearchSectionRef = useRef<HTMLDivElement>(null);
@@ -171,7 +171,7 @@ function JobBoardContent() {
   // LinkedIn state
   const [freelanceJobs, setFreelanceJobs] = useState<FreelanceJob[]>([]);
   const [loadingFreelance, setLoadingFreelance] = useState(false);
-  console.log(loadingFreelance, "loadingFreelance - build fix");
+  // console.log(loadingFreelance, "loadingFreelance - build fix");
 
   useEffect(() => {
     if (querySearch && typeof querySearch === 'string') {
@@ -204,7 +204,7 @@ function JobBoardContent() {
         // Fetch jobs from backend API
         const response = await apiClient.getJobs(1, 5000) as { jobs: Job[], total: number }; // Get up to 5000 jobs
         if (response?.jobs) {
-          console.log('Fetched jobs from API:', response.jobs.length, 'of', response.total, 'total jobs');
+          // console.log('Fetched jobs from API:', response.jobs.length, 'of', response.total, 'total jobs');
           setJobs(response.jobs);
           setAllJobs(response.jobs);
         }
@@ -252,7 +252,7 @@ function JobBoardContent() {
 
         // Fetch profile from backend API
         const profileData: ProfileResponse = await apiClient.getProfile();
-        console.log('Fetched profile from API:', profileData);
+        // console.log('Fetched profile from API:', profileData);
       } catch (error) {
         console.error('Error fetching profile from API:', error);
         // No fallback - rely on backend API only for security
@@ -265,12 +265,12 @@ function JobBoardContent() {
   // Log search term activity to backend API
   const logSearchTermActivity = async (searchTermToLog: string) => {
     if (!user || !user.id || !searchTermToLog || searchTermToLog.trim() === "") {
-      console.log("[logSearchTermActivity] Pre-condition failed. User:", user, "SearchTerm:", searchTermToLog);
+      // console.log("[logSearchTermActivity] Pre-condition failed. User:", user, "SearchTerm:", searchTermToLog);
       return;
     }
 
-    console.log("[logSearchTermActivity] Logging search term:", searchTermToLog, "for user:", user.id);
-    console.log("[logSearchTermActivity] About to call backend API");
+    // console.log("[logSearchTermActivity] Logging search term:", searchTermToLog, "for user:", user.id);
+    // console.log("[logSearchTermActivity] About to call backend API");
 
     try {
       // Get user session for API token
@@ -281,7 +281,7 @@ function JobBoardContent() {
 
       // Log search via backend API
       await apiClient.logSearch(searchTermToLog.trim());
-      console.log("✅ Search term logged successfully via API!");
+      // console.log("✅ Search term logged successfully via API!");
 
     } catch (error) {
       console.error("❌ Error logging search term via API:", error);
@@ -291,12 +291,12 @@ function JobBoardContent() {
 
   // useEffect for logging debounced search term
   useEffect(() => {
-    console.log("[useEffect logSearchTerm] Triggered. User:", user, "DebouncedSearchTerm:", debouncedSearchTerm);
+    // console.log("[useEffect logSearchTerm] Triggered. User:", user, "DebouncedSearchTerm:", debouncedSearchTerm);
     if (user && user.id && debouncedSearchTerm && debouncedSearchTerm.trim() !== "") {
-      console.log("[useEffect logSearchTerm] Conditions met. Calling logSearchTermActivity.");
+      // console.log("[useEffect logSearchTerm] Conditions met. Calling logSearchTermActivity.");
       logSearchTermActivity(debouncedSearchTerm);
     } else {
-      console.log("[useEffect logSearchTerm] Conditions NOT met. Skipping logSearchTermActivity.");
+      // console.log("[useEffect logSearchTerm] Conditions NOT met. Skipping logSearchTermActivity.");
       if (!user || !user.id) console.log("[useEffect logSearchTerm] Reason: User or user.id is missing.");
       if (!debouncedSearchTerm || debouncedSearchTerm.trim() === "") console.log("[useEffect logSearchTerm] Reason: debouncedSearchTerm is empty or whitespace.");
     }
@@ -305,17 +305,17 @@ function JobBoardContent() {
 
   // useEffect for fetching LinkedIn posts when search term changes
   useEffect(() => {
-    console.log('[FREELANCE] useEffect triggered:', {
+    // console.log('[FREELANCE] useEffect triggered:', {
       linkedinFeedEnabled,
       debouncedSearchTerm,
       searchTermLength: debouncedSearchTerm?.trim().length
     });
 
     if (linkedinFeedEnabled && debouncedSearchTerm && debouncedSearchTerm.trim().length >= 2) {
-      console.log('[FREELANCE] Calling fetchFreelanceJobs');
+      // console.log('[FREELANCE] Calling fetchFreelanceJobs');
       fetchFreelanceJobs(debouncedSearchTerm);
     } else {
-      console.log('[FREELANCE] Clearing freelance jobs - no search term or LinkedIn disabled');
+      // console.log('[FREELANCE] Clearing freelance jobs - no search term or LinkedIn disabled');
       setFreelanceJobs([]);
     }
   }, [debouncedSearchTerm, linkedinFeedEnabled]);
@@ -324,7 +324,7 @@ function JobBoardContent() {
   const loadLinkedinFeedState = async () => {
     if (!user?.id) return;
 
-    console.log('[LINKEDIN] Loading LinkedIn feed state for user:', user.id);
+    // console.log('[LINKEDIN] Loading LinkedIn feed state for user:', user.id);
 
     try {
       // Get user session for API token
@@ -335,7 +335,7 @@ function JobBoardContent() {
 
       // Fetch LinkedIn feed enabled state from backend API
       const enabled = await apiClient.getLinkedInFeedEnabled();
-      console.log('[LINKEDIN] LinkedIn feed enabled from API:', enabled);
+      // console.log('[LINKEDIN] LinkedIn feed enabled from API:', enabled);
       setLinkedinFeedEnabled(enabled);
     } catch (error) {
       console.error('[LINKEDIN] Error loading LinkedIn feed state from API:', error);
@@ -348,7 +348,7 @@ function JobBoardContent() {
   const saveLinkedinFeedState = async (enabled: boolean) => {
     if (!user?.id) return;
 
-    console.log('[LINKEDIN] Saving LinkedIn feed state:', enabled, 'for user:', user.id);
+    // console.log('[LINKEDIN] Saving LinkedIn feed state:', enabled, 'for user:', user.id);
 
     try {
       // Get user session for API token
@@ -359,7 +359,7 @@ function JobBoardContent() {
 
       // Update LinkedIn feed enabled state via backend API
       await apiClient.updateLinkedInFeedEnabled(enabled);
-      console.log('[LINKEDIN] Successfully saved LinkedIn feed state via API:', enabled);
+      // console.log('[LINKEDIN] Successfully saved LinkedIn feed state via API:', enabled);
     } catch (error) {
       console.error('[LINKEDIN] Error saving LinkedIn feed state via API:', error);
       // No fallback - rely on backend API only for security
@@ -414,8 +414,8 @@ function JobBoardContent() {
         const response = await apiClient.getJobs(1, 10000) as { jobs: Job[] }; // Get all jobs
 
         if (response?.jobs) {
-          console.log('✅ Jobs fetched from API:', response.jobs.length, 'jobs');
-          console.log('First job sample:', response.jobs[0]);
+          // console.log('✅ Jobs fetched from API:', response.jobs.length, 'jobs');
+          // console.log('First job sample:', response.jobs[0]);
 
           // Set all jobs for search/filtering
           setAllJobs(response.jobs);
@@ -440,7 +440,7 @@ function JobBoardContent() {
 
   // Initialize filters when allJobs change
   useEffect(() => {
-    console.log('allJobs changed, length:', allJobs.length);
+    // console.log('allJobs changed, length:', allJobs.length);
     if (allJobs.length > 0) {
       // Extract unique companies, locations, and sources
       const companies = new Set(allJobs.map(job => job.Company).filter(company => company && company.trim() !== ''));
@@ -520,10 +520,10 @@ function JobBoardContent() {
     const newSelected = new Set(selectedRegions);
     if (newSelected.has(region)) {
       newSelected.delete(region);
-      console.log(`Removed ${region} from selection. New selection:`, Array.from(newSelected));
+      // console.log(`Removed ${region} from selection. New selection:`, Array.from(newSelected));
     } else {
       newSelected.add(region);
-      console.log(`Added ${region} to selection. New selection:`, Array.from(newSelected));
+      // console.log(`Added ${region} to selection. New selection:`, Array.from(newSelected));
     }
     setSelectedRegions(newSelected);
   };
@@ -611,14 +611,14 @@ function JobBoardContent() {
 
   // Function to fetch LinkedIn posts
   const fetchFreelanceJobs = async (searchTerm: string) => {
-    console.log('[FREELANCE] fetchFreelanceJobs called with:', {
+    // console.log('[FREELANCE] fetchFreelanceJobs called with:', {
       linkedinFeedEnabled,
       searchTerm,
       searchTermLength: searchTerm?.trim().length
     });
 
     if (!linkedinFeedEnabled) {
-      console.log('[FREELANCE] Early return - LinkedIn not enabled');
+      // console.log('[FREELANCE] Early return - LinkedIn not enabled');
       setFreelanceJobs([]);
       return;
     }
@@ -626,15 +626,15 @@ function JobBoardContent() {
     // If no search term, show all jobs
     const shouldFilter = searchTerm && searchTerm.trim().length >= 2;
     if (!shouldFilter) {
-      console.log('[FREELANCE] No search term, fetching all jobs');
+      // console.log('[FREELANCE] No search term, fetching all jobs');
     }
 
-    console.log('[FREELANCE] Fetching freelance jobs for search term:', searchTerm);
+    // console.log('[FREELANCE] Fetching freelance jobs for search term:', searchTerm);
     setLoadingFreelance(true);
 
     try {
       const searchWords = searchTerm.trim().toLowerCase().split(/\s+/).filter(word => word.length > 0);
-      console.log('[FREELANCE] Search words:', searchWords);
+      // console.log('[FREELANCE] Search words:', searchWords);
 
       // Fetch all freelance jobs and filter client-side for better search
       const { data: jobs, error } = await supabase
@@ -648,10 +648,10 @@ function JobBoardContent() {
         return;
       }
 
-      console.log('[FREELANCE] Fetched jobs:', jobs?.length || 0);
+      // console.log('[FREELANCE] Fetched jobs:', jobs?.length || 0);
 
       if (!jobs || jobs.length === 0) {
-        console.log('[FREELANCE] No jobs found');
+        // console.log('[FREELANCE] No jobs found');
         setFreelanceJobs([]);
         return;
       }
@@ -662,7 +662,7 @@ function JobBoardContent() {
         filteredJobs = jobs.filter(job => {
           const jobText = `${job.post_text} ${job.author_name}`.toLowerCase();
           const matches = searchWords.every(word => jobText.includes(word));
-          console.log('[FREELANCE] Job filter:', {
+          // console.log('[FREELANCE] Job filter:', {
             jobId: job.id,
             jobText: jobText.substring(0, 50) + '...',
             matches,
@@ -670,9 +670,9 @@ function JobBoardContent() {
           });
           return matches;
         });
-        console.log('[FREELANCE] Filtered jobs:', filteredJobs.length);
+        // console.log('[FREELANCE] Filtered jobs:', filteredJobs.length);
       } else {
-        console.log('[FREELANCE] No filtering, showing all jobs:', jobs.length);
+        // console.log('[FREELANCE] No filtering, showing all jobs:', jobs.length);
       }
 
       setFreelanceJobs(filteredJobs);
@@ -695,7 +695,7 @@ function JobBoardContent() {
     threshold: 0.36, // Reduced fuzziness by 10%
   }), [allJobs]);
 
-  console.log(fuse, 'fuse')
+  // console.log(fuse, 'fuse')
 
   // Memoize filtered jobs to avoid expensive filtering on every render
   const filteredJobs = useMemo(() => {
@@ -717,27 +717,27 @@ function JobBoardContent() {
     // 2. Filter by selected companies
     if (selectedCompanies.size > 0 && selectedCompanies.size < getUniqueCompanies.length) {
       filtered = filtered.filter(job => selectedCompanies.has(job.Company));
-      console.log(`Company filter applied: ${selectedCompanies.size}/${getUniqueCompanies.length} companies selected`);
+      // console.log(`Company filter applied: ${selectedCompanies.size}/${getUniqueCompanies.length} companies selected`);
     } else if (selectedCompanies.size === 0) {
       // If no companies selected, show no jobs
       filtered = [];
-      console.log('No companies selected - showing no jobs');
+      // console.log('No companies selected - showing no jobs');
     }
 
     // 3. Filter by selected locations
     if (selectedLocations.size > 0 && selectedLocations.size < getUniqueLocations.length) {
       filtered = filtered.filter(job => selectedLocations.has(job.Location));
-      console.log(`Location filter applied: ${selectedLocations.size}/${getUniqueLocations.length} locations selected`);
+      // console.log(`Location filter applied: ${selectedLocations.size}/${getUniqueLocations.length} locations selected`);
     } else if (selectedLocations.size === 0) {
       // If no locations selected, show no jobs
       filtered = [];
-      console.log('No locations selected - showing no jobs');
+      // console.log('No locations selected - showing no jobs');
     }
 
     // 4. Filter by selected regions (using boolean fields from Supabase)
     if (selectedRegions.size > 0 && selectedRegions.size < 3) {
-      console.log('Region filtering active. Selected regions:', Array.from(selectedRegions));
-      console.log('Sample job for region debugging:', filtered[0]);
+      // console.log('Region filtering active. Selected regions:', Array.from(selectedRegions));
+      // console.log('Sample job for region debugging:', filtered[0]);
       const beforeCount = filtered.length;
       filtered = filtered.filter(job => {
         let matchesRegion = false;
@@ -746,20 +746,20 @@ function JobBoardContent() {
         if (selectedRegions.has('Rest_of_World') && job.Rest_of_World) matchesRegion = true;
         return matchesRegion;
       });
-      console.log(`Region filter: ${beforeCount} -> ${filtered.length} jobs`);
+      // console.log(`Region filter: ${beforeCount} -> ${filtered.length} jobs`);
     } else {
-      console.log('No region filtering applied (all regions selected or none)');
+      // console.log('No region filtering applied (all regions selected or none)');
     }
 
     // 5. Filter by selected sources
     if (selectedSources.size > 0 && selectedSources.size < getUniqueSources.length) {
       const beforeCount = filtered.length;
       filtered = filtered.filter(job => selectedSources.has(job.Source || ''));
-      console.log(`Source filter applied: ${beforeCount} -> ${filtered.length} jobs (${selectedSources.size}/${getUniqueSources.length} sources selected)`);
+      // console.log(`Source filter applied: ${beforeCount} -> ${filtered.length} jobs (${selectedSources.size}/${getUniqueSources.length} sources selected)`);
     } else if (selectedSources.size === 0) {
       // If no sources selected, show no jobs
       filtered = [];
-      console.log('No sources selected - showing no jobs');
+      // console.log('No sources selected - showing no jobs');
     }
 
     return filtered;
@@ -891,7 +891,7 @@ function JobBoardContent() {
       return;
     }
 
-    console.log("[LogJobClick] Starting - User:", user.id, "Job ID:", job.UNIQUE_ID);
+    // console.log("[LogJobClick] Starting - User:", user.id, "Job ID:", job.UNIQUE_ID);
 
     try {
       // Get user session for API token
@@ -908,12 +908,12 @@ function JobBoardContent() {
       }
 
       apiClient.setToken(session.access_token);
-      console.log("[LogJobClick] Token set, calling API...");
+      // console.log("[LogJobClick] Token set, calling API...");
 
       // Log job click via backend API
       const result = await apiClient.recordJobClick(job.UNIQUE_ID);
-      console.log("[LogJobClick] ✅ SUCCESS - API returned:", result);
-      console.log("[LogJobClick] Job click logged successfully for job:", job.UNIQUE_ID);
+      // console.log("[LogJobClick] ✅ SUCCESS - API returned:", result);
+      // console.log("[LogJobClick] Job click logged successfully for job:", job.UNIQUE_ID);
 
     } catch (error: any) {
       console.error("[LogJobClick] ❌ ERROR logging job click:", error);
@@ -1226,12 +1226,12 @@ function JobBoardContent() {
     marginTop: 0,
   };
 
-  console.log(showMenuAddJobForm); // voorkom build error tijdelijk
-  console.log(menuButtonSharedStyle); // voorkom build error tijdelijk
-  console.log(hasAddJobPermission); // voorkom build error tijdelijk
-  console.log(setShowMenuAddJobForm); // voorkom build error tijdelijk
-  console.log(hasMore); // voorkom build error tijdelijk
-  console.log(jobs); // voorkom build error tijdelijk
+  // console.log(showMenuAddJobForm); // voorkom build error tijdelijk
+  // console.log(menuButtonSharedStyle); // voorkom build error tijdelijk
+  // console.log(hasAddJobPermission); // voorkom build error tijdelijk
+  // console.log(setShowMenuAddJobForm); // voorkom build error tijdelijk
+  // console.log(hasMore); // voorkom build error tijdelijk
+  // console.log(jobs); // voorkom build error tijdelijk
 
 
   return (
@@ -2018,7 +2018,7 @@ function JobBoardContent() {
                 onClick={(e) => {
                   e.preventDefault();
                   const newState = !linkedinFeedEnabled;
-                  console.log('[LINKEDIN] Toggle clicked, changing from', linkedinFeedEnabled, 'to', newState);
+                  // console.log('[LINKEDIN] Toggle clicked, changing from', linkedinFeedEnabled, 'to', newState);
                   setLinkedinFeedEnabled(newState);
                   if (user?.id) {
                     saveLinkedinFeedState(newState);
@@ -2877,7 +2877,7 @@ function JobBoardContent() {
           <AddJobForm
             onClose={() => setShowAddJobForm(false)}
             onJobAdded={() => {
-              console.log("Job toegevoegd");
+              // console.log("Job toegevoegd");
             }}
             user={user}
           />

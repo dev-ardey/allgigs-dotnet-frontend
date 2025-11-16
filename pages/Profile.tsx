@@ -51,7 +51,7 @@ function ProfileContent() {
   // State variables (from dashboard)
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  console.log(user)
+  // console.log(user)
   const [isAvailable, setIsAvailable] = useState(true);
   const emptyProfile: Profile = {
     firstName: '',
@@ -90,7 +90,7 @@ function ProfileContent() {
     { id: "3", name: "Portfolio.pdf", type: "PDF", size: "4.7 MB", uploadedAt: "2025-06-15" },
   ]);
 
-  console.log(documents, setDocuments)
+  // console.log(documents, setDocuments)
   // Testimonial state - now connected to profile data
   const [testimonial, setTestimonial] = useState('');
   const [testimonialSending, setTestimonialSending] = useState(false);
@@ -188,18 +188,18 @@ function ProfileContent() {
         interview_reminders: newSettings.interviewReminders,
         market_insights: newSettings.marketInsights
       };
-      console.log('[DEBUG] Saving email notifications:', notificationData);
+      // console.log('[DEBUG] Saving email notifications:', notificationData);
       const { data, error } = await supabase
         .from('email_notifications')
         .upsert(notificationData);
-      console.log('[DEBUG] Upsert response:', data, error);
+      // console.log('[DEBUG] Upsert response:', data, error);
       if (error) {
         console.error('[DEBUG] Error saving email notifications:', error);
       } else {
-        console.log('[DEBUG] Email notifications saved successfully');
+        // console.log('[DEBUG] Email notifications saved successfully');
       }
       // Log de state na opslaan
-      console.log('[DEBUG] mailNotifications state after save:', newSettings);
+      // console.log('[DEBUG] mailNotifications state after save:', newSettings);
     } catch (error) {
       console.error('[DEBUG] Error saving email notifications:', error);
     }
@@ -302,12 +302,12 @@ function ProfileContent() {
           .select('new_lead_notifications, follow_up_reminders, weekly_summary, interview_reminders, market_insights')
           .eq('user_id', user.id)
           .single();
-        console.log('[DEBUG] Fetch email_notifications for user_id:', user.id);
-        console.log('[DEBUG] Fetch response:', data, error);
+        // console.log('[DEBUG] Fetch email_notifications for user_id:', user.id);
+        // console.log('[DEBUG] Fetch response:', data, error);
         if (error && error.code !== 'PGRST116') {
           console.error('[DEBUG] Error fetching email notifications:', error);
         } else if (data) {
-          console.log('[DEBUG] Found email notifications data:', data);
+          // console.log('[DEBUG] Found email notifications data:', data);
           setMailNotifications({
             newLeadNotifications: data.new_lead_notifications ?? true,
             followUpReminders: data.follow_up_reminders ?? true,
@@ -316,7 +316,7 @@ function ProfileContent() {
             marketInsights: data.market_insights ?? false
           });
           // Log de state na laden
-          console.log('[DEBUG] mailNotifications state after fetch:', {
+          // console.log('[DEBUG] mailNotifications state after fetch:', {
             newLeadNotifications: data.new_lead_notifications ?? true,
             followUpReminders: data.follow_up_reminders ?? true,
             weeklySummary: data.weekly_summary ?? true,
@@ -324,7 +324,7 @@ function ProfileContent() {
             marketInsights: data.market_insights ?? false
           });
         } else {
-          console.log('[DEBUG] No email notifications found, creating default record');
+          // console.log('[DEBUG] No email notifications found, creating default record');
           const defaultSettings = {
             newLeadNotifications: true,
             followUpReminders: true,
@@ -344,7 +344,7 @@ function ProfileContent() {
 
   // Save profile function (fixed to use upsert like CompleteProfileForm)
   const saveProfile = async () => {
-    console.log('Save profile clicked');
+    // console.log('Save profile clicked');
     if (!editedProfile) {
       console.error('No edited profile data');
       return;
@@ -364,8 +364,8 @@ function ProfileContent() {
       return;
     }
 
-    console.log('User found:', user.id);
-    console.log('Edited profile data:', editedProfile);
+    // console.log('User found:', user.id);
+    // console.log('Edited profile data:', editedProfile);
 
     try {
       // Use upsert like CompleteProfileForm does - save all available fields
@@ -392,7 +392,7 @@ function ProfileContent() {
         postponed_time: editedProfile.postponedTime
       };
 
-      console.log('Profile data to be upserted:', profileData);
+      // console.log('Profile data to be upserted:', profileData);
 
       try {
         // Get user session for API token
@@ -424,7 +424,7 @@ function ProfileContent() {
         };
 
         await apiClient.updateProfile(updateData);
-        console.log('Profile saved successfully');
+        // console.log('Profile saved successfully');
         setProfile(editedProfile);
         setEditMode(false);
         alert('Profile saved successfully!');

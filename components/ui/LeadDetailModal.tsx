@@ -135,13 +135,13 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
     const [newActivity, setNewActivity] = useState<{ type: Activity['type'], title: string, description: string }>({ type: 'note', title: '', description: '' });
     const [showAddActivity, setShowAddActivity] = useState(false);
     const [editingStartDate, setEditingStartDate] = useState(false);
-    console.log(editingStartDate, setEditingStartDate, "editingStartDate - build fix");
+    // console.log(editingStartDate, setEditingStartDate, "editingStartDate - build fix");
     const [startDate, setStartDate] = useState(lead.starting_date || '');
-    console.log(startDate, setStartDate, "startDate - build fix");
+    // console.log(startDate, setStartDate, "startDate - build fix");
     const [editingGotJob, setEditingGotJob] = useState(false);
-    console.log(editingGotJob, setEditingGotJob, "editingGotJob - build fix");
+    // console.log(editingGotJob, setEditingGotJob, "editingGotJob - build fix");
     const [gotJob, setGotJob] = useState<boolean | null>(lead.got_the_job || null);
-    console.log(setGotJob, "setGotJob - build fix");
+    // console.log(setGotJob, "setGotJob - build fix");
 
     // Mock data for demonstration
     const [contacts, setContacts] = useState<Contact[]>([
@@ -267,7 +267,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
         }
     };
 
-    console.log(handleSaveStartDate(), "handleSaveStartDate - build fix");
+    // console.log(handleSaveStartDate(), "handleSaveStartDate - build fix");
 
     const handleSaveGotJob = () => {
         if (onUpdate && lead) {
@@ -279,7 +279,7 @@ const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
             setEditingGotJob(false);
         }
     };
-    console.log(handleSaveGotJob(), "handleSaveGotJob - build fix");
+    // console.log(handleSaveGotJob(), "handleSaveGotJob - build fix");
 
     const getActivityIcon = (type: Activity['type']) => {
         switch (type) {

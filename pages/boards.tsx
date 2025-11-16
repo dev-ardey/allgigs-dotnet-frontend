@@ -96,11 +96,11 @@ const CompanyCard: React.FC<{
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
     // Get job data for this source
-    console.log(`Looking for job data for company: "${company.Company_name}"`);
+    // console.log(`Looking for job data for company: "${company.Company_name}"`);
     const sourceData = sourceJobStats[company.Company_name] || { total: 0 };
     const sourceIndustries = Object.entries(sourceData).filter(([key]) => key !== 'total');
     const sourceTotal = sourceData.total;
-    console.log(`Found ${sourceTotal} jobs for ${company.Company_name}:`, sourceData);
+    // console.log(`Found ${sourceTotal} jobs for ${company.Company_name}:`, sourceData);
 
 
     return (
@@ -835,10 +835,11 @@ function AutomationCompaniesContent() {
     const [selectedCompanies, setSelectedCompanies] = useState<Set<number>>(new Set());
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [user, setUser] = useState<any>(null);
-    console.log('user', user);
+    const [_user, setUser] = useState<any>(null);
+    // console.log('user', user);
     // Temporarily disable profile check to focus on main app functionality
-    const needsProfile = false;
+    // @ts-expect-error - Temporarily disabled
+    const _needsProfile = false;
     const profileLoading = false;
     // const {needsProfile, loading: profileLoading } = useProfileCheck(user);
 
@@ -959,8 +960,9 @@ function AutomationCompaniesContent() {
         return costs;
     };
 
-    const selectedCompanyCosts = calculateSelectedCompanyCosts();
-    console.log('selectedCompanyCosts', selectedCompanyCosts);
+    // @ts-expect-error - Keep for reference
+    const _selectedCompanyCosts = calculateSelectedCompanyCosts();
+    // console.log('selectedCompanyCosts', selectedCompanyCosts);
 
     // Calculate source breakdown for selected industries
     const getSourceBreakdownForIndustries = (industries: Set<string>) => {
@@ -993,7 +995,7 @@ function AutomationCompaniesContent() {
 
     // Consistent color mapping for industries (shared across all pie charts)
     const getIndustryColor = (industry: string) => {
-        console.log('Getting color for industry:', `"${industry}"`);
+        // console.log('Getting color for industry:', `"${industry}"`);
 
         const colorMap: { [key: string]: string } = {
             'IT': '#0066CC',           // Strong Blue
@@ -1019,14 +1021,14 @@ function AutomationCompaniesContent() {
             'Non-profit': '#CC6699'    // Mauve
         };
 
-        console.log('Available color keys:', Object.keys(colorMap));
+        // console.log('Available color keys:', Object.keys(colorMap));
 
         // If industry exists in map, use that color, otherwise generate consistent color based on hash
         if (colorMap[industry]) {
-            console.log(`Using mapped color for ${industry}:`, colorMap[industry]);
+            // console.log(`Using mapped color for ${industry}:`, colorMap[industry]);
             return colorMap[industry];
         } else {
-            console.log(`No mapped color found for "${industry}", using hash-based color`);
+            // console.log(`No mapped color found for "${industry}", using hash-based color`);
         }
 
         // Generate consistent color based on industry name hash
@@ -1041,8 +1043,8 @@ function AutomationCompaniesContent() {
     // Fetch job statistics
     const fetchJobStats = async () => {
         try {
-            console.log('=== STARTING JOB STATS FETCH ===');
-            console.log('Supabase client:', supabase);
+            // console.log('=== STARTING JOB STATS FETCH ===');
+            // console.log('Supabase client:', supabase);
 
             // Get user session for API token
             const { data: { session } } = await supabase.auth.getSession();
@@ -1051,33 +1053,33 @@ function AutomationCompaniesContent() {
             }
 
             // Fetch job statistics via backend API
-            console.log('=== FETCHING JOB STATS VIA API ===');
+            // console.log('=== FETCHING JOB STATS VIA API ===');
             const jobStatsData = await apiClient.getJobStatistics();
 
             if (!jobStatsData) {
-                console.warn('No job statistics data returned from API');
+                // console.warn('No job statistics data returned from API');
                 return;
             }
 
             // The backend should return structured stats
             // If it returns raw data, we'll process it
-            console.log('Job stats from API:', jobStatsData);
+            // console.log('Job stats from API:', jobStatsData);
 
             // Fallback: If API doesn't return processed stats, fetch directly
             // Test permissions on the job table specifically
-            console.log('=== TESTING JOB TABLE PERMISSIONS ===');
+            // console.log('=== TESTING JOB TABLE PERMISSIONS ===');
             const { data: permTest, error: permError, count } = await supabase
                 .from('Allgigs_All_vacancies_NEW')
                 .select('*', { count: 'exact' })
                 .limit(1);
 
-            console.log('Permission test result:');
-            console.log('- Data:', permTest);
-            console.log('- Error:', permError);
-            console.log('- Count:', count);
-            console.log('- Error details:', permError?.details);
-            console.log('- Error hint:', permError?.hint);
-            console.log('- Error code:', permError?.code);
+            // console.log('Permission test result:');
+            // console.log('- Data:', permTest);
+            // console.log('- Error:', permError);
+            // console.log('- Count:', count);
+            // console.log('- Error details:', permError?.details);
+            // console.log('- Error hint:', permError?.hint);
+            // console.log('- Error code:', permError?.code);
 
             if (permError) {
                 console.error('PERMISSION ERROR on Allgigs_All_vacancies_NEW:', permError);
@@ -1086,20 +1088,20 @@ function AutomationCompaniesContent() {
             }
 
             if (count === 0) {
-                console.warn('Table exists and is accessible, but contains 0 records');
-                console.warn('Please check if data has been imported into Allgigs_All_vacancies_NEW');
+                // console.warn('Table exists and is accessible, but contains 0 records');
+                // console.warn('Please check if data has been imported into Allgigs_All_vacancies_NEW');
                 return;
             }
 
-            console.log(`Found ${count} records in table!`);
+            // console.log(`Found ${count} records in table!`);
 
             // If we have data, let's also check what columns are available
             if (permTest && permTest.length > 0) {
-                console.log('Sample record from table:', permTest[0]);
-                console.log('Available columns:', Object.keys(permTest[0]));
+                // console.log('Sample record from table:', permTest[0]);
+                // console.log('Available columns:', Object.keys(permTest[0]));
             }
 
-            console.log('Connection successful! Now trying job stats table...');
+            // console.log('Connection successful! Now trying job stats table...');
 
             // Let's check what tables are available by trying some common variations
             const tableVariations = [
@@ -1117,23 +1119,23 @@ function AutomationCompaniesContent() {
 
             for (const tableName of tableVariations) {
                 try {
-                    console.log(`Trying table: ${tableName}`);
-                    const { data: testData, error: testError, count } = await supabase
+                    // console.log(`Trying table: ${tableName}`);
+                    const { data: testData, error: testError, count: _count } = await supabase
                         .from(tableName)
                         .select('*', { count: 'exact' })
                         .limit(1);
 
-                    console.log(`Table ${tableName}: data=${testData?.length || 0}, error=${testError?.message || 'none'}, count=${count}`);
+                    // console.log(`Table ${tableName}: data=${testData?.length || 0}, error=${testError?.message || 'none'}, count=${count}`);
 
                     if (!testError && testData && testData.length > 0) {
-                        console.log(`Found data in table: ${tableName}`);
-                        console.log('Sample record:', testData[0]);
-                        console.log('Available columns:', Object.keys(testData[0]));
+                        // console.log(`Found data in table: ${tableName}`);
+                        // console.log('Sample record:', testData[0]);
+                        // console.log('Available columns:', Object.keys(testData[0]));
                         workingTable = tableName;
                         break;
                     }
                 } catch (err) {
-                    console.log(`Table ${tableName} failed:`, err);
+                    // console.log(`Table ${tableName} failed:`, err);
                 }
             }
 
@@ -1142,21 +1144,21 @@ function AutomationCompaniesContent() {
                 return;
             }
 
-            console.log(`Using table: ${workingTable}`);
-            console.log('Fetching from table:', workingTable);
+            // console.log(`Using table: ${workingTable}`);
+            // console.log('Fetching from table:', workingTable);
 
             // Try the main table
-            console.log('Attempting query...');
+            // console.log('Attempting query...');
             const { data, error } = await supabase
                 .from(workingTable)
                 .select('Industry, Source');
 
-            console.log('=== QUERY RESULT ===');
-            console.log('Data:', data);
-            console.log('Error:', error);
-            console.log('Data length:', data?.length);
+            // console.log('=== QUERY RESULT ===');
+            // console.log('Data:', data);
+            // console.log('Error:', error);
+            // console.log('Data length:', data?.length);
 
-            console.log('Job stats data:', data, 'Error:', error);
+            // console.log('Job stats data:', data, 'Error:', error);
 
             if (error) {
                 console.error('Supabase error:', error);
@@ -1171,26 +1173,26 @@ function AutomationCompaniesContent() {
 
                 for (const [industryCol, sourceCol] of columnVariations) {
                     try {
-                        console.log(`Trying columns: ${industryCol}, ${sourceCol}`);
+                        // console.log(`Trying columns: ${industryCol}, ${sourceCol}`);
                         const { data: testData, error: testError } = await supabase
                             .from('Allgigs_All_vacancies_NEW')
                             .select(`${industryCol}, ${sourceCol}`)
                             .limit(5);
 
                         if (!testError && testData && testData.length > 0) {
-                            console.log(`Found data with columns ${industryCol}, ${sourceCol}:`, testData[0]);
+                            // console.log(`Found data with columns ${industryCol}, ${sourceCol}:`, testData[0]);
                             // Update the data processing to use these columns
                             break;
                         }
                     } catch (e) {
-                        console.log(`Columns ${industryCol}, ${sourceCol} not found`);
+                        // console.log(`Columns ${industryCol}, ${sourceCol} not found`);
                     }
                 }
                 return;
             }
 
             if (!data || data.length === 0) {
-                console.log('No data found in Allgigs_All_vacancies_NEW');
+                // console.log('No data found in Allgigs_All_vacancies_NEW');
                 return;
             }
 
@@ -1231,11 +1233,11 @@ function AutomationCompaniesContent() {
                 }))
                 .sort((a, b) => b.count - a.count);
 
-            console.log('Processed job stats:', { industryStats, sourceCounts, total });
-            console.log('Industry counts breakdown:', industryCounts);
-            console.log('Number of unique industries:', Object.keys(industryCounts).length);
-            console.log('Industry names:', Object.keys(industryCounts));
-            console.log('Available source names in job data:', Object.keys(sourceCounts));
+            // console.log('Processed job stats:', { industryStats, sourceCounts, total });
+            // console.log('Industry counts breakdown:', industryCounts);
+            // console.log('Number of unique industries:', Object.keys(industryCounts).length);
+            // console.log('Industry names:', Object.keys(industryCounts));
+            // console.log('Available source names in job data:', Object.keys(sourceCounts));
             setJobStats(industryStats);
             setSourceJobStats(sourceCounts);
             setTotalJobs(total);
@@ -1254,7 +1256,7 @@ function AutomationCompaniesContent() {
 
     const fetchCompanies = async () => {
         try {
-            console.log('=== STARTING COMPANIES FETCH ===');
+            // console.log('=== STARTING COMPANIES FETCH ===');
             setLoading(true);
 
             // Get user session for API token
@@ -1266,12 +1268,12 @@ function AutomationCompaniesContent() {
             // Fetch automation details via backend API
             const response: AutomationDetailsResponse = await apiClient.getAutomationDetails(1000);
 
-            console.log('=== COMPANIES QUERY RESULT ===');
-            console.log('Full response:', response);
-            console.log('Response.details:', response.details);
-            console.log('Response.details type:', typeof response.details);
-            console.log('Response.details length:', response.details?.length);
-            console.log('Response.total:', response.total);
+            // console.log('=== COMPANIES QUERY RESULT ===');
+            // console.log('Full response:', response);
+            // console.log('Response.details:', response.details);
+            // console.log('Response.details type:', typeof response.details);
+            // console.log('Response.details length:', response.details?.length);
+            // console.log('Response.total:', response.total);
 
             if (!response) {
                 throw new Error('No response from API');
@@ -1365,15 +1367,15 @@ function AutomationCompaniesContent() {
             // Add all other companies
             mergedCompanies.push(...otherCompanies);
 
-            console.log('✅ Successfully processed companies:', mergedCompanies.length);
-            console.log('✅ LinkedIn companies:', linkedInCompanies.length);
-            console.log('✅ Other companies:', otherCompanies.length);
-            console.log('✅ Sample company data:', mergedCompanies[0]);
+            // console.log('✅ Successfully processed companies:', mergedCompanies.length);
+            // console.log('✅ LinkedIn companies:', linkedInCompanies.length);
+            // console.log('✅ Other companies:', otherCompanies.length);
+            // console.log('✅ Sample company data:', mergedCompanies[0]);
 
             setCompanies(mergedCompanies);
             setFilteredCompanies(mergedCompanies);
 
-            console.log('✅ Companies state updated:', mergedCompanies.length);
+            // console.log('✅ Companies state updated:', mergedCompanies.length);
         } catch (err) {
             console.error('❌ Error fetching companies via API:', err);
             console.error('❌ Error details:', {
@@ -1387,7 +1389,7 @@ function AutomationCompaniesContent() {
             setFilteredCompanies([]);
         } finally {
             setLoading(false);
-            console.log('=== COMPANIES FETCH COMPLETE ===');
+            // console.log('=== COMPANIES FETCH COMPLETE ===');
         }
     };
 
@@ -1468,7 +1470,7 @@ function AutomationCompaniesContent() {
     }, [searchTerm, modelFilter, customerFilter, pricingModelFilter, whoPaysFilter, companies]);
 
     useEffect(() => {
-        console.log('Component mounted, starting data fetch...');
+        // console.log('Component mounted, starting data fetch...');
         checkUser();
         fetchCompanies();
         fetchJobStats();
@@ -1508,16 +1510,16 @@ function AutomationCompaniesContent() {
         };
     }, [sourceDropdownOpen, industryDropdownOpen]);
 
-    console.log('Render state:', { profileLoading, needsProfile, loading, companiesCount: companies.length, jobStatsCount: jobStats.length });
+    // console.log('Render state:', { profileLoading, needsProfile, loading, companiesCount: companies.length, jobStatsCount: jobStats.length });
 
     if (profileLoading) {
-        console.log('Showing profile loading...');
+        // console.log('Showing profile loading...');
         return <div className="loading">Loading...</div>;
     }
 
 
     if (loading) {
-        console.log('Showing companies loading...');
+        // console.log('Showing companies loading...');
         return <div className="loading">Loading companies...</div>;
     }
 
@@ -1913,8 +1915,8 @@ function AutomationCompaniesContent() {
 
                                                         // Show source breakdown or industry breakdown based on toggle
                                                         if (showingSourceBreakdown && selectedIndustries.size > 0 && selectedSources.size > 0) {
-                                                            const { breakdown, total } = getSourceBreakdownForIndustries(selectedIndustries);
-                                                            console.log('breakdown', breakdown, total);
+                                                            const { breakdown, total: _total } = getSourceBreakdownForIndustries(selectedIndustries);
+                                                            // console.log('breakdown', breakdown, total);
 
                                                             return breakdown.map((item) => {
                                                                 const sliceAngle = (item.percentage / 100) * 2 * Math.PI;
@@ -1924,8 +1926,9 @@ function AutomationCompaniesContent() {
                                                                 // Add French flag for specific sources
                                                                 const frenchSources = ['404Works', 'comet', 'Welcome to the Jungle', 'Freelance-Informatique', 'Codeur.com'];
                                                                 const isFrench = frenchSources.includes(item.source);
-                                                                const displayName = `${item.source}${isFrench ? ' 🇫🇷' : ''}`;
-                                                                console.log('displayName', displayName);
+                                                                // @ts-expect-error - Keep for debugging
+                                                                const _displayName = `${item.source}${isFrench ? ' 🇫🇷' : ''}`;
+                                                                // console.log('displayName', displayName);
 
                                                                 const startX = 200 + 150 * Math.cos(startAngle - Math.PI / 2);
                                                                 const startY = 200 + 150 * Math.sin(startAngle - Math.PI / 2);
@@ -2038,8 +2041,9 @@ function AutomationCompaniesContent() {
                                                                     `Z`
                                                                 ].join(' ');
 
-                                                                const labelAngle = startAngle + sliceAngle / 2;
-                                                                console.log('labelAngle', labelAngle);
+                                                                // @ts-expect-error - Keep for debugging
+                                                                const _labelAngle = startAngle + sliceAngle / 2;
+                                                                // console.log('labelAngle', labelAngle);
                                                                 // const labelX = 200 + 200 * Math.cos(labelAngle - Math.PI / 2);
                                                                 // const labelY = 200 + 200 * Math.sin(labelAngle - Math.PI / 2);
 

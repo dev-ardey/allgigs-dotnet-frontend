@@ -99,7 +99,7 @@ const ArchiveModal: React.FC<ArchiveModalProps> = ({
     };
 
     // Console log to prevent unused variable error
-    console.log('ArchiveModal user:', user);
+    // console.log('ArchiveModal user:', user);
 
     // Filter archived leads based on search term
     const filteredLeads = archivedLeads.filter(lead =>

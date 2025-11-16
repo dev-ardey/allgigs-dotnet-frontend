@@ -135,7 +135,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     // Modal states
     const [showArchiveModal, setShowArchiveModal] = useState(false);
     const [showPrepModal, setShowPrepModal] = useState(false);
-    console.log(showPrepModal, setShowPrepModal, "showPrepModal - build fix");
+    // console.log(showPrepModal, setShowPrepModal, "showPrepModal - build fix");
     const [showStatisticsModal, setShowStatisticsModal] = useState(false);
 
     // Feature states
@@ -156,7 +156,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     const [allCollapsed, setAllCollapsed] = useState(false);
     const [showFollowUpOnly, setShowFollowUpOnly] = useState(false);
 
-    console.log('build', allCollapsed, setAllCollapsed, "allCollapsed - build fix");
+    // console.log('build', allCollapsed, setAllCollapsed, "allCollapsed - build fix");
     // Collapse/Expand all handlers
     const handleCollapseAll = async () => {
         try {
@@ -211,7 +211,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
     // Archive stats
     const [archivedCount, setArchivedCount] = useState(0);
-    console.log(archivedCount, setArchivedCount, "archivedCount - build fix");
+    // console.log(archivedCount, setArchivedCount, "archivedCount - build fix");
 
     // ==========================================
     // STAGE CONFIGURATION (AANGEPAST VOOR NIEUWE DATA)
@@ -392,9 +392,9 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             // ALSO fetch job clicks to show in Prospects column (jobs clicked but not yet applied)
             let jobClicks: any[] = [];
             try {
-                console.log('[DEBUG] Fetching job clicks for user:', user.id);
+                // console.log('[DEBUG] Fetching job clicks for user:', user.id);
                 const jobClicksResponse = await apiClient.getJobClicksWithDetails(1000); // Get enough to cover all clicks
-                console.log('[DEBUG] Raw job clicks response:', JSON.stringify(jobClicksResponse, null, 2));
+                // console.log('[DEBUG] Raw job clicks response:', JSON.stringify(jobClicksResponse, null, 2));
 
                 // Backend returns camelCase 'clicks' property (due to JSON serialization config)
                 // Handle both camelCase and PascalCase, and also direct array response
@@ -409,7 +409,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
                 if (clicksArray && Array.isArray(clicksArray) && clicksArray.length > 0) {
                     jobClicks = clicksArray;
-                    console.log('[DEBUG] ✅ Fetched job clicks via API:', {
+                    // console.log('[DEBUG] ✅ Fetched job clicks via API:', {
                         count: jobClicks.length,
                         sample: jobClicks[0],
                         responseKeys: Object.keys(jobClicksResponse || {}),
@@ -421,7 +421,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         }))
                     });
                 } else {
-                    console.warn('[DEBUG] ⚠️ Job clicks response is empty or invalid:', {
+                    // console.warn('[DEBUG] ⚠️ Job clicks response is empty or invalid:', {
                         response: jobClicksResponse,
                         responseType: typeof jobClicksResponse,
                         isArray: Array.isArray(jobClicksResponse),
@@ -441,7 +441,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 // Continue without job clicks if this fails
             }
 
-            console.log('[DEBUG] Fetched applying records via API:', {
+            // console.log('[DEBUG] Fetched applying records via API:', {
                 count: applyingRecords.length,
                 sample: applyingRecords[0]
             });
@@ -451,7 +451,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             const clickedJobIds = jobClicks?.map(click => click.jobId || click.job_id || click.JobId).filter(Boolean) || [];
             const allJobIds = [...new Set([...applyingJobIds, ...clickedJobIds])]; // Combine and deduplicate
 
-            console.log('[DEBUG] Job IDs for fetching:', {
+            // console.log('[DEBUG] Job IDs for fetching:', {
                 applyingCount: applyingJobIds.length,
                 clickedCount: clickedJobIds.length,
                 totalUnique: allJobIds.length,
@@ -467,15 +467,15 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             let jobDataMap: Record<string, any> = {};
             if (allJobIds.length > 0) {
                 try {
-                    console.log('[DEBUG] 🚀 Batch fetching', allJobIds.length, 'jobs in ONE request');
+                    // console.log('[DEBUG] 🚀 Batch fetching', allJobIds.length, 'jobs in ONE request');
                     const startTime = performance.now();
 
                     // NEW: Batch fetch all jobs in 1 API call (was 80+ calls!)
                     const batchResponse = await apiClient.getJobsByIds(allJobIds);
 
                     const endTime = performance.now();
-                    console.log('[DEBUG] ✅ Batch fetch complete in', Math.round(endTime - startTime), 'ms');
-                    console.log('[DEBUG] Batch result:', {
+                    // console.log('[DEBUG] ✅ Batch fetch complete in', Math.round(endTime - startTime), 'ms');
+                    // console.log('[DEBUG] Batch result:', {
                         found: batchResponse.jobs.length,
                         notFound: batchResponse.notFound.length,
                         total: allJobIds.length
@@ -483,8 +483,8 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
                     // DEBUG: Log first job to see exact structure
                     if (batchResponse.jobs.length > 0) {
-                        console.log('[DEBUG] 🔍 First job from batch:', batchResponse.jobs[0]);
-                        console.log('[DEBUG] 🔍 Job properties:', {
+                        // console.log('[DEBUG] 🔍 First job from batch:', batchResponse.jobs[0]);
+                        // console.log('[DEBUG] 🔍 Job properties:', {
                             uniqueId: batchResponse.jobs[0].uniqueId,
                             title: batchResponse.jobs[0].title,
                             company: batchResponse.jobs[0].company,
@@ -507,7 +507,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         const uniqueId = jobAny.UNIQUE_ID || jobAny.UniqueId || job.uniqueId || '';
                         
                         if (!uniqueId) {
-                            console.warn('[DEBUG] ⚠️ Job without UNIQUE_ID, skipping:', job);
+                            // console.warn('[DEBUG] ⚠️ Job without UNIQUE_ID, skipping:', job);
                             return;
                         }
                         
@@ -526,10 +526,10 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
                     // Log any not found jobs (for debugging)
                     if (failCount > 0) {
-                        console.warn('[DEBUG] ⚠️ Jobs not found:', batchResponse.notFound.slice(0, 5));
+                        // console.warn('[DEBUG] ⚠️ Jobs not found:', batchResponse.notFound.slice(0, 5));
                     }
 
-                    console.log('[DEBUG] Job data fetched:', {
+                    // console.log('[DEBUG] Job data fetched:', {
                         total: allJobIds.length,
                         success: successCount,
                         failed: failCount,
@@ -541,7 +541,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     // DEBUG: Log what we mapped
                     if (Object.keys(jobDataMap).length > 0) {
                         const firstJobId = Object.keys(jobDataMap)[0];
-                        console.log('[DEBUG] 🔍 Mapped job data for', firstJobId, ':', jobDataMap[firstJobId]);
+                        // console.log('[DEBUG] 🔍 Mapped job data for', firstJobId, ':', jobDataMap[firstJobId]);
                     }
                 } catch (jobError) {
                     console.error('[DEBUG] Error fetching job data via API:', jobError);
@@ -561,7 +561,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         try {
                             interviews = JSON.parse(interviewsData);
                         } catch (e) {
-                            console.warn('Failed to parse interviews JSON:', e);
+                            // console.warn('Failed to parse interviews JSON:', e);
                             interviews = [];
                         }
                     } else if (Array.isArray(interviewsData)) {
@@ -576,7 +576,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                         try {
                             contacts = JSON.parse(contactsData);
                         } catch (e) {
-                            console.warn('Failed to parse contacts JSON:', e);
+                            // console.warn('Failed to parse contacts JSON:', e);
                             contacts = [];
                         }
                     } else if (Array.isArray(contactsData)) {
@@ -674,7 +674,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
             // Create leads from job clicks that don't have applying records
             const appliedJobIds = new Set(applyingRecords?.map(r => r.uniqueIdJob) || []);
-            console.log('[DEBUG] Creating clicked leads:', {
+            // console.log('[DEBUG] Creating clicked leads:', {
                 totalClicks: jobClicks.length,
                 appliedJobIdsCount: appliedJobIds.size,
                 appliedJobIds: Array.from(appliedJobIds).slice(0, 5),
@@ -696,7 +696,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 return hasJobId && isNotApplied;
             });
 
-            console.log('[DEBUG] Filtered job clicks for Prospects:', {
+            // console.log('[DEBUG] Filtered job clicks for Prospects:', {
                 totalClicks: jobClicks.length,
                 filteredCount: filteredClicks.length,
                 filteredOut: jobClicks.length - filteredClicks.length,
@@ -716,7 +716,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
                 // DEBUG: Log FIRST click processing in detail
                 if (index === 0) {
-                    console.log('[DEBUG] 🔍 Processing FIRST click:', {
+                    // console.log('[DEBUG] 🔍 Processing FIRST click:', {
                         jobId,
                         userId,
                         clickedAt,
@@ -778,7 +778,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             // Combine applying records with clicked leads
             const allLeads = [...processedRecords, ...clickedLeads];
 
-            console.log('[DEBUG] ✅ Final leads summary:', {
+            // console.log('[DEBUG] ✅ Final leads summary:', {
                 processedRecordsCount: processedRecords.length,
                 clickedLeadsCount: clickedLeads.length,
                 totalLeads: allLeads.length,
@@ -870,7 +870,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     const loadFutureFeatures = useCallback(async () => {
         if (!user?.id) return;
 
-        console.log('Loading future features for user:', user.id);
+        // console.log('Loading future features for user:', user.id);
 
         try {
             const { data, error } = await supabase
@@ -879,12 +879,12 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 .eq('user_id', user.id)
                 .single();
 
-            console.log('Database response:', { data, error });
+            // console.log('Database response:', { data, error });
 
             if (error && error.code !== 'PGRST116') {
                 console.error('Error loading future features:', error);
             } else if (data) {
-                console.log('Setting future features:', data);
+                // console.log('Setting future features:', data);
                 setFutureFeatures({
                     marketing: data.marketing ?? false,
                     tooling: data.tooling ?? false,
@@ -893,7 +893,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     value_proposition: data.value_proposition ?? false
                 });
             } else {
-                console.log('No data found, using defaults');
+                // console.log('No data found, using defaults');
             }
         } catch (error) {
             console.error('Error loading future features:', error);
@@ -903,7 +903,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     const saveFutureFeatures = useCallback(async (features: any) => {
         if (!user?.id) return;
 
-        console.log('Saving future features:', features);
+        // console.log('Saving future features:', features);
 
         try {
             const { data, error } = await supabase
@@ -913,7 +913,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     ...features
                 });
 
-            console.log('Save response:', { data, error });
+            // console.log('Save response:', { data, error });
 
             if (error) throw error;
         } catch (error) {
@@ -925,18 +925,18 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     // USE EFFECT: LOAD FUTURE FEATURES
     // ==========================================
     useEffect(() => {
-        console.log('useEffect triggered, user:', user?.id);
+        // console.log('useEffect triggered, user:', user?.id);
         if (user?.id) {
             loadFutureFeatures();
         }
     }, [user?.id, loadFutureFeatures]);
 
     const handleFeatureToggle = async (feature: string) => {
-        console.log('Toggle clicked for feature:', feature);
-        console.log('Current state:', futureFeatures);
+        // console.log('Toggle clicked for feature:', feature);
+        // console.log('Current state:', futureFeatures);
 
         const newFeatures = { ...futureFeatures, [feature]: !futureFeatures[feature as keyof typeof futureFeatures] };
-        console.log('New state:', newFeatures);
+        // console.log('New state:', newFeatures);
 
         setFutureFeatures(newFeatures);
         await saveFutureFeatures(newFeatures);
@@ -986,7 +986,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
             await fetchLeads(); // Refresh to get latest data
         }
     };
-    console.log(handleLeadUpdate, "handleLeadUpdate - build fix");
+    // console.log(handleLeadUpdate, "handleLeadUpdate - build fix");
 
     const handleArchiveClick = () => {
         setShowArchiveModal(true);
@@ -1029,7 +1029,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     };
 
 
-    console.log(markFollowUpComplete, "markFollowUpComplete - build fix");
+    // console.log(markFollowUpComplete, "markFollowUpComplete - build fix");
 
     // ==========================================
     // APPLY ACTION HANDLER (NIEUWE LOGICA)
@@ -1037,7 +1037,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
     const handleApplyAction = async (jobId: string, applied: boolean) => {
         if (!user?.id) return;
 
-        console.log('[DEBUG] handleApplyAction called:', { jobId, applied, userId: user.id });
+        // console.log('[DEBUG] handleApplyAction called:', { jobId, applied, userId: user.id });
 
         try {
             // Get user session for API token
@@ -1054,11 +1054,11 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                 if (existingApp) {
                     // Update existing applying record to set applied = true
                     await apiClient.updateApplication(existingApp.applyingId, { applied: true });
-                    console.log('[DEBUG] Successfully updated applying record to applied = true');
+                    // console.log('[DEBUG] Successfully updated applying record to applied = true');
                 } else {
                     // Create new application if it doesn't exist
                     await apiClient.createApplication(jobId, true);
-                    console.log('[DEBUG] Successfully created applying record with applied = true');
+                    // console.log('[DEBUG] Successfully created applying record with applied = true');
                 }
             } else {
                 // If applied = false, remove the applying record entirely
@@ -1066,7 +1066,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                     // Note: Backend doesn't have delete endpoint, so we'll archive instead
                     // Or we can update applied to false
                     await apiClient.updateApplication(existingApp.applyingId, { applied: false });
-                    console.log('[DEBUG] Successfully updated applying record to applied = false');
+                    // console.log('[DEBUG] Successfully updated applying record to applied = false');
                 }
             }
 
@@ -1199,7 +1199,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
 
             // Only archive jobs that were actually applied to
             if (!jobToArchive.applied) {
-                console.log('Cannot archive: Job was not applied to');
+                // console.log('Cannot archive: Job was not applied to');
                 return;
             }
 
@@ -1848,7 +1848,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                                                 // Refresh leads when interview is added
                                                 fetchLeads();
                                             } else if (action === 'toggle_collapse') {
-                                                console.log('toggle_collapse action received:', {
+                                                // console.log('toggle_collapse action received:', {
                                                     leadId: lead.applying_id,
                                                     collapsed: data.collapsed,
                                                     currentCollapsed: lead.collapsed_card
@@ -1865,7 +1865,7 @@ const LeadsPipeline: React.FC<LeadsPipelineProps> = ({ user, statsData = [] }) =
                                                             : l
                                                     );
 
-                                                    console.log('Updated leads state:', updatedLeads.find(l => l.applying_id === lead.applying_id));
+                                                    // console.log('Updated leads state:', updatedLeads.find(l => l.applying_id === lead.applying_id));
                                                     return updatedLeads;
                                                 });
                                             } else if (action === 'archive') {
