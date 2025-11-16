@@ -1007,11 +1007,11 @@ function DashboardContent() {
   useEffect(() => {
     const fetchFutureFeatures = async () => {
       if (!user) {
-        console.log('No user found, skipping future features fetch');
+        // console.log('No user found, skipping future features fetch');
         return;
       }
 
-      console.log('Fetching future features for user:', user.id);
+      // console.log('Fetching future features for user:', user.id);
 
       try {
         // Get user session for API token
@@ -1022,7 +1022,7 @@ function DashboardContent() {
 
         // Fetch future features from backend API
         const featuresData: FutureFeaturesResponse = await apiClient.getFutureFeatures();
-        console.log('Fetched future features from API:', featuresData);
+        // console.log('Fetched future features from API:', featuresData);
 
         if (featuresData) {
           setFutureFeatures({
@@ -1078,7 +1078,7 @@ function DashboardContent() {
         };
 
         await apiClient.updateFutureFeatures(updateData);
-        console.log('Future features saved successfully via API');
+        // console.log('Future features saved successfully via API');
       } catch (error) {
         console.error('Error saving future features via API:', error);
         // No fallback - rely on backend API only for security
@@ -1103,7 +1103,7 @@ function DashboardContent() {
 
       // Log job click via backend API
       await apiClient.recordJobClick(job.UNIQUE_ID);
-      console.log("Job click logged successfully via API:", job.Title);
+      // console.log("Job click logged successfully via API:", job.Title);
 
       // Refresh stats na nieuwe click
       fetchJobClicksStats();
@@ -1246,7 +1246,7 @@ function DashboardContent() {
     if (!user) return;
     setLoading(true);
     if (user && user.id) {
-      console.log("[Effect] Fetching recently clicked jobs...");
+      // console.log("[Effect] Fetching recently clicked jobs...");
       fetchRecentlyClickedJobs();
     }
   }, [user]);
@@ -1297,7 +1297,7 @@ function DashboardContent() {
   // ]);
 
   const [showAddJobForm, setShowAddJobForm] = useState(false);
-  console.log(showAddJobForm, setShowAddJobForm, "showAddJobForm - build fix");
+  // console.log(showAddJobForm, setShowAddJobForm, "showAddJobForm - build fix");
 
   // Future features state
   const [futureFeatures, setFutureFeatures] = useState({
@@ -1309,10 +1309,10 @@ function DashboardContent() {
   });
 
   // Feature modal state
-  const [showFeatureModal, setShowFeatureModal] = useState<null | string>(null);
-  const [notifyMe, setNotifyMe] = useState<{ [key: string]: boolean }>({});
-  console.log(notifyMe, setNotifyMe, "notifyMe - build fix");
-  console.log(showFeatureModal, setShowFeatureModal, "showFeatureModal - build fix");
+  const [_showFeatureModal, setShowFeatureModal] = useState<null | string>(null);
+  const [_notifyMe, _setNotifyMe] = useState<{ [key: string]: boolean }>({});
+  // console.log(notifyMe, setNotifyMe, "notifyMe - build fix");
+  // console.log(showFeatureModal, setShowFeatureModal, "showFeatureModal - build fix");
 
   // const toggleAvailable = () => setIsAvailable(prev => !prev);
 
@@ -1671,7 +1671,7 @@ function DashboardContent() {
           onClose={() => setShowAddJobForm(false)}
           onJobAdded={() => {
             // Optioneel: herlaad jobs
-            console.log("Job toegevoegd");
+            // console.log("Job toegevoegd");
           }}
           user={user}
         />
